@@ -62,6 +62,15 @@ export default [
     languageOptions: {
       globals: {
         useTweaks: "readonly",
+        usePlayback: "readonly",
+        useCellManager: "readonly",
+        useKeyboard: "readonly",
+        APP_CONSTANTS: "readonly",
+        TweaksPanel: "readonly",
+        TweakSection: "readonly",
+        TweakRadio: "readonly",
+        TweakColor: "readonly",
+        TweakSelect: "readonly",
       },
     },
   },
