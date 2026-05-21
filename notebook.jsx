@@ -5,11 +5,6 @@
 
 const { useState, useEffect, useRef, useCallback, useMemo } = React
 
-let _cid = 0
-function cellId() {
-  return "c" + ++_cid + "_" + Date.now().toString(36)
-}
-
 // ============================================================================
 // Code editor with syntax highlighting overlay
 // ============================================================================
@@ -1304,89 +1299,8 @@ function Toolbar({ onAdd, onRun, onRunAll, onStop, onDelete, kernelStatus, onOpe
 }
 
 // ============================================================================
-// Starter content
-// ============================================================================
-
-const STARTER = [
-  {
-    id: cellId(),
-    type: "text",
-    source: `# Music Composer Notebook
-
-A notebook for sketching chord progressions. Each **code cell** below is parsed as music — use \`@key\`, \`@tempo\`, \`@inst\` directives, then a stream of chord tokens.
-
-**Chord tokens:**
-- Absolute: \`Cmaj7\`, \`F#m\`, \`Bb7\`, \`Dm9\`, \`G7sus4\`, \`Em7b5\`, \`C/E\`
-- Roman: \`I\`, \`ii\`, \`V7\`, \`vi\`, \`viio\`, \`bVII\`, \`Imaj7\`
-
-**Rhythm:** suffix a chord with \`.w\` (whole), \`.h\` (half), \`.q\` (quarter), \`.e\` (eighth), or \`:N\` for N beats. \`~\` is a rest. Tokens without a suffix split the bar evenly.
-
-Comments use \`--\` (double dash), so \`#\` stays free for sharps like \`F#m\`, \`C#maj7\`.
-
-Hit **Shift+Enter** to render a cell, or **Run All** up top.`,
-    runCount: null,
-    output: null,
-    status: "idle",
-  },
-  {
-    id: cellId(),
-    type: "music",
-    source: `@key C
-@tempo 72
-@inst piano
-
--- Drifting minor 9th vamp
-Dm9.h  Cmaj9/E.h
-Dm9.h  Cmaj9/E.h
-Dm9.h  Cmaj9/E.h
-G7`,
-    runCount: null,
-    output: null,
-    status: "idle",
-  },
-  {
-    id: cellId(),
-    type: "music",
-    source: `@key C
-@tempo 72
-@inst guitar
-
--- Same vamp, on guitar
-Dm9.h  Cmaj9/E.h
-Dm9.h  Cmaj9/E.h
-Dm9.h  Cmaj9/E.h
-G7`,
-    runCount: null,
-    output: null,
-    status: "idle",
-  },
-  {
-    id: cellId(),
-    type: "music",
-    source: `@key C
-@tempo 72
-@inst piano
-
-Fmaj7/D`,
-    runCount: null,
-    output: null,
-    status: "idle",
-  },
-]
-
-// ============================================================================
 // Tweaks
 // ============================================================================
-
-const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/ {
-  theme: "light",
-  accent: "#1a73e8",
-  density: "cozy",
-  monoFont: "IBM Plex Mono",
-} /*EDITMODE-END*/
-
-const ACCENT_OPTIONS = ["#1a73e8", "#d97757", "#1f8a5b", "#a855f7"]
-const MONO_FONTS = ["IBM Plex Mono", "JetBrains Mono", "Fira Code", "Source Code Pro"]
 
 function NotebookTweaks({ tweaks, setTweak }) {
   return (
@@ -1402,7 +1316,7 @@ function NotebookTweaks({ tweaks, setTweak }) {
         <TweakColor
           value={tweaks.accent}
           onChange={(v) => setTweak("accent", v)}
-          options={ACCENT_OPTIONS}
+          options={APP_CONSTANTS.ACCENT_OPTIONS}
         />
       </TweakSection>
       <TweakSection label="Density">
@@ -1416,7 +1330,7 @@ function NotebookTweaks({ tweaks, setTweak }) {
         <TweakSelect
           value={tweaks.monoFont}
           onChange={(v) => setTweak("monoFont", v)}
-          options={MONO_FONTS}
+          options={APP_CONSTANTS.MONO_FONTS}
         />
       </TweakSection>
     </TweaksPanel>
@@ -1601,17 +1515,27 @@ const SIDE_TABS = [
 
 function App() {
   const [sideTab, setSideTab] = useState("notebook")
-  const [cells, setCells] = useState(STARTER)
-  const [selectedId, setSelectedId] = useState(STARTER[1].id)
-  const [editingId, setEditingId] = useState(null)
   const [kernelStatus, setKernelStatus] = useState("idle")
   const [runCounter, setRunCounter] = useState(0)
-  const [trash, setTrash] = useState([])
   const [audioReady, setAudioReady] = useState(false)
-  const dPressedRef = useRef(false)
-  const dTimerRef = useRef(null)
 
-  const [tweaks, setTweak] = useTweaks(TWEAK_DEFAULTS)
+  // Cell management hook
+  const cm = useCellManager(APP_CONSTANTS.STARTER_CELLS)
+  const {
+    cells,
+    selectedId,
+    setSelectedId,
+    editingId,
+    setEditingId,
+    findIndex,
+    updateCell,
+    insertCell,
+    deleteCell,
+    undoDelete,
+    convertCell,
+  } = cm
+
+  const [tweaks, setTweak] = useTweaks(APP_CONSTANTS.TWEAK_DEFAULTS)
   const theme = tweaks.theme || "light"
   const accent = tweaks.accent || "#1a73e8"
   const density = tweaks.density || "cozy"
@@ -1635,66 +1559,6 @@ function App() {
   }, [])
 
   const playback = usePlayback(armAudio)
-
-  const findIndex = useCallback((id) => cells.findIndex((c) => c.id === id), [cells])
-
-  const updateCell = useCallback((id, patch) => {
-    setCells((cs) => cs.map((c) => (c.id === id ? { ...c, ...patch } : c)))
-  }, [])
-
-  const insertCell = useCallback((afterId, where = "below", type = "music", source) => {
-    setCells((cs) => {
-      const idx = afterId ? cs.findIndex((c) => c.id === afterId) : cs.length - 1
-      const insertAt = where === "above" ? Math.max(0, idx) : idx + 1
-      const nc = {
-        id: cellId(),
-        type,
-        source:
-          source != null ? source : type === "music" ? "@key C\n@tempo 96\n@inst piano\n\n" : "",
-        runCount: null,
-        output: null,
-        status: "idle",
-      }
-      const next = [...cs]
-      next.splice(insertAt, 0, nc)
-      setSelectedId(nc.id)
-      setEditingId(source ? null : nc.id)
-      return next
-    })
-  }, [])
-
-  const deleteCell = useCallback((id) => {
-    setCells((cs) => {
-      const idx = cs.findIndex((c) => c.id === id)
-      if (idx < 0) return cs
-      const removed = cs[idx]
-      setTrash((t) => [...t, { cell: removed, idx }])
-      const next = cs.filter((c) => c.id !== id)
-      if (next.length) setSelectedId(next[Math.min(idx, next.length - 1)].id)
-      else setSelectedId(null)
-      return next
-    })
-  }, [])
-
-  const undoDelete = useCallback(() => {
-    setTrash((t) => {
-      if (!t.length) return t
-      const last = t[t.length - 1]
-      setCells((cs) => {
-        const next = [...cs]
-        next.splice(Math.min(last.idx, next.length), 0, last.cell)
-        return next
-      })
-      setSelectedId(last.cell.id)
-      return t.slice(0, -1)
-    })
-  }, [])
-
-  const convertCell = useCallback((id, type) => {
-    setCells((cs) =>
-      cs.map((c) => (c.id === id ? { ...c, type, output: null, runCount: null } : c)),
-    )
-  }, [])
 
   const runCell = useCallback(
     async (id) => {
@@ -1798,112 +1662,19 @@ function App() {
     [selectedId, cells, insertCell],
   )
 
-  // Keybindings
-  useEffect(() => {
-    const onKey = (e) => {
-      const inEditable =
-        e.target.tagName === "TEXTAREA" ||
-        e.target.tagName === "INPUT" ||
-        e.target.isContentEditable
-
-      if (e.key === "Enter" && e.shiftKey) {
-        e.preventDefault()
-        if (selectedId) {
-          runCell(selectedId)
-          const idx = findIndex(selectedId)
-          if (idx === cells.length - 1) insertCell(selectedId, "below", "music")
-          else {
-            setSelectedId(cells[idx + 1].id)
-            setEditingId(null)
-            if (e.target.blur) e.target.blur()
-          }
-        }
-        return
-      }
-      if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
-        e.preventDefault()
-        if (selectedId) runCell(selectedId)
-        return
-      }
-      if (e.key === "Enter" && e.altKey) {
-        e.preventDefault()
-        if (selectedId) {
-          runCell(selectedId)
-          insertCell(selectedId, "below", "music")
-        }
-        return
-      }
-
-      if (inEditable) {
-        if (e.key === "Escape") {
-          e.preventDefault()
-          setEditingId(null)
-          if (e.target.blur) e.target.blur()
-        }
-        return
-      }
-
-      if (!selectedId) return
-      const idx = findIndex(selectedId)
-
-      if (e.key === "Enter") {
-        e.preventDefault()
-        setEditingId(selectedId)
-        return
-      }
-      if (e.key === "a" || e.key === "A") {
-        e.preventDefault()
-        insertCell(selectedId, "above", "music")
-        return
-      }
-      if (e.key === "b" || e.key === "B") {
-        e.preventDefault()
-        insertCell(selectedId, "below", "music")
-        return
-      }
-      if (e.key === "z" || e.key === "Z") {
-        e.preventDefault()
-        undoDelete()
-        return
-      }
-      if (e.key === "d" || e.key === "D") {
-        e.preventDefault()
-        if (dPressedRef.current) {
-          deleteCell(selectedId)
-          dPressedRef.current = false
-          if (dTimerRef.current) clearTimeout(dTimerRef.current)
-        } else {
-          dPressedRef.current = true
-          dTimerRef.current = setTimeout(() => {
-            dPressedRef.current = false
-          }, 800)
-        }
-        return
-      }
-      if (e.key === "ArrowDown" || e.key === "j") {
-        e.preventDefault()
-        if (idx < cells.length - 1) setSelectedId(cells[idx + 1].id)
-        return
-      }
-      if (e.key === "ArrowUp" || e.key === "k") {
-        e.preventDefault()
-        if (idx > 0) setSelectedId(cells[idx - 1].id)
-        return
-      }
-    }
-    window.addEventListener("keydown", onKey)
-    return () => window.removeEventListener("keydown", onKey)
-  }, [
+  // Keyboard shortcuts hook
+  useKeyboard({
     selectedId,
     editingId,
     cells,
+    findIndex,
     runCell,
     insertCell,
     deleteCell,
-    convertCell,
     undoDelete,
-    findIndex,
-  ])
+    setSelectedId,
+    setEditingId,
+  })
 
   const selectedCell = cells.find((c) => c.id === selectedId)
 

@@ -1,0 +1,177 @@
+- generic [ref=e3]:
+  - complementary "Workspace" [ref=e4]:
+    - generic [ref=e5]: Composer.nb
+    - navigation [ref=e6]:
+      - button "Notebook Cells & playback" [ref=e7] [cursor=pointer]:
+        - generic [ref=e8]: Notebook
+        - generic [ref=e9]: Cells & playback
+      - button "Chord library Browse chord shapes" [ref=e10] [cursor=pointer]:
+        - generic [ref=e11]: Chord library
+        - generic [ref=e12]: Browse chord shapes
+  - generic [ref=e14]:
+    - banner [ref=e15]:
+      - generic [ref=e16]:
+        - img [ref=e18]
+        - generic [ref=e22]:
+          - generic [ref=e23]:
+            - text: Composer
+            - generic [ref=e24]: .
+            - generic [ref=e25]: nb
+          - generic [ref=e26]: "Last Checkpoint: a few seconds ago (autosaved)"
+    - generic [ref=e27]:
+      - generic [ref=e28]:
+        - button "+" [ref=e30] [cursor=pointer]:
+          - generic [ref=e31]: +
+        - generic [ref=e32]:
+          - button "Run All" [ref=e33] [cursor=pointer]:
+            - generic [ref=e34]:
+              - img [ref=e35]
+              - generic [ref=e38]: Run All
+          - button "Interrupt — stop audio" [ref=e39] [cursor=pointer]:
+            - img [ref=e40]
+      - generic [ref=e42]:
+        - button "Theme" [ref=e43] [cursor=pointer]:
+          - img [ref=e44]
+          - generic [ref=e47]: Theme
+        - generic [ref=e48]: MusicKernel
+        - generic "idle" [ref=e49]
+    - main [ref=e50]:
+      - generic [ref=e51]:
+        - generic [ref=e54]:
+          - button "Cell options" [ref=e56] [cursor=pointer]:
+            - img [ref=e57]
+          - generic [ref=e62]:
+            - heading "Music Composer Notebook" [level=1] [ref=e63]
+            - paragraph [ref=e64]:
+              - text: A notebook for sketching chord progressions. Each
+              - strong [ref=e65]: code cell
+              - text: below is parsed as music — use
+              - code [ref=e66]: "@key"
+              - text: ","
+              - code [ref=e67]: "@tempo"
+              - text: ","
+              - code [ref=e68]: "@inst"
+              - text: directives, then a stream of chord tokens.
+            - paragraph [ref=e69]:
+              - strong [ref=e70]: "Chord tokens:"
+            - list [ref=e71]:
+              - listitem [ref=e72]:
+                - paragraph [ref=e73]: "Absolute: `Cmaj7`, `F#m`, `Bb7`, `Dm9`, `G7sus4`, `Em7b5`, `C/E`"
+              - listitem [ref=e74]:
+                - paragraph [ref=e75]: "Roman: `I`, `ii`, `V7`, `vi`, `viio`, `bVII`, `Imaj7`"
+            - paragraph [ref=e76]:
+              - strong [ref=e77]: "Rhythm:"
+              - text: suffix a chord with
+              - code [ref=e78]: .w
+              - text: (whole),
+              - code [ref=e79]: .h
+              - text: (half),
+              - code [ref=e80]: .q
+              - text: (quarter),
+              - code [ref=e81]: .e
+              - text: (eighth), or
+              - code [ref=e82]: :N
+              - text: for N beats.
+              - code [ref=e83]: ~
+              - text: is a rest. Tokens without a suffix split the bar evenly.
+            - paragraph [ref=e84]:
+              - text: Comments use
+              - code [ref=e85]: "--"
+              - text: (double dash), so
+              - code [ref=e86]: "#"
+              - text: stays free for sharps like
+              - code [ref=e87]: F#m
+              - text: ","
+              - code [ref=e88]: C#maj7
+              - text: .
+            - paragraph [ref=e89]:
+              - text: Hit
+              - strong [ref=e90]: Shift+Enter
+              - text: to render a cell, or
+              - strong [ref=e91]: Run All
+              - text: up top.
+        - generic [ref=e92]:
+          - generic [ref=e93]:
+            - generic [ref=e94]: "In [1]:"
+            - button "Run cell (Shift+Enter)" [ref=e95] [cursor=pointer]:
+              - img [ref=e96]
+          - generic [ref=e98]:
+            - button "Cell options" [ref=e100] [cursor=pointer]:
+              - img [ref=e101]
+            - generic [ref=e105]:
+              - generic: "@key C @tempo 72 @inst piano -- Drifting minor 9th vamp Dm9.h Cmaj9/E.h Dm9.h Cmaj9/E.h Dm9.h Cmaj9/E.h G7"
+              - textbox [ref=e106]: "@key C @tempo 72 @inst piano -- Drifting minor 9th vamp Dm9.h Cmaj9/E.h Dm9.h Cmaj9/E.h Dm9.h Cmaj9/E.h G7"
+            - generic [ref=e147]:
+              - generic [ref=e148]: "Out [1]:"
+              - generic [ref=e149]:
+                - generic [ref=e150]:
+                  - button "Pause" [active] [ref=e499] [cursor=pointer]:
+                    - img [ref=e152]
+                  - generic "Click or drag to seek" [ref=e154]
+                  - generic [ref=e159]: 0:01 / 0:14
+                  - generic [ref=e160]:
+                    - generic [ref=e161]: 72 BPM
+                    - generic [ref=e162]: C
+                    - generic [ref=e163]: piano
+                    - generic [ref=e164]: 7 chords
+                  - button "WAV" [ref=e166] [cursor=pointer]:
+                    - img [ref=e167]
+                    - generic [ref=e169]: WAV
+                - generic [ref=e170]:
+                  - generic [ref=e171]:
+                    - generic [ref=e172]: Dm9
+                    - img [ref=e173]
+                    - generic [ref=e217]: D3 F3 A3 C4 E4
+                  - generic [ref=e218]:
+                    - generic [ref=e219]: Cmaj9/E
+                    - img [ref=e220]
+                    - generic [ref=e264]: C3 E3 G3 B3 D4
+                  - generic [ref=e265]:
+                    - generic [ref=e266]: Dm9
+                    - img [ref=e267]
+                    - generic [ref=e311]: D3 F3 A3 C4 E4
+                  - generic [ref=e312]:
+                    - generic [ref=e313]: Cmaj9/E
+                    - img [ref=e314]
+                    - generic [ref=e358]: C3 E3 G3 B3 D4
+                  - generic [ref=e359]:
+                    - generic [ref=e360]: Dm9
+                    - img [ref=e361]
+                    - generic [ref=e405]: D3 F3 A3 C4 E4
+                  - generic [ref=e406]:
+                    - generic [ref=e407]: Cmaj9/E
+                    - img [ref=e408]
+                    - generic [ref=e452]: C3 E3 G3 B3 D4
+                  - generic [ref=e453]:
+                    - generic [ref=e454]: G7
+                    - img [ref=e455]
+                    - generic [ref=e498]: G3 B3 D4 F4
+        - generic [ref=e107]:
+          - generic [ref=e108]:
+            - generic [ref=e109]: "In [ ]:"
+            - button "Run cell (Shift+Enter)" [ref=e110] [cursor=pointer]:
+              - img [ref=e111]
+          - generic [ref=e113]:
+            - button "Cell options" [ref=e115] [cursor=pointer]:
+              - img [ref=e116]
+            - generic [ref=e120]:
+              - generic: "@key C @tempo 72 @inst guitar -- Same vamp, on guitar Dm9.h Cmaj9/E.h Dm9.h Cmaj9/E.h Dm9.h Cmaj9/E.h G7"
+              - textbox [ref=e121]: "@key C @tempo 72 @inst guitar -- Same vamp, on guitar Dm9.h Cmaj9/E.h Dm9.h Cmaj9/E.h Dm9.h Cmaj9/E.h G7"
+        - generic [ref=e122]:
+          - generic [ref=e123]:
+            - generic [ref=e124]: "In [ ]:"
+            - button "Run cell (Shift+Enter)" [ref=e125] [cursor=pointer]:
+              - img [ref=e126]
+          - generic [ref=e128]:
+            - button "Cell options" [ref=e130] [cursor=pointer]:
+              - img [ref=e131]
+            - generic [ref=e135]:
+              - generic: "@key C @tempo 72 @inst piano Fmaj7/D"
+              - textbox [ref=e136]: "@key C @tempo 72 @inst piano Fmaj7/D"
+    - contentinfo [ref=e137]:
+      - generic [ref=e138]: Composer.nb
+      - generic [ref=e139]: "|"
+      - generic [ref=e140]: MusicKernel | Idle
+      - generic [ref=e141]: "|"
+      - generic [ref=e142]: "Mode: Command"
+      - generic [ref=e143]: Shift+Enter run · Esc exit edit · A/B insert · DD delete · Z undo

@@ -1,0 +1,40 @@
+<h2>Visual Polish Direction</h2>
+<p class="subtitle">Minimal & clean — reduce noise, let content breathe</p>
+
+<div class="options">
+  <div class="option" data-choice="a" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>Subtle Refinement</h3>
+      <p>Keep the current layout skeleton. Tighten spacing, soften borders, improve typography hierarchy. Remove visual clutter (redundant labels, thick borders, heavy shadows). Make the waveform player feel integrated rather than bolted on.</p>
+      <div class="pros-cons">
+        <div class="pros"><h4>Pros</h4><ul><li>Least disruptive</li><li>Preserves user familiarity</li><li>Fast to implement</li></ul></div>
+        <div class="cons"><h4>Cons</h4><ul><li>Still feels "Jupyter clone"</li><li>Limited impact</li></ul></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="b" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>Clean Slate Aesthetic</h3>
+      <p>Strip the Jupyter chrome. Remove cell borders in favor of subtle separators. Collapse the gutter (In[N]:) to a thin accent line. Float the waveform player inline with no box. Make code cells feel like writing in a clean editor, not a notebook widget. Think: Notion meets a code editor.</p>
+      <div class="pros-cons">
+        <div class="pros"><h4>Pros</h4><ul><li>Feels modern and distinct</li><li>Content-first design</li><li>Less visual noise</li></ul></div>
+        <div class="cons"><h4>Cons</h4><ul><li>More CSS rework</li><li>Breaks "notebook" mental model</li></ul></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="c" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content">
+      <h3>Hybrid: Clean Core, Notebook Structure</h3>
+      <p>Keep the cell-based structure and gutter but modernize everything inside. Thinner borders (1px, low opacity). Tighter line height in code. Waveform player gets a sleek inline bar. Chord diagrams shrink and tile horizontally. Piano roll becomes a compact strip. Status bar gets minimal. Overall: same bones, refined skin.</p>
+      <div class="pros-cons">
+        <div class="pros"><h4>Pros</h4><ul><li>Best of both worlds</li><li>Recognizable as a notebook</li><li>Feels intentional, not generic</li></ul></div>
+        <div class="cons"><h4>Cons</h4><ul><li>Moderate CSS effort</li></ul></div>
+      </div>
+    </div>
+  </div>
+</div>
