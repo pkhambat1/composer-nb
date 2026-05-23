@@ -63,13 +63,13 @@ function sampleItems(items, count) {
 }
 
 function ChordBrowserPanel({ theme, accent }) {
-  const [catalog, setCatalog] = useState(null)
-  const [sample, setSample] = useState([])
-  const [loadError, setLoadError] = useState(null)
-  const [filter, setFilter] = useState("")
-  const catalogRef = useRef(null)
+  const [catalog, setCatalog] = React.useState(null)
+  const [sample, setSample] = React.useState([])
+  const [loadError, setLoadError] = React.useState(null)
+  const [filter, setFilter] = React.useState("")
+  const catalogRef = React.useRef(null)
 
-  useEffect(() => {
+  React.useEffect(() => {
     let cancelled = false
     if (!window.ChordLookup) {
       setLoadError("ChordLookup not loaded")
@@ -93,11 +93,11 @@ function ChordBrowserPanel({ theme, accent }) {
     }
   }, [])
 
-  const reshuffle = useCallback(() => {
+  const reshuffle = React.useCallback(() => {
     if (catalogRef.current) setSample(sampleItems(catalogRef.current, 100))
   }, [])
 
-  const filtered = useMemo(() => {
+  const filtered = React.useMemo(() => {
     const q = filter.trim().toLowerCase()
     if (!q) return sample
     if (!catalog) return []

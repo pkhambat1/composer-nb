@@ -3,8 +3,6 @@
    chord palette sidebar, theme/accent/density/font tweaks.
 */
 
-const { useState, useEffect, useRef, useCallback, useMemo } = React
-
 // ============================================================================
 // Tweaks
 // ============================================================================
@@ -49,11 +47,10 @@ function NotebookTweaks({ tweaks, setTweak }) {
 // ============================================================================
 
 function App() {
-  const [sideTab, setSideTab] = useState("notebook")
-  const [kernelStatus, setKernelStatus] = useState("idle")
-  const [runCounter, setRunCounter] = useState(0)
-  const [audioReady, setAudioReady] = useState(false)
-
+  const [sideTab, setSideTab] = React.useState("notebook")
+  const [kernelStatus, setKernelStatus] = React.useState("idle")
+  const [runCounter, setRunCounter] = React.useState(0)
+  const abortRef = React.useRef(null)
   // Cell management hook
   const cm = useCellManager(APP_CONSTANTS.STARTER_CELLS)
   const {
@@ -67,7 +64,6 @@ function App() {
     insertCell,
     deleteCell,
     undoDelete,
-    _convertCell,
   } = cm
 
   const [tweaks, setTweak] = useTweaks(APP_CONSTANTS.TWEAK_DEFAULTS)
@@ -76,7 +72,7 @@ function App() {
   const density = tweaks.density || "cozy"
   const monoFont = tweaks.monoFont || "IBM Plex Mono"
 
-  useEffect(() => {
+  React.useEffect(() => {
     document.documentElement.dataset.theme = theme
     document.documentElement.dataset.density = density
     document.documentElement.style.setProperty("--accent", accent)
@@ -86,16 +82,15 @@ function App() {
     )
   }, [theme, accent, density, monoFont])
 
-  const armAudio = useCallback(async () => {
+  const armAudio = React.useCallback(async () => {
     try {
       await window.Tone.start()
-      setAudioReady(true)
-    } catch (e) {}
+    } catch (_e) {}
   }, [])
 
   const playback = usePlayback(armAudio)
 
-  const runCell = useCallback(
+  const runCell = React.useCallback(
     async (id) => {
       const c = cells.find((x) => x.id === id)
       if (!c) return
@@ -105,9 +100,12 @@ function App() {
       }
       playback.stopCell(id)
       setKernelStatus("busy")
-      updateCell(id, { status: "running" })
+      updateCell(id, { status: "running", output: null })
+      const runId = Symbol()
+      abortRef.current = runId
       try {
         const parsed = window.MusicEngine.parseSource(c.source)
+        if (abortRef.current !== runId) return
         if (parsed.errors && parsed.errors.length > 0) {
           const lines = parsed.errors.map((e) => `Line ${e.line}: ${e.msg}`).join("\n")
           updateCell(id, { status: "idle", output: { kind: "error", error: lines } })
@@ -125,28 +123,49 @@ function App() {
           updateCell(id, { status: "idle", output: { kind: "error", error: msg } })
           return
         }
-        const buffer = await window.MusicEngine.renderToBuffer(parsed)
         const nextCount = runCounter + 1
         setRunCounter(nextCount)
+        updateCell(id, {
+          status: "rendering",
+          runCount: nextCount,
+          output: { kind: "rendering", parsed, duration: parsed.totalSec },
+        })
+        // Yield so React can paint chord chips before the render blocks the main thread
+        await new Promise((r) => setTimeout(r, 0))
+        if (abortRef.current !== runId) return
+        const buffer = await window.MusicEngine.renderToBuffer(parsed)
+        if (abortRef.current !== runId) return
         const dur = window.MusicEngine.bufferDuration(buffer) || parsed.totalSec || 0
         updateCell(id, {
           status: "idle",
-          runCount: nextCount,
           output: { kind: "rendered", buffer, parsed, duration: dur },
         })
       } catch (e) {
+        if (abortRef.current !== runId) return
         updateCell(id, {
           status: "idle",
           output: { kind: "error", error: String((e && e.message) || e) },
         })
       } finally {
-        setKernelStatus("idle")
+        if (abortRef.current === runId) {
+          abortRef.current = null
+          setKernelStatus("idle")
+        }
       }
     },
     [cells, runCounter, updateCell, playback],
   )
 
-  const runAll = useCallback(async () => {
+  const interruptCell = React.useCallback(
+    (id) => {
+      abortRef.current = null
+      updateCell(id, { status: "idle", output: null })
+      setKernelStatus("idle")
+    },
+    [updateCell],
+  )
+
+  const runAll = React.useCallback(async () => {
     playback.stopAll()
     setKernelStatus("busy")
     let counter = runCounter
@@ -169,8 +188,15 @@ function App() {
           updateCell(c.id, { status: "idle", output: { kind: "error", error: msg } })
           continue
         }
-        const buffer = await window.MusicEngine.renderToBuffer(parsed)
         counter += 1
+        updateCell(c.id, {
+          status: "rendering",
+          runCount: counter,
+          output: { kind: "rendering", parsed, duration: parsed.totalSec },
+        })
+        // Yield so React can paint chord chips before the render blocks the main thread
+        await new Promise((r) => setTimeout(r, 0))
+        const buffer = await window.MusicEngine.renderToBuffer(parsed)
         const dur = window.MusicEngine.bufferDuration(buffer) || parsed.totalSec || 0
         updateCell(c.id, {
           status: "idle",
@@ -187,15 +213,6 @@ function App() {
     setRunCounter(counter)
     setKernelStatus("idle")
   }, [cells, runCounter, updateCell, playback])
-
-  // Insert from palette
-  const insertFromPalette = useCallback(
-    (source) => {
-      const target = selectedId || (cells.length ? cells[cells.length - 1].id : null)
-      insertCell(target, "below", "music", source)
-    },
-    [selectedId, cells, insertCell],
-  )
 
   // Keyboard shortcuts hook
   useKeyboard({
@@ -285,6 +302,7 @@ function App() {
               onLeaveEdit={() => setEditingId((cur) => (cur === c.id ? null : cur))}
               onChange={(v) => updateCell(c.id, { source: v })}
               onRun={() => runCell(c.id)}
+              onInterrupt={() => interruptCell(c.id)}
               onDelete={() => deleteCell(c.id)}
               onSetPreview={(v) => updateCell(c.id, { previewMode: v })}
               onTogglePlayback={playback.togglePlayback}

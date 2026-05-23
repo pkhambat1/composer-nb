@@ -26,20 +26,12 @@ export default [
     },
   },
   {
-    files: ["**/*.{js,jsx}"],
-    ignores: ["**/*.config.js"],
+    files: ["src/**/*.{js,jsx}"],
     languageOptions: {
       ecmaVersion: 2022,
-      sourceType: "script",
+      sourceType: "module",
       globals: {
         ...globals.browser,
-        React: "readonly",
-        ReactDOM: "readonly",
-        Tone: "readonly",
-        WaveSurfer: "readonly",
-        Tonal: "readonly",
-        marked: "readonly",
-        ChordLookup: "readonly",
       },
       parserOptions: {
         ecmaFeatures: { jsx: true },
@@ -55,23 +47,6 @@ export default [
       ...sharedStylistic,
       "no-unused-vars": ["warn", { argsIgnorePattern: "^_", varsIgnorePattern: "^_" }],
       "no-empty": ["error", { allowEmptyCatch: true }],
-    },
-  },
-  {
-    files: ["notebook.jsx"],
-    languageOptions: {
-      globals: {
-        useTweaks: "readonly",
-        usePlayback: "readonly",
-        useCellManager: "readonly",
-        useKeyboard: "readonly",
-        APP_CONSTANTS: "readonly",
-        TweaksPanel: "readonly",
-        TweakSection: "readonly",
-        TweakRadio: "readonly",
-        TweakColor: "readonly",
-        TweakSelect: "readonly",
-      },
     },
   },
 ]

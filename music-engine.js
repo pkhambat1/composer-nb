@@ -149,9 +149,9 @@
     let s = suffix || ""
     let intervals = baseQuality === "minor" ? [0, 3, 7] : [0, 4, 7]
 
-    if (/^(o|°|dim)/i.test(s)) {
+    if (/^dim/i.test(s)) {
       intervals = [0, 3, 6]
-      s = s.replace(/^(o|°|dim)/i, "")
+      s = s.replace(/^dim/i, "")
     } else if (/^(ø|m7b5|hdim)/i.test(s)) {
       intervals = [0, 3, 6, 10]
       s = s.replace(/^(ø|m7b5|hdim)/i, "")
@@ -173,7 +173,7 @@
     }
 
     const isMaj7 = /maj/i.test(suffix) || /Δ/.test(suffix) || /(?:^|[^a-zA-Z])M\d/.test(suffix)
-    const isDim7 = /(o|°|dim)7/i.test(suffix)
+    const isDim7 = /dim7/i.test(suffix)
     const has7 = /(?:^|[^1])7/.test(s) || /9|11|13/.test(s)
     const has9 = /(?:add)?9/.test(s)
     const has11 = /11/.test(s)
@@ -304,13 +304,13 @@
 
     const rootName = PC_TO_NAME[resolved.rootPc]
     let qualityLabel = ""
-    if (intervals.includes(3) && intervals.includes(6)) qualityLabel = "°"
+    if (intervals.includes(3) && intervals.includes(6)) qualityLabel = "dim"
     else if (intervals.includes(3)) qualityLabel = "m"
     else if (intervals.includes(8) && intervals.includes(4)) qualityLabel = "+"
     const suffixLabel = (resolved.suffix || "")
       .replace(/^m(in)?(?!aj)/i, "")
       .replace(/^maj/i, "maj")
-      .replace(/^o|^°|^dim/i, "")
+      .replace(/^dim/i, "")
     const label =
       rootName + qualityLabel + suffixLabel + (resolved.slashBass ? "/" + resolved.slashBass : "")
 

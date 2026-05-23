@@ -1,4 +1,8 @@
 // components/Cell.jsx — Single cell (music or text)
+import React from "react"
+import CodeEditor from "./CodeEditor.jsx"
+import MusicOutput from "./MusicOutput.jsx"
+import MarkdownContent from "./MarkdownCell.jsx"
 
 function CellMenu({ onDelete }) {
   const [open, setOpen] = React.useState(false)
@@ -60,11 +64,12 @@ function CellMenu({ onDelete }) {
   )
 }
 
-function Cell({
+export default function Cell({
   cell,
   index,
   selected,
   editing,
+  isActive,
   onSelect,
   onEnterEdit,
   onLeaveEdit,
@@ -93,9 +98,23 @@ function Cell({
     }
   }, [editing])
 
+  // Auto-grow text cell textarea
+  React.useEffect(() => {
+    if (cell.type !== "text" || !editing) return
+    const ta = taRef.current
+    if (!ta) return
+    ta.style.height = "auto"
+    ta.style.height = ta.scrollHeight + 2 + "px"
+  }, [cell.type, cell.source, editing])
+
   const promptText =
     cell.type === "music" ? (cell.runCount != null ? `In [${cell.runCount}]:` : "In [ ]:") : ""
-  const isRunning = cell.status === "running" || cell.status === "rendering"
+  const runState =
+    cell.status === "running" || cell.status === "rendering"
+      ? "running"
+      : cell.status === "waiting"
+        ? "waiting"
+        : "idle"
 
   return (
     <div
@@ -104,34 +123,20 @@ function Cell({
         cell.type +
         (selected ? " cell-selected" : "") +
         (editing ? " cell-editing" : "") +
-        (isRunning ? " cell-running" : "")
+        (isActive ? " cell-running" : "")
       }
       onClick={onSelect}
       data-screen-label={`Cell ${index + 1} (${cell.type})`}
     >
       <div className="cell-prompt">
         {cell.type === "music" ? (
-          <span className={"prompt-text" + (isRunning ? " prompt-running" : "")}>
-            {isRunning ? "In [*]:" : promptText}
+          <span className={"prompt-text" + (runState === "running" ? " prompt-running" : "") + (runState === "waiting" ? " prompt-waiting" : "")}>
+            {runState === "waiting" ? "In [\u2026]:" : runState === "running" ? "In [*]:" : promptText}
           </span>
         ) : null}
       </div>
       <div className="cell-body">
         <CellMenu onDelete={onDelete} />
-        {cell.type !== "music" && editing && (
-          <button
-            className="cell-run-btn"
-            onClick={(e) => {
-              e.stopPropagation()
-              onRun()
-            }}
-            title="Run cell (Shift+Enter)"
-          >
-            <svg width="10" height="10" viewBox="0 0 10 10">
-              <polygon points="2,1 9,5 2,9" fill="currentColor" />
-            </svg>
-          </button>
-        )}
         {cell.type === "music" ? (
           <>
             <CodeEditor
@@ -142,7 +147,7 @@ function Cell({
               onBlur={onLeaveEdit}
               onRun={onRun}
               onInterrupt={onInterrupt}
-              isRunning={isRunning}
+              runState={runState}
             />
             <MusicOutput
               cell={cell}
@@ -161,16 +166,28 @@ function Cell({
         ) : editing ? (
           cell.previewMode ? (
             <div className="text-split">
-              <textarea
-                ref={taRef}
-                className="text-area text-area-split"
-                value={cell.source}
-                onFocus={onEnterEdit}
-                onBlur={onLeaveEdit}
-                onChange={(e) => onChange(e.target.value)}
-                onClick={(e) => e.stopPropagation()}
-                placeholder="Markdown — # heading, **bold**, *italic*, `code`, - lists, [link](url)"
-              />
+              <div className="text-input">
+                <textarea
+                  ref={taRef}
+                  className="text-area text-area-split"
+                  value={cell.source}
+                  onFocus={onEnterEdit}
+                  onBlur={onLeaveEdit}
+                  onChange={(e) => onChange(e.target.value)}
+                  onClick={(e) => e.stopPropagation()}
+                  placeholder="Markdown — # heading, **bold**, *italic*, `code`, - lists, [link](url)"
+                />
+                <button
+                  className="cell-run-btn"
+                  onClick={(e) => { e.stopPropagation(); onRun() }}
+                  title="Run cell (Shift+Enter)"
+                >
+                  <svg width="10" height="10" viewBox="0 0 10 10">
+                    <polygon points="2,1 9,5 2,9" fill="currentColor" />
+                  </svg>
+                  <span>Run</span>
+                </button>
+              </div>
               <div
                 className="text-rendered text-rendered-split markdown"
                 onClick={(e) => e.stopPropagation()}
@@ -190,7 +207,7 @@ function Cell({
               </button>
             </div>
           ) : (
-            <>
+            <div className="text-input">
               <textarea
                 ref={taRef}
                 className="text-area"
@@ -202,6 +219,16 @@ function Cell({
                 placeholder="Markdown — # heading, **bold**, *italic*, `code`, - lists, [link](url)"
               />
               <button
+                className="cell-run-btn"
+                onClick={(e) => { e.stopPropagation(); onRun() }}
+                title="Run cell (Shift+Enter)"
+              >
+                <svg width="10" height="10" viewBox="0 0 10 10">
+                  <polygon points="2,1 9,5 2,9" fill="currentColor" />
+                </svg>
+                <span>Run</span>
+              </button>
+              <button
                 className="md-preview-toggle"
                 onMouseDown={(e) => e.preventDefault()}
                 onClick={(e) => {
@@ -212,7 +239,7 @@ function Cell({
               >
                 preview
               </button>
-            </>
+            </div>
           )
         ) : (
           <div className="text-rendered markdown" onDoubleClick={onEnterEdit}>

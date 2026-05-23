@@ -1,7 +1,9 @@
 // components/CodeEditor.jsx — Code editor with syntax highlighting overlay
+import React from "react"
+import { highlightMusic } from "../lib/highlight.js"
 
 const CodeEditor = React.forwardRef(function CodeEditor(props, ref) {
-  const { value, onChange, onFocus, onBlur, placeholder, onRun, onInterrupt, isRunning } = props
+  const { value, onChange, onFocus, onBlur, placeholder, onRun, onInterrupt, runState } = props
   const localRef = React.useRef(null)
   const setRef = (el) => {
     localRef.current = el
@@ -53,9 +55,7 @@ const CodeEditor = React.forwardRef(function CodeEditor(props, ref) {
   }
 
   const lines = React.useMemo(() => {
-    const fn = window.highlightMusic
-    if (fn) return fn(value)
-    return value.split("\n").map((line) => [{ c: null, s: line }])
+    return highlightMusic(value)
   }, [value])
 
   return (
@@ -89,7 +89,23 @@ const CodeEditor = React.forwardRef(function CodeEditor(props, ref) {
         onBlur={onBlur}
         onClick={(e) => e.stopPropagation()}
       />
-      {onRun && !isRunning && (
+      {runState === "waiting" && onInterrupt && (
+        <button
+          className="cell-run-btn cell-wait-btn"
+          onClick={(e) => {
+            e.stopPropagation()
+            onInterrupt()
+          }}
+          title="Cancel — click to interrupt"
+        >
+          <svg width="10" height="10" viewBox="0 0 10 10">
+            <circle cx="5" cy="5" r="4" stroke="currentColor" strokeWidth="1.2" fill="none" />
+            <path d="M5 3v2.5l1.5 1" stroke="currentColor" strokeWidth="1.2" fill="none" strokeLinecap="round" />
+          </svg>
+          <span>Waiting</span>
+        </button>
+      )}
+      {runState === "idle" && onRun && (
         <button
           className="cell-run-btn"
           onClick={(e) => {
@@ -101,9 +117,10 @@ const CodeEditor = React.forwardRef(function CodeEditor(props, ref) {
           <svg width="10" height="10" viewBox="0 0 10 10">
             <polygon points="2,1 9,5 2,9" fill="currentColor" />
           </svg>
+          <span>Run</span>
         </button>
       )}
-      {isRunning && onInterrupt && (
+      {runState === "running" && onInterrupt && (
         <button
           className="cell-run-btn cell-stop-btn"
           onClick={(e) => {
@@ -115,8 +132,11 @@ const CodeEditor = React.forwardRef(function CodeEditor(props, ref) {
           <svg width="10" height="10" viewBox="0 0 10 10">
             <rect x="2" y="2" width="6" height="6" rx="1" fill="currentColor" />
           </svg>
+          <span>Stop</span>
         </button>
       )}
     </div>
   )
 })
+
+export default CodeEditor

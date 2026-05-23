@@ -1,7 +1,10 @@
 // components/MusicOutput.jsx — Music cell output: waveform, piano roll, chord chips, errors
+import React from "react"
+import WaveSurfer from "wavesurfer.js"
+import * as MusicEngine from "../lib/music-engine.js"
+import ChordDiagram from "./ChordDiagram.jsx"
 
 function themeColors(theme, accent) {
-  // accent is hex
   if (theme === "retro") {
     return {
       primary: "#ffb000",
@@ -45,7 +48,7 @@ function formatTime(sec) {
   return m + ":" + String(s).padStart(2, "0")
 }
 
-function MusicOutput({
+export default function MusicOutput({
   cell,
   focusedCellId,
   isPlaying,
@@ -75,16 +78,16 @@ function MusicOutput({
   const cellIsPlaying = isFocused && isPlaying
 
   React.useEffect(() => {
-    if (!buffer || !waveMountRef.current || !window.WaveSurfer) return
+    if (!buffer || !waveMountRef.current) return
 
     let aborted = false
 
     const colors = themeColors(theme, accent)
-    const url = window.MusicEngine.bufferToObjectUrl(buffer)
+    const url = MusicEngine.bufferToObjectUrl(buffer)
     urlRef.current = url
     setReady(false)
 
-    const ws = window.WaveSurfer.create({
+    const ws = WaveSurfer.create({
       container: waveMountRef.current,
       height: 50,
       waveColor: colors.midline || "rgba(0,0,0,0.12)",
@@ -200,20 +203,26 @@ function MusicOutput({
       <div className="cell-output">
         <div className="out-prompt">Out [{runCount}]:</div>
         <div className="out-content">
-          <div className="music-row music-row-controls rendering-placeholder">
-            <span className="rendering-text">Rendering audio...</span>
+          <div className="out-section">
+            <div className="out-section-label">Playback</div>
+            <div className="music-row music-row-controls rendering-placeholder">
+              <span className="rendering-text">Rendering audio...</span>
+            </div>
           </div>
 
-          <div className="chord-strip">
-            {parsed.events
-              .filter((e) => e.chord)
-              .map((e, i) => (
-                <div key={i} className="chord-chip">
-                  <span className="chord-label">{e.chord.label}</span>
-                  <ChordDiagram chord={e.chord} instrument={parsed.directives.inst} accent={accent} />
-                  <span className="chord-notes">{e.chord.noteNames.map((n) => n.replace(/\d+$/, "")).join(" ")}</span>
-                </div>
-              ))}
+          <div className="out-section">
+            <div className="out-section-label">Chord diagrams</div>
+            <div className="chord-strip">
+              {parsed.events
+                .filter((e) => e.chord)
+                .map((e, i) => (
+                  <div key={i} className="chord-chip">
+                    <span className="chord-label">{e.chord.label}</span>
+                    <ChordDiagram chord={e.chord} instrument={parsed.directives.inst} accent={accent} />
+                    <span className="chord-notes">{e.chord.noteNames.map((n) => n.replace(/\d+$/, "")).join(" ")}</span>
+                  </div>
+                ))}
+            </div>
           </div>
 
           {parsed.errors && parsed.errors.length > 0 && (
@@ -264,83 +273,89 @@ function MusicOutput({
 
   const onExport = () => {
     const fname = `cell-${runCount || "out"}.wav`
-    window.MusicEngine.downloadWav(output.buffer, fname)
+    MusicEngine.downloadWav(output.buffer, fname)
   }
 
   return (
     <div className="cell-output">
       <div className="out-prompt">Out [{runCount}]:</div>
       <div className="out-content">
-        <div className="music-row music-row-controls">
-          <button
-            type="button"
-            className={
-              "play-btn" +
-              (displayPlaying ? " playing" : "") +
-              (displayPaused ? " paused" : "")
-            }
-            onClick={async (e) => {
-              e.stopPropagation()
-              await armAudio()
-              const w = wsRef.current
-              if (!w || !ready) return
-              onTogglePlayback(cell.id)
-            }}
-            title={displayPlaying ? "Pause" : "Play"}
-          >
-            {displayPlaying ? (
-              <svg width="14" height="14" viewBox="0 0 14 14">
-                <rect x="3" y="3" width="3" height="8" />
-                <rect x="8" y="3" width="3" height="8" />
-              </svg>
-            ) : (
-              <svg width="14" height="14" viewBox="0 0 14 14">
-                <polygon points="3,2 12,7 3,12" />
-              </svg>
-            )}
-          </button>
-          <div
-            className="waveform-wrap"
-            onClick={(e) => e.stopPropagation()}
-            title="Click or drag to seek"
-          >
-            <div ref={waveMountRef} className="waveform-mount" />
-          </div>
-          {duration > 0 && (
-            <span className="playback-time" aria-live="polite">
-              {formatTime(currentTime)} / {formatTime(duration)}
-            </span>
-          )}
-          <div className="out-controls-right">
-            <button className="icon-btn" onClick={onExport} title="Download as WAV">
-              <svg width="12" height="12" viewBox="0 0 12 12">
-                <path
-                  d="M6 1v7m-3-3l3 3 3-3M2 10h8"
-                  stroke="currentColor"
-                  strokeWidth="1.4"
-                  fill="none"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-              <span>WAV</span>
+        <div className="out-section">
+          <div className="out-section-label">Playback</div>
+          <div className="music-row music-row-controls">
+            <button
+              type="button"
+              className={
+                "play-btn" +
+                (displayPlaying ? " playing" : "") +
+                (displayPaused ? " paused" : "")
+              }
+              onClick={async (e) => {
+                e.stopPropagation()
+                await armAudio()
+                const w = wsRef.current
+                if (!w || !ready) return
+                onTogglePlayback(cell.id)
+              }}
+              title={displayPlaying ? "Pause" : "Play"}
+            >
+              {displayPlaying ? (
+                <svg width="14" height="14" viewBox="0 0 14 14">
+                  <rect x="3" y="3" width="3" height="8" />
+                  <rect x="8" y="3" width="3" height="8" />
+                </svg>
+              ) : (
+                <svg width="14" height="14" viewBox="0 0 14 14">
+                  <polygon points="3,2 12,7 3,12" />
+                </svg>
+              )}
             </button>
+            <div
+              className="waveform-wrap"
+              onClick={(e) => e.stopPropagation()}
+              title="Click or drag to seek"
+            >
+              <div ref={waveMountRef} className="waveform-mount" />
+            </div>
+            {duration > 0 && (
+              <span className="playback-time" aria-live="polite">
+                {formatTime(currentTime)} / {formatTime(duration)}
+              </span>
+            )}
+            <div className="out-controls-right">
+              <button className="icon-btn" onClick={onExport} title="Download as WAV">
+                <svg width="12" height="12" viewBox="0 0 12 12">
+                  <path
+                    d="M6 1v7m-3-3l3 3 3-3M2 10h8"
+                    stroke="currentColor"
+                    strokeWidth="1.4"
+                    fill="none"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+                <span>WAV</span>
+              </button>
+            </div>
           </div>
         </div>
 
-        <div className="chord-strip">
-          {parsed.events
-            .filter((e) => e.chord)
-            .map((e, i) => (
-              <div
-                key={i}
-                className="chord-chip"
-              >
-                <span className="chord-label">{e.chord.label}</span>
-                <ChordDiagram chord={e.chord} instrument={parsed.directives.inst} accent={accent} />
-                <span className="chord-notes">{e.chord.noteNames.map((n) => n.replace(/\d+$/, "")).join(" ")}</span>
-              </div>
-            ))}
+        <div className="out-section">
+          <div className="out-section-label">Chord diagrams</div>
+          <div className="chord-strip">
+            {parsed.events
+              .filter((e) => e.chord)
+              .map((e, i) => (
+                <div
+                  key={i}
+                  className="chord-chip"
+                >
+                  <span className="chord-label">{e.chord.label}</span>
+                  <ChordDiagram chord={e.chord} instrument={parsed.directives.inst} accent={accent} />
+                  <span className="chord-notes">{e.chord.noteNames.map((n) => n.replace(/\d+$/, "")).join(" ")}</span>
+                </div>
+              ))}
+          </div>
         </div>
 
         {parsed.errors && parsed.errors.length > 0 && (

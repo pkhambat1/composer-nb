@@ -1,4 +1,6 @@
 // components/ChordDiagram.jsx — Chord diagrams: guitar fingering grid & piano keyboard
+import React from "react"
+import * as ChordLookup from "../lib/chord-lookup.js"
 
 function getChordIntervals(chord) {
   const set = new Set()
@@ -19,7 +21,7 @@ function detectChordQuality(intervals) {
     s5 = has(8)
   const b7 = has(10),
     M7 = has(11)
-  const has6 = has(9) // 9 semitones = major 6th
+  const has6 = has(9)
 
   if (m3 && b5 && !p5) {
     if (has(9)) return "dim7"
@@ -42,27 +44,24 @@ function detectChordQuality(intervals) {
   return "maj"
 }
 
-// Open shape per quality. Each shape: { frets: [low-E,A,D,G,B,high-E], baseRootPc }
-// baseRootPc = pitch class the root sits on when the shape is in this open position.
-// (so transpose = (targetRoot - baseRootPc + 12) % 12)
 const GUITAR_SHAPES = {
-  maj: { frets: [0, 2, 2, 1, 0, 0], baseRootPc: 4 }, // E major
-  min: { frets: [0, 2, 2, 0, 0, 0], baseRootPc: 4 }, // Em
-  7: { frets: [0, 2, 0, 1, 0, 0], baseRootPc: 4 }, // E7
-  maj7: { frets: [0, 2, 1, 1, 0, 0], baseRootPc: 4 }, // Emaj7
-  m7: { frets: [0, 2, 0, 0, 0, 0], baseRootPc: 4 }, // Em7
-  mM7: { frets: [0, 2, 1, 0, 0, 0], baseRootPc: 4 }, // Em(maj7)
-  6: { frets: [0, 2, 2, 1, 2, 0], baseRootPc: 4 }, // E6
-  m6: { frets: [0, 2, 2, 0, 2, 0], baseRootPc: 4 }, // Em6
-  sus4: { frets: [0, 2, 2, 2, 0, 0], baseRootPc: 4 }, // Esus4
-  sus2: { frets: [-1, -1, 0, 2, 3, 0], baseRootPc: 2 }, // Dsus2
-  aug: { frets: [0, 3, 2, 1, 1, 0], baseRootPc: 4 }, // E aug
-  dim: { frets: [-1, -1, 0, 1, 0, 1], baseRootPc: 2 }, // D dim shape
-  m7b5: { frets: [-1, -1, 0, 1, 1, 1], baseRootPc: 2 }, // Dm7b5
+  maj: { frets: [0, 2, 2, 1, 0, 0], baseRootPc: 4 },
+  min: { frets: [0, 2, 2, 0, 0, 0], baseRootPc: 4 },
+  7: { frets: [0, 2, 0, 1, 0, 0], baseRootPc: 4 },
+  maj7: { frets: [0, 2, 1, 1, 0, 0], baseRootPc: 4 },
+  m7: { frets: [0, 2, 0, 0, 0, 0], baseRootPc: 4 },
+  mM7: { frets: [0, 2, 1, 0, 0, 0], baseRootPc: 4 },
+  6: { frets: [0, 2, 2, 1, 2, 0], baseRootPc: 4 },
+  m6: { frets: [0, 2, 2, 0, 2, 0], baseRootPc: 4 },
+  sus4: { frets: [0, 2, 2, 2, 0, 0], baseRootPc: 4 },
+  sus2: { frets: [-1, -1, 0, 2, 3, 0], baseRootPc: 2 },
+  aug: { frets: [0, 3, 2, 1, 1, 0], baseRootPc: 4 },
+  dim: { frets: [-1, -1, 0, 1, 0, 1], baseRootPc: 2 },
+  m7b5: { frets: [-1, -1, 0, 1, 1, 1], baseRootPc: 2 },
   dim7: { frets: [-1, -1, 0, 1, 0, 1], baseRootPc: 2 },
 }
 
-function GuitarDiagram({ chord }) {
+export const GuitarDiagram = React.memo(function GuitarDiagram({ chord }) {
   const [dbPosition, setDbPosition] = React.useState(chord?.position ?? null)
 
   React.useEffect(() => {
@@ -70,7 +69,7 @@ function GuitarDiagram({ chord }) {
       setDbPosition(chord.position)
       return
     }
-    if (!chord?.label || !window.ChordLookup) return
+    if (!chord?.label) return
     let cancelled = false
     setDbPosition(null)
     ChordLookup.load().then(() => {
@@ -112,7 +111,6 @@ function GuitarDiagram({ chord }) {
       lowFret = minF
       showNutLabel = true
     }
-    // Derive finger numbers from fret positions
     const uniqueFrets = [...new Set(played)].sort((a, b) => a - b)
     fingers = fretted.map((f) => (f > 0 ? uniqueFrets.indexOf(f) + 1 : 0))
   }
@@ -169,7 +167,6 @@ function GuitarDiagram({ chord }) {
       height={H}
       viewBox={`0 0 ${W} ${H}`}
     >
-      {/* strings */}
       {Array.from({ length: STRINGS }, (_, i) => (
         <line
           key={"s" + i}
@@ -181,7 +178,6 @@ function GuitarDiagram({ chord }) {
           strokeWidth={1.6 - i * 0.1}
         />
       ))}
-      {/* frets */}
       {Array.from({ length: FRETS + 1 }, (_, i) => (
         <line
           key={"f" + i}
@@ -194,7 +190,6 @@ function GuitarDiagram({ chord }) {
           strokeLinecap={i === 0 && lowFret === 1 ? "round" : undefined}
         />
       ))}
-      {/* starting fret when shape is up the neck */}
       {showNutLabel && (
         <text
           className="guitar-fret-pos"
@@ -213,7 +208,6 @@ function GuitarDiagram({ chord }) {
           </tspan>
         </text>
       )}
-      {/* dots below barre (nut side) so finger labels aren't covered */}
       {fretted.map((f, si) => {
         const x = xOf(si)
         const finger = fingers?.[si]
@@ -242,7 +236,6 @@ function GuitarDiagram({ chord }) {
           </g>
         )
       })}
-      {/* barre — thick pill, one finger label */}
       {barreGraphics.map((b) => (
         <g key={b.key} className="guitar-barre">
           <rect
@@ -267,7 +260,6 @@ function GuitarDiagram({ chord }) {
           </text>
         </g>
       ))}
-      {/* open/mute, barre fret dots, and frets above barre */}
       {fretted.map((f, si) => {
         const x = xOf(si)
         const finger = fingers?.[si]
@@ -299,6 +291,8 @@ function GuitarDiagram({ chord }) {
           )
         }
         if (f === 0) {
+          const hasMutes = fretted.some((v) => v < 0)
+          if (!hasMutes) return null
           return (
             <circle
               key={si}
@@ -335,7 +329,7 @@ function GuitarDiagram({ chord }) {
       })}
     </svg>
   )
-}
+})
 
 function PianoDiagram({ chord }) {
   const notes = [...new Set(chord.notesMidi || [])]
@@ -357,8 +351,6 @@ function PianoDiagram({ chord }) {
   const dotR = 3.2
 
   const whiteOrder = [0, 2, 4, 5, 7, 9, 11]
-  const blackPcs = new Set([1, 3, 6, 8, 10])
-  // Map black-key pitch class to which white-key index it sits after
   const blackAfterWhite = { 1: 0, 3: 1, 6: 3, 8: 4, 10: 5 }
 
   const noteSet = new Set(notes)
@@ -371,7 +363,6 @@ function PianoDiagram({ chord }) {
   for (let o = 0; o < octs; o++) {
     const baseM = startC + o * 12
 
-    // White keys
     whiteOrder.forEach((pc, i) => {
       const m = baseM + pc
       const x = (o * 7 + i) * wW
@@ -404,7 +395,6 @@ function PianoDiagram({ chord }) {
       }
     })
 
-    // Black keys
     Object.entries(blackAfterWhite).forEach(([pcStr, whiteIdx]) => {
       const pc = +pcStr
       const m = baseM + pc
@@ -436,21 +426,17 @@ function PianoDiagram({ chord }) {
       height={H}
       viewBox={`0 0 ${W} ${H}`}
     >
-      {/* Top bar */}
       <rect x="0" y="0" width={W} height={TOP_BAR} fill="var(--text)" rx="0.5" />
-      {/* White keys */}
       {whiteKeyRects}
-      {/* Dots on white keys (below black keys layer) */}
       {whiteDots}
-      {/* Black keys */}
       {blackKeyRects}
-      {/* Dots on black keys (above black keys) */}
       {blackDots}
     </svg>
   )
 }
 
-function ChordDiagram({ chord, instrument }) {
+const ChordDiagram = React.memo(function ChordDiagram({ chord, instrument }) {
   if (instrument === "guitar") return <GuitarDiagram chord={chord} />
   return <PianoDiagram chord={chord} />
-}
+})
+export default ChordDiagram
