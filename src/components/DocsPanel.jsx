@@ -358,8 +358,41 @@ C ~ G ~      -- Alternating chords and rests, 1 beat each
   },
 ]
 
+// Group pages for TOC nav
+const GROUPS = []
+const seen = new Set()
+for (const p of PAGES) {
+  if (!seen.has(p.group)) {
+    seen.add(p.group)
+    GROUPS.push(p.group)
+  }
+}
+
 export default function DocsPanel({ style }) {
   const contentRef = React.useRef(null)
+  const [activeId, setActiveId] = React.useState(PAGES[0].id)
+
+  // Track which section is visible while scrolling
+  React.useEffect(() => {
+    const container = contentRef.current
+    if (!container) return
+    const onScroll = () => {
+      const top = container.scrollTop + 40
+      let current = PAGES[0].id
+      for (const p of PAGES) {
+        const el = container.querySelector(`#docs-${p.id}`)
+        if (el && el.offsetTop <= top) current = p.id
+      }
+      setActiveId(current)
+    }
+    container.addEventListener("scroll", onScroll, { passive: true })
+    return () => container.removeEventListener("scroll", onScroll)
+  }, [])
+
+  const scrollTo = React.useCallback((id) => {
+    const el = contentRef.current?.querySelector(`#docs-${id}`)
+    if (el) el.scrollIntoView({ behavior: "smooth", block: "start" })
+  }, [])
 
   const renderer = React.useMemo(() => {
     const r = new marked.Renderer()
@@ -408,14 +441,33 @@ export default function DocsPanel({ style }) {
           <p className="panel-subtitle">DSL documentation</p>
         </div>
       </header>
-      <div className="docs-scroll" ref={contentRef} onClick={handleContentClick}>
-        {allHtml.map((page) => (
-          <article
-            key={page.id}
-            className="docs-article"
-            dangerouslySetInnerHTML={{ __html: page.html }}
-          />
-        ))}
+      <div className="docs-body">
+        <nav className="docs-nav">
+          {GROUPS.map((g) => (
+            <div key={g} className="docs-nav-group">
+              <div className="docs-nav-group-label">{g}</div>
+              {PAGES.filter((p) => p.group === g).map((p) => (
+                <button
+                  key={p.id}
+                  className={"docs-nav-item" + (p.id === activeId ? " docs-nav-active" : "")}
+                  onClick={() => scrollTo(p.id)}
+                >
+                  {p.title}
+                </button>
+              ))}
+            </div>
+          ))}
+        </nav>
+        <div className="docs-scroll" ref={contentRef} onClick={handleContentClick}>
+          {allHtml.map((page) => (
+            <article
+              key={page.id}
+              id={`docs-${page.id}`}
+              className="docs-article"
+              dangerouslySetInnerHTML={{ __html: page.html }}
+            />
+          ))}
+        </div>
       </div>
     </div>
   )
