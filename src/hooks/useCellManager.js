@@ -47,7 +47,7 @@ export function useCellManager(starterCells) {
         id: cellId(),
         type,
         source:
-          source != null ? source : type === "music" ? "@key C\n@tempo 96\n@inst piano\n\n" : "",
+          source != null ? source : "",
         runCount: null,
         output: null,
         status: "idle",

@@ -368,15 +368,27 @@ for (const p of PAGES) {
   }
 }
 
-export default function DocsPanel({ style }) {
+function DocsPanel({ style }) {
   const contentRef = React.useRef(null)
-  const [activeId, setActiveId] = React.useState(PAGES[0].id)
+  const scrollLockRef = React.useRef(false)
+  const [activeId, setActiveId] = React.useState(() => {
+    const hash = window.location.hash.replace("#", "")
+    if (hash.startsWith("docs-")) {
+      const id = hash.replace("docs-", "")
+      if (PAGES.some((p) => p.id === id)) return id
+    }
+    return PAGES[0].id
+  })
+
+  // Ref to hold scrollTo for use in mount effect (avoids temporal dead zone)
+  const scrollToRef = React.useRef(null)
 
   // Track which section is visible while scrolling
   React.useEffect(() => {
     const container = contentRef.current
     if (!container) return
     const onScroll = () => {
+      if (scrollLockRef.current) return
       const top = container.scrollTop + 40
       let current = PAGES[0].id
       for (const p of PAGES) {
@@ -390,12 +402,47 @@ export default function DocsPanel({ style }) {
   }, [])
 
   const scrollTo = React.useCallback((id) => {
-    const el = contentRef.current?.querySelector(`#docs-${id}`)
-    if (el) el.scrollIntoView({ behavior: "smooth", block: "start" })
+    setActiveId(id)
+    scrollLockRef.current = true
+    setTimeout(() => { scrollLockRef.current = false }, 600)
+    const container = contentRef.current
+    const el = container?.querySelector(`#docs-${id}`)
+    if (el && container) {
+      const target = el.offsetTop
+      const start = container.scrollTop
+      const dist = target - start
+      const duration = 250
+      const t0 = performance.now()
+      const step = (now) => {
+        const p = Math.min((now - t0) / duration, 1)
+        const ease = p < 0.5 ? 2 * p * p : 1 - (-2 * p + 2) ** 2 / 2
+        container.scrollTop = start + dist * ease
+        if (p < 1) requestAnimationFrame(step)
+      }
+      requestAnimationFrame(step)
+    }
+    history.replaceState(null, "", `#docs-${id}`)
+  }, [])
+  scrollToRef.current = scrollTo
+
+  // Scroll to hash target on mount
+  React.useEffect(() => {
+    const hash = window.location.hash.replace("#", "")
+    if (hash.startsWith("docs-")) {
+      const id = hash.replace("docs-", "")
+      setTimeout(() => scrollToRef.current(id), 100)
+    }
   }, [])
 
   const renderer = React.useMemo(() => {
     const r = new marked.Renderer()
+    r.heading = function ({ text, depth }) {
+      const escaped = text.replace(/&/g, "&amp;").replace(/</g, "&lt;")
+      if (depth === 1) {
+        return `<h1 class="docs-heading-link">${escaped}<svg class="docs-link-icon" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 8.5a3 3 0 0 0 4.2.4l2-2a3 3 0 0 0-4.2-4.2L7.3 3.9"/><path d="M9.5 7.5a3 3 0 0 0-4.2-.4l-2 2a3 3 0 0 0 4.2 4.2l1.2-1.2"/></svg></h1>`
+      }
+      return `<h${depth}>${escaped}</h${depth}>`
+    }
     r.code = function ({ text }) {
       const lines = highlightMusic(text)
       const highlighted = lines
@@ -423,6 +470,29 @@ export default function DocsPanel({ style }) {
   }, [renderer])
 
   const handleContentClick = React.useCallback((e) => {
+    const linkIcon = e.target.closest(".docs-link-icon")
+    if (linkIcon) {
+      const article = linkIcon.closest(".docs-article")
+      if (article) {
+        const pageId = article.id.replace("docs-", "")
+        const url = `${window.location.origin}${window.location.pathname}#docs-${pageId}`
+        navigator.clipboard.writeText(url).then(() => {
+          linkIcon.classList.add("docs-link-copied")
+          setTimeout(() => linkIcon.classList.remove("docs-link-copied"), 1500)
+        }, () => {})
+        scrollTo(pageId)
+      }
+      return
+    }
+    const heading = e.target.closest(".docs-heading-link")
+    if (heading) {
+      const article = heading.closest(".docs-article")
+      if (article) {
+        const pageId = article.id.replace("docs-", "")
+        scrollTo(pageId)
+      }
+      return
+    }
     const btn = e.target.closest(".docs-copy-btn")
     if (!btn) return
     const code = btn.getAttribute("data-code")
@@ -472,3 +542,7 @@ export default function DocsPanel({ style }) {
     </div>
   )
 }
+
+export default React.memo(DocsPanel, (prev, next) =>
+  prev.style?.display === next.style?.display,
+)

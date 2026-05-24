@@ -32,6 +32,10 @@ export function midiToName(m) {
 const MAJOR_SCALE = [0, 2, 4, 5, 7, 9, 11]
 const MINOR_SCALE = [0, 2, 3, 5, 7, 8, 10]
 
+// Diatonic chord qualities by scale degree (0-6)
+const MAJOR_QUALITIES = ["major", "minor", "minor", "major", "major", "minor", "dim"]
+const MINOR_QUALITIES = ["minor", "dim", "major", "minor", "minor", "major", "major"]
+
 const ROMAN = {
   I: 0,
   II: 1,
@@ -117,21 +121,21 @@ function resolveRoot(tok, key) {
     }
   }
   const degree = ROMAN[tok.roman]
-  const isLower = tok.roman === tok.roman.toLowerCase()
   const scale = key.mode === "minor" ? MINOR_SCALE : MAJOR_SCALE
+  const qualities = key.mode === "minor" ? MINOR_QUALITIES : MAJOR_QUALITIES
   let pc = (key.tonicPc + scale[degree]) % 12
   pc = applyAccidental(pc, tok.accidental)
   return {
     rootPc: pc,
     suffix: tok.suffix,
-    baseQuality: isLower ? "minor" : "major",
+    baseQuality: qualities[degree],
     slashBass: tok.slashBass,
   }
 }
 
 function intervalsFromSuffix(suffix, baseQuality) {
   let s = suffix || ""
-  let intervals = baseQuality === "minor" ? [0, 3, 7] : [0, 4, 7]
+  let intervals = baseQuality === "dim" ? [0, 3, 6] : baseQuality === "minor" ? [0, 3, 7] : [0, 4, 7]
 
   if (/^dim/i.test(s)) {
     intervals = [0, 3, 6]
@@ -210,6 +214,7 @@ function tokenToSymbol(tok, key) {
   const rootName = PC_TO_NAME[resolved.rootPc]
   let qual = ""
   if (resolved.baseQuality === "minor") qual = "m"
+  else if (resolved.baseQuality === "dim") qual = "dim"
   return rootName + qual + (tok.suffix || "")
 }
 

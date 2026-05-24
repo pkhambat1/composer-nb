@@ -35,19 +35,20 @@ export function useKeyboard({
         e.target.tagName === "INPUT" ||
         e.target.isContentEditable
 
-      // Shift+Enter: run cell and move to next (or insert new)
+      // Shift+Enter: run cell and move to next (or insert new at end)
       if (e.key === "Enter" && e.shiftKey) {
         e.preventDefault()
         if (selectedId) {
           runCell(selectedId)
           const idx = findIndex(selectedId)
-          if (idx === cells.length - 1) {
-            insertCell(selectedId, "below", "music")
+          if (idx < cells.length - 1) {
+            const nextId = cells[idx + 1].id
+            setSelectedId(nextId)
+            setEditingId(nextId)
           } else {
-            setSelectedId(cells[idx + 1].id)
-            setEditingId(null)
-            if (e.target.blur) e.target.blur()
+            insertCell(selectedId, "below", "music")
           }
+          if (e.target.blur) e.target.blur()
         }
         return
       }

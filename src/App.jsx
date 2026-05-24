@@ -22,12 +22,15 @@ import DocsPanel from "./components/DocsPanel.jsx"
 // ============================================================================
 
 export default function App() {
-  const [sideTab, setSideTab] = React.useState("notebook")
+  const [sideTab, setSideTab] = React.useState(() => {
+    const hash = window.location.hash.replace("#", "")
+    if (hash.startsWith("docs-")) return "docs"
+    return "notebook"
+  })
   const [kernelStatus, setKernelStatus] = React.useState("idle")
   const [activeCellId, setActiveCellId] = React.useState(null)
   const [runCounter, setRunCounter] = React.useState(0)
   const abortRef = React.useRef(null)
-  const queueGenRef = React.useRef(0)
   // Cell management hook
   const cm = useCellManager(APP_CONSTANTS.STARTER_CELLS)
   const {
@@ -129,38 +132,74 @@ export default function App() {
     [cells, runCounter, updateCell, playback],
   )
 
-  const interruptCell = React.useCallback(
-    (id) => {
-      abortRef.current = null
-      setActiveCellId(null)
-      updateCell(id, { status: "idle", output: null })
-      // Clear all waiting cells and reset the queue
-      queueGenRef.current += 1
-      runQueueRef.current = Promise.resolve()
-      cells.forEach((c) => {
-        if (c.status === "waiting") updateCell(c.id, { status: "idle" })
-      })
-      setKernelStatus("idle")
-    },
-    [updateCell, cells],
-  )
-
-  // --- Run queue: serialise all run operations so they don't overlap ------
-  const runQueueRef = React.useRef(Promise.resolve())
+  // --- Run queue: array queue with sequential processing ------------------
+  const queueRef = React.useRef([])
+  const processingRef = React.useRef(false)
+  const skipRef = React.useRef(null) // resolve fn to immediately unblock queue
   const runCellRef = React.useRef(runCell)
   React.useEffect(() => { runCellRef.current = runCell }, [runCell])
 
+  const processQueue = React.useCallback(async () => {
+    if (processingRef.current) return
+    processingRef.current = true
+    while (queueRef.current.length > 0) {
+      const id = queueRef.current.shift()
+      await new Promise((resolve) => {
+        skipRef.current = resolve
+        runCellRef.current(id).then(resolve, resolve)
+      })
+      skipRef.current = null
+    }
+    processingRef.current = false
+    setKernelStatus("idle")
+  }, [])
+
   const queuedRunCell = React.useCallback((id) => {
-    updateCell(id, { status: "waiting" })
+    updateCell(id, { status: "waiting", output: null, runCount: null })
     setKernelStatus("busy")
-    const gen = queueGenRef.current
-    const p = runQueueRef.current.then(
-      () => { if (queueGenRef.current === gen) return runCellRef.current(id) },
-      () => { if (queueGenRef.current === gen) return runCellRef.current(id) },
-    )
-    runQueueRef.current = p
-    return p
-  }, [updateCell])
+    queueRef.current.push(id)
+    processQueue()
+  }, [updateCell, processQueue])
+
+  const interruptCell = React.useCallback(
+    (id) => {
+      const c = cells.find((x) => x.id === id)
+      if (!c) return
+      if (c.status === "waiting") {
+        // Just remove from queue, don't touch anything else
+        queueRef.current = queueRef.current.filter((qid) => qid !== id)
+        updateCell(id, { status: "idle" })
+        if (queueRef.current.length === 0 && !activeCellId) {
+          setKernelStatus("idle")
+        }
+      } else {
+        // Running cell — abort and immediately unblock queue
+        abortRef.current = null
+        setActiveCellId(null)
+        updateCell(id, { status: "idle", output: null })
+        if (skipRef.current) skipRef.current()
+      }
+    },
+    [updateCell, cells, activeCellId],
+  )
+
+  const stopAll = React.useCallback(() => {
+    // Clear entire queue
+    const waiting = [...queueRef.current]
+    queueRef.current = []
+    waiting.forEach((id) => updateCell(id, { status: "idle" }))
+    // Reset any running/rendering cells
+    cells.forEach((c) => {
+      if (c.status === "running" || c.status === "rendering") {
+        updateCell(c.id, { status: "idle", output: null })
+      }
+    })
+    // Abort active cell and unblock queue loop
+    abortRef.current = null
+    setActiveCellId(null)
+    if (skipRef.current) skipRef.current()
+    setKernelStatus("idle")
+  }, [updateCell, cells])
 
   const queuedRunAll = React.useCallback(() => {
     playback.stopAll()
@@ -188,37 +227,48 @@ export default function App() {
     <div className="app-shell">
       <Sidebar
         sideTab={sideTab}
-        onTabChange={setSideTab}
+        onTabChange={(tab) => {
+          setSideTab(tab)
+          if (tab !== "docs" && window.location.hash.startsWith("#docs-")) {
+            history.replaceState(null, "", window.location.pathname)
+          }
+        }}
         theme={theme}
         onSetTheme={(v) => setSetting("theme", v)}
       />
 
       <div className="app-main">
         <div className="notebook-root" style={{ display: sideTab === "notebook" ? undefined : "none" }}>
+          <div className="nb-sticky-header">
+          <div className="nb-title-bar">
+            <h1 className="panel-title">Notebook</h1>
+            <p className="panel-subtitle">Cells & playback</p>
+          </div>
           <Toolbar
-            onAdd={() =>
+            onAddCode={() =>
               insertCell(
-                selectedId || (cells[cells.length - 1] && cells[cells.length - 1].id),
+                cells.length ? cells[cells.length - 1].id : null,
                 "below",
                 "music",
+              )
+            }
+            onAddText={() =>
+              insertCell(
+                cells.length ? cells[cells.length - 1].id : null,
+                "below",
+                "text",
               )
             }
             onRun={() => selectedId && queuedRunCell(selectedId)}
             onRunAll={queuedRunAll}
             onStop={() => {
               playback.stopAll()
-              if (activeCellId) interruptCell(activeCellId)
-              // Also clear any waiting cells even if nothing is actively running
-              queueGenRef.current += 1
-              runQueueRef.current = Promise.resolve()
-              cells.forEach((c) => {
-                if (c.status === "waiting") updateCell(c.id, { status: "idle" })
-              })
-              setKernelStatus("idle")
+              stopAll()
             }}
             onDelete={() => selectedId && deleteCell(selectedId)}
             kernelStatus={kernelStatus}
           />
+          </div>
 
           <main
             className="nb-main"
@@ -243,7 +293,7 @@ export default function App() {
                   onSelect={() => setSelectedId(c.id)}
                   onEnterEdit={() => setEditingId(c.id)}
                   onLeaveEdit={() => setEditingId((cur) => (cur === c.id ? null : cur))}
-                  onChange={(v) => updateCell(c.id, { source: v })}
+                  onChange={(v) => updateCell(c.id, { source: v, output: null, runCount: null })}
                   onRun={() => queuedRunCell(c.id)}
                   onInterrupt={() => interruptCell(c.id)}
                   onDelete={() => deleteCell(c.id)}

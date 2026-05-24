@@ -122,17 +122,18 @@ const CodeEditor = React.forwardRef(function CodeEditor(props, ref) {
       )}
       {runState === "running" && onInterrupt && (
         <button
-          className="cell-run-btn cell-stop-btn"
+          className="cell-run-btn cell-wait-btn"
           onClick={(e) => {
             e.stopPropagation()
             onInterrupt()
           }}
-          title="Stop cell"
+          title="Running — click to interrupt"
         >
           <svg width="10" height="10" viewBox="0 0 10 10">
-            <rect x="2" y="2" width="6" height="6" rx="1" fill="currentColor" />
+            <circle cx="5" cy="5" r="4" stroke="currentColor" strokeWidth="1.2" fill="none" />
+            <path d="M5 3v2.5l1.5 1" stroke="currentColor" strokeWidth="1.2" fill="none" strokeLinecap="round" />
           </svg>
-          <span>Stop</span>
+          <span>Running</span>
         </button>
       )}
     </div>

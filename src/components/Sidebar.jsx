@@ -56,8 +56,8 @@ export default function Sidebar({ sideTab, onTabChange, theme, onSetTheme }) {
             title="Appearance"
           >
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="8" cy="8" r="5.5" />
-              <path d="M8 2.5a5.5 5.5 0 0 1 0 11z" fill="currentColor" stroke="none" />
+              <circle cx="11" cy="5" r="2.5" />
+              <path d="M1 14l4-6 3 4 2-2 5 4H1z" />
             </svg>
           </button>
           {themeOpen && (

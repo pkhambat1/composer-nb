@@ -87,6 +87,14 @@ export default function MusicOutput({
     urlRef.current = url
     setReady(false)
 
+    // Extract pre-decoded channel data to avoid expensive decodeAudioData for large files
+    const ab = buffer && buffer.get ? buffer.get() : buffer
+    const channelData = []
+    for (let ch = 0; ch < ab.numberOfChannels; ch++) {
+      channelData.push(ab.getChannelData(ch))
+    }
+    const duration = ab.duration
+
     const ws = WaveSurfer.create({
       container: waveMountRef.current,
       height: 50,
@@ -101,6 +109,10 @@ export default function MusicOutput({
       interact: true,
       dragToSeek: true,
       autoplay: false,
+      // Pre-decoded peaks + duration: renders waveform instantly, skips decodeAudioData
+      peaks: channelData,
+      duration,
+      url,
     })
 
     wsRef.current = ws
@@ -142,8 +154,6 @@ export default function MusicOutput({
     ws.on("finish", onFinish)
     ws.on("timeupdate", bumpTime)
     ws.on("audioprocess", bumpTime)
-
-    ws.load(url)
 
     return () => {
       aborted = true

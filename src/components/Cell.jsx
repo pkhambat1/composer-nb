@@ -64,7 +64,7 @@ function CellMenu({ onDelete }) {
   )
 }
 
-export default function Cell({
+function Cell({
   cell,
   index,
   selected,
@@ -143,7 +143,7 @@ export default function Cell({
               ref={taRef}
               value={cell.source}
               onChange={(v) => onChange(v)}
-              onFocus={onEnterEdit}
+              onFocus={() => { onSelect(); onEnterEdit() }}
               onBlur={onLeaveEdit}
               onRun={onRun}
               onInterrupt={onInterrupt}
@@ -171,7 +171,7 @@ export default function Cell({
                   ref={taRef}
                   className="text-area text-area-split"
                   value={cell.source}
-                  onFocus={onEnterEdit}
+                  onFocus={() => { onSelect(); onEnterEdit() }}
                   onBlur={onLeaveEdit}
                   onChange={(e) => onChange(e.target.value)}
                   onClick={(e) => e.stopPropagation()}
@@ -212,7 +212,7 @@ export default function Cell({
                 ref={taRef}
                 className="text-area"
                 value={cell.source}
-                onFocus={onEnterEdit}
+                onFocus={() => { onSelect(); onEnterEdit() }}
                 onBlur={onLeaveEdit}
                 onChange={(e) => onChange(e.target.value)}
                 onClick={(e) => e.stopPropagation()}
@@ -250,3 +250,15 @@ export default function Cell({
     </div>
   )
 }
+
+export default React.memo(Cell, (prev, next) =>
+  prev.cell === next.cell &&
+  prev.index === next.index &&
+  prev.selected === next.selected &&
+  prev.editing === next.editing &&
+  prev.isActive === next.isActive &&
+  prev.theme === next.theme &&
+  prev.accent === next.accent &&
+  prev.focusedCellId === next.focusedCellId &&
+  prev.isPlaying === next.isPlaying,
+)

@@ -34,7 +34,7 @@ A notebook for sketching chord progressions. Each **code cell** below is parsed 
 
 Comments use \`--\` (double dash), so \`#\` stays free for sharps like \`F#m\`, \`C#maj7\`.
 
-Hit **Shift+Enter** to render a cell, or **Run All** up top.`,
+Press **Shift+Enter** to render a cell, or use **Run All** to render everything.`,
     },
     {
       type: "music",
