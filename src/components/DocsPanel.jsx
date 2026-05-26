@@ -133,6 +133,7 @@ Directives start with \`@\` and configure the cell. Place them at the top of a c
 | \`@inst\` | \`piano\` | Instrument (\`piano\` or \`guitar\`) |
 | \`@beats\` | \`4\` | Beats per bar (time signature numerator) |
 | \`@octave\` | \`3\` | Base octave (0–8) |
+| \`@capo\` | \`0\` | Capo fret (0–12, guitar only) |
 
 ## Key signatures
 
@@ -153,6 +154,19 @@ The \`@key\` directive accepts a root note with optional mode:
 |-------|-------------|
 | \`piano\` | Piano voicing with keyboard chord diagrams |
 | \`guitar\` | Guitar voicing with fingering chord diagrams |
+
+## Capo (guitar only)
+
+\`@capo N\` puts a virtual capo on fret \`N\` (0–12). Only applies when \`@inst guitar\`; ignored on other instruments with a warning.
+
+Chord *labels* stay capo-relative — i.e. they name the shape you'd finger as if the capo were the nut — but the *sounding* notes are transposed up by \`N\` semitones, and the note names shown reflect actual pitches.
+
+\`\`\`
+@inst guitar
+@capo 6
+
+C G Am F     -- shapes labeled C/G/Am/F, sounds as F# C# D#m B
+\`\`\`
 
 ## Changing directives mid-cell
 

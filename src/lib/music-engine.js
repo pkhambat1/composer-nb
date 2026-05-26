@@ -310,6 +310,17 @@ export function buildChord(tokenStr, key, octave) {
   }
 }
 
+// Transpose a chord's sounding pitches up by `semis` (capo fret). The label
+// is intentionally left alone so chips/diagrams keep showing the shape name
+// the user wrote, while playback and note names reflect actual pitches.
+function applyCapo(chord, semis) {
+  if (!semis) return
+  chord.notesMidi = chord.notesMidi.map((m) => m + semis)
+  chord.bassMidi = chord.bassMidi + semis
+  chord.noteNames = chord.notesMidi.map(midiToName)
+  chord.bassName = midiToName(chord.bassMidi)
+}
+
 // --- Source parser -------------------------------------------------------
 
 export function parseSource(src) {
@@ -319,6 +330,7 @@ export function parseSource(src) {
     inst: "piano",
     beats: 4,
     octave: 3,
+    capo: 0,
   }
   const errors = []
   const lines = src.split("\n")
@@ -340,12 +352,20 @@ export function parseSource(src) {
           const n = parseInt(v, 10)
           if (!isNaN(n) && n >= 0 && n <= 8) directives.octave = n
           else errors.push({ line: li + 1, token: v, msg: `@octave must be 0–8 (got "${v}")` })
+        } else if (k === "capo") {
+          const n = parseInt(v, 10)
+          if (!isNaN(n) && n >= 0 && n <= 12) directives.capo = n
+          else errors.push({ line: li + 1, token: v, msg: `@capo must be 0–12 (got "${v}")` })
         }
       }
     }
   }
 
   const key = parseKey(directives.key)
+  const capoActive = directives.inst === "guitar" && directives.capo > 0
+  if (directives.capo > 0 && directives.inst !== "guitar") {
+    errors.push({ line: 0, token: "@capo", msg: "@capo only applies to @inst guitar" })
+  }
   const bars = []
 
   for (let li = 0; li < lines.length; li++) {
@@ -366,6 +386,7 @@ export function parseSource(src) {
         errors.push({ line: li + 1, token: tokRaw, msg: `couldn't parse "${tokRaw}"` })
         return { isError: true, beatsExplicit: explicitBeats, raw: tokRaw, line: li + 1 }
       }
+      if (capoActive) applyCapo(chord, directives.capo)
       return { chord, beatsExplicit: explicitBeats, raw: tokRaw, line: li + 1 }
     })
 
