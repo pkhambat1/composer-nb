@@ -52,5 +52,21 @@ C Cmaj7
 Cadd9
 Em`,
     },
+    {
+      type: "music",
+      source: `@key Am
+@tempo 75
+@inst guitar
+
+-- Hotel California (Eagles) Intro
+Am E7
+G D
+F C
+Dm E7
+Am E7
+G D
+F C
+Dm E7`,
+    },
   ],
 }
