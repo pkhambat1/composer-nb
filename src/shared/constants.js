@@ -42,47 +42,15 @@ Press **Shift+Enter** to render a cell, or use **Run All** to render everything.
 @tempo 75
 @inst guitar
 
--- Hotel California (Eagles)
-
--- [INTRO] x2
-Am E7 G D
-F C Dm E7
-Am E7 G D
-F C Dm E7
-
--- [VERSE 1]
-Am E7 G D
-F C Dm E7
-Am E7 G D
-F C Dm E7
-
--- [CHORUS]
-F C E7 Am
-F C Dm E7
-
--- [VERSE 2]
-Am E7 G D
-F C Dm E7
-Am E7 G D
-F C Dm E7
-
--- [CHORUS 2]
-F C E7 Am
-F C Dm E7
-
--- [VERSE 3]
-Am E7 G D
-F C Dm E7
-Am E7 G D
-F C Dm E7
-
--- [OUTRO SOLO] x3
-Am E7 G D
-F C Dm E7
-Am E7 G D
-F C Dm E7
-Am E7 G D
-F C Dm E7`,
+-- Hotel California (Eagles) Intro
+Am E7
+G D
+F C
+Dm E7
+Am E7
+G D
+F C
+Dm E7`,
     },
   ],
 }
