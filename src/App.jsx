@@ -293,7 +293,7 @@ export default function App() {
                   onSelect={() => setSelectedId(c.id)}
                   onEnterEdit={() => setEditingId(c.id)}
                   onLeaveEdit={() => setEditingId((cur) => (cur === c.id ? null : cur))}
-                  onChange={(v) => updateCell(c.id, { source: v, output: null, runCount: null })}
+                  onChange={(v) => updateCell(c.id, { source: v })}
                   onRun={() => queuedRunCell(c.id)}
                   onInterrupt={() => interruptCell(c.id)}
                   onDelete={() => deleteCell(c.id)}

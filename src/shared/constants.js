@@ -38,20 +38,19 @@ Press **Shift+Enter** to render a cell, or use **Run All** to render everything.
     },
     {
       type: "music",
-      source: `@key Am
-@tempo 75
-@inst guitar
-@capo 2
+      source: `@inst guitar
+@capo 5
+@tempo 90
+@beats 4
 
--- Hotel California (Eagles) Intro
-Am E7
-G D
-F C
-Dm E7
-Am E7
-G D
-F C
-Dm E7`,
+-- Trains (Porcupine Tree) Chorus
+A Am
+C Cmaj7
+D A
+C Cmaj7
+
+Cadd9
+Em`,
     },
   ],
 }

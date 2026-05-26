@@ -23,7 +23,7 @@ function highlightChordToken(raw) {
   const parts = []
   let core = raw
   let rhythm = ""
-  const dotM = raw.match(/^(.+?)(\.(w|h|q|e|s))$/)
+  const dotM = raw.match(/^(.+?)(\.(w|h|q|e|s)\.*)$/)
   const colonM = raw.match(/^(.+?)(:\d+(?:\.\d+)?)$/)
   if (dotM) {
     core = dotM[1]

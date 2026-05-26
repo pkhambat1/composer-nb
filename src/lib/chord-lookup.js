@@ -1,5 +1,5 @@
 /* Guitar chord positions from @tombatossals/chords-db (loaded at runtime). */
-import { Chord, Note } from "tonal"
+import { Chord, Interval, Note } from "tonal"
 
 const CHORDS_DB_URL =
   "https://cdn.jsdelivr.net/npm/@tombatossals/chords-db@0.5.1/lib/guitar.json"
@@ -138,12 +138,75 @@ function scorePosition(p) {
   return score
 }
 
-function pickPosition(positions) {
+// Pitch classes a position's midi notes contain.
+function pcsOfPosition(p) {
+  const out = new Set()
+  for (const m of p.midi || []) out.add(((m % 12) + 12) % 12)
+  return out
+}
+
+// Defining pitch classes for a chord symbol, broken down by role.
+// The 5th is optional (commonly dropped in guitar voicings); everything else
+// must be present in a candidate position. `third` / `extensions` are used to
+// score voicing musicality.
+function chordPcsForLabel(label) {
+  if (!label) return null
+  const ch = Chord.get(label.split("/")[0])
+  if (ch.empty || !ch.intervals?.length || ch.tonic == null) return null
+  const tonicPc = Note.chroma(ch.tonic)
+  if (tonicPc == null || isNaN(tonicPc)) return null
+  const required = new Set()
+  const extensions = new Set()
+  let third = null
+  for (const iv of ch.intervals) {
+    const semi = Interval.semitones(iv)
+    if (semi == null) continue
+    const pc = (((tonicPc + semi) % 12) + 12) % 12
+    if (iv === "5P") continue
+    required.add(pc)
+    if (third == null && (iv === "3M" || iv === "3m" || iv === "4P" || iv === "2M")) third = pc
+    if (/^(9|11|13)/.test(iv)) extensions.add(pc)
+  }
+  return { required, third, extensions }
+}
+
+function positionCoversRequired(p, required) {
+  if (!required) return true
+  const pcs = pcsOfPosition(p)
+  for (const r of required) if (!pcs.has(r)) return false
+  return true
+}
+
+// Penalty when an extension (9/11/13) is voiced below the chord's 3rd.
+// Conventional guitar voicings stack the basic triad below the extensions
+// (e.g. Cadd9 = x32030 puts E on the D string before D on the B string),
+// so reversing that order produces the "wrong" sounding shape.
+function voicingOrderPenalty(p, third, extensions) {
+  if (third == null || !extensions || !extensions.size) return 0
+  if (!p.midi || !p.midi.length) return 0
+  const sorted = p.midi.slice().sort((a, b) => a - b)
+  let firstThird = -1
+  let firstExt = -1
+  for (let i = 0; i < sorted.length; i++) {
+    const pc = ((sorted[i] % 12) + 12) % 12
+    if (firstThird === -1 && pc === third) firstThird = i
+    if (firstExt === -1 && extensions.has(pc)) firstExt = i
+  }
+  if (firstThird === -1) return -8
+  if (firstExt !== -1 && firstThird > firstExt) return -8
+  return 0
+}
+
+function pickPosition(positions, chordPcs) {
   if (!positions?.length) return null
-  let best = positions[0]
+  const required = chordPcs?.required
+  const valid = required ? positions.filter((p) => positionCoversRequired(p, required)) : positions
+  const pool = valid.length ? valid : positions
+  let best = pool[0]
   let bestScore = -Infinity
-  for (const p of positions) {
-    const score = scorePosition(p)
+  for (const p of pool) {
+    let score = scorePosition(p)
+    if (chordPcs) score += voicingOrderPenalty(p, chordPcs.third, chordPcs.extensions)
     if (score > bestScore) {
       bestScore = score
       best = p
@@ -192,12 +255,13 @@ function exportPosition(pos) {
   const fingers = pos.fingers
     ? normalizeBarreFingers(frets, pos.fingers.slice(), barres, baseFret)
     : null
-  return { frets, fingers, baseFret, barres }
+  const midi = pos.midi ? pos.midi.slice() : null
+  return { frets, fingers, baseFret, barres, midi }
 }
 
-function positionFromEntry(entry) {
+function positionFromEntry(entry, required) {
   if (!entry?.positions?.length) return null
-  return exportPosition(pickPosition(entry.positions))
+  return exportPosition(pickPosition(entry.positions, required))
 }
 
 function maxAbsoluteFret(position) {
@@ -275,9 +339,10 @@ export function lookupPosition(label) {
     return null
   }
 
+  const chordPcs = chordPcsForLabel(label)
   const dbKey = KEY_ALIASES[ks.key] || ks.key
   const entry = chordEntryFor(dbKey, ks.suffix)
-  let pos = positionFromEntry(entry)
+  let pos = positionFromEntry(entry, chordPcs)
 
   if (!pos) {
     const ch = Chord.get(label.split("/")[0])
@@ -289,7 +354,7 @@ export function lookupPosition(label) {
       const alt = resolveKeySuffix(tryLabel)
       if (!alt) continue
       const altKey = KEY_ALIASES[alt.key] || alt.key
-      pos = positionFromEntry(chordEntryFor(altKey, alt.suffix))
+      pos = positionFromEntry(chordEntryFor(altKey, alt.suffix), chordPcs)
       if (pos) break
     }
   }

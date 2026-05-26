@@ -1,6 +1,7 @@
 /* Music DSL parser + chord builder + Tone.js offline renderer + waveform draw + WAV export. */
 import * as Tone from "tone"
 import { Chord, Note, Interval } from "tonal"
+import * as ChordLookup from "./chord-lookup.js"
 
 const NOTE_TO_PC = {
   C: 0,
@@ -67,8 +68,14 @@ export function parseKey(str) {
 const DUR_LETTERS = { w: 4, h: 2, q: 1, e: 0.5, s: 0.25 }
 
 function splitDurationSuffix(raw) {
-  const dotM = raw.match(/^(.+?)\.(w|h|q|e|s)$/)
-  if (dotM) return { core: dotM[1], beats: DUR_LETTERS[dotM[2]] }
+  // Allow N trailing dots for augmentation: `.q.` = dotted quarter (1.5x),
+  // `.q..` = double-dotted (1.75x). Multiplier is 2 − 2^−dots.
+  const dotM = raw.match(/^(.+?)\.(w|h|q|e|s)(\.*)$/)
+  if (dotM) {
+    const base = DUR_LETTERS[dotM[2]]
+    const dots = dotM[3].length
+    return { core: dotM[1], beats: base * (2 - Math.pow(2, -dots)) }
+  }
   const colonM = raw.match(/^(.+?):(\d+(?:\.\d+)?)$/)
   if (colonM) return { core: colonM[1], beats: parseFloat(colonM[2]) }
   return { core: raw, beats: null }
@@ -552,6 +559,34 @@ export async function renderToBuffer(parsed) {
   const bassVel = inst === "guitar" ? 0.6 : 0.7
   const chordVel = inst === "guitar" ? 0.55 : 0.55
 
+  // For guitar, swap Tonal's compact voicing for the chord-db's idiomatic
+  // voicing so the audio matches the diagram AND the actual pitches a real
+  // guitar produces at those frets (Cadd9 = C3 E3 G3 D4 E4, low E open = E2).
+  // Bass becomes the lowest fretted string and the artificial -12 doubling is
+  // suppressed — both pushed the chord below playable guitar range.
+  if (inst === "guitar") {
+    try {
+      await ChordLookup.load()
+      const capo = parsed.directives.capo > 0 ? parsed.directives.capo : 0
+      for (const ev of parsed.events) {
+        if (!ev.chord) continue
+        const pos = ChordLookup.lookupPosition(ev.chord.label)
+        if (pos?.midi?.length) {
+          const voicing = pos.midi.map((m) => m + capo)
+          ev.chord.notesMidi = voicing
+          ev.chord.noteNames = voicing.map(midiToName)
+          ev.chord.bassMidi = voicing[0]
+          ev.chord.bassName = midiToName(voicing[0])
+          ev.chord.fromGuitarPosition = true
+          ev.bassMidi = voicing[0]
+          ev.midiNotes = voicing
+        }
+      }
+    } catch (_) {
+      // chord-db unavailable (offline / fetch failed) — fall back to Tonal voicing.
+    }
+  }
+
   const totalSec = Math.max(1.0, parsed.totalSec + 1.6)
   const buffer = await Tone.Offline(
     async ({ transport }) => {
@@ -569,17 +604,25 @@ export async function renderToBuffer(parsed) {
       for (const ev of parsed.events) {
         if (ev.isRest || !ev.chord) continue
         const dur = ev.secDur * 0.96
-        synth.triggerAttackRelease(midiToName(ev.bassMidi), dur, ev.secStart, bassVel)
-        if (inst === "guitar" && ev.chord.notesMidi[0]) {
-          synth.triggerAttackRelease(
-            midiToName(ev.chord.notesMidi[0] - 12),
-            dur,
-            ev.secStart + 0.006,
-            bassVel * 0.85,
-          )
+        const usingPos = ev.chord.fromGuitarPosition
+        if (!usingPos) {
+          synth.triggerAttackRelease(midiToName(ev.bassMidi), dur, ev.secStart, bassVel)
+          if (inst === "guitar" && ev.chord.notesMidi[0]) {
+            synth.triggerAttackRelease(
+              midiToName(ev.chord.notesMidi[0] - 12),
+              dur,
+              ev.secStart + 0.006,
+              bassVel * 0.85,
+            )
+          }
         }
         ev.chord.noteNames.forEach((n, idx) => {
-          synth.triggerAttackRelease(n, dur, ev.secStart + (idx + 1) * stagger, chordVel)
+          // When using a real guitar position the lowest note IS the bass, so
+          // start the strum at the very beginning and give it a small velocity
+          // bump; otherwise stagger the chord notes after the separate bass hit.
+          const offset = usingPos ? idx * stagger : (idx + 1) * stagger
+          const vel = usingPos && idx === 0 ? bassVel : chordVel
+          synth.triggerAttackRelease(n, dur, ev.secStart + offset, vel)
         })
       }
     },

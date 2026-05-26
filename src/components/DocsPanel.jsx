@@ -303,6 +303,22 @@ Am.q    -- A minor for 1 beat
 Am.e    -- A minor for half a beat
 \`\`\`
 
+## Dotted notes
+
+Add a trailing dot to extend the duration by 50%. Each additional dot adds half of the previous addition (standard music-notation rule).
+
+| Suffix | Beats | Name |
+|--------|-------|------|
+| \`.q.\` | 1.5 | Dotted quarter |
+| \`.h.\` | 3 | Dotted half |
+| \`.e.\` | 0.75 | Dotted eighth |
+| \`.q..\` | 1.75 | Double-dotted quarter |
+
+\`\`\`
+Am.h. Dm.q    -- 3 + 1 = 4 beats
+C.q. F.e G.e  -- 1.5 + 0.5 + 0.5 = 2.5 beats
+\`\`\`
+
 ## Implicit duration
 
 Chords without a duration suffix split the remaining beats in the bar evenly:
