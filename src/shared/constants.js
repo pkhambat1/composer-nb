@@ -41,6 +41,7 @@ Press **Shift+Enter** to render a cell, or use **Run All** to render everything.
       source: `@key Am
 @tempo 75
 @inst guitar
+@capo 2
 
 -- Hotel California (Eagles) Intro
 Am E7
