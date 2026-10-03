@@ -11,7 +11,7 @@ const sharedStylistic = {
 
 /** @type {import('eslint').Linter.Config[]} */
 export default [
-  { ignores: ["node_modules", "dist", ".git"] },
+  { ignores: ["**/node_modules", "**/dist", ".git", ".claude", "dsl/python"] },
   {
     files: ["**/*.config.js"],
     languageOptions: {
@@ -26,7 +26,7 @@ export default [
     },
   },
   {
-    files: ["src/**/*.{js,jsx}"],
+    files: ["playground/src/**/*.{js,jsx}", "dsl/js/**/*.js"],
     languageOptions: {
       ecmaVersion: 2022,
       sourceType: "module",

@@ -2,3 +2,5 @@ node_modules
 dist
 .git
 package-lock.json
+dsl/python/composer_nb/static
+.claude

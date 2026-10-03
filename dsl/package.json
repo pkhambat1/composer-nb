@@ -1,0 +1,24 @@
+{
+  "name": "@composer-nb/dsl",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "exports": {
+    ".": "./js/music-engine.js",
+    "./chord-lookup": "./js/chord-lookup.js",
+    "./highlight": "./js/highlight.js"
+  },
+  "scripts": {
+    "build": "vite build",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "tonal": "^6.4.2",
+    "tone": "14.8.49"
+  },
+  "devDependencies": {
+    "vite": "^6.3.5",
+    "vitest": "^2.1.9"
+  }
+}

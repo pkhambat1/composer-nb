@@ -1,0 +1,177 @@
+/* Styles for the notebook widget. Colors come from the host notebook's theme
+   variables (JupyterLab, VS Code) when present, so it follows light/dark. */
+
+.cnb {
+  --cnb-accent: var(--jp-brand-color1, #1a73e8);
+  --cnb-text: var(--jp-ui-font-color1, rgba(0, 0, 0, 0.87));
+  --cnb-mute: var(--jp-ui-font-color2, rgba(0, 0, 0, 0.54));
+  --cnb-paper: var(--jp-layout-color1, #fff);
+  --cnb-border: var(--jp-border-color2, rgba(0, 0, 0, 0.12));
+  --cnb-wave: var(--jp-ui-font-color3, rgba(0, 0, 0, 0.38));
+  --cnb-error: var(--jp-error-color1, #b00020);
+  --cnb-mono: var(--jp-code-font-family, ui-monospace, "SF Mono", Menlo, monospace);
+
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 4px 0;
+  color: var(--cnb-text);
+  font-family: var(--jp-ui-font-family, system-ui, sans-serif);
+  font-size: 13px;
+}
+
+.cnb-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px;
+}
+.cnb-name {
+  font-weight: 600;
+}
+.cnb-after {
+  padding: 0 6px;
+  border: 1px solid var(--cnb-border);
+  border-radius: 999px;
+  color: var(--cnb-mute);
+  font-size: 11px;
+}
+.cnb-settings {
+  color: var(--cnb-mute);
+  font-family: var(--cnb-mono);
+  font-size: 11.5px;
+}
+
+.cnb-status {
+  color: var(--cnb-mute);
+  font-size: 12px;
+}
+.cnb-status-error {
+  color: var(--cnb-error);
+}
+
+.cnb-player {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.cnb-play {
+  position: relative;
+  flex-shrink: 0;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: 1px solid var(--cnb-border);
+  border-radius: 50%;
+  background: var(--cnb-paper);
+  color: var(--cnb-accent);
+  cursor: pointer;
+}
+.cnb-play:hover {
+  border-color: var(--cnb-accent);
+}
+/* Play triangle; becomes two pause bars while playing. */
+.cnb-play::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 52%;
+  transform: translate(-40%, -50%);
+  border-style: solid;
+  border-width: 6px 0 6px 10px;
+  border-color: transparent transparent transparent currentColor;
+}
+.cnb-play.is-playing::before {
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 3px;
+  height: 11px;
+  border: solid currentColor;
+  border-width: 0 3px;
+}
+
+.cnb-wave {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  height: 44px;
+  cursor: pointer;
+}
+.cnb-wave canvas {
+  display: block;
+  height: 44px;
+}
+.cnb-wave-base {
+  width: 100%;
+}
+.cnb-wave-progress {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 0;
+  overflow: hidden;
+}
+
+.cnb-time {
+  flex-shrink: 0;
+  color: var(--cnb-mute);
+  font-family: var(--cnb-mono);
+  font-size: 11.5px;
+  font-variant-numeric: tabular-nums;
+}
+.cnb-download {
+  flex-shrink: 0;
+  padding: 3px 8px;
+  border: 1px solid var(--cnb-border);
+  border-radius: 4px;
+  color: var(--cnb-mute);
+  font-size: 11px;
+  text-decoration: none;
+}
+.cnb-download:hover {
+  border-color: var(--cnb-accent);
+  color: var(--cnb-accent);
+}
+
+.cnb-chords {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.cnb-chip {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 64px;
+  padding: 5px 8px;
+  border: 1px solid var(--cnb-border);
+  border-radius: 4px;
+  background: var(--cnb-paper);
+  font-family: var(--cnb-mono);
+}
+.cnb-chip-label {
+  font-size: 12px;
+}
+.cnb-chip-notes {
+  color: var(--cnb-mute);
+  font-size: 9.5px;
+  font-weight: 600;
+}
+
+.cnb-errors {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 6px 10px;
+  border-left: 3px solid var(--cnb-error);
+  background: color-mix(in srgb, var(--cnb-error) 7%, transparent);
+  font-family: var(--cnb-mono);
+  font-size: 11.5px;
+}
+.cnb-error {
+  display: flex;
+  gap: 10px;
+}
+.cnb-error-line {
+  flex-shrink: 0;
+  color: var(--cnb-error);
+}
