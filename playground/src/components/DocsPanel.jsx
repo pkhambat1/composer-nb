@@ -14,69 +14,58 @@ const PAGES = [
     group: "Getting Started",
     body: `# Composer.nb
 
-A Jupyter-style notebook for sketching music: chord progressions, drum grooves, and the two together.
+A notebook for sketching music: chord progressions, drum grooves, and the two together.
 
-In a **music cell**, chords go on a line of their own and each drum gets its own line. Run the cell to hear it, see chord diagrams and a drum grid, and export a WAV.
-
-## Cell types
-
-| Type | What it holds |
-|------|---------------|
-| **Music cells** | Instruments, settings and words. They render to audio. |
-| **Text cells** | Markdown notes: headings, **bold**, *italic*, \`code\`, lists and links. |
+A **music cell** is a short script. Run it to hear it, see chord diagrams and a drum grid, and export a WAV. A **text cell** holds Markdown notes.
 
 ## Quick example
 
 \`\`\`
-time: 4/4
-tempo: 100
-sound: guitar
-Am F|C G
-kick: 1 3
-snare: 2 4
-hat: x.
+tempo 100
+sound guitar
+
+play {
+  chords: Am F|C G
+  kick: loop x-------
+  snare: loop ----x---
+  hat: loop x-
+}
 \`\`\`
 
-Lines next to each other play together. This block lasts 2 bars because the chords do; the drum lines repeat to fill it.`,
+Everything inside the braces plays together. The chords are 2 bars long, and the three drum lines loop for those 2 bars.`,
   },
   {
-    id: "quickstart",
-    title: "Quickstart",
+    id: "lines",
+    title: "The five lines",
     group: "Getting Started",
-    body: `# Quickstart
+    body: `# The five lines
 
-## 1. Set the time and tempo
+Every line starts by saying what it is.
 
-\`\`\`
-time: 4/4
-tempo: 100
-\`\`\`
+| Line | What it is |
+|------|------------|
+| \`tempo 90\` | A **setting**: a reserved word and its value. No \`=\`, because it isn't a variable |
+| \`verse = Am F\\|C G\` | A **variable**: your own name for steps or chords. Only these get \`=\` |
+| \`pattern groove { ... }\` | A **pattern**: lines that play together. Braces always follow a keyword |
+| \`kick: x--x---\` | Inside braces, an **instrument** and what it plays |
+| \`play { ... }\` | **Plays** what's after it: a block, or one line |
 
-Settings apply from where you write them onward, including in the cells below.
+\`//\` starts a comment. Blank lines and indentation mean nothing.
 
-## 2. Add chords
+## One meaning per symbol
 
-Write them on a line of their own. \`|\` separates bars, and the chords in a bar split it evenly. They play on piano unless you pick another \`sound\`:
+| Symbol | Meaning |
+|--------|---------|
+| \`:\` | This instrument plays this |
+| \`=\` | This name holds this |
+| \`{ }\` | These lines play together |
+| \`*\` | Times: \`groove * 2\` |
+| \`( )\` | A group: \`(verse chorus) * 2\` |
+| \`/\` | Division, between two numbers. In \`C/E\` it's part of a chord's name |
 
-\`\`\`
-sound: guitar
-C Am|F G
-\`\`\`
+## Nothing floats
 
-## 3. Add drums
-
-Give each drum its own line and list the beats it plays in every bar:
-
-\`\`\`
-kick: 1 3
-snare: 2 4
-\`\`\`
-
-## 4. Run it
-
-Press **Shift+Enter**. You'll get playback, chord diagrams, a drum grid and a WAV button.
-
-> **Tip:** Lines in the same block play together. A blank line starts a new block, which plays after the one before it.`,
+Nothing plays unless it's inside a \`play\`. An instrument's line on its own, outside braces, is an error.`,
   },
   {
     id: "settings",
@@ -84,27 +73,28 @@ Press **Shift+Enter**. You'll get playback, chord diagrams, a drum grid and a WA
     group: "Language Reference",
     body: `# Settings
 
-Settings are written \`name: value\`. A setting applies to the whole block it's in and to everything after it, including the cells below, so a cell can inherit its tempo from the cell above. A cell's output lists anything it inherited.
+A setting is a reserved word followed by its value. It applies from where it's written onward, including in the cells below. A cell's output lists anything it inherited. A setting written inside braces only applies inside them.
 
-|Setting|Default|Meaning|
+| Setting | Default | Meaning |
 |---------|---------|---------|
-|\`time\`|\`4/4\`|Beats per bar over the note that gets the beat: \`4/4\`, \`7/8\`, \`(3+4)/4\`|
-|\`tempo\`|\`120\`|Quarter notes per minute|
-|\`step\`|\`1/16\`|How long each step of a loop is: \`1/16\`, \`1/8\`, or \`1/12\` for triplets|
-|\`bars\`|automatic|How many bars this block plays (this block only)|
-|\`sound\`|\`piano\`|Instrument for chord lines: \`piano\`, \`epiano\`, \`organ\`, \`pad\`, \`bass\`, \`guitar\`|
-|\`key\`|\`C\`|Key for Roman numeral chords: \`C\`, \`Am\`, \`Bb\`, \`F#m\`|
-|\`capo\`|\`0\`|Capo fret for guitar lines, 0 to 12|
-|\`octave\`|\`3\`|Octave chords are voiced in, 1 to 6|
-|\`kit\`|\`rock\`|Drum sound: \`rock\` (a recorded kit) or \`synth\`|
+| \`time\` | \`4 over 4\` | How many notes are in a bar, over which note: \`7 over 8\`, \`3+4 over 4\` |
+| \`tempo\` | \`120\` | Quarter notes per minute |
+| \`step\` | \`1/16\` | How long one step lasts, as a fraction of a whole note: \`1/8\`, or \`1/12\` for triplets |
+| \`sound\` | \`piano\` | What chords play on: \`piano\`, \`epiano\`, \`organ\`, \`pad\`, \`bass\`, \`guitar\` |
+| \`key\` | \`C\` | Key for Roman numeral chords: \`C\`, \`Am\`, \`Bb\`, \`F#m\` |
+| \`capo\` | \`0\` | Capo fret, 0 to 12. Only works with \`sound guitar\` |
+| \`octave\` | \`3\` | Octave chords are voiced in, 1 to 6 |
+| \`kit\` | \`rock\` | Drum sound: \`rock\` (a recorded kit) or \`synth\` |
+
+## Numbers are arithmetic
+
+Wherever a number goes, arithmetic goes: \`tempo 60*2\`, \`groove * (4/2)\`, \`(1+2) bars groove\`.
+
+That's why a time isn't written with a slash. \`7/8\` is the number 0.875, and a time is two numbers: \`time 7 over 8\`. \`6 over 8\` and \`3 over 4\` are different times, though they'd divide to the same thing. Write \`3+4 over 4\` for a bar felt as 3 then 4; the drum grid shades the groups.
 
 ## Counting
 
-A beat is a quarter note everywhere: \`tempo\` counts quarter notes, and drum beats are counted \`1 e & a 2 e & a\`. A 7/8 bar is three and a half beats long, so it ends on \`4e\`.
-
-## Added-up time
-
-Bars that group unevenly are written with brackets: \`(3+4)/4\` is a bar of seven quarter notes, felt as 3 then 4. The drum grid shades the groups.`,
+A beat is a quarter note everywhere: \`tempo\` counts quarter notes, and drum beats are counted \`1 e & a 2 e & a\`. A \`7 over 8\` bar is three and a half beats long, so it ends on \`4e\`.`,
   },
   {
     id: "chords",
@@ -112,49 +102,28 @@ Bars that group unevenly are written with brackets: \`(3+4)/4\` is a bar of seve
     group: "Language Reference",
     body: `# Chords
 
-## Instruments
-
-Chords go on a line of their own and play on the \`sound\` setting: \`piano\` (the default), \`epiano\`, \`organ\`, \`pad\`, \`bass\` or \`guitar\`. Like any setting, it carries on into the cells below, so you set it once.
+Chords go on a \`chords:\` line and play on the \`sound\` setting.
 
 \`\`\`
-sound: guitar
-Am E7|G D|F C|Dm E7
-\`\`\`
-
-To play a second instrument at the same time, start its line with its name:
-
-\`\`\`
-sound: piano
-C Am|F G
-bass: C A|F G
+sound guitar
+play chords: Am E7|G D|F C|Dm E7
 \`\`\`
 
 ## Bars and rhythm
 
-|You write|Meaning|
+| You write | Meaning |
 |-----------|---------|
-|\`\\|\`|A bar line|
-|\`Am F\`|The chords in a bar split it evenly|
-|\`.\`|Hold the chord before for another slot|
-|\`_\`|Silence for a slot|
-|\`%\`|Repeat the bar before|
+| \`\\|\` | A bar line |
+| \`Am F\` | The chords in a bar split it evenly |
+| \`-\` | Hold the chord before for another slot |
+| \`_\` | Silence for a slot |
+| \`%\` | Repeat the bar before |
 
 \`\`\`
-C . . G|Am . F G|%|F . _ .
+play chords: C - - G|Am - F G|%|F - _ -
 \`\`\`
 
-The first bar is C for three beats and G for one. A bar has to split evenly into sixteenth notes, so three chords in a 4/4 bar is an error: write \`Am . F G\` instead.
-
-## Long progressions
-
-Chord lines next to each other carry on from one another, each starting a new bar:
-
-\`\`\`
-Am E7|G D|F C|Dm E7
-F C|G D
-\`\`\`
-
-To play it twice, put \`repeat 2:\` above it and indent it (see Repeats). A named line (\`bass:\`, \`hat:\`) continues onto the next line when that line starts with \`|\`.
+The first bar is C for three beats and G for one. A bar has to split evenly into sixteenth notes, so three chords in a 4 over 4 bar is an error: write \`Am - F G\` instead.
 
 ## Chord names
 
@@ -165,11 +134,20 @@ Any standard chord name works: \`C\`, \`Am\`, \`F#m\`, \`Bb7\`, \`Cmaj7\`, \`Dm9
 Roman numerals follow the \`key\` setting. Uppercase is major and lowercase is minor; \`°\` (or \`o\`) is diminished and \`ø\` half-diminished. A \`b\` or \`#\` in front moves the root.
 
 \`\`\`
-key: C
-I vi|IV V7|bVII IV|ii7 vii°
+key C
+play chords: I vi|IV V7|bVII IV|ii7 vii°
 \`\`\`
 
-In C that plays C Am, F G7, Bb F, then Dm7 Bdim.`,
+In C that plays C Am, F G7, Bb F, then Dm7 Bdim.
+
+## Naming a progression
+
+A variable holds chords so you can reuse them:
+
+\`\`\`
+verse = Am E7|G D
+play chords: verse verse
+\`\`\``,
   },
   {
     id: "drums",
@@ -177,139 +155,127 @@ In C that plays C Am, F G7, Bb F, then Dm7 Bdim.`,
     group: "Language Reference",
     body: `# Drums
 
-## The kit
+## One instrument per line
 
-\`kick\`, \`snare\`, \`hat\`, \`ride\`, \`crash\`, \`tom\` and \`floor\` (the floor tom). Each drum gets its own line, and there are two ways to say when it plays.
+\`kick\`, \`snare\`, \`hat\`, \`ride\`, \`crash\`, \`tom\` and \`floor\` (the floor tom) each get their own line. The line says which sound, and what follows the colon says when. Some drums have a second sound with a line of its own: \`ride.bell\`, \`hat.open\` and \`hat.pedal\`.
+
+Lines play together, so two drums on the same step is two lines with a hit in the same place.
+
+## Steps
+
+A row of steps, one character each. Each step lasts one \`step\` (a sixteenth note unless you change it).
+
+| Step | Meaning |
+|------|---------|
+| \`x\` | Hit |
+| \`X\` | Accented hit |
+| \`g\` | Ghost note |
+| \`d\` | Double stroke |
+| \`-\` | Nothing |
+
+\`\`\`
+play {
+  kick: x---x---x-x-----
+  snare: ----X-------X-g-
+}
+\`\`\`
 
 ## Beats
 
-List the beats a drum plays in every bar. A beat is a quarter note, split as \`1 e & a\`:
+Or list the beats a drum plays. A beat is a quarter note, counted \`1 e & a\`. \`\\|\` separates bars, and \`-\` is an empty bar.
 
 \`\`\`
-kick: 1 2& 3
-snare: 2 4
-crash: 1|.
+play {
+  kick: 1 2& 3
+  snare: 2 accent 4 4a ghost
+  crash: 1|-
+}
 \`\`\`
 
-\`|\` separates bars, \`.\` is an empty bar and \`%\` repeats the bar before. The crash line above hits once every 2 bars.
+A word after a beat changes how it's hit: \`accent\`, \`ghost\` or \`double\`.
 
-A word after a beat changes how it's played:
+## loop
 
-|Word|Meaning|
-|------|---------|
-|\`accent\`|Hit it harder|
-|\`ghost\`|Barely touch it|
-|\`double\`|Two quick strokes|
-|\`open\`|Open hi-hat (\`hat\` only)|
-|\`pedal\`|Hi-hat closed with the foot (\`hat\` only)|
-|\`bell\`|The bell of the ride (\`ride\` only)|
+A line plays what's written, once. \`loop\` repeats it until whatever it's in ends.
 
 \`\`\`
-snare: 2 accent 4 4a ghost
-hat: 1 2 3 4 open 4& pedal
+play {
+  chords: Am F|C G
+  hat: loop x-
+}
 \`\`\`
 
-## Loops
-
-A loop is a row of steps that repeats on its own, whatever the bar lines are doing. Each step lasts one \`step\` (a sixteenth note unless you change it).
-
-|Step|Meaning|
-|------|---------|
-|\`x\`|Hit|
-|\`g\`|Ghost note|
-|\`d\`|Double stroke|
-|\`o\`|Open hi-hat (\`hat\` only)|
-|\`p\`|Pedal hi-hat (\`hat\` only)|
-|\`b\`|Ride bell (\`ride\` only)|
-|\`.\`|Rest|
-
-A capital letter adds an accent: \`X\`, \`O\`, \`B\`.
+Loops of different lengths drift against each other, which is how you write a polyrhythm:
 
 \`\`\`
-hat: X.x.X.x.X.x.X.O.
+time 7 over 8
+
+play 3 bars {
+  kick: loop x--x---
+  snare: loop ----x--
+  ride.bell: loop x--
+}
 \`\`\`
 
-## Loops against the bar
-
-Loops of different lengths drift against each other and against the bar line, which makes polyrhythms easy:
-
-\`\`\`
-time: 7/8
-crash: 1|.|.
-ride: b..
-kick: x..x...
-snare: ....x..
-\`\`\`
-
-The ride bell repeats every 3 steps against a 7-step kick and snare. A block plays until all of its lines line up again, here after 3 bars, and the crash only hits at the start of them. Indent it under \`repeat 2:\` to play it all twice.`,
+The bell repeats every 3 steps against a 7-step kick and snare.`,
   },
   {
-    id: "words",
-    title: "Words and blocks",
+    id: "patterns",
+    title: "Patterns and play",
     group: "Language Reference",
-    body: `# Words and blocks
+    body: `# Patterns and play
 
-## Lines
+## pattern
 
-Every line is one of these:
-
-|Line|Meaning|
-|------|---------|
-|\`tempo: 120\`|A setting|
-|\`snare: 2 4\`|An instrument and what it plays|
-|\`Am F \\|C G\`|Chords, played on the \`sound\` setting|
-|\`repeat 2:\`|Plays the lines indented under it again|
-|\`fill = x x d d\`|A word you can reuse|
-|\`-- note\`|A comment|
-
-## Words
-
-A word names a rhythm or a progression once so you can reuse it. Define it with \`=\`, then use it in a loop or a chord line:
+A pattern names some lines that play together. It doesn't play until you play it.
 
 \`\`\`
-pair = X.x.
-intro = Am E7|G D
-
-hat: pair pair pair pair
-intro intro
+pattern groove 3 bars {
+  kick: loop x--x---
+  snare: loop ----x--
+  ride.bell: loop x--
+}
 \`\`\`
 
-A chord word always covers whole bars. Like settings, words carry on into the cells below.
+Patterns, like settings and variables, carry on into the cells below.
 
-## Blocks
+## play
 
-Lines next to each other form a block and play together. A blank line starts a new block, which plays after the one before it; the editor draws a dashed line there. A block with only settings or words in it doesn't play anything, it just sets things up.
-
-Every line in a block repeats: a chord or beat line every few bars, a loop every few steps. The block lasts until they all line up again, up to 16 bars. Write \`bars:\` to choose the length yourself.
-
-## Repeats
-
-\`repeat 2:\` plays the lines indented under it twice. The repeat ends at the first line that isn't indented under it, and whatever comes next plays after it:
+\`play\` plays what's after it and gives one output. What's after it is a block, or one line:
 
 \`\`\`
-time: 7/8
-repeat 2:
-  crash: 1|.|.
-  ride: b..
-  kick: x..x...
-  snare: ....x..
-snare: 1 2 3 4
-\`\`\`
-
-That plays the 3-bar groove twice, so the crash hits at the start of each time through, then one bar of snare.
-
-Indent further to put a repeat inside a repeat. Blank lines inside a repeat still start a new block, and every block inside it repeats:
-
-\`\`\`
-time: 7/8
-repeat 2:
-  repeat 3:
-    kick: x..x...
+play groove
+play {
   crash: 1
-  snare: 2 4
+  groove * 2
+}
 \`\`\`
 
-That's the kick figure three times, then a bar of crash and snare, and all of that twice. Settings changed inside a repeat stay changed after it. A repeat plays 1 to 16 times. In the editor, Tab indents and Enter keeps the indentation, adding a level after a \`repeat\` line.`,
+Inside braces, a pattern's name on a line of its own plays that pattern, next to the instrument lines beside it. So the second play above is one crash over the groove twice. A pattern can play other patterns the same way.
+
+## In order, and again
+
+| You write | Meaning |
+|-----------|---------|
+| \`intro verse\` | One after the other |
+| \`verse * 2\` | Twice |
+| \`(verse chorus) * 2\` | The pair, twice |
+
+\`\`\`
+play intro (verse chorus) * 2
+\`\`\`
+
+## Lengths
+
+A length goes in front of what it measures:
+
+\`\`\`
+pattern groove 3 bars { kick: loop x--x--- }
+play 3 bars groove
+play 2 bars { hat: loop x- }
+\`\`\`
+
+Without one, a pattern lasts exactly as long as its longest line that isn't a loop, down to a single beat. A pattern with only loops in it needs a length, where you define it or where you play it.`,
   },
   {
     id: "shortcuts",
@@ -319,37 +285,37 @@ That's the kick figure three times, then a bar of crash and snare, and all of th
 
 ## Cell execution
 
-|Key|Action|
+| Key | Action |
 |-----|--------|
-|\`Shift+Enter\`|Run cell and move to next (or insert new cell at end)|
-|\`Ctrl+Enter\` / \`Cmd+Enter\`|Run cell without moving|
-|\`Alt+Enter\`|Run cell and insert new cell below|
+| \`Shift+Enter\` | Run cell and move to next (or insert new cell at end) |
+| \`Ctrl+Enter\` / \`Cmd+Enter\` | Run cell without moving |
+| \`Alt+Enter\` | Run cell and insert new cell below |
 
 ## Navigation
 
-|Key|Action|
+| Key | Action |
 |-----|--------|
-|\`J\` or \`↓\`|Select next cell|
-|\`K\` or \`↑\`|Select previous cell|
-|\`Enter\`|Enter edit mode on selected cell|
-|\`Esc\`|Exit edit mode (back to command mode)|
+| \`J\` or \`↓\` | Select next cell |
+| \`K\` or \`↑\` | Select previous cell |
+| \`Enter\` | Enter edit mode on selected cell |
+| \`Esc\` | Exit edit mode (back to command mode) |
 
 ## Cell management
 
-|Key|Action|
+| Key | Action |
 |-----|--------|
-|\`A\`|Insert new music cell above|
-|\`B\`|Insert new music cell below|
-|\`DD\`|Delete selected cell (press D twice quickly)|
-|\`Z\`|Undo last delete|
+| \`A\` | Insert new music cell above |
+| \`B\` | Insert new music cell below |
+| \`DD\` | Delete selected cell (press D twice quickly) |
+| \`Z\` | Undo last delete |
 
 ## Code editing
 
-|Key|Action|
+| Key | Action |
 |-----|--------|
-|\`Cmd+/\` or \`Ctrl+/\`|Toggle comment on selected lines|
-|\`Tab\` / \`Shift+Tab\`|Indent / outdent the selected lines (for \`repeat\`)|
-|\`Enter\`|New line at the same indentation, one level in after \`repeat 2:\`|
+| \`Cmd+/\` or \`Ctrl+/\` | Toggle \`//\` comment on selected lines |
+| \`Tab\` / \`Shift+Tab\` | Indent / outdent the selected lines |
+| \`Enter\` | New line at the same indentation, one level in after \`{\` |
 
 > **Note:** Navigation and cell management shortcuts only work in **command mode** (when not editing a cell). Press \`Esc\` first to exit edit mode.`,
   },

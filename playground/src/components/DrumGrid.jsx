@@ -1,21 +1,19 @@
 // components/DrumGrid.jsx — Drum hits bar by bar, counted 1 e & a, with a playhead
 import React from "react"
-import { TPQ } from "@composer-nb/dsl/language"
+import { LANES, TPQ } from "@composer-nb/dsl/language"
 
-const ORDER = ["crash", "ride", "hat", "tom", "floor", "snare", "kick"]
 const SAY = { 1: [""], 2: ["", "&"], 3: ["", "&", "a"], 4: ["", "e", "&", "a"] }
 const COUNTING = { 1: "1 2 3", 2: "1 & 2 &", 3: "1 & a", 4: "1 e & a" }
-const ART = { open: "o", pedal: "p", bell: "b" }
 
 function DrumBlock({ block, index }) {
   const per = Math.round((block.barTicks / TPQ) * block.res)
   const cellTicks = TPQ / block.res
-  const lanes = ORDER.filter((d) => block.drumEvents.some((e) => e.inst === d))
+  const lanes = LANES.filter((d) => block.drumEvents.some((e) => e.lane === d))
 
   const hits = new Map()
   for (const e of block.drumEvents) {
     if (e.hidden) continue
-    const k = e.inst + "@" + Math.round(e.tick / cellTicks)
+    const k = e.lane + "@" + Math.round(e.tick / cellTicks)
     if (!hits.has(k) || e.vel > hits.get(k).vel) hits.set(k, e)
   }
 
@@ -33,15 +31,14 @@ function DrumBlock({ block, index }) {
   return (
     <div className="dg-block">
       <div className="dg-head">
-        {block.time} · {block.tempo} bpm · {block.bars} bar{block.bars === 1 ? "" : "s"}
-        {block.times > 1 ? ` × ${block.times}` : ""} · counting{" "}
+        time {block.time} · tempo {block.tempo} · {block.bars} bar{block.bars === 1 ? "" : "s"} · counting{" "}
         {COUNTING[block.res] || "in small steps"}
       </div>
       {Array.from({ length: block.bars }, (_, bar) => (
         <div
           key={bar}
           className="dg-bar"
-          style={{ gridTemplateColumns: `52px repeat(${per}, minmax(0, 1fr))` }}
+          style={{ gridTemplateColumns: `68px repeat(${per}, minmax(0, 1fr))` }}
         >
           {lanes.map((lane) => (
             <React.Fragment key={lane}>
@@ -56,9 +53,7 @@ function DrumBlock({ block, index }) {
                   if (e.double) cls += " dg-dbl"
                 }
                 return (
-                  <div key={col} className={cls} data-k={`${index}-${bar}-${col}`}>
-                    {e ? ART[e.art] : null}
-                  </div>
+                  <div key={col} className={cls} data-k={`${index}-${bar}-${col}`} />
                 )
               })}
             </React.Fragment>

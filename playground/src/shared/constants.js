@@ -26,39 +26,48 @@ export const APP_CONSTANTS = {
 
 A notebook for sketching music. In a **music cell**:
 
-- \`Am E7|G D\` plays chords, with \`|\` between bars. They're piano unless you set \`sound: guitar\` (or epiano, organ, pad, bass)
-- \`snare: 2 4\` hits the snare on beats 2 and 4 of every bar
-- \`ride: b..\` is a loop: the ride bell, then two rests, over and over
+- \`tempo 90\` is a setting: a reserved word and its value
+- \`verse = Am F|C G\` is a variable: your own name for steps or chords
+- \`pattern groove { ... }\` is a pattern: lines that play together
+- \`kick: x--x---\` inside braces is an instrument and what it plays, one instrument per line
+- \`play { ... }\` plays what's after it, a block or one line
 
-Settings like \`time: 7/8\` and \`tempo: 120\` apply from where you write them, including in the cells below. \`--\` starts a comment.
+Settings and names carry on into the cells below. \`//\` starts a comment.
 
 Press **Shift+Enter** to run a cell, or **Run All** to run everything. The full reference is under **Language** in the sidebar.`,
     },
     {
       type: "music",
-      source: `-- what happens now
-time: 7/8
-crash: 1|.|.
-ride: b..
-kick: x..x...
-snare: ....x..`,
+      source: `// what happens now: crash once, groove twice
+time 7 over 8
+
+pattern groove 3 bars {
+  kick: loop x--x---
+  snare: loop ----x--
+  ride.bell: loop x--
+}
+
+play {
+  crash: 1
+  groove * 2
+}`,
     },
     {
       type: "music",
-      source: `-- trains chorus
-time: 4/4
-tempo: 90
-capo: 5
-sound: guitar
-A Am|C Cmaj7|D A|C Cmaj7|Cadd9|Em`,
+      source: `// trains chorus
+time 4 over 4
+tempo 90
+sound guitar
+capo 5
+play chords: A Am|C Cmaj7|D A|C Cmaj7|Cadd9|Em`,
     },
     {
       type: "music",
-      source: `-- hotel california intro
-tempo: 75
-capo: 2
-repeat 2:
-  Am E7|G D|F C|Dm E7`,
+      source: `// hotel california intro
+tempo 75
+capo 2
+intro = Am E7|G D|F C|Dm E7
+play chords: intro intro`,
     },
   ],
 }

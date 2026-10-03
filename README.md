@@ -6,7 +6,7 @@ A small language for chords and drums, and a notebook to hear them in.
 -- what happens now
 time: 7/8
 crash: 1|.|.
-ride: b..
+ride.bell: x..
 kick: x..x...
 snare: ....x..
 ```

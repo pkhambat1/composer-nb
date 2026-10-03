@@ -6,7 +6,7 @@ A small language for chords and drums, played right inside Jupyter notebooks.
 %%music
 time: 7/8
 crash: 1|.|.
-ride: b..
+ride.bell: x..
 kick: x..x...
 snare: ....x..
 ```
@@ -99,17 +99,17 @@ C . . G|Am . F G|%|F . _ .
 
 ### Drums
 
-`kick`, `snare`, `hat`, `ride`, `crash`, `tom` and `floor` each get their own line, played either on beats or as a loop:
+`kick`, `snare`, `hat`, `ride`, `crash`, `tom` and `floor` each get their own line, played either on beats or as a loop. Some have a second sound with a line of its own: `ride.bell`, `hat.open` and `hat.pedal`.
 
 ```
 kick: 1 3
 snare: 2 4 accent
 crash: 1|.|.
 hat: X.x.X.x.
-ride: b..
+ride.bell: x..
 ```
 
-Beats are counted `1 e & a 2 e & a`, and `|` separates bars (`.` is an empty bar). A loop is a row of steps that repeats on its own: `x` hit, `X` accent, `g` ghost, `d` double, `o` open hat, `p` pedal hat, `b` ride bell, `.` rest. Every line in a block repeats until they all line up again.
+Beats are counted `1 e & a 2 e & a`, and `|` separates bars (`.` is an empty bar). A loop is a row of steps that repeats on its own: `x` hit, `X` accent, `g` ghost, `d` double, `.` rest. Every line in a block repeats until they all line up again.
 
 ### Repeats
 

@@ -63,8 +63,8 @@ const CodeEditor = React.forwardRef(function CodeEditor(props, ref) {
       const { selectionStart: start, selectionEnd: end, value: text } = ta
       const before = text.slice(text.lastIndexOf("\n", start - 1) + 1, start)
       let indent = /^[ \t]*/.exec(before)[0]
-      // The line after repeat 2: goes one level in, since that's what the repeat covers.
-      if (/^\s*repeat\s+\S+\s*:\s*(--.*)?$/i.test(before)) indent += INDENT
+      // The line after an opening brace goes one level in.
+      if (/\{\s*(\/\/.*)?$/.test(before)) indent += INDENT
       if (!indent) return
       e.preventDefault()
       replaceRange(ta, start, end, "\n" + indent, onChange)
@@ -83,12 +83,12 @@ const CodeEditor = React.forwardRef(function CodeEditor(props, ref) {
       const lineEnd = text.indexOf("\n", end)
       const block = text.slice(lineStart, lineEnd < 0 ? text.length : lineEnd)
       const lines = block.split("\n")
-      const allCommented = lines.every((l) => /^\s*-- /.test(l) || l.trim() === "")
+      const allCommented = lines.every((l) => /^\s*\/\/ /.test(l) || l.trim() === "")
       const toggled = lines
         .map((l) => {
           if (l.trim() === "") return l
-          if (allCommented) return l.replace(/^(\s*)-- /, "$1")
-          return "-- " + l
+          if (allCommented) return l.replace(/^(\s*)\/\/ /, "$1")
+          return "// " + l
         })
         .join("\n")
 

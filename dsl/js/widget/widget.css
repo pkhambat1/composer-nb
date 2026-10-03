@@ -244,3 +244,27 @@
   color: var(--cnb-accent);
   font-weight: 700;
 }
+
+/* Each play line gets its own output. */
+.cnb-output {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.cnb-output + .cnb-output {
+  margin-top: 6px;
+  padding-top: 10px;
+  border-top: 1px solid var(--cnb-border);
+}
+.cnb-output-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px;
+}
+.cnb-play-line {
+  color: var(--cnb-accent);
+  font-family: var(--cnb-mono);
+  font-size: 12px;
+  font-weight: 600;
+}

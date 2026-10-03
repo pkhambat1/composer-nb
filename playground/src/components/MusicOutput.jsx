@@ -49,8 +49,8 @@ function CellDetails({ parsed, accent, getTime = noTime, playing = false }) {
   const chords = parsed.events.filter((e) => e.chord && !e.repeat)
   const meta = parsed.blocks
     .filter((b) => !b.drumEvents.length)
-    .map((b) => `${b.time} · ${b.tempo} bpm · ${b.bars} bar${b.bars === 1 ? "" : "s"}${b.times > 1 ? ` × ${b.times}` : ""}`)
-  if (parsed.blocks.length > 1) meta.unshift(`${parsed.blocks.length} blocks, one after another`)
+    .map((b) => `time ${b.time} · tempo ${b.tempo} · ${b.bars} bar${b.bars === 1 ? "" : "s"}`)
+  if (parsed.outputs.length > 1) meta.unshift(`${parsed.outputs.length} plays, one after another`)
   if (parsed.fromAbove.length) meta.push(`from cells above: ${parsed.fromAbove.join(", ")}`)
   return (
     <>

@@ -4,10 +4,10 @@ from composer_nb import MusicWidget, Song
 
 
 def test_chain_runs_from_first_song_to_last():
-    intro = Song("@key Bm", name="intro")
-    verse = Song("@tempo 120", after=intro, name="verse")
+    intro = Song("key Bm", name="intro")
+    verse = Song("tempo 120", after=intro, name="verse")
     chorus = Song("G D", after=verse)
-    assert chorus.chain == ["@key Bm", "@tempo 120", "G D"]
+    assert chorus.chain == ["key Bm", "tempo 120", "G D"]
 
 
 def test_song_on_its_own_is_a_chain_of_one():
@@ -15,10 +15,10 @@ def test_song_on_its_own_is_a_chain_of_one():
 
 
 def test_widget_carries_chain_and_names():
-    intro = Song("@key Bm", name="intro")
+    intro = Song("key Bm", name="intro")
     widget = Song("G D", after=intro, name="verse").widget()
     assert isinstance(widget, MusicWidget)
-    assert widget.sources == ["@key Bm", "G D"]
+    assert widget.sources == ["key Bm", "G D"]
     assert widget.name == "verse"
     assert widget.after == "intro"
 
@@ -30,7 +30,7 @@ def test_displays_as_a_notebook_widget():
 
 
 def test_repr_names_what_it_follows():
-    intro = Song("@key Am", name="intro")
+    intro = Song("key Am", name="intro")
     assert repr(Song("C", after=intro, name="verse")) == "Song('verse', after=intro)"
     assert repr(Song("C")) == "Song()"
 
