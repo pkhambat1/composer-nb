@@ -129,18 +129,19 @@ play chords: C - - G|Am - F G|%|F - _ -
 
 ### Drums
 
-`kick`, `snare`, `hat`, `ride`, `crash`, `tom` and `floor` each get their own line. Some have a second sound with a line of its own: `ride.bell`, `hat.open` and `hat.pedal`. A drum plays either steps or beats:
+`kick`, `snare`, `hat`, `ride`, `crash`, `tom` and `floor` each get their own line. Some have other sounds with lines of their own: `ride.bell`, `hat.open`, `hat.pedal`, `snare.rim` (a rimshot) and `snare.ghost` (the snare's ghost notes, so they can sit under its main line). A drum plays either steps or beats:
 
 ```
 play {
   kick: x---x---x-x-----
-  snare: ----X-------X-g-
+  snare: ----X-------X---
+  snare.ghost: --------------x-
   crash: 1
   hat: loop x-
 }
 ```
 
-Steps are one character each, a 16th note unless `step` says otherwise: `x` hit, `X` accent, `g` ghost, `d` double, `-` nothing. Beats are counted `1 e & a 2 e & a`, with `accent`, `ghost` or `double` after a beat to change how it's hit.
+Steps are one character each, a 16th note unless `step` says otherwise: `x` hit, `X` accent, `g` ghost (on the snare, use `snare.ghost`), `d` double, `-` nothing. Beats are counted `1 e & a 2 e & a`, with `accent`, `ghost` or `double` after a beat to change how it's hit.
 
 ### Patterns and play
 

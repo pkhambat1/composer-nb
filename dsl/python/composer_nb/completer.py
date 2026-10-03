@@ -11,7 +11,7 @@ from typing import Dict, List, Optional, Tuple
 from .song import Song
 
 DRUMS = ["crash", "ride", "hat", "tom", "floor", "snare", "kick"]
-VARIATIONS = {"ride": ["bell"], "hat": ["open", "pedal"]}
+VARIATIONS = {"ride": ["bell"], "hat": ["open", "pedal"], "snare": ["ghost", "rim"]}
 INSTRUMENTS = ["piano", "epiano", "organ", "pad", "bass", "guitar"]
 SETTINGS = ["time", "tempo", "step", "sound", "key", "capo", "octave", "kit"]
 TYPES = ["steps", "chords", "pattern"]

@@ -8,6 +8,7 @@ const SAMPLES =
 const FILES = {
   kick: "Kick",
   snare: "Snare",
+  "snare rim": "SnareRimshot",
   hat: "HatClosed",
   "hat open": "HatOpen",
   "hat pedal": "HatPedal",
@@ -83,6 +84,12 @@ function makeSynthKit(output) {
   }).connect(output)
   const snare = new Tone.NoiseSynth({ envelope: { attack: 0.001, decay: 0.16, sustain: 0 } })
   snare.connect(highpass(1200))
+  // The rim's ring, which a rimshot adds to the snare
+  const rim = new Tone.MembraneSynth({
+    pitchDecay: 0.01,
+    octaves: 1,
+    envelope: { attack: 0.001, decay: 0.08, sustain: 0 },
+  }).connect(output)
   const hat = new Tone.NoiseSynth({ envelope: { attack: 0.001, decay: 0.05, sustain: 0 } })
   hat.connect(highpass(7500))
   const openHat = new Tone.NoiseSynth({ envelope: { attack: 0.001, decay: 0.5, sustain: 0 } })
@@ -104,6 +111,7 @@ function makeSynthKit(output) {
   kick.volume.value = -4
   toms.volume.value = -6
   snare.volume.value = -10
+  rim.volume.value = -14
   hat.volume.value = -20
   openHat.volume.value = -20
   cymbal.volume.value = -24
@@ -114,6 +122,10 @@ function makeSynthKit(output) {
     if (ev.inst === "kick") kick.triggerAttackRelease("C1", 0.3, time, vel)
     else if (ev.inst === "tom") toms.triggerAttackRelease("G2", 0.3, time, vel)
     else if (ev.inst === "floor") toms.triggerAttackRelease("C2", 0.4, time, vel)
+    else if (ev.inst === "snare" && ev.art === "rim") {
+      snare.triggerAttackRelease(0.15, time, vel)
+      rim.triggerAttackRelease("A5", 0.08, time, vel)
+    }
     else if (ev.inst === "snare") snare.triggerAttackRelease(0.15, time, vel)
     else if (ev.inst === "crash") cymbal.triggerAttackRelease(300, 1.5, time, vel)
     else if (ev.inst === "ride" && ev.art === "bell") bell.triggerAttackRelease(900, 0.5, time, vel)

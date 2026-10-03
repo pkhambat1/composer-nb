@@ -32,7 +32,8 @@ import { applyCapo, buildChord, isRoman, parseKey } from "./chords.js"
 export const TPQ = 96 // ticks per quarter note: fine enough for 1/32 notes and triplets
 export const DRUMS = ["crash", "ride", "hat", "tom", "floor", "snare", "kick"]
 // A drum's other sounds are lines of their own, written drum.variation (ride.bell).
-export const VARIATIONS = { ride: ["bell"], hat: ["open", "pedal"] }
+// snare.ghost plays the snare's ghost notes, so they can go under its main line.
+export const VARIATIONS = { ride: ["bell"], hat: ["open", "pedal"], snare: ["ghost", "rim"] }
 // Every drum line name, in the order the drum grid draws them.
 export const LANES = DRUMS.flatMap((d) => [d, ...(VARIATIONS[d] || []).map((v) => `${d}.${v}`)])
 export const PARTS = ["chords", ...LANES]
@@ -847,6 +848,18 @@ function chordPattern(part, tokens, st, barTicks, err) {
   }
 }
 
+// The snare's ghost notes have a line of their own, so a ghost note on the snare's main
+// line, or an accent or ghost on snare.ghost, is a mistake. Says why, or null.
+function ghostLineProblem(part, ghost, accent) {
+  if (part.name === "snare" && ghost) {
+    return "the snare's ghost notes go on a line of their own: snare.ghost: --x-"
+  }
+  if (part.art !== "ghost") return null
+  if (accent) return "snare.ghost hits are ghost notes, so they can't be accented"
+  if (ghost) return "every hit on snare.ghost is a ghost note already, so write x"
+  return null
+}
+
 function checkHit(mods, ln, what, err) {
   if (mods.accent && mods.ghost) {
     err(ln, `${what}: a hit can't be both accent and ghost`)
@@ -857,15 +870,16 @@ function checkHit(mods, ln, what, err) {
 
 // `inst` and `art` pick the sound (ride + bell); `lane` is the line it came from.
 function hit(part, tick, mods, kit) {
+  const ghost = mods.ghost || part.art === "ghost" // every hit on snare.ghost is one
   return {
     inst: part.drum,
     art: part.art,
     lane: part.name,
     kit,
     tick,
-    vel: mods.accent ? 1 : mods.ghost ? 0.3 : 0.7,
+    vel: mods.accent ? 1 : ghost ? 0.3 : 0.7,
     accent: !!mods.accent,
-    ghost: !!mods.ghost,
+    ghost,
     double: !!mods.double,
     line: part.ln,
   }
@@ -907,7 +921,9 @@ function beatPattern(part, tokens, st, barTicks, err) {
       } else if (VARIATION_LINE[tok]) {
         fail(`"${tok}" is a line of its own now, e.g. ${VARIATION_LINE[tok]}: 1`)
       } else if (MODIFIERS.includes(tok)) {
-        if (hits.length) hits[hits.length - 1].mods[tok] = true
+        const problem = ghostLineProblem(part, tok === "ghost", tok === "accent")
+        if (problem) fail(`"${tok}": ${problem}`)
+        else if (hits.length) hits[hits.length - 1].mods[tok] = true
         else fail(`"${tok}" goes after the beat it changes, e.g. 3 ${tok}`)
       } else if (tok === ".") {
         fail("Use - for an empty bar: 1|-|-")
@@ -957,6 +973,11 @@ const STEP_HELP = "Use x (hit), X (accent), g (ghost), d (double) or - (nothing)
 function stepMods(c, part, err, where) {
   if (c === "-") return null
   const mods = { ...STEPS[c.toLowerCase()], accent: c !== c.toLowerCase() }
+  const problem = ghostLineProblem(part, mods.ghost, mods.accent)
+  if (problem) {
+    err(part.ln, `"${c}"${where}: ${problem}`)
+    return undefined
+  }
   if (mods.accent && mods.ghost) {
     err(part.ln, `"${c}"${where}: a ghost note can't be accented`)
     return undefined

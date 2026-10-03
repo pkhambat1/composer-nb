@@ -877,15 +877,15 @@ describe("settings", () => {
 
 describe("drums", () => {
   it("read steps: x hit, X accent, g ghost, d double, - nothing", () => {
-    const o = parseSource("play snare: Xxgd-").outputs[0]
+    const o = parseSource("play tom: Xxgd-").outputs[0]
     expect(o.drumEvents.filter((e) => !e.hidden).map((e) => e.vel)).toEqual([1, 0.7, 0.3, 0.7])
     expect(o.drumEvents.filter((e) => e.hidden)).toHaveLength(1)
   })
 
   it("read beats with words after them, and - as an empty bar", () => {
-    const o = parseSource(play("crash: 1|-|1", "snare: 2 accent 4 ghost")).outputs[0]
+    const o = parseSource(play("crash: 1|-|1", "tom: 2 accent 4 ghost")).outputs[0]
     expect(hits(o, "crash").map((e) => e.secStart)).toEqual([0, 4])
-    expect(hits(o, "snare").map((e) => e.vel)).toEqual([1, 0.3])
+    expect(hits(o, "tom").map((e) => e.vel)).toEqual([1, 0.3])
   })
 
   it("play a variation on its own lane, with the drum's sound", () => {
@@ -894,17 +894,43 @@ describe("drums", () => {
     expect(hits(o, "ride.bell").map((e) => [e.inst, e.art])).toEqual([["ride", "bell"]])
   })
 
+  it("play the snare's ghost notes and rimshots on lines of their own", () => {
+    const o = parseSource(play("snare: ----x---", "snare.ghost: --x---dd", "snare.rim: x-------"))
+      .outputs[0]
+    expect(hits(o, "snare").map((e) => [e.inst, e.art, e.vel])).toEqual([["snare", "hit", 0.7]])
+    expect(hits(o, "snare.rim").map((e) => [e.inst, e.art, e.vel])).toEqual([["snare", "rim", 0.7]])
+    // Every hit on snare.ghost is a ghost note: dd is four of them, a 32nd apart.
+    const ghosts = o.drumEvents.filter((e) => e.lane === "snare.ghost")
+    expect(ghosts.map((e) => [e.art, e.vel, e.ghost])).toEqual(Array(5).fill(["ghost", 0.3, true]))
+    expect(ghosts.map((e) => e.secStart / 0.125)).toEqual([2, 6, 6.5, 7, 7.5])
+    expect(hits(parseSource("play snare.rim: X").outputs[0], "snare.rim")[0].vel).toBe(1)
+  })
+
+  it("keep the snare's ghost notes on snare.ghost", () => {
+    expect(firstError("play snare: --g-")).toMatch(
+      /the snare's ghost notes go on a line of their own: snare\.ghost: --x-/,
+    )
+    expect(firstError("play snare: 2 4 ghost")).toMatch(/snare\.ghost: --x-/)
+    expect(firstError("play snare.ghost: X-")).toMatch(
+      /snare\.ghost hits are ghost notes, so they can't be accented/,
+    )
+    expect(firstError("play snare.ghost: 2 accent")).toMatch(/can't be accented/)
+    expect(firstError("play snare.ghost: g-")).toMatch(
+      /every hit on snare\.ghost is a ghost note already, so write x/,
+    )
+  })
+
   it("point old rests and letters at the new ones", () => {
     expect(firstError("play kick: x..x")).toMatch(/use - for a rest/)
     expect(firstError("play ride: b--")).toMatch(/ride\.bell: x--/)
     expect(firstError("play hat: x-x-x-xo")).toMatch(/hat\.open: x--/)
     expect(firstError("play hat: 4 open")).toMatch(/hat\.open: 1/)
     expect(firstError("play crash: 1|.|.")).toMatch(/Use - for an empty bar/)
-    expect(firstError("play snare.rim: 1")).toMatch(/Drums with a second sound/)
+    expect(firstError("play snare.flam: 1")).toMatch(/Drums with a second sound/)
   })
 
   it("won't accent a ghost note", () => {
-    expect(firstError("play snare: G")).toMatch(/ghost note can't be accented/)
+    expect(firstError("play hat: G")).toMatch(/ghost note can't be accented/)
   })
 })
 
