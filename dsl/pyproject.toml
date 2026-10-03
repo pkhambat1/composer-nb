@@ -1,0 +1,44 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "composer-nb"
+version = "0.1.0"
+description = "A small language for sketching chord progressions, played inside Jupyter notebooks."
+readme = "README.md"
+requires-python = ">=3.9"
+authors = [{ name = "Pezanne Khambatta" }]
+keywords = ["music", "chords", "jupyter", "notebook", "dsl"]
+classifiers = [
+  "Framework :: Jupyter",
+  "Intended Audience :: Education",
+  "Programming Language :: Python :: 3",
+  "Topic :: Artistic Software",
+  "Topic :: Multimedia :: Sound/Audio",
+]
+dependencies = [
+  "anywidget>=0.9",
+  "ipython>=7.23",
+]
+
+[project.optional-dependencies]
+test = ["pytest>=7"]
+
+[project.urls]
+Homepage = "https://github.com/pkhambat1/composer-nb"
+Issues = "https://github.com/pkhambat1/composer-nb/issues"
+
+[tool.hatch.build.targets.wheel]
+packages = ["python/composer_nb"]
+artifacts = ["python/composer_nb/static/*"]
+
+[tool.hatch.build.targets.sdist]
+include = ["python", "README.md", "hatch_build.py"]
+artifacts = ["python/composer_nb/static/*"]
+
+# Refuses to build without the compiled widget; see hatch_build.py.
+[tool.hatch.build.hooks.custom]
+
+[tool.pytest.ini_options]
+testpaths = ["tests/python"]

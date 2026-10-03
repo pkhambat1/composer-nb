@@ -1,0 +1,6 @@
+# Built by `npm run build -w dsl`; shipped in the wheel, not committed.
+python/composer_nb/static/
+/dist/
+__pycache__/
+.pytest_cache/
+*.egg-info/

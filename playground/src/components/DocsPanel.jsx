@@ -1,0 +1,511 @@
+// components/DocsPanel.jsx — Built-in DSL documentation
+import React from "react"
+import { marked } from "marked"
+import { highlightMusic } from "@composer-nb/dsl/highlight"
+
+// ---------------------------------------------------------------------------
+// Doc pages — plain markdown (converted from MDX)
+// ---------------------------------------------------------------------------
+
+const PAGES = [
+  {
+    id: "intro",
+    title: "Introduction",
+    group: "Getting Started",
+    body: `# Composer.nb
+
+A notebook for sketching music: chord progressions, drum grooves, and the two together.
+
+A **music cell** is a short script. Run it to hear it, see chord diagrams and a drum grid, and export a WAV. A **text cell** holds Markdown notes.
+
+## Quick example
+
+\`\`\`
+tempo 100
+sound guitar
+
+play {
+  chords: Am F|C G
+  kick: loop x-------
+  snare: loop ----x---
+  hat: loop x-
+}
+\`\`\`
+
+Everything inside the braces plays together. The chords are 2 bars long, and the three drum lines loop for those 2 bars.`,
+  },
+  {
+    id: "lines",
+    title: "The five lines",
+    group: "Getting Started",
+    body: `# The five lines
+
+Every line starts by saying what it is.
+
+| Line | What it is |
+|------|------------|
+| \`tempo 90\` | A **setting**: a reserved word and its value. No \`=\`, because it isn't a variable |
+| \`verse = Am F\\|C G\` | A **variable**: your own name for steps or chords. Only these get \`=\` |
+| \`pattern groove { ... }\` | A **pattern**: lines that play together. Braces always follow a keyword |
+| \`kick: x--x---\` | Inside braces, an **instrument** and what it plays |
+| \`play { ... }\` | **Plays** what's after it: a block, or one line |
+
+\`//\` starts a comment. Blank lines and indentation mean nothing.
+
+## One meaning per symbol
+
+| Symbol | Meaning |
+|--------|---------|
+| \`:\` | This instrument plays this |
+| \`=\` | This name holds this |
+| \`{ }\` | These lines play together |
+| \`*\` | Times: \`groove * 2\` |
+| \`( )\` | A group: \`(verse chorus) * 2\` |
+| \`/\` | Division, between two numbers. In \`C/E\` it's part of a chord's name |
+
+## Nothing floats
+
+Nothing plays unless it's inside a \`play\`. An instrument's line on its own, outside braces, is an error.`,
+  },
+  {
+    id: "settings",
+    title: "Settings",
+    group: "Language Reference",
+    body: `# Settings
+
+A setting is a reserved word followed by its value. It applies from where it's written onward, including in the cells below. A cell's output lists anything it inherited. A setting written inside braces only applies inside them.
+
+| Setting | Default | Meaning |
+|---------|---------|---------|
+| \`time\` | \`4 over 4\` | How many notes are in a bar, over which note: \`7 over 8\`, \`3+4 over 4\` |
+| \`tempo\` | \`120\` | Quarter notes per minute |
+| \`step\` | \`1/16\` | How long one step lasts, as a fraction of a whole note: \`1/8\`, or \`1/12\` for triplets |
+| \`sound\` | \`piano\` | What chords play on: \`piano\`, \`epiano\`, \`organ\`, \`pad\`, \`bass\`, \`guitar\` |
+| \`key\` | \`C\` | Key for Roman numeral chords: \`C\`, \`Am\`, \`Bb\`, \`F#m\` |
+| \`capo\` | \`0\` | Capo fret, 0 to 12. Only works with \`sound guitar\` |
+| \`octave\` | \`3\` | Octave chords are voiced in, 1 to 6 |
+| \`kit\` | \`rock\` | Drum sound: \`rock\` (a recorded kit) or \`synth\` |
+
+## Numbers are arithmetic
+
+Wherever a number goes, arithmetic goes: \`tempo 60*2\`, \`groove * (4/2)\`, \`(1+2) bars groove\`.
+
+That's why a time isn't written with a slash. \`7/8\` is the number 0.875, and a time is two numbers: \`time 7 over 8\`. \`6 over 8\` and \`3 over 4\` are different times, though they'd divide to the same thing. Write \`3+4 over 4\` for a bar felt as 3 then 4; the drum grid shades the groups.
+
+## Counting
+
+A beat is a quarter note everywhere: \`tempo\` counts quarter notes, and drum beats are counted \`1 e & a 2 e & a\`. A \`7 over 8\` bar is three and a half beats long, so it ends on \`4e\`.`,
+  },
+  {
+    id: "chords",
+    title: "Chords",
+    group: "Language Reference",
+    body: `# Chords
+
+Chords go on a \`chords:\` line and play on the \`sound\` setting.
+
+\`\`\`
+sound guitar
+play chords: Am E7|G D|F C|Dm E7
+\`\`\`
+
+## Bars and rhythm
+
+| You write | Meaning |
+|-----------|---------|
+| \`\\|\` | A bar line |
+| \`Am F\` | The chords in a bar split it evenly |
+| \`-\` | Hold the chord before for another slot |
+| \`_\` | Silence for a slot |
+| \`%\` | Repeat the bar before |
+
+\`\`\`
+play chords: C - - G|Am - F G|%|F - _ -
+\`\`\`
+
+The first bar is C for three beats and G for one. A bar has to split evenly into sixteenth notes, so three chords in a 4 over 4 bar is an error: write \`Am - F G\` instead.
+
+## Chord names
+
+Any standard chord name works: \`C\`, \`Am\`, \`F#m\`, \`Bb7\`, \`Cmaj7\`, \`Dm9\`, \`G7sus4\`, \`Em7b5\`, \`Cadd9\`. A slash sets the bass note: \`C/E\`.
+
+## Roman numerals
+
+Roman numerals follow the \`key\` setting. Uppercase is major and lowercase is minor; \`°\` (or \`o\`) is diminished and \`ø\` half-diminished. A \`b\` or \`#\` in front moves the root.
+
+\`\`\`
+key C
+play chords: I vi|IV V7|bVII IV|ii7 vii°
+\`\`\`
+
+In C that plays C Am, F G7, Bb F, then Dm7 Bdim.
+
+## Naming a progression
+
+A variable holds chords so you can reuse them:
+
+\`\`\`
+verse = Am E7|G D
+play chords: verse verse
+\`\`\``,
+  },
+  {
+    id: "drums",
+    title: "Drums",
+    group: "Language Reference",
+    body: `# Drums
+
+## One instrument per line
+
+\`kick\`, \`snare\`, \`hat\`, \`ride\`, \`crash\`, \`tom\` and \`floor\` (the floor tom) each get their own line. The line says which sound, and what follows the colon says when. Some drums have a second sound with a line of its own: \`ride.bell\`, \`hat.open\` and \`hat.pedal\`.
+
+Lines play together, so two drums on the same step is two lines with a hit in the same place.
+
+## Steps
+
+A row of steps, one character each. Each step lasts one \`step\` (a sixteenth note unless you change it).
+
+| Step | Meaning |
+|------|---------|
+| \`x\` | Hit |
+| \`X\` | Accented hit |
+| \`g\` | Ghost note |
+| \`d\` | Double stroke |
+| \`-\` | Nothing |
+
+\`\`\`
+play {
+  kick: x---x---x-x-----
+  snare: ----X-------X-g-
+}
+\`\`\`
+
+## Beats
+
+Or list the beats a drum plays. A beat is a quarter note, counted \`1 e & a\`. \`\\|\` separates bars, and \`-\` is an empty bar.
+
+\`\`\`
+play {
+  kick: 1 2& 3
+  snare: 2 accent 4 4a ghost
+  crash: 1|-
+}
+\`\`\`
+
+A word after a beat changes how it's hit: \`accent\`, \`ghost\` or \`double\`.
+
+## loop
+
+A line plays what's written, once. \`loop\` repeats it until whatever it's in ends.
+
+\`\`\`
+play {
+  chords: Am F|C G
+  hat: loop x-
+}
+\`\`\`
+
+Loops of different lengths drift against each other, which is how you write a polyrhythm:
+
+\`\`\`
+time 7 over 8
+
+play 3 bars {
+  kick: loop x--x---
+  snare: loop ----x--
+  ride.bell: loop x--
+}
+\`\`\`
+
+The bell repeats every 3 steps against a 7-step kick and snare.`,
+  },
+  {
+    id: "patterns",
+    title: "Patterns and play",
+    group: "Language Reference",
+    body: `# Patterns and play
+
+## pattern
+
+A pattern names some lines that play together. It doesn't play until you play it.
+
+\`\`\`
+pattern groove 3 bars {
+  kick: loop x--x---
+  snare: loop ----x--
+  ride.bell: loop x--
+}
+\`\`\`
+
+Patterns, like settings and variables, carry on into the cells below.
+
+## play
+
+\`play\` plays what's after it and gives one output. What's after it is a block, or one line:
+
+\`\`\`
+play groove
+play {
+  crash: 1
+  groove * 2
+}
+\`\`\`
+
+Inside braces, a pattern's name on a line of its own plays that pattern, next to the instrument lines beside it. So the second play above is one crash over the groove twice. A pattern can play other patterns the same way.
+
+## In order, and again
+
+| You write | Meaning |
+|-----------|---------|
+| \`intro verse\` | One after the other |
+| \`verse * 2\` | Twice |
+| \`(verse chorus) * 2\` | The pair, twice |
+
+\`\`\`
+play intro (verse chorus) * 2
+\`\`\`
+
+## Lengths
+
+A length goes in front of what it measures:
+
+\`\`\`
+pattern groove 3 bars { kick: loop x--x--- }
+play 3 bars groove
+play 2 bars { hat: loop x- }
+\`\`\`
+
+Without one, a pattern lasts exactly as long as its longest line that isn't a loop, down to a single beat. A pattern with only loops in it needs a length, where you define it or where you play it.`,
+  },
+  {
+    id: "shortcuts",
+    title: "Keyboard Shortcuts",
+    group: "App",
+    body: `# Keyboard Shortcuts
+
+## Cell execution
+
+| Key | Action |
+|-----|--------|
+| \`Shift+Enter\` | Run cell and move to next (or insert new cell at end) |
+| \`Ctrl+Enter\` / \`Cmd+Enter\` | Run cell without moving |
+| \`Alt+Enter\` | Run cell and insert new cell below |
+
+## Navigation
+
+| Key | Action |
+|-----|--------|
+| \`J\` or \`↓\` | Select next cell |
+| \`K\` or \`↑\` | Select previous cell |
+| \`Enter\` | Enter edit mode on selected cell |
+| \`Esc\` | Exit edit mode (back to command mode) |
+
+## Cell management
+
+| Key | Action |
+|-----|--------|
+| \`A\` | Insert new music cell above |
+| \`B\` | Insert new music cell below |
+| \`DD\` | Delete selected cell (press D twice quickly) |
+| \`Z\` | Undo last delete |
+
+## Code editing
+
+| Key | Action |
+|-----|--------|
+| \`Cmd+/\` or \`Ctrl+/\` | Toggle \`//\` comment on selected lines |
+| \`Tab\` / \`Shift+Tab\` | Indent / outdent the selected lines |
+| \`Enter\` | New line at the same indentation, one level in after \`{\` |
+
+> **Note:** Navigation and cell management shortcuts only work in **command mode** (when not editing a cell). Press \`Esc\` first to exit edit mode.`,
+  },
+]
+
+// Group pages for TOC nav
+const GROUPS = []
+const seen = new Set()
+for (const p of PAGES) {
+  if (!seen.has(p.group)) {
+    seen.add(p.group)
+    GROUPS.push(p.group)
+  }
+}
+
+function DocsPanel({ style }) {
+  const contentRef = React.useRef(null)
+  const scrollLockRef = React.useRef(false)
+  const [activeId, setActiveId] = React.useState(() => {
+    const hash = window.location.hash.replace("#", "")
+    if (hash.startsWith("docs-")) {
+      const id = hash.replace("docs-", "")
+      if (PAGES.some((p) => p.id === id)) return id
+    }
+    return PAGES[0].id
+  })
+
+  // Ref to hold scrollTo for use in mount effect (avoids temporal dead zone)
+  const scrollToRef = React.useRef(null)
+
+  // Track which section is visible while scrolling
+  React.useEffect(() => {
+    const container = contentRef.current
+    if (!container) return
+    const onScroll = () => {
+      if (scrollLockRef.current) return
+      const top = container.scrollTop + 40
+      let current = PAGES[0].id
+      for (const p of PAGES) {
+        const el = container.querySelector(`#docs-${p.id}`)
+        if (el && el.offsetTop <= top) current = p.id
+      }
+      setActiveId(current)
+    }
+    container.addEventListener("scroll", onScroll, { passive: true })
+    return () => container.removeEventListener("scroll", onScroll)
+  }, [])
+
+  const scrollTo = React.useCallback((id) => {
+    setActiveId(id)
+    scrollLockRef.current = true
+    setTimeout(() => { scrollLockRef.current = false }, 600)
+    const container = contentRef.current
+    const el = container?.querySelector(`#docs-${id}`)
+    if (el && container) {
+      const target = el.offsetTop
+      const start = container.scrollTop
+      const dist = target - start
+      const duration = 250
+      const t0 = performance.now()
+      const step = (now) => {
+        const p = Math.min((now - t0) / duration, 1)
+        const ease = p < 0.5 ? 2 * p * p : 1 - (-2 * p + 2) ** 2 / 2
+        container.scrollTop = start + dist * ease
+        if (p < 1) requestAnimationFrame(step)
+      }
+      requestAnimationFrame(step)
+    }
+    history.replaceState(null, "", `#docs-${id}`)
+  }, [])
+  scrollToRef.current = scrollTo
+
+  // Scroll to hash target on mount
+  React.useEffect(() => {
+    const hash = window.location.hash.replace("#", "")
+    if (hash.startsWith("docs-")) {
+      const id = hash.replace("docs-", "")
+      setTimeout(() => scrollToRef.current(id), 100)
+    }
+  }, [])
+
+  const renderer = React.useMemo(() => {
+    const r = new marked.Renderer()
+    r.heading = function ({ text, depth }) {
+      const escaped = text.replace(/&/g, "&amp;").replace(/</g, "&lt;")
+      if (depth === 1) {
+        return `<h1 class="docs-heading-link">${escaped}<svg class="docs-link-icon" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 8.5a3 3 0 0 0 4.2.4l2-2a3 3 0 0 0-4.2-4.2L7.3 3.9"/><path d="M9.5 7.5a3 3 0 0 0-4.2-.4l-2 2a3 3 0 0 0 4.2 4.2l1.2-1.2"/></svg></h1>`
+      }
+      return `<h${depth}>${escaped}</h${depth}>`
+    }
+    r.code = function ({ text }) {
+      const lines = highlightMusic(text)
+      const highlighted = lines
+        .map((parts) =>
+          parts
+            .map((p) =>
+              p.c
+                ? `<span class="${p.c}">${p.s.replace(/&/g, "&amp;").replace(/</g, "&lt;")}</span>`
+                : p.s.replace(/&/g, "&amp;").replace(/</g, "&lt;"),
+            )
+            .join(""),
+        )
+        .join("\n")
+      const escaped = text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/"/g, "&quot;")
+      return `<div class="docs-code-wrap"><button class="docs-copy-btn" data-code="${escaped}" title="Copy to clipboard"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="5" width="9" height="9" rx="1.5"/><path d="M5 11H3.5A1.5 1.5 0 0 1 2 9.5v-7A1.5 1.5 0 0 1 3.5 1h7A1.5 1.5 0 0 1 12 2.5V5"/></svg></button><pre><code>${highlighted}</code></pre></div>`
+    }
+    return r
+  }, [])
+
+  const allHtml = React.useMemo(() => {
+    return PAGES.map((page) => ({
+      id: page.id,
+      html: marked.parse(page.body, { renderer }),
+    }))
+  }, [renderer])
+
+  const handleContentClick = React.useCallback((e) => {
+    const linkIcon = e.target.closest(".docs-link-icon")
+    if (linkIcon) {
+      const article = linkIcon.closest(".docs-article")
+      if (article) {
+        const pageId = article.id.replace("docs-", "")
+        const url = `${window.location.origin}${window.location.pathname}#docs-${pageId}`
+        navigator.clipboard.writeText(url).then(() => {
+          linkIcon.classList.add("docs-link-copied")
+          setTimeout(() => linkIcon.classList.remove("docs-link-copied"), 1500)
+        }, () => {})
+        scrollTo(pageId)
+      }
+      return
+    }
+    const heading = e.target.closest(".docs-heading-link")
+    if (heading) {
+      const article = heading.closest(".docs-article")
+      if (article) {
+        const pageId = article.id.replace("docs-", "")
+        scrollTo(pageId)
+      }
+      return
+    }
+    const btn = e.target.closest(".docs-copy-btn")
+    if (!btn) return
+    const code = btn.getAttribute("data-code")
+    if (!code) return
+    navigator.clipboard.writeText(code).then(() => {
+      btn.classList.add("docs-copy-done")
+      setTimeout(() => btn.classList.remove("docs-copy-done"), 1500)
+    })
+  }, [])
+
+  return (
+    <div className="docs-panel" style={style}>
+      <header className="panel-header">
+        <div>
+          <h1 className="panel-title">Language reference</h1>
+          <p className="panel-subtitle">DSL documentation</p>
+        </div>
+      </header>
+      <div className="docs-body">
+        <nav className="docs-nav">
+          {GROUPS.map((g) => (
+            <div key={g} className="docs-nav-group">
+              <div className="docs-nav-group-label">{g}</div>
+              {PAGES.filter((p) => p.group === g).map((p) => (
+                <button
+                  key= {p.id}
+                  className={"docs-nav-item" + (p.id === activeId ? " docs-nav-active" : "")}
+                  onClick={() => scrollTo(p.id)}
+                >
+                  {p.title}
+                </button>
+              ))}
+            </div>
+          ))}
+        </nav>
+        <div className="docs-scroll" ref={contentRef} onClick={handleContentClick}>
+          {allHtml.map((page) => (
+            <article
+              key= {page.id}
+              id= {`docs-${page.id}`}
+              className="docs-article"
+              dangerouslySetInnerHTML={{ __html: page.html }}
+            />
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+export default React.memo(DocsPanel, (prev, next) =>
+  prev.style?.display === next.style?.display,
+)

@@ -1,37 +1,27 @@
 {
   "name": "composer-nb",
   "private": true,
-  "version": "0.0.0",
   "type": "module",
+  "workspaces": [
+    "dsl",
+    "playground"
+  ],
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview",
+    "dev": "npm run dev -w playground",
+    "build": "npm run build --workspaces",
+    "test": "npm test --workspaces --if-present",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "test": "vitest run",
-    "test:watch": "vitest",
     "docs": "npx mintlify dev --dir docs"
   },
   "devDependencies": {
     "@eslint/js": "^9.13.0",
     "@stylistic/eslint-plugin": "^5.8.0",
-    "@vitejs/plugin-react": "^4.3.4",
     "eslint": "^9.13.0",
     "eslint-plugin-react-hooks": "^5.0.0",
     "globals": "^15.11.0",
-    "prettier": "^3.8.1",
-    "vite": "^6.3.5",
-    "vitest": "^2.1.9"
-  },
-  "dependencies": {
-    "marked": "^15.0.7",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1",
-    "tonal": "^6.4.2",
-    "tone": "14.8.49",
-    "wavesurfer.js": "^7.8.8"
+    "prettier": "^3.8.1"
   }
 }
