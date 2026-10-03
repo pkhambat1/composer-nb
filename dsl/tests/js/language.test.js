@@ -519,6 +519,74 @@ describe("lengths", () => {
   })
 })
 
+describe("blocks without a name", () => {
+  const BODY = "  kick: loop x---\n  floor: loop x--\n  snare: loop x----"
+  const SIZED = `play 4 bars {\n${BODY}\n}`
+
+  it("play inside another block, with a length in front", () => {
+    expect(sound(`play {\n4 bars {\n${BODY}\n}\n}`)).toEqual(sound(SIZED))
+    expect(sound(`play  {\n  4 bars {\n${BODY}\n  }\n}`)).toEqual(sound(SIZED))
+  })
+
+  it("play the same as a pattern with that block", () => {
+    expect(sound(`play {\n4 bars {\n${BODY}\n}\n}`)).toEqual(
+      sound(`pattern beat 4 bars {\n${BODY}\n}\nplay beat`),
+    )
+  })
+
+  it("play in a row with names, and repeat", () => {
+    const named = "pattern a { kick: x--- }\npattern b { snare: x--- }"
+    expect(sound(`${named}\nplay a { snare: x--- } * 2 a`)).toEqual(
+      sound(`${named}\nplay a b * 2 a`),
+    )
+    expect(sound(`${named}\nplay { snare: x--- } * 2`)).toEqual(sound(`${named}\nplay b * 2`))
+    expect(sound(`${named}\nplay {\n  snare: x---\n} * 2`)).toEqual(sound(`${named}\nplay b * 2`))
+    expect(sound(`${named}\nplay 2 bars { kick: loop x- } * 2`)).toEqual(
+      sound("pattern c 2 bars { kick: loop x- }\nplay c * 2"),
+    )
+  })
+
+  it("play together with the other lines in their braces", () => {
+    expect(sound("play {\n  { kick: x--- }\n  snare: --x-\n}")).toEqual(
+      sound("play {\n  kick: x---\n  snare: --x-\n}"),
+    )
+  })
+
+  it("go inside patterns and nest", () => {
+    expect(
+      sound("pattern g {\n  2 bars {\n    { kick: x- }\n    snare: loop ----x---\n  }\n}\nplay g"),
+    ).toEqual(sound("play 2 bars {\n  kick: x-\n  snare: loop ----x---\n}"))
+  })
+
+  it("keep what's set inside them to themselves", () => {
+    const p = parseSource("play {\n  {\n    tempo 60\n    kick: x\n  }\n}\nplay kick: x")
+    expect(p.errors).toEqual([])
+    expect(p.outputs.map((o) => o.durSec)).toEqual([0.25, 0.125])
+  })
+
+  it("explain their mistakes", () => {
+    expect(firstError(`{\n${BODY}\n}`)).toMatch(
+      /Nothing plays this block. Put play in front: play \{/,
+    )
+    expect(firstError(`4 bars {\n${BODY}\n}`)).toMatch(/play 4 bars \{ \.\.\. \}/)
+    expect(firstError("play {\n  {\n  }\n  kick: x\n}")).toMatch(
+      /These braces have nothing in them/,
+    )
+    expect(firstError("play {\n  { kick: loop x- }\n}")).toMatch(
+      /Everything in this block loops, so it has no length. Say how long: 3 bars \{ \.\.\. \}/,
+    )
+    expect(firstError("play {\n  { tempo 90 }\n}")).toMatch(/Nothing to play in this block/)
+    expect(anyError("play {\n  kick: { x }\n}")).toMatch(/Braces can't go after kick:/)
+    expect(firstError("play {\n  groove {\n    kick: x\n  }\n}")).toMatch(/"groove" isn't defined/)
+    expect(anyError("play {\n  pattern b {\n    kick: x\n  }\n}")).toMatch(
+      /can't be defined inside braces/,
+    )
+    expect(firstError("pattern a {\n  { a }\n}")).toMatch(/a plays itself/)
+    expect(firstError("play {\n  { kick: x\n}")).toMatch(/needs a \} to close it/)
+    expect(firstError("play groove { kick: x } }")).toMatch(/doesn't close anything/)
+  })
+})
+
 describe("loop", () => {
   it("plays a line once unless it says loop", () => {
     const once = parseSource("play 2 bars kick: x---").outputs[0]
