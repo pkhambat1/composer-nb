@@ -189,7 +189,7 @@ With `play 4 bars` that's an error, and it says the loops line up every 15 bars.
 
 ## Playground
 
-The same language runs in the composer-nb playground, a notebook-style web app. Its source is in the [`playground/`](https://github.com/pkhambat1/composer-nb/tree/main/playground) folder of the repository.
+The same language runs in the [composer-nb playground](https://composer-nb.vercel.app), a notebook-style web app you can use in the browser with nothing to install. Its source is in the [`playground/`](https://github.com/pkhambat1/composer-nb/tree/main/playground) folder of the repository.
 
 ## Developing
 
