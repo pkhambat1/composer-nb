@@ -48,6 +48,8 @@ export const TYPES = ["steps", "chords", "pattern"]
 // loop, for, def and section are old words, kept so they're explained rather than taken as
 // names.
 export const KEYWORDS = [...TYPES, "play", "loop", "for", "bars", "bar", "over", "def", "section"]
+// Old words for how a beat is hit, kept so they're explained: a step after the beat says it
+// now (2 X).
 export const MODIFIERS = ["accent", "ghost", "double"]
 export const KITS = ["rock", "synth"]
 const SETTING_EXAMPLE = {
@@ -481,6 +483,14 @@ function defineWord(type, name, value, ln, state, err, blocks = null) {
     )
   }
   if (ROMAN.includes(name)) return err(ln, `${name} is a chord, so pick another name`)
+  if (type === "steps" && listsBeats(tokenize(value))) {
+    // steps burst = -|3 dd: beats, as steps
+    const run = beatsAsSteps({ name, art: "hit", ln, blocks }, tokenize(value), state, err)
+    if (run == null) return
+    delete state.sections[name]
+    state.words[name] = { type, tokens: [run], line: ln }
+    return
+  }
   const key = parseKey(state.key)
   const tokens = []
   for (const t of tokenize(value)) {
@@ -549,28 +559,27 @@ function patternText(value) {
   return !!track && !/\s/.test(track[1])
 }
 
-// Whether everything in a block is steps, or names of steps: a drum's block of layers.
+// Whether a token can be part of steps: a step run, a name of steps, a beat, a bar line,
+// or a block of steps.
+function stepsToken(t, st, blocks) {
+  if (blocks?.[t]) return holdsSteps(blocks[t], st)
+  return isStepRun(t) || st.words[t]?.type === "steps" || BEAT_RE.test(t) || t === "|" || t === "%"
+}
+
+// Whether everything in a block is steps (or beats, or names of steps): a drum's layers.
 function holdsSteps(block, st) {
-  return block.lines.every((l) =>
-    tokenize(l.text).every((t) =>
-      l.blocks?.[t] ? holdsSteps(l.blocks[t], st) : isStepRun(t) || st.words[t]?.type === "steps",
-    ),
-  )
+  return block.lines.every((l) => tokenize(l.text).every((t) => stepsToken(t, st, l.blocks)))
 }
 
 // What a value is, from how it's written: a pattern (braces, a length, an instrument's
 // line, or other patterns' names), steps or chords. Braces holding steps are steps.
 function shapeOf(value, st, blocks = null) {
   const tokens = tokenize(value)
-  if (
-    tokens.some((t) => blocks?.[t]) &&
-    tokens.every((t) =>
-      blocks?.[t] ? holdsSteps(blocks[t], st) : isStepRun(t) || st.words[t]?.type === "steps",
-    )
-  ) {
-    return "steps"
-  }
+  const stepsLike = tokens.every((t) => stepsToken(t, st, blocks))
+  if (stepsLike && tokens.some((t) => blocks?.[t])) return "steps"
   if (patternText(value)) return "pattern"
+  // Beats, which are steps written by where they hit: -|3 dd
+  if (stepsLike && tokens.some((t) => BEAT_RE.test(t))) return "steps"
   if (tokens.some((t) => st.sections[t])) return "pattern"
   const key = parseKey(st.key)
   const steps = tokens.every((t) => isStepRun(t) || st.words[t]?.type === "steps")
@@ -903,14 +912,6 @@ function ghostLineProblem(part, ghost, accent) {
   return null
 }
 
-function checkHit(mods, ln, what, err) {
-  if (mods.accent && mods.ghost) {
-    err(ln, `${what}: a hit can't be both accent and ghost`)
-    return false
-  }
-  return true
-}
-
 // `inst` and `art` pick the sound (ride + bell); `lane` is the line it came from.
 function hit(part, tick, mods, kit) {
   const ghost = mods.ghost || part.art === "ghost" // every hit on snare.ghost is one
@@ -934,9 +935,16 @@ function pushHit(out, part, tick, mods, doubleGap, kit) {
   if (mods.double) out.push({ ...ev, tick: tick + doubleGap, hidden: true, gap: doubleGap })
 }
 
-// Beats: crash: 1, snare: 2 4|2 4& — positions in bars, counted 1 e & a.
-function beatPattern(part, tokens, st, barTicks, err) {
+const BEAT_RE = /^(\d+)(e|&|a)?$/
+// Whether a line lists beats (2 4|2e 4) rather than steps (x-x-).
+const listsBeats = (tokens) => tokens.some((t) => /^\d/.test(t) || t === "|" || t === "%")
+
+// Beats: crash: 1, snare: 2e 4|2 4& — where a drum is hit, counted 1 e & a in each bar.
+// Steps after a beat say how it's hit, and carry on from there: 2 X is an accent on 2, and
+// 3 dd a burst of doubles from 3. Returns each bar's hits ({ tick, mods, tok }), or null.
+function readBeats(part, tokens, st, barTicks, err) {
   const qpb = barQuarters(st)
+  const stepTicks = st.stepTicks
   const bars = []
   let ok = true
   const fail = (msg) => {
@@ -953,39 +961,74 @@ function beatPattern(part, tokens, st, barTicks, err) {
       bars.push([])
       continue
     }
-    const hits = []
+    const beats = [] // { tok, tick, steps }: each beat, and the steps written after it
     for (const tok of bar) {
-      const m = /^(\d+)(e|&|a)?$/.exec(tok)
+      const m = BEAT_RE.exec(tok)
+      const last = beats[beats.length - 1]
+      const word = st.words[tok]
+      const block = part.blocks?.[tok]
       if (m) {
         const q = Number(m[1]) - 1 + SUB[m[2] || ""]
         if (Number(m[1]) < 1 || q > qpb - 1e-9) {
           fail(`${tok} is past the end of a ${timeLabel(st)} bar, which ends on ${lastCount(st)}`)
-        } else hits.push({ tick: Math.round(q * TPQ), mods: {}, tok })
+        } else beats.push({ tok, tick: Math.round(q * TPQ), steps: null })
+      } else if (tok !== "-" && (isStepRun(tok) || word?.type === "steps" || block)) {
+        // Steps after a beat, from that beat on
+        const run = block
+          ? stepBlock(block, st, err, part.drum ? part : null)
+          : word
+            ? word.tokens.join("")
+            : tok
+        if (run == null) ok = false
+        else if (!last) {
+          const shown = block ? "{ ... }" : tok
+          fail(`Say which beat ${shown} starts on: 1 ${shown}`)
+        } else if (last.steps) {
+          fail(
+            `${last.tok} already has steps after it. Write them as one: ${last.tok} ${last.run}${run}`,
+          )
+        } else {
+          last.run = run
+          last.steps = [...run].map((c) => stepMods(c, part, err, word ? ` (in ${tok})` : ""))
+          if (last.steps.includes(undefined)) ok = false
+        }
       } else if (VARIATION_LINE[tok]) {
         fail(`"${tok}" is a line of its own now, e.g. ${VARIATION_LINE[tok]}: 1`)
       } else if (MODIFIERS.includes(tok)) {
+        // The old words for how a beat is hit. A step after it says that now.
         const problem = ghostLineProblem(part, tok === "ghost", tok === "accent")
-        if (problem) fail(`"${tok}": ${problem}`)
-        else if (hits.length) hits[hits.length - 1].mods[tok] = true
-        else fail(`"${tok}" goes after the beat it changes, e.g. 3 ${tok}`)
+        const step = { accent: "X", ghost: "g", double: "d" }[tok]
+        fail(
+          problem
+            ? `"${tok}": ${problem}`
+            : `Say how a beat is hit with a step after it: ${last ? last.tok : 2} ${step} for ${tok === "accent" ? "an accent" : tok === "ghost" ? "a ghost note" : "a double"}`,
+        )
       } else if (tok === ".") {
         fail("Use - for an empty bar: 1|-|-")
       } else if (tok === "-" || tok === "%") {
         fail(`${tok} stands for a whole bar, so it goes between bar lines on its own: 1 3|${tok}`)
-      } else if (isStepRun(tok) || BLOCK_KEY.test(tok)) {
-        fail(
-          `${BLOCK_KEY.test(tok) ? "This line lists beats, so a block of steps can't go on it" : `"${tok}" is steps, but this line lists beats`}. ` +
-            "Use beats (1 2& 3) or steps (x-x-), not both",
-        )
-      } else if (st.words[tok]) {
-        fail(`${tok} is ${st.words[tok].type}, which don't go in a list of beats`)
+      } else if (word) {
+        fail(`${tok} is ${word.type}, which don't go in a list of beats`)
       } else if (st.sections[tok]) {
         fail(`${tok} is a pattern, so it goes on a line of its own, not on an instrument's line`)
       } else {
         fail(`"${tok}" isn't a beat. Beats look like 1, 2&, 3e or 4a`)
       }
     }
-    for (const h of hits) if (!checkHit(h.mods, part.ln, h.tok, err)) ok = false
+    // A beat on its own is one hit. Steps after one end before the next beat, in the bar.
+    const hits = []
+    beats.sort((a, b) => a.tick - b.tick)
+    beats.forEach((b, i) => {
+      const steps = b.steps || [{}]
+      const end = b.tick + (b.steps ? steps.length * stepTicks : 1)
+      const next = beats[i + 1]
+      if (next && next.tick === b.tick) fail(`${b.tok} is in this bar twice`)
+      else if (next && next.tick < end) fail(`The steps after ${b.tok} run into ${next.tok}`)
+      if (end > barTicks) fail(`The steps after ${b.tok} run past the end of the bar`)
+      steps.forEach((mods, k) => {
+        if (mods) hits.push({ tick: b.tick + k * stepTicks, mods, tok: b.tok })
+      })
+    })
     bars.push(hits)
   }
   if (!ok) return null
@@ -993,6 +1036,13 @@ function beatPattern(part, tokens, st, barTicks, err) {
     err(part.ln, `${part.name} has nothing to play`)
     return null
   }
+  return bars
+}
+
+function beatPattern(part, tokens, st, barTicks, err) {
+  const bars = readBeats(part, tokens, st, barTicks, err)
+  if (!bars) return null
+  const stepTicks = st.stepTicks
   return {
     kind: "drum",
     ticks: bars.length * barTicks,
@@ -1001,12 +1051,46 @@ function beatPattern(part, tokens, st, barTicks, err) {
       for (let b = 0; b * barTicks < total && (loop || b < bars.length); b++) {
         for (const h of bars[b % bars.length]) {
           if (b * barTicks + h.tick < total)
-            pushHit(out, part, b * barTicks + h.tick, h.mods, TPQ / 8, st.kit)
+            pushHit(out, part, b * barTicks + h.tick, h.mods, stepTicks / 2, st.kit)
         }
       }
       return out
     },
   }
+}
+
+// The step that hits a drum this way: x, X, g or d (D for an accented double).
+function stepLetter(mods) {
+  const c = mods.double ? "d" : mods.ghost ? "g" : "x"
+  return mods.accent ? c.toUpperCase() : c
+}
+
+// Beats written as steps, so they can be named as steps or layered with them: each bar on
+// the step grid. Null, after saying why, when the bars or beats aren't on it.
+function beatsAsSteps(part, tokens, st, err) {
+  const { barTicks } = meterOf(st)
+  const bars = readBeats(part, tokens, st, barTicks, err)
+  if (!bars) return null
+  const stepTicks = st.stepTicks
+  if (barTicks % stepTicks) {
+    err(
+      part.ln,
+      `A ${timeLabel(st)} bar isn't a whole number of steps, so these beats can't be steps`,
+    )
+    return null
+  }
+  const perBar = barTicks / stepTicks
+  const run = Array(bars.length * perBar).fill("-")
+  for (let b = 0; b < bars.length; b++) {
+    for (const h of bars[b]) {
+      if (h.tick % stepTicks) {
+        err(part.ln, `${h.tok} isn't on a step, so these beats can't be steps`)
+        return null
+      }
+      run[b * perBar + h.tick / stepTicks] = stepLetter(h.mods)
+    }
+  }
+  return run.join("")
 }
 
 const STEP_HELP = "Use x (hit), X (accent), g (ghost), d (double) or - (nothing)"
@@ -1135,6 +1219,11 @@ function stepLayer(line, st, err, part) {
       `A block of steps holds steps, one layer a line, like --x-. ${line.text} is an instrument's line, which goes in a pattern`,
     )
   }
+  if (listsBeats(tokenize(line.text))) {
+    // A layer of beats: -|3 dd
+    const where = { name: "steps", art: "hit", ...part, ln: line.ln, blocks: line.blocks }
+    return beatsAsSteps(where, tokenize(line.text), st, err)
+  }
   const check = (run, where) => {
     if (!part) return true
     const here = { ...part, ln: line.ln }
@@ -1159,8 +1248,6 @@ function stepLayer(line, st, err, part) {
       return fail(`${tok} is a pattern, so it can't be a layer of steps`)
     } else if (tok === "loop") {
       return fail("loop isn't needed: a block's layers repeat until they line up again")
-    } else if (/^\d/.test(tok) || tok === "|" || tok === "%") {
-      return fail("A block of steps holds steps, not beats: --x- rather than 2 4")
     } else if (/^[a-z][a-z0-9]+$/.test(tok)) {
       return fail(`"${tok}" isn't defined above. Name it first: steps ${tok} = x-x-`)
     } else return fail(`"${tok}" isn't a step. ${STEP_HELP}`)
@@ -1189,7 +1276,7 @@ function readPart(part, st, barTicks, err, repeats) {
   }
   let pattern
   if (part.name === "chords") pattern = chordPattern(part, tokens, st, barTicks, err)
-  else if (tokens.some((t) => /^\d/.test(t) || t === "|" || t === "%")) {
+  else if (listsBeats(tokens)) {
     pattern = beatPattern(part, tokens, st, barTicks, err)
   } else pattern = stepPattern(part, tokens, st, err)
   return pattern && { ...pattern, part }

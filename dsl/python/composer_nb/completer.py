@@ -15,7 +15,6 @@ VARIATIONS = {"ride": ["bell"], "hat": ["open", "pedal"], "snare": ["ghost", "ri
 INSTRUMENTS = ["piano", "epiano", "organ", "pad", "bass", "guitar"]
 SETTINGS = ["time", "tempo", "step", "sound", "key", "capo", "octave", "kit"]
 TYPES = ["steps", "chords", "pattern"]
-MODIFIERS = ["accent", "ghost", "double"]
 KITS = ["rock", "synth"]
 
 LANES = [lane for d in DRUMS for lane in [d, *(f"{d}.{v}" for v in VARIATIONS.get(d, []))]]
@@ -153,10 +152,7 @@ def complete(text: str, cursor: int, songs: Optional[Dict[str, Song]] = None):
     elif part and part.group(1) in PARTS:
         # A drum's line takes steps, the chords line takes chords: only names of that type.
         holds = "chords" if part.group(1) == "chords" else "steps"
-        written = part.group(2).split()
-        options = _options(names[holds], "variable")
-        if holds == "steps" and any(w[0].isdigit() for w in written):
-            options = _options(MODIFIERS, "keyword")  # beats take accent, ghost, double
+        options = _options(names[holds], "variable")  # steps can follow a beat too: 3 burst
     elif open_blocks and open_blocks[-1][0] == "steps":
         options = _options(names["steps"], "variable")  # a layer in a drum's block of steps
     else:

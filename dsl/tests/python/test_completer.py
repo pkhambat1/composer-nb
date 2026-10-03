@@ -18,7 +18,7 @@ def texts(cell, songs=None):
 
 
 @pytest.mark.parametrize(
-    "name", ["DRUMS", "VARIATIONS", "INSTRUMENTS", "SETTINGS", "TYPES", "MODIFIERS", "KITS"]
+    "name", ["DRUMS", "VARIATIONS", "INSTRUMENTS", "SETTINGS", "TYPES", "KITS"]
 )
 def test_words_match_the_language(name):
     literal = re.search(rf"^export const {name} = (.+)$", LANGUAGE_JS.read_text(), re.M).group(1)
@@ -60,7 +60,8 @@ def test_instrument_lines_offer_names_of_their_type():
     cell = "%%music\nsteps pair = X-x-\nchords verse = Am F\nplay {\n  "
     assert texts(cell + "hat: ") == ["pair"]
     assert texts(cell + "hat: p") == ["pair"]
-    assert texts(cell + "snare: 2 4 a") == ["accent"]
+    assert texts(cell + "snare: 2 4 p") == ["pair"]  # steps after a beat
+    assert texts(cell + "snare: 2 4 a") == []
     assert texts(cell + "chords: ") == ["verse"]
     assert texts(cell + "chords: Am ") == ["verse"]
     # A name only goes where its type goes.

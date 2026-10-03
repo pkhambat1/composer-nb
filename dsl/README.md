@@ -160,7 +160,7 @@ A block of steps is steps, so it can be named too: `steps ghosts = { ... }`. Whe
 
 An open hi-hat rings until the next hi-hat hit closes it (a stick on `hat`, or the foot on `hat.pedal`), and replaces a closed hit at the same moment, so `hat: X-x-` can keep going under `hat.open: ------X-`.
 
-Steps are one character each, a 16th note unless `step` says otherwise: `x` hit, `X` accent, `g` ghost (on the snare, use `snare.ghost`), `d` double, `-` nothing. Beats are counted `1 e & a 2 e & a`, with `accent`, `ghost` or `double` after a beat to change how it's hit.
+Steps are one character each, a 16th note unless `step` says otherwise: `x` hit, `X` accent, `g` ghost (on the snare, use `snare.ghost`), `d` double, `-` nothing. Beats are counted `1 e & a 2 e & a`, and `-` between bar lines is an empty bar. Steps after a beat say how it's hit, and carry on from there: `2 X` is an accent on 2, and `3 dd` a burst of doubles from 3. So a line that's mostly rests is written by where it hits: `snare.ghost: -|3 dd` instead of `snare.ghost: ----------------------dd----`.
 
 ### Patterns and play
 

@@ -228,18 +228,31 @@ play {
 
 ## Beats
 
-Or list the beats a drum plays. A beat is a quarter note, counted \`1 e & a\`. \`\\|\` separates bars, and \`-\` is an empty bar.
+Or say where a drum is hit. A beat is a quarter note, counted \`1 e & a\`. \`\\|\` separates bars, and \`-\` is an empty bar.
 
 \`\`\`
 play {
   kick: 1 2& 3
-  snare: 2 accent 4
+  snare: 2 X 4
   snare.ghost: 4a
   crash: 1|-
 }
 \`\`\`
 
-A word after a beat changes how it's hit: \`accent\`, \`ghost\` or \`double\`.
+A beat on its own is a hit. Steps after a beat say how it's hit, and carry on from there: \`2 X\` is an accent on 2, and \`3 dd\` is a burst of doubles from 3. That's the way to write a line that's mostly rests, by where it hits rather than every step:
+
+\`\`\`
+time 7 over 8
+
+pattern lift = {
+  snare: 2e 4
+  snare.ghost: -|3 dd
+  hat.open: -|3& X
+  hat.pedal: -|4
+}
+\`\`\`
+
+Beats are steps too, so they can be named (\`steps burst = -|3 dd\`), or be a layer in a drum's block.
 
 ## Naming steps
 
