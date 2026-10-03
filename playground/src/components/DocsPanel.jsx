@@ -174,9 +174,18 @@ play chords: verse verse
 
 ## One instrument per line
 
-\`kick\`, \`snare\`, \`hat\`, \`ride\`, \`crash\`, \`tom\` and \`floor\` (the floor tom) each get their own line. The line says which sound, and what follows the colon says when. Some drums have a second sound with a line of its own: \`ride.bell\`, \`hat.open\` and \`hat.pedal\`.
+\`kick\`, \`snare\`, \`hat\`, \`ride\`, \`crash\`, \`tom\` and \`floor\` (the floor tom) each get their own line. The line says which sound, and what follows the colon says when. Some drums have other sounds with lines of their own: \`ride.bell\`, \`hat.open\`, \`hat.pedal\`, \`snare.rim\` (a rimshot) and \`snare.ghost\` (the snare's ghost notes, so they can sit under its main line).
 
 Lines play together, so two drums on the same step is two lines with a hit in the same place.
+
+An open hi-hat rings until the next hi-hat hit closes it, like a real one. It also replaces a closed hit at the same moment, so the \`hat\` line can keep going under it:
+
+\`\`\`
+play {
+  hat: loop X-x-
+  hat.open: ------X-
+}
+\`\`\`
 
 ## Steps
 
@@ -186,14 +195,15 @@ A row of steps, one character each. Each step lasts one \`step\` (a sixteenth no
 |------|---------|
 | \`x\` | Hit |
 | \`X\` | Accented hit |
-| \`g\` | Ghost note |
+| \`g\` | Ghost note. On the snare, ghost notes go on \`snare.ghost\` |
 | \`d\` | Double stroke |
 | \`-\` | Nothing |
 
 \`\`\`
 play {
   kick: x---x---x-x-----
-  snare: ----X-------X-g-
+  snare: ----X-------X---
+  snare.ghost: --------------x-
 }
 \`\`\`
 
@@ -204,7 +214,8 @@ Or list the beats a drum plays. A beat is a quarter note, counted \`1 e & a\`. \
 \`\`\`
 play {
   kick: 1 2& 3
-  snare: 2 accent 4 4a ghost
+  snare: 2 accent 4
+  snare.ghost: 4a
   crash: 1|-
 }
 \`\`\`
