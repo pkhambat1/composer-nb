@@ -1,6 +1,10 @@
 # composer-nb
 
-A small language for chords and drums, played right inside Jupyter notebooks.
+A small language for chords and drums, played right inside Jupyter notebooks. Run a cell and hear it, with a drum grid, chord shapes for guitar, and a WAV to keep. **[Try it in your browser](https://composer-nb.vercel.app)**, with nothing to install.
+
+<p align="center">
+  <img src="https://raw.githubusercontent.com/pkhambat1/composer-nb/main/docs/images/playground.png" width="820" alt="A composer-nb cell: guitar chords with a drum pattern, a waveform player, a drum grid and chord diagrams">
+</p>
 
 ```
 %%music
@@ -79,6 +83,10 @@ Song("tempo 120\nsound epiano\nplay chords: " + blues)
 ## The language
 
 Every line starts by saying what it is:
+
+<p align="center">
+  <img src="https://raw.githubusercontent.com/pkhambat1/composer-nb/main/docs/images/how-a-cell-reads.svg" width="820" alt="A cell with each kind of line labelled: a setting, a named pattern, drum lines, play, chords, and a pattern played by name">
+</p>
 
 | Line                | What it is                                                             |
 | ------------------- | ---------------------------------------------------------------------- |
@@ -162,6 +170,10 @@ An open hi-hat rings until the next hi-hat hit closes it (a stick on `hat`, or t
 
 Steps are one character each, a 16th note unless `step` says otherwise: `x` hit, `X` accent, `g` ghost (on the snare, use `snare.ghost`), `d` double, `-` nothing. Beats are counted `1 e & a 2 e & a`, and `-` between bar lines is an empty bar. Steps after a beat say how it's hit, and carry on from there: `2 X` is an accent on 2, and `3 dd` a burst of doubles from 3. So a line that's mostly rests is written by where it hits: `snare.ghost: -|3 dd` instead of `snare.ghost: ----------------------dd----`.
 
+<p align="center">
+  <img src="https://raw.githubusercontent.com/pkhambat1/composer-nb/main/docs/images/say-where-it-hits.svg" width="820" alt="The same ghost-note burst written as 28 steps and as -|3 dd, shown on a two-bar grid">
+</p>
+
 ### Patterns and play
 
 A pattern is lines in braces that play together, over and over: everything in it repeats until the pattern ends. Give it a name, and play it by name. Names in a row play one after another:
@@ -193,6 +205,10 @@ Putting something in a pattern is the one way to repeat it, and a length is the 
 Without a length, a pattern lasts until its lines line up again, and a play lasts as long as the longest thing in it. A play can be longer than its lines, and the rest is silent: `play 4 bars { crash: 1 }`.
 
 Whatever repeats has to fit what it's in a whole number of times. Lines of different lengths drift against each other, which is how you write a polyrhythm, and the pattern's length has to be one where they line up:
+
+<p align="center">
+  <img src="https://raw.githubusercontent.com/pkhambat1/composer-nb/main/docs/images/lines-line-up.svg" width="820" alt="A step grid in 7 over 8: the kick and snare repeat every 7 steps and the ride bell every 3, lining up again after 21 steps">
+</p>
 
 ```
 pattern poly = 15 bars {
