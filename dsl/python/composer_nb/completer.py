@@ -14,6 +14,7 @@ DRUMS = ["crash", "ride", "hat", "tom", "floor", "snare", "kick"]
 VARIATIONS = {"ride": ["bell"], "hat": ["open", "pedal"]}
 INSTRUMENTS = ["piano", "epiano", "organ", "pad", "bass", "guitar"]
 SETTINGS = ["time", "tempo", "step", "sound", "key", "capo", "octave", "kit"]
+TYPES = ["steps", "chords", "pattern"]
 MODIFIERS = ["accent", "ghost", "double"]
 KITS = ["rock", "synth"]
 
@@ -22,15 +23,14 @@ PARTS = ["chords", *LANES]
 SETTING_VALUES = {"sound": INSTRUMENTS, "kit": KITS}
 
 MAGIC = "%%music"
-DEF_RE = re.compile(r"^\s*([A-Za-z_]\w*)\s*=(.*)$", re.M)
-# What makes `name = ...` a block rather than chords or steps: a length, braces, or an
-# instrument's line.
-BLOCK_VALUE_RE = re.compile(r"^\s*(?:[\d(][^=]*?\bbars?\b|.*\{|[A-Za-z]\w*(?:\.\w+)?\s*:)")
+# A name and the type in front of it: steps pair = X-x-
+DEF_RE = re.compile(r"^\s*(steps|chords|pattern)\s+([A-Za-z_]\w*)\s*=", re.M)
 # The instrument line the cursor is on: its name, then what's been written after the colon.
 PART_RE = re.compile(r"(?:^|[\s{])([a-z]+(?:\.[a-z]+)?):([^:{}]*)$")
 NUMBER_RE = re.compile(r"^\d+$|\)$")
 
 Option = Tuple[str, str]  # the text to insert and its kind, which picks the icon
+Names = Dict[str, List[str]]  # the names of each type
 
 
 def _options(texts, kind) -> List[Option]:
@@ -50,42 +50,54 @@ def _magic_line(line: str, songs: Dict[str, Song]) -> Optional[Tuple[str, List[O
     return fragment, []
 
 
-def _names(defined: str) -> Tuple[List[str], List[str]]:
-    """Names given with = in `defined`: (chords and steps, blocks)."""
-    words, blocks = set(), set()
-    for name, value in DEF_RE.findall(defined):
-        if name in SETTINGS:
-            continue
-        refers = any(t in blocks for t in re.split(r"[\s()*]+", value))
-        kind, other = (blocks, words) if BLOCK_VALUE_RE.match(value) or refers else (words, blocks)
-        kind.add(name)
-        other.discard(name)  # a name given again means the new thing
-    return sorted(words), sorted(blocks)
+def _names(defined: str) -> Names:
+    """The names given in `defined`, by the type written in front of them."""
+    types = {}
+    for type_, name in DEF_RE.findall(defined):
+        types[name] = type_  # a name given again means the new thing
+    return {t: sorted(n for n, given in types.items() if given == t) for t in TYPES}
 
 
-def _statement(head: str, body: str, patterns: List[str]) -> List[Option]:
+def _sequence(words: List[str], patterns: List[Option], parts: List[Option]) -> List[Option]:
+    """What can come next in a row of patterns, after the `words` already written."""
+    loop = [("loop ", "keyword")]
+    if not words:
+        return patterns + loop + parts
+    if NUMBER_RE.search(words[-1]):
+        return _options(["bars ", "bar "], "keyword")  # a length: 3 bars groove
+    if words[-1] in ("bars", "bar"):
+        return loop + patterns
+    return patterns
+
+
+def _statement(head: str, body: str, names: Names) -> List[Option]:
     """What can come next on a line that isn't an instrument's."""
     inside = (body + head).count("{") > (body + head).count("}")
-    words = re.split(r"[{}]", head)[-1].split()
-    names = _options(patterns, "variable")
+    words = re.sub(r"[()=]", lambda m: " = " if m.group() == "=" else " ", re.split(r"[{}]", head)[-1]).split()
+    patterns = _options(names["pattern"], "variable")
     parts = _options([p + ": " for p in PARTS], "property")
     if not words:
         settings = _options([s + " " for s in SETTINGS], "keyword")
+        types = _options([t + " " for t in TYPES], "keyword")
         if inside:
-            return parts + names + settings
-        return settings + [("play ", "keyword")]
-    first, last = words[0], words[-1]
-    named = len(words) > 2 and words[1] == "="  # groove = 3 bars {
-    if (first == "play" or named) and len(words) > 1 and NUMBER_RE.search(last):
-        return _options(["bars ", "bar "], "keyword")
+            return parts + patterns + [("loop ", "keyword")] + settings + types
+        return settings + types + [("play ", "keyword")]
+    first = words[0]
     if first == "play":
-        return names + (parts if len(words) == 1 else [])
+        return _sequence(words[1:], patterns, parts)
+    if first in TYPES:
+        if len(words) < 3 or words[2] != "=":
+            return []  # still writing the name
+        # After the =, what the type in front holds: steps pair = X-x-
+        if first == "pattern":
+            return _sequence(words[3:], patterns, parts)
+        return _options(names[first], "variable")
     if first == "time" and len(words) > 1 and "over" not in words:
         return [("over ", "keyword")]
     if first in SETTING_VALUES and len(words) == 1:
         return _options(SETTING_VALUES[first], "value")
-    if named or (inside and first not in SETTINGS):
-        return names  # blocks to play in order: intro verse * 2
+    if inside and first not in SETTINGS:
+        return _sequence(words, patterns, [])  # patterns to play in order: intro verse
     return []
 
 
@@ -110,22 +122,23 @@ def complete(text: str, cursor: int, songs: Optional[Dict[str, Song]] = None):
     # Names defined above the cursor, in this cell or the cells it continues from.
     after = re.search(r"\bafter\s+(\w+)", magic_line)
     inherited = songs[after.group(1)].chain if after and after.group(1) in songs else []
-    defined = "\n".join([*inherited, body])
-    words, patterns = _names(defined)
+    names = _names("\n".join([*inherited, body]))
 
     variation = re.search(r"([a-z]+)\.$", head)
     part = PART_RE.search(head)
     if variation:  # ride. -> ride.bell
         options = _options([v + ": " for v in VARIATIONS.get(variation.group(1), [])], "property")
     elif part and part.group(1) in PARTS:
+        # A drum's line takes steps, the chords line takes chords: only names of that type.
+        holds = "chords" if part.group(1) == "chords" else "steps"
         written = part.group(2).split()
-        options = _options(words, "variable")
+        options = _options(names[holds], "variable")
         if not written:
             options = [("loop ", "keyword")] + options
-        elif part.group(1) != "chords" and any(w[0].isdigit() for w in written):
+        elif holds == "steps" and any(w[0].isdigit() for w in written):
             options = _options(MODIFIERS, "keyword")  # beats take accent, ghost, double
     else:
-        options = _statement(head, body, patterns)
+        options = _statement(head, body, names)
     return fragment, [o for o in options if o[0].startswith(fragment) and o[0] != fragment]
 
 

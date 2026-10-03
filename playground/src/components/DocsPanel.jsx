@@ -36,32 +36,49 @@ Everything inside the braces plays together. The chords are 2 bars long, and the
   },
   {
     id: "lines",
-    title: "The five lines",
+    title: "Lines and types",
     group: "Getting Started",
-    body: `# The five lines
+    body: `# Lines and types
 
 Every line starts by saying what it is.
 
 | Line | What it is |
 |------|------------|
-| \`tempo 90\` | A **setting**: a reserved word and its value. No \`=\`, because it isn't a variable |
-| \`verse = Am F\\|C G\` | A **name** for steps or chords. \`=\` always gives something a name |
-| \`groove = { ... }\` | A **block** with a name: lines in braces that play together |
+| \`tempo 90\` | A **setting**: a reserved word and its value. No \`=\`, because it isn't a name |
+| \`steps pair = X-x-\` | A **name**, with its **type** in front |
 | \`kick: x--x---\` | Inside braces, an **instrument** and what it plays |
-| \`play { ... }\` | **Plays** what's after it: a block, or one line |
+| \`play { ... }\` | **Plays** what's after it: a pattern, or one line |
 
 \`//\` starts a comment. Blank lines and indentation mean nothing.
+
+## Three types
+
+A name's type goes in front of it, and \`=\` gives it its value.
+
+| Type | What it holds | Where it goes |
+|------|---------------|---------------|
+| \`steps\` | A drum's hits: \`steps pair = X-x-\` | On a drum's line: \`hat: pair pair\` |
+| \`chords\` | Bars of chords: \`chords verse = Am F\\|C G\` | On the chords line: \`chords: verse\` |
+| \`pattern\` | Lines in braces that play together: \`pattern groove = { ... }\` | On a line of its own, or after \`play\` |
+
+A name only holds its type, and only goes where that type goes. Chords on a drum's line, or steps where a pattern belongs, is an error that names both types. A name without a type is an error too, and the message shows the line to write.
 
 ## One meaning per symbol
 
 | Symbol | Meaning |
 |--------|---------|
 | \`:\` | This instrument plays this |
-| \`=\` | This name holds this |
+| \`=\` | This name is this |
 | \`{ }\` | These lines play together |
-| \`*\` | Times: \`groove * 2\` |
-| \`( )\` | A group: \`(verse chorus) * 2\` |
-| \`/\` | Division, between two numbers. In \`C/E\` it's part of a chord's name |
+| \`( )\` | A group: \`8 bars loop (verse chorus)\` |
+| \`*\` \`/\` | Arithmetic, between two numbers. In \`C/E\` the slash is part of a chord's name |
+
+## One way to do each thing
+
+| You want | You write |
+|----------|-----------|
+| To repeat something | \`loop\` in front of it |
+| To say how long | A length in front of it: \`3 bars\` |
 
 ## Nothing floats
 
@@ -88,7 +105,7 @@ A setting is a reserved word followed by its value. It applies from where it's w
 
 ## Numbers are arithmetic
 
-Wherever a number goes, arithmetic goes: \`tempo 60*2\`, \`groove * (4/2)\`, \`(1+2) bars groove\`.
+Wherever a number goes, arithmetic goes: \`tempo 60*2\`, \`(1+2) bars groove\`, \`2*3 bars loop groove\`. So \`*\` and \`/\` only ever multiply and divide.
 
 That's why a time isn't written with a slash. \`7/8\` is the number 0.875, and a time is two numbers: \`time 7 over 8\`. \`6 over 8\` and \`3 over 4\` are different times, though they'd divide to the same thing. Write \`3+4 over 4\` for a bar felt as 3 then 4; the drum grid shades the groups.
 
@@ -142,10 +159,10 @@ In C that plays C Am, F G7, Bb F, then Dm7 Bdim.
 
 ## Naming a progression
 
-A variable holds chords so you can reuse them:
+A name of type \`chords\` holds chords so you can reuse them:
 
 \`\`\`
-verse = Am E7|G D
+chords verse = Am E7|G D
 play chords: verse verse
 \`\`\``,
   },
@@ -194,6 +211,15 @@ play {
 
 A word after a beat changes how it's hit: \`accent\`, \`ghost\` or \`double\`.
 
+## Naming steps
+
+A name of type \`steps\` holds steps so you can reuse them on any drum's line:
+
+\`\`\`
+steps pair = X-x-
+play hat: pair pair
+\`\`\`
+
 ## loop
 
 A line plays what's written, once. \`loop\` repeats it until whatever it's in ends.
@@ -217,32 +243,34 @@ play 3 bars {
 }
 \`\`\`
 
-The bell repeats every 3 steps against a 7-step kick and snare.`,
+The bell repeats every 3 steps against a 7-step kick and snare. A loop has to fit the pattern it's in a whole number of times, and 3 bars is where these line up. With \`play 4 bars\` the bell would stop partway through, so it's an error, and the message says the loops line up every 3 bars.`,
   },
   {
     id: "patterns",
-    title: "Blocks and play",
+    title: "Patterns and play",
     group: "Language Reference",
-    body: `# Blocks and play
+    body: `# Patterns and play
 
-## Blocks
+## Patterns
 
-A block is lines in braces that play together. \`=\` gives it a name, and it doesn't play until you play it.
+A pattern is lines in braces that play together. Give it a name with its type in front, and it doesn't play until you play it.
 
 \`\`\`
-groove = 3 bars {
+time 7 over 8
+
+pattern groove = 3 bars {
   kick: loop x--x---
   snare: loop ----x--
   ride.bell: loop x--
 }
 \`\`\`
 
-Named blocks, like settings and other names, carry on into the cells below. A block without a name plays right where it's written, anywhere a name could go:
+Named patterns, like settings and other names, carry on into the cells below. A pattern without a name plays right where it's written, anywhere a name could go:
 
 \`\`\`
-play groove { snare: xxxx } * 2
+play groove { snare: xxxx } groove
 play {
-  4 bars {
+  2 bars {
     kick: loop x---
   }
 }
@@ -250,41 +278,58 @@ play {
 
 ## play
 
-\`play\` plays what's after it and gives one output. What's after it is a block, or one line:
+\`play\` plays what's after it and gives one output. What's after it is a pattern, or one line:
 
 \`\`\`
 play groove
-play {
+play 6 bars {
   crash: 1
-  groove * 2
+  loop groove
 }
 \`\`\`
 
-Inside braces, a block's name on a line of its own plays that block, next to the instrument lines beside it. So the second play above is one crash over the groove twice. A block can play other blocks the same way.
+Inside braces, a pattern's name on a line of its own plays that pattern, next to the instrument lines beside it. So the second play above is one crash, with the groove looping under it for 6 bars.
 
-## In order, and again
+## In order
 
 | You write | Meaning |
 |-----------|---------|
 | \`intro verse\` | One after the other |
-| \`verse * 2\` | Twice |
-| \`(verse chorus) * 2\` | The pair, twice |
+| \`verse verse\` | Twice |
+| \`(verse chorus)\` | A group, to give a length or loop |
 
 \`\`\`
-play intro (verse chorus) * 2
+play intro 16 bars loop (verse chorus) outro
 \`\`\`
+
+## loop
+
+\`loop\` is the one way to repeat. In front of what a line plays, it repeats that until the pattern it's in ends. That's the same for an instrument's line and for a pattern on a line of its own:
+
+\`\`\`
+play 4 bars {
+  hat: loop x-
+  loop beat
+}
+\`\`\`
+
+After a length, it repeats for that long: \`8 bars loop verse\`.
+
+A loop has to fit what it's in a whole number of times. A 3-bar groove loops in 6 bars or 9, not in 4, and the error says where it lines up.
 
 ## Lengths
 
-A length goes in front of what it measures:
+A length is the one way to say how long, and goes in front of what it measures:
 
 \`\`\`
-groove = 3 bars { kick: loop x--x--- }
-play 3 bars groove
-play 2 bars { hat: loop x- }
+pattern groove = 3 bars { kick: loop x--x--- }
+play 3 bars { hat: loop x- }
+play 6 bars loop groove
 \`\`\`
 
-Without one, a block lasts exactly as long as its longest line that isn't a loop, down to a single beat. A block with only loops in it needs a length, where you name it or where you play it.`,
+Without one, a pattern lasts exactly as long as its longest line that isn't a loop, down to a single beat. A pattern with only loops in it needs a length, where you name it or where you play it.
+
+A length with nothing looping plays what's after it once, and leaves the rest silent: \`4 bars hit\`.`,
   },
   {
     id: "shortcuts",

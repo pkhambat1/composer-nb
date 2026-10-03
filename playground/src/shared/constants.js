@@ -27,10 +27,10 @@ export const APP_CONSTANTS = {
 A notebook for sketching music. In a **music cell**:
 
 - \`tempo 90\` is a setting: a reserved word and its value
-- \`verse = Am F|C G\` names steps or chords: \`=\` always gives something a name
-- \`groove = { ... }\` names a block: lines in braces that play together
+- \`steps pair = X-x-\`, \`chords verse = Am F|C G\` and \`pattern groove = { ... }\` are names, with their type in front
 - \`kick: x--x---\` inside braces is an instrument and what it plays, one instrument per line
-- \`play { ... }\` plays what's after it, a block or one line
+- \`play { ... }\` plays what's after it, a pattern or one line
+- \`loop\` is the one way to repeat, and a length like \`3 bars\` the one way to say how long
 
 Settings and names carry on into the cells below. \`//\` starts a comment.
 
@@ -38,18 +38,18 @@ Press **Shift+Enter** to run a cell, or **Run All** to run everything. The full 
     },
     {
       type: "music",
-      source: `// what happens now: crash once, groove twice
+      source: `// what happens now: crash once, the groove looping under it
 time 7 over 8
 
-groove = 3 bars {
+pattern groove = 3 bars {
   kick: loop x--x---
   snare: loop ----x--
   ride.bell: loop x--
 }
 
-play {
+play 6 bars {
   crash: 1
-  groove * 2
+  loop groove
 }`,
     },
     {
@@ -66,7 +66,7 @@ play chords: A Am|C Cmaj7|D A|C Cmaj7|Cadd9|Em`,
       source: `// hotel california intro
 tempo 75
 capo 2
-intro = Am E7|G D|F C|Dm E7
+chords intro = Am E7|G D|F C|Dm E7
 play chords: intro intro`,
     },
   ],
