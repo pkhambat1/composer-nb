@@ -3,18 +3,18 @@
 A small language for chords and drums, and a notebook to hear them in.
 
 ```
-// what happens now: crash once, groove twice
+// what happens now: crash once, the groove looping under it
 time 7 over 8
 
-groove = 3 bars {
+pattern groove = 3 bars {
   kick: loop x--x---
   snare: loop ----x--
   ride.bell: loop x--
 }
 
-play {
+play 6 bars {
   crash: 1
-  groove * 2
+  loop groove
 }
 ```
 

@@ -18,13 +18,13 @@ describe("parseChain", () => {
   })
 
   it("carries named chords and patterns as well as settings", () => {
-    expect(labels(parseChain(["intro = Am E7|G D", "play chords: intro"]))).toEqual([
+    expect(labels(parseChain(["chords intro = Am E7|G D", "play chords: intro"]))).toEqual([
       "Am",
       "E7",
       "G",
       "D",
     ])
-    expect(labels(parseChain(["v = {\n  chords: F C\n}", "play v * 2"]))).toEqual([
+    expect(labels(parseChain(["pattern v = {\n  chords: F C\n}", "play v v"]))).toEqual([
       "F",
       "C",
       "F",

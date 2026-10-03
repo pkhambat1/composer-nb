@@ -7,7 +7,7 @@
      .tk-ext, .tk-rest, .tk-slash, .tk-bass, .tk-beat, .tk-mod, .tk-step, .tk-step-acc,
      .tk-error
    Whitespace is kept exactly, so the layer lines up with the textarea under it. */
-import { MODIFIERS, PARTS, SETTINGS } from "./language.js"
+import { KEYWORDS, MODIFIERS, PARTS, SETTINGS, TYPES } from "./language.js"
 import { isRoman } from "./chords.js"
 
 const ROMAN_RE = /^([#b])?(VII|VI|IV|V|III|II|I|vii|vi|iv|v|iii|ii|i)([°oø]?)(.*)$/
@@ -64,7 +64,7 @@ function stepRun(t) {
   )
 }
 
-// One token of what an instrument plays (or of a variable's value).
+// One token of what an instrument plays (or of what a steps or chords name holds).
 function valueToken(t, kind) {
   if (t === "|" || t === "%") return [part("tk-bar", t)]
   if (t === "loop") return [part("tk-directive-key", t)]
@@ -90,16 +90,21 @@ function values(text, kind) {
   )
 }
 
-// groove * 2 (verse chorus) * 3, 3 bars groove, groove { snare: xxxx }: names, counts,
-// lengths and blocks without a name.
+// intro verse, 6 bars loop (verse chorus), groove { snare: xxxx }: patterns' names,
+// lengths, loop and patterns without a name.
 function names(text) {
   const open = text.indexOf("{")
   if (open >= 0) return [...names(text.slice(0, open)), ...braces(text.slice(open))]
+  let number = false // whether the last thing was a number, which * can multiply
   return pieces(text, /(\s+|[()*{}])/).map((p) => {
     if (/^\s+$/.test(p)) return part(null, p)
-    if ("()*{}".includes(p)) return part("tk-punct", p)
-    if (p === "bars" || p === "bar") return part("tk-directive-key", p)
-    if (/^[\d./+-]+$/.test(p)) return part("tk-directive-val", p)
+    const wasNumber = number
+    number = /^[\d./+-]+$/.test(p) || (number && p === "*")
+    // * only does arithmetic: 2*3 bars. After a name it used to repeat, and loop does now.
+    if (p === "*") return part(wasNumber ? "tk-punct" : "tk-error", p)
+    if ("(){}".includes(p)) return part("tk-punct", p)
+    if (p === "bars" || p === "bar" || p === "loop") return part("tk-directive-key", p)
+    if (number) return part("tk-directive-val", p)
     return part(NAME_RE.test(p) ? "tk-word" : "tk-error", p)
   })
 }
@@ -147,7 +152,7 @@ function braces(text) {
   if (close < 0) return out.concat(inner.trim() ? line(inner) : [part(null, inner)])
   const body = inner.slice(0, close)
   out.push(...(body.trim() ? line(body) : [part(null, body)]), part("tk-punct", "}"))
-  // { ... } * 2: what follows a block is more to play in a row
+  // { ... } outro: what follows a block is more to play in a row
   out.push(...names(inner.slice(close + 1)))
   return out
 }
@@ -161,14 +166,27 @@ function line(code) {
   const word = /^[A-Za-z][A-Za-z0-9]*/.exec(body)?.[0] || ""
   const after = body.slice(word.length)
 
+  const typed = TYPES.includes(word) && /^(\s+)([A-Za-z][A-Za-z0-9]*)(\s*)(=)(\s*)(.*)$/.exec(after)
   if (body.startsWith("}")) {
-    // } * 2: what follows a block is more to play in a row
+    // } outro: what follows a block is more to play in a row
     out.push(part("tk-punct", "}"), ...names(body.slice(1)))
-  } else if (word === "pattern" && /^(\s|$)/.test(after)) {
-    // pattern groove {: the old way to name a block (groove = { now)
+  } else if (typed) {
+    // steps pair = X-x-, chords verse = Am F, pattern groove = 3 bars { ... }: the type,
+    // the name, and a value of that type
+    const [, gap, name, before, , afterEq, value] = typed
+    const taken = SETTINGS.includes(name) || PARTS.includes(name) || KEYWORDS.includes(name)
+    out.push(part("tk-directive-key", word), part(null, gap))
+    out.push(part(taken ? "tk-error" : "tk-word", name), part(null, before))
+    out.push(part("tk-punct", "="), part(null, afterEq))
+    if (word === "pattern") {
+      const len = length(value)
+      out.push(...len.parts, ...playable(len.rest))
+    } else out.push(...values(value, word === "chords" ? "chord" : "drum"))
+  } else if ((word === "pattern" || word === "steps") && /^(\s|$)/.test(after)) {
+    // pattern groove {: a type without its name and =
     out.push(part("tk-error", word), ...names(after))
   } else if (word === "play" && /^(\s|$)/.test(after)) {
-    // play groove * 2, play 3 bars { ... }, play kick: x--x
+    // play groove, play 3 bars { ... }, play kick: x--x
     const space = /^\s*/.exec(after)[0]
     out.push(part("tk-directive-key", word), part(null, space))
     const len = length(after.slice(space.length))
@@ -189,11 +207,9 @@ function line(code) {
       )
     }
   } else if (word && /^\s*=/.test(after)) {
-    // verse = Am E7|G D names chords or steps; groove = 3 bars { ... } names a block
+    // verse = Am E7|G D: a name without its type in front
     const m = /^(\s*)(=)(\s*)(.*)$/.exec(after)
-    const reserved =
-      SETTINGS.includes(word) || PARTS.includes(word) || word === "play" || word === "pattern"
-    out.push(part(reserved ? "tk-error" : "tk-word", word), part(null, m[1]), part("tk-punct", "="))
+    out.push(part("tk-error", word), part(null, m[1]), part("tk-punct", "="))
     out.push(part(null, m[3]))
     const len = length(m[4])
     const block = len.parts.length || m[4].includes("{") || TRACK_RE.test(m[4])

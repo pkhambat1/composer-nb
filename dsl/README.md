@@ -4,18 +4,18 @@ A small language for chords and drums, played right inside Jupyter notebooks.
 
 ```
 %%music
-// what happens now: crash once, groove twice
+// what happens now: crash once, the groove looping under it
 time 7 over 8
 
-groove = 3 bars {
+pattern groove = 3 bars {
   kick: loop x--x---
   snare: loop ----x--
   ride.bell: loop x--
 }
 
-play {
+play 6 bars {
   crash: 1
-  groove * 2
+  loop groove
 }
 ```
 
@@ -44,7 +44,7 @@ Give a cell a name, and later cells can start from the settings and names it end
 tempo 75
 capo 2
 sound guitar
-riff = Am E7|G D
+chords riff = Am E7|G D
 play chords: riff
 ```
 
@@ -80,15 +80,26 @@ Song("tempo 120\nsound epiano\nplay chords: " + blues)
 
 Every line starts by saying what it is:
 
-| Line                | What it is                                                           |
-| ------------------- | -------------------------------------------------------------------- |
-| `tempo 90`          | A setting: a reserved word and its value                             |
-| `verse = Am F\|C G` | A name for chords or steps. `=` always gives something a name        |
-| `groove = { ... }`  | A name for a block: lines in braces that play together               |
-| `kick: x--x---`     | Inside braces, an instrument and what it plays                       |
-| `play { ... }`      | Plays what's after it, a block or one line. Nothing else makes sound |
+| Line                | What it is                                                             |
+| ------------------- | ---------------------------------------------------------------------- |
+| `tempo 90`          | A setting: a reserved word and its value                               |
+| `steps pair = X-x-` | A name, with its type in front: `steps`, `chords` or `pattern`         |
+| `kick: x--x---`     | Inside braces, an instrument and what it plays                         |
+| `play { ... }`      | Plays what's after it, a pattern or one line. Nothing else makes sound |
 
 `//` starts a comment. Blank lines and indentation mean nothing. Settings and names carry on into the cells below.
+
+### Types
+
+A name's type goes in front of it, and `=` gives it its value:
+
+| Type      | What it holds                                                  | Where it goes                         |
+| --------- | -------------------------------------------------------------- | ------------------------------------- |
+| `steps`   | A drum's hits: `steps pair = X-x-`                             | On a drum's line: `hat: pair pair`    |
+| `chords`  | Bars of chords: `chords verse = Am F\|C G`                     | On the chords line: `chords: verse`   |
+| `pattern` | Lines in braces that play together: `pattern groove = { ... }` | On a line of its own, or after `play` |
+
+A name only holds its type, and only goes where that type goes. Chords on a drum's line, or steps where a pattern belongs, is an error that names both types. A name without a type is an error too, and the message shows the line to write.
 
 ### Settings
 
@@ -103,7 +114,7 @@ Every line starts by saying what it is:
 | `octave` | `3`        | Octave chords are voiced in, 1 to 6                                          |
 | `kit`    | `rock`     | Drum sound: `rock` or `synth`                                                |
 
-Every number is arithmetic (`tempo 60*2`, `groove * (4/2)`), so `/` only ever divides. That's why a time is `7 over 8` rather than `7/8`.
+Every number is arithmetic (`tempo 60*2`, `(1+2) bars groove`), so `*` and `/` only ever multiply and divide. That's why a time is `7 over 8` rather than `7/8`.
 
 ### Chords
 
@@ -129,41 +140,49 @@ play {
 }
 ```
 
-Steps are one character each, a 16th note unless `step` says otherwise: `x` hit, `X` accent, `g` ghost, `d` double, `-` nothing. Beats are counted `1 e & a 2 e & a`, with `accent`, `ghost` or `double` after a beat to change how it's hit. A line plays once; `loop` repeats it until what it's in ends, so loops of different lengths drift against each other.
+Steps are one character each, a 16th note unless `step` says otherwise: `x` hit, `X` accent, `g` ghost, `d` double, `-` nothing. Beats are counted `1 e & a 2 e & a`, with `accent`, `ghost` or `double` after a beat to change how it's hit.
 
-### Blocks and play
+### Patterns and play
 
-A block is lines in braces that play together. Give it a name with `=`, and play it by name:
+A pattern is lines in braces that play together. Give it a name, and play it by name. Names in a row play one after another:
 
 ```
-hit = { crash: 1 }
-groove = {
+pattern hit = { crash: 1 }
+pattern groove = {
   kick: x---x---
   snare: ----x---
 }
-play hit groove * 2 hit
+play hit groove groove hit
 ```
 
-| You write            | Meaning                                       |
-| -------------------- | --------------------------------------------- |
-| `intro verse`        | One after the other                           |
-| `verse * 2`          | Twice                                         |
-| `(verse chorus) * 2` | The pair, twice                               |
-| `3 bars groove`      | A length, always in front of what it measures |
+Inside braces, a pattern's name on a line of its own plays next to the lines beside it. A pattern without a name plays wherever a name could: `play hit { snare: xxxx } hit`.
 
-Inside braces, a block's name on a line of its own plays next to the lines beside it. A block without a name plays wherever a name could:
+### loop and lengths
+
+`loop` is the one way to repeat, and a length is the one way to say how long.
+
+| You write            | Meaning                                                |
+| -------------------- | ------------------------------------------------------ |
+| `hat: loop x-`       | The steps repeat until the pattern they're in ends     |
+| `loop groove`        | On a line of its own, the pattern repeats the same way |
+| `3 bars { ... }`     | A length, always in front of what it measures          |
+| `6 bars loop groove` | `groove` repeats for 6 bars                            |
+| `4 bars hit`         | `hit` plays once, and the rest of the 4 bars is silent |
+| `8 bars loop (a b)`  | Brackets group: `a` then `b`, repeated for 8 bars      |
+
+Without a length, a pattern lasts as long as its longest line that isn't a loop. A pattern with only loops in it needs a length, where you name it (`pattern groove = 3 bars { ... }`) or where you play it (`play 3 bars groove`).
+
+A loop has to fit what it's in a whole number of times. Loops of different lengths drift against each other, which is how you write a polyrhythm, and the length has to be one where they line up:
 
 ```
-play {
-  4 bars {
-    kick: loop x---
-    floor: loop x--
-    snare: loop x----
-  }
+play 15 bars {
+  kick: loop x---
+  floor: loop x--
+  snare: loop x----
 }
 ```
 
-Without a length, a block lasts as long as its longest line that isn't a loop. A block with only loops in it needs a length, where you name it (`groove = 3 bars { ... }`) or where you play it (`play 3 bars groove`). What's set or named inside braces stays inside them.
+With `play 4 bars` that's an error, and it says the loops line up every 15 bars. What's set or named inside braces stays inside them.
 
 ## Playground
 
