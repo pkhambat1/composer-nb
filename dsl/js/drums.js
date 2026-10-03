@@ -30,6 +30,10 @@ const MIX = {
 const loading = new Map()
 
 const layer = (vel) => (vel < 0.45 ? "Soft" : vel < 0.85 ? "Med" : "Hard")
+// How loud a hit is next to a normal one (velocity 0.7). Squared, like MIDI's usual
+// velocity curve, so an accent (1) is about 6 dB louder and a ghost note (0.3) about
+// 15 dB softer: far enough apart to hear.
+const loudness = (vel) => (vel / 0.7) ** 2
 const sampleName = (ev) => (FILES[ev.inst + " " + ev.art] || FILES[ev.inst]) + "-" + layer(ev.vel)
 
 // Fetched by hand: ToneAudioBuffer.fromUrl encodes the "@" in the CDN path, which the CDN
@@ -146,13 +150,13 @@ export async function schedule(kit, events, output) {
     const buffer = ev.kit !== "synth" ? kit.buffers[sampleName(ev)] : null
     let choke = null
     if (buffer) {
-      const gain = new Tone.Gain(MIX[ev.inst][0] * (0.75 + 0.25 * vel)).connect(channel(ev.inst))
+      const gain = new Tone.Gain(MIX[ev.inst][0] * loudness(vel)).connect(channel(ev.inst))
       const src = new Tone.ToneBufferSource({ url: buffer, fadeOut: 0.03 }).connect(gain)
       src.start(time)
       choke = (t) => src.stop(t)
     } else {
       synth ||= makeSynthKit(bus)
-      choke = synth(ev, time, vel)
+      choke = synth(ev, time, 0.7 * loudness(vel))
     }
     if (ev.inst === "hat" && ev.art === "open" && choke) openHat = { time, choke }
   }
