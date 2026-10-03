@@ -60,13 +60,10 @@ def _names(defined: str) -> Names:
 
 def _sequence(words: List[str], patterns: List[Option], parts: List[Option]) -> List[Option]:
     """What can come next in a row of patterns, after the `words` already written."""
-    loop = [("loop ", "keyword")]
     if not words:
-        return patterns + loop + parts
+        return patterns + parts
     if NUMBER_RE.search(words[-1]):
         return _options(["bars ", "bar "], "keyword")  # a length: 3 bars groove
-    if words[-1] in ("bars", "bar"):
-        return loop + patterns
     return patterns
 
 
@@ -80,7 +77,7 @@ def _statement(head: str, body: str, names: Names) -> List[Option]:
         settings = _options([s + " " for s in SETTINGS], "keyword")
         types = _options([t + " " for t in TYPES], "keyword")
         if inside:
-            return parts + patterns + [("loop ", "keyword")] + settings + types
+            return parts + patterns + settings + types
         return settings + types + [("play ", "keyword")]
     first = words[0]
     if first == "play":
@@ -133,9 +130,7 @@ def complete(text: str, cursor: int, songs: Optional[Dict[str, Song]] = None):
         holds = "chords" if part.group(1) == "chords" else "steps"
         written = part.group(2).split()
         options = _options(names[holds], "variable")
-        if not written:
-            options = [("loop ", "keyword")] + options
-        elif holds == "steps" and any(w[0].isdigit() for w in written):
+        if holds == "steps" and any(w[0].isdigit() for w in written):
             options = _options(MODIFIERS, "keyword")  # beats take accent, ghost, double
     else:
         options = _statement(head, body, names)

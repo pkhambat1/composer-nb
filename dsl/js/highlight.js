@@ -67,7 +67,8 @@ function stepRun(t) {
 // One token of what an instrument plays (or of what a steps or chords name holds).
 function valueToken(t, kind) {
   if (t === "|" || t === "%") return [part("tk-bar", t)]
-  if (t === "loop") return [part("tk-directive-key", t)]
+  // loop is gone: whether something repeats depends on where it is
+  if (t === "loop") return [part("tk-error", t)]
   if (t === "-" || t === "_") return [part("tk-rest", t)]
   if (kind !== "chord") {
     if (STEPS_RE.test(t)) return stepRun(t)
@@ -90,8 +91,8 @@ function values(text, kind) {
   )
 }
 
-// intro verse, 6 bars loop (verse chorus), groove { snare: xxxx }: patterns' names,
-// lengths, loop and patterns without a name.
+// intro verse, 6 bars (verse chorus), groove { snare: xxxx }: patterns' names, lengths
+// and patterns without a name.
 function names(text) {
   const open = text.indexOf("{")
   if (open >= 0) return [...names(text.slice(0, open)), ...braces(text.slice(open))]
@@ -100,10 +101,12 @@ function names(text) {
     if (/^\s+$/.test(p)) return part(null, p)
     const wasNumber = number
     number = /^[\d./+-]+$/.test(p) || (number && p === "*")
-    // * only does arithmetic: 2*3 bars. After a name it used to repeat, and loop does now.
+    // * only does arithmetic: 2*3 bars. After a name it used to repeat; a length in front
+    // does that now, and loop is gone.
     if (p === "*") return part(wasNumber ? "tk-punct" : "tk-error", p)
     if ("(){}".includes(p)) return part("tk-punct", p)
-    if (p === "bars" || p === "bar" || p === "loop") return part("tk-directive-key", p)
+    if (p === "loop") return part("tk-error", p)
+    if (p === "bars" || p === "bar") return part("tk-directive-key", p)
     if (number) return part("tk-directive-val", p)
     return part(NAME_RE.test(p) ? "tk-word" : "tk-error", p)
   })

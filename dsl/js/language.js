@@ -9,19 +9,19 @@
      kick: x--x---            inside braces, an instrument and what it plays. The colon
                               only ever means this. A drum takes steps (or beats: 1 2& 3),
                               chords: takes chords. Lines play together, so two drums on
-                              one step is two lines.
+                              one step is two lines, and a drum can have more than one
+                              line: they play as layers of it.
      play { }                 plays what's after it, a pattern or one line, and gives one
                               output with a player and a drum grid. Nothing plays unless
                               it's inside a play.
-   Inside braces, a pattern's name on a line of its own plays it, and names in a row play
-   one after another (intro verse verse). A pattern without a name plays wherever a name
-   could: intro { snare: xxxx } outro.
-   A line plays what's written, once. loop is the one way to repeat: kick: loop x--x---
-   repeats until the pattern it's in ends, and so does loop groove on a line of its own.
-   A length is the one way to say how long, and goes in front of what it measures:
-   pattern groove = 3 bars {, play 6 bars loop groove. Without one, a pattern lasts as
-   long as its longest line that isn't a loop. A loop has to fit what it's in a whole
-   number of times.
+   A pattern is a loop: everything in it repeats until the pattern ends, and without a
+   length it lasts until its lines line up again. A play is a timeline: its own lines play
+   once, and a pattern on a line of its own repeats until the play ends. Names in a row
+   play one after another (intro verse verse), and a pattern without a name plays wherever
+   a name could: intro { snare: xxxx } outro. A length goes in front of what it measures,
+   and a pattern given a length repeats for that long: pattern groove = 3 bars {,
+   play 6 bars groove. Anything that repeats has to fit what it's in a whole number of
+   times.
    Every number is arithmetic: (1+2) bars groove, tempo 60*2. So * and / only ever do
    arithmetic, and a time is two numbers (7 over 8), not a fraction.
    What's set or named inside braces stays inside. // starts a comment. Blank lines and
@@ -41,6 +41,8 @@ export const INSTRUMENTS = ["piano", "epiano", "organ", "pad", "bass", "guitar"]
 export const SETTINGS = ["time", "tempo", "step", "sound", "key", "capo", "octave", "kit"]
 // The types a name can have. Its type goes in front of it: steps pair = X-x-
 export const TYPES = ["steps", "chords", "pattern"]
+// loop, for, def and section are old words, kept so they're explained rather than taken as
+// names.
 export const KEYWORDS = [...TYPES, "play", "loop", "for", "bars", "bar", "over", "def", "section"]
 export const MODIFIERS = ["accent", "ghost", "double"]
 export const KITS = ["rock", "synth"]
@@ -83,8 +85,9 @@ const RENAMED = {
   bpm: "Use tempo 120",
   oct: "Use octave 3",
   group: "Put the grouping in the time: time 2+2+3 over 8",
-  pattern: "Give each drum its own line, e.g. ride.bell: loop x--",
-  repeat: "Put the lines in braces and loop them for a length: play 4 bars loop { ... }",
+  pattern: "Give each drum its own line, e.g. ride.bell: x--",
+  repeat:
+    "Put the lines in a pattern, which repeats: pattern verse = { ... }, then play 8 bars verse",
   drums: "Each drum gets its own line: kick: x--x---, snare: ----x--",
   bd: "Use kick",
   sd: "Use snare",
@@ -478,10 +481,9 @@ function defineWord(type, name, value, ln, state, err) {
     else if (state.sections[t]) {
       return err(ln, `${t} is a pattern, so it can't go in ${type}`)
     } else if (t === "loop") {
-      const line = type === "steps" ? "kick" : "chords"
       return err(
         ln,
-        `loop isn't part of ${type}. It goes on the line that plays them: ${line}: loop ${name}`,
+        `loop isn't part of ${type}, and isn't needed: everything in a pattern repeats until it ends`,
       )
     } else if (type === "steps" ? isStepRun(t) : CHORD_MARKS.includes(t) || buildChord(t, key)) {
       tokens.push(t)
@@ -666,8 +668,7 @@ function classify({ ln, text, blocks }, err, st) {
       const [, type, name, value] = noEquals
       err(ln, `${type} ${name} needs = before what it holds: ${type} ${name} = ${value}`)
     } else if (/^loop\s+[A-Za-z][A-Za-z0-9.]*\s*:/.test(text)) {
-      const [, name, value] = /^loop\s+([^:\s]+)\s*:\s*(.*)$/.exec(text)
-      err(ln, `loop goes after the colon: ${name}: loop ${value || "x-x-"}`)
+      err(ln, NO_LOOP.pattern)
     } else if (/^repeat\b/i.test(text)) err(ln, RENAMED.repeat)
     else if (/^(pattern|section|def)(\s|$)/.test(text)) {
       err(ln, patternHint(text))
@@ -700,8 +701,8 @@ function classify({ ln, text, blocks }, err, st) {
         )
         return null
       }
-      const seq = readSequence(text, ln, err, blocks)
-      return seq && { kind: "sequence", ln, items: seq.items, loop: seq.loop }
+      const items = readSequence(text, ln, err, blocks)
+      return items && { kind: "sequence", ln, items }
     } else err(ln, LINE_SHAPES)
     return null
   }
@@ -751,9 +752,7 @@ function chordSlot(tok, part, st, key, err) {
       part.ln,
       st.sections[tok]
         ? `${tok} is a pattern, so it goes on a line of its own, not on an instrument's line`
-        : tok === "loop"
-          ? "loop goes first on the line: chords: loop Am F"
-          : `"${tok}" isn't defined above. Name it first: chords ${tok} = Am F|C G`,
+        : `"${tok}" isn't defined above. Name it first: chords ${tok} = Am F|C G`,
     )
     return null
   }
@@ -937,8 +936,6 @@ function beatPattern(part, tokens, st, barTicks, err) {
         fail(`${tok} is ${st.words[tok].type}, which don't go in a list of beats`)
       } else if (st.sections[tok]) {
         fail(`${tok} is a pattern, so it goes on a line of its own, not on an instrument's line`)
-      } else if (tok === "loop") {
-        fail(`loop goes first on the line: ${part.name}: loop 1 3`)
       } else {
         fail(`"${tok}" isn't a beat. Beats look like 1, 2&, 3e or 4a`)
       }
@@ -1005,9 +1002,7 @@ function stepPattern(part, tokens, st, err) {
           part.ln,
           st.sections[tok]
             ? `${tok} is a pattern, so it goes on a line of its own, not on an instrument's line`
-            : tok === "loop"
-              ? `loop goes first on the line: ${part.name}: loop x-x-`
-              : `"${tok}" isn't defined above. Name it first: steps ${tok} = x-x-`,
+            : `"${tok}" isn't defined above. Name it first: steps ${tok} = x-x-`,
         )
       } else {
         err(part.ln, `"${tok}"${where} isn't a step. ${STEP_HELP}`)
@@ -1054,12 +1049,12 @@ function stepPattern(part, tokens, st, err) {
   }
 }
 
-function readPart(part, st, barTicks, err) {
-  let tokens = tokenize(part.value)
-  const loop = tokens[0] === "loop"
-  if (loop) tokens = tokens.slice(1)
-  if (!tokens.length) {
-    err(part.ln, `${part.name}: loop needs something to repeat, e.g. ${part.name}: loop x-x-`)
+// One instrument's line. `repeats` says whether it's in a pattern, where lines repeat,
+// for saying what to write instead of loop.
+function readPart(part, st, barTicks, err, repeats) {
+  const tokens = tokenize(part.value)
+  if (tokens.includes("loop")) {
+    err(part.ln, repeats ? NO_LOOP.pattern : NO_LOOP.play)
     return null
   }
   if (tokens.includes("for")) {
@@ -1074,7 +1069,7 @@ function readPart(part, st, barTicks, err) {
   else if (tokens.some((t) => /^\d/.test(t) || t === "|" || t === "%")) {
     pattern = beatPattern(part, tokens, st, barTicks, err)
   } else pattern = stepPattern(part, tokens, st, err)
-  return pattern && { ...pattern, part, loop }
+  return pattern && { ...pattern, part }
 }
 
 // ---------------------------------------------------------------------------
@@ -1095,22 +1090,27 @@ function meterOf(st) {
   }
 }
 
-// Where something is being played from, for error messages.
+// Where something is being played from. In a pattern everything repeats until it ends; in
+// a play, lines play once and only patterns repeat.
 const blockCtx = (name, ln) => ({
   ln,
+  repeats: true,
   where: `in ${name}`,
-  lengthless: `${name} only has loops, so it has no length. Say how long: pattern ${name} = 3 bars {, or play 3 bars ${name}`,
+  sized: `pattern ${name} = 4 bars {`,
 })
-const playCtx = (ln) => ({
-  ln,
-  where: "in this play",
-  lengthless: "Everything here loops, so it has no length. Say how long: play 3 bars { ... }",
-})
-const anonCtx = (ln) => ({
-  ln,
-  where: "in this pattern",
-  lengthless: "Everything in this pattern loops, so it has no length. Say how long: 3 bars { ... }",
-})
+const playCtx = (ln) => ({ ln, repeats: false, where: "in this play" })
+const anonCtx = (ln) => ({ ln, repeats: true, where: "in this pattern", sized: "4 bars { ... }" })
+
+// loop is gone: what repeats is decided by where something is.
+const NO_LOOP = {
+  pattern: "loop isn't needed: everything in a pattern repeats until the pattern ends",
+  play:
+    "loop isn't needed, but a play's own lines play once. To repeat a line, put it in a " +
+    "pattern: pattern beat = { kick: x--- }, then play 4 bars beat",
+  sequence:
+    "loop isn't needed: a pattern on a line of its own repeats until what it's in ends, " +
+    "and a length in front repeats it for that long: 6 bars groove",
+}
 
 const gcd = (a, b) => (b ? gcd(b, a % b) : a)
 const lcm = (a, b) => (a / gcd(a, b)) * b
@@ -1123,8 +1123,8 @@ function sayTicks(ticks, st, barTicks) {
   return count(ticks / TPQ, "beat")
 }
 
-// A loop has to fit what it's in a whole number of times. Reports each of `loops`
-// ({ what, ticks, ln }) that doesn't fit `total` ticks, and the length they'd all fit.
+// Anything that repeats has to fit what it's in a whole number of times. Reports each of
+// `loops` ({ what, ticks, ln }) that doesn't fit `total` ticks, and where they'd all fit.
 // Returns whether they all do.
 function checkLoops(loops, total, st, barTicks, err) {
   // A pattern that sets its own tempo can come out at no whole number of ticks here.
@@ -1134,7 +1134,8 @@ function checkLoops(loops, total, st, barTicks, err) {
   const every =
     loops.filter(whole).reduce((a, l) => lcm(a, Math.round(l.ticks)), barTicks) / barTicks
   const when = every === 1 ? "every bar" : `every ${fmt(every)} bars`
-  const hint = loops.length > 1 ? `The loops here line up ${when}` : `It lines up ${when}`
+  const hint =
+    loops.length > 1 ? `The things repeating here line up ${when}` : `It lines up ${when}`
   const length = sayTicks(total, st, barTicks)
   for (const l of bad) {
     err(
@@ -1146,36 +1147,6 @@ function checkLoops(loops, total, st, barTicks, err) {
     )
   }
   return false
-}
-
-// Plays `parts` together, for `bars` bars if given, otherwise exactly as long as the
-// longest line that isn't a loop, and at least `minSec`. Loops fill that; `loops` says
-// how long each one is, for checking that they fit.
-function partsClip(parts, st, bars, minSec, err, ctx) {
-  const meter = meterOf(st)
-  const { barTicks, secPerTick } = meter
-  const read = parts.map((p) => readPart(p, st, barTicks, err)).filter(Boolean)
-  if (read.length < parts.length) return null
-  const once = read.filter((p) => !p.loop)
-  const ownTicks = bars ? Math.round(bars * barTicks) : Math.max(0, ...once.map((p) => p.ticks))
-  const totalTicks = Math.max(ownTicks, Math.round(minSec / secPerTick))
-  if (!totalTicks) {
-    err(ctx.ln ?? read[0].part.ln, ctx.lengthless)
-    return null
-  }
-  const events = []
-  const drumEvents = []
-  for (const p of read) {
-    for (const e of p.expand(totalTicks, p.loop)) {
-      if (p.kind === "drum") drumEvents.push({ ...e, secStart: e.tick * secPerTick })
-      else events.push({ ...e, secStart: e.tick * secPerTick, secDur: e.ticks * secPerTick })
-    }
-  }
-  const durSec = totalTicks * secPerTick
-  const loops = read
-    .filter((p) => p.loop)
-    .map((p) => ({ what: `The ${p.part.name} loop`, ticks: p.ticks, ln: p.part.ln }))
-  return { durSec, events, drumEvents, spans: [{ ...meter, startSec: 0, durSec }], loops }
 }
 
 // `clip` played end to end until `durSec`.
@@ -1191,32 +1162,56 @@ function tile(clip, durSec) {
   return { ...out, durSec }
 }
 
-// Plays parts and already-evaluated clips together from the same start. They last
-// `bars` bars if given, otherwise as long as the longest of them. Loops, both lines and
-// the clips in `looped` ({ clip, what, ln }), fill that, and have to fit it.
-function layer(parts, clips, st, bars, err, ctx, looped = []) {
+// Plays instrument lines (`parts`) and already-evaluated clips together from the same
+// start. `once` clips play once; `repeated` ones ({ clip, what, ln }) repeat to fill.
+// In a pattern (ctx.repeats) the lines repeat too, and without `bars` it lasts until
+// everything in it lines up again. In a play the lines play once, and it lasts as long as
+// the longest thing in it. Whatever repeats has to fit.
+function layer(parts, once, repeated, st, bars, err, ctx) {
   const meter = meterOf(st)
   const { barTicks, secPerTick } = meter
-  const barSec = barTicks * secPerTick
-  const longest = Math.max(0, ...clips.map((c) => c.durSec))
-  let own = null
-  if (parts.length) {
-    own = partsClip(parts, st, bars, bars ? 0 : longest, err, ctx)
-    if (!own) return null
-  } else if (!clips.length && !looped.length) return null
-  const durSec = bars ? bars * barSec : Math.max(own ? own.durSec : 0, longest)
-  if (!durSec) {
-    err(ctx.ln ?? looped[0].ln, ctx.lengthless)
-    return null
-  }
+  const read = parts.map((p) => readPart(p, st, barTicks, err, ctx.repeats)).filter(Boolean)
+  if (read.length < parts.length) return null
+  if (!read.length && !once.length && !repeated.length) return null
   const loops = [
-    ...(own ? own.loops : []),
-    ...looped.map((l) => ({ ...l, ticks: l.clip.durSec / secPerTick })),
+    ...(ctx.repeats
+      ? read.map((p) => ({ what: `The ${p.part.name} line`, ticks: p.ticks, ln: p.part.ln }))
+      : []),
+    ...repeated.map((r) => ({ ...r, ticks: r.clip.durSec / secPerTick })),
   ]
-  if (!checkLoops(loops, Math.round(durSec / secPerTick), st, barTicks, err)) return null
-  const once = [...clips, ...looped.map((l) => tile(l.clip, durSec))]
+  let totalTicks
+  if (bars) totalTicks = Math.round(bars * barTicks)
+  else if (ctx.repeats) {
+    const whole = loops.filter((l) => nearWhole(l.ticks)).map((l) => Math.round(l.ticks))
+    totalTicks = whole.reduce(lcm, 1)
+    if (totalTicks > MAX_BARS * barTicks) {
+      err(
+        ctx.ln ?? loops[0].ln,
+        `What's ${ctx.where} only lines up again after more than ${MAX_BARS} bars. ` +
+          `Say how long it is: ${ctx.sized}`,
+      )
+      return null
+    }
+  } else {
+    totalTicks = Math.max(
+      ...read.map((p) => p.ticks),
+      ...[...once, ...repeated.map((r) => r.clip)].map((c) => Math.round(c.durSec / secPerTick)),
+    )
+  }
+  if (!checkLoops(loops, totalTicks, st, barTicks, err)) return null
+  const durSec = totalTicks * secPerTick
+  const own = read.map((p) => {
+    const line = { ln: p.part.ln, events: [], drumEvents: [], spans: [] }
+    for (const e of p.expand(totalTicks, ctx.repeats)) {
+      if (p.kind === "drum") line.drumEvents.push({ ...e, secStart: e.tick * secPerTick })
+      else line.events.push({ ...e, secStart: e.tick * secPerTick, secDur: e.ticks * secPerTick })
+    }
+    return line
+  })
+  const clips = [...once, ...repeated.map((r) => ({ ...tile(r.clip, durSec), ln: r.ln }))]
+  // In the order they're written, so what plays at the same moment keeps that order.
+  const all = [...own, ...clips].sort((a, b) => a.ln - b.ln)
   const inside = (e) => e.secStart < durSec - 1e-9
-  const all = own ? [own, ...once] : once
   const events = all.flatMap((c) => c.events).filter(inside)
   // A hi-hat can't be open and closed at once, so an open hit replaces a closed one at the
   // same moment. The next hi-hat hit closes it.
@@ -1224,13 +1219,22 @@ function layer(parts, clips, st, bars, err, ctx, looped = []) {
   const opened = new Set(
     all.flatMap((c) => c.drumEvents.filter((e) => e.lane === "hat.open").map(moment)),
   )
-  const drumEvents = all
-    .flatMap((c) => c.drumEvents)
-    .filter((e) => inside(e) && !(e.lane === "hat" && opened.has(moment(e))))
+  // A drum's lines are layers of it: where two hit at the same moment, that's one hit, the
+  // louder.
+  const loudest = new Map()
+  for (const e of all.flatMap((c) => c.drumEvents)) {
+    if (!inside(e) || (e.lane === "hat" && opened.has(moment(e)))) continue
+    const at = `${e.lane} ${moment(e)}`
+    const had = loudest.get(at)
+    if (!had || e.vel > had.vel || (e.vel === had.vel && had.hidden && !e.hidden)) {
+      loudest.set(at, e)
+    }
+  }
+  const drumEvents = [...loudest.values()]
   events.sort((a, b) => a.secStart - b.secStart)
   drumEvents.sort((a, b) => a.secStart - b.secStart)
   // The grid follows the longest sequence, then this block's own bars after it.
-  const lead = once.reduce((a, c) => (!a || c.durSec > a.durSec ? c : a), null)
+  const lead = clips.reduce((a, c) => (!a || c.durSec > a.durSec ? c : a), null)
   const spans = []
   let covered = 0
   if (lead) {
@@ -1262,65 +1266,61 @@ function readLines(lines, st, err, named) {
   return read
 }
 
-// What a looped item is called when it doesn't fit.
+// What something that repeats is called when it doesn't fit.
 const loopName = (it) => it.name || (it.items ? "This group" : "This pattern")
 
+// A drum can have several lines in a block, which play as layers of it. Chords can't:
+// they play one at a time.
+const secondChords = (where) =>
+  `chords already has a line ${where}. Chords play one at a time, so put them all on one line`
+
 // Lines in braces are one block: they play together, and what's defined inside stays
-// inside. `bars` is the length written in front of the block, if any.
+// inside. `bars` is the length written in front of the block, if any. In a pattern every
+// line repeats; in a play a line of patterns repeats only when it's one pattern on its own.
 function blockClip(lines, state, err, ctx, stack, bars = 0) {
   const st = cloneState(state)
   const read = readLines(lines, st, err)
   const parts = []
   for (const l of read) {
     if (l.kind !== "part") continue
-    if (parts.some((p) => p.name === l.name)) {
-      err(l.ln, `${l.name} already has a line ${ctx.where}. Put it all on one line`)
+    if (l.name === "chords" && parts.some((p) => p.name === "chords")) {
+      err(l.ln, secondChords(ctx.where))
       continue
     }
     parts.push(l)
   }
-  const clips = []
-  const looped = []
+  const once = []
+  const repeated = []
   for (const l of read) {
     if (l.kind !== "sequence") continue
     const clip = sequenceClip(l.items, st, err, l.ln, stack)
     if (!clip) return null
-    // loop groove: repeats until this block ends, like an instrument's loop
-    if (l.loop) looped.push({ clip, what: loopName(l.items[0]), ln: l.ln })
-    else clips.push(clip)
+    const what = l.items.length === 1 ? loopName(l.items[0]) : "This line"
+    if (ctx.repeats || l.items.length === 1) repeated.push({ clip, what, ln: l.ln })
+    else once.push({ ...clip, ln: l.ln })
   }
-  if (!parts.length && !clips.length && !looped.length) {
+  if (!parts.length && !once.length && !repeated.length) {
     // A line that's already been reported as a mistake doesn't need this too.
     if (lines.length && read.length === lines.length) {
       err(lines[0].ln, `Nothing to play ${ctx.where}`)
     }
     return null
   }
-  return layer(parts, clips, st, bars, err, ctx, looped)
+  return layer(parts, once, repeated, st, bars, err, ctx)
 }
 
-// Plays a pattern, with or without a name, with the settings in effect where it's
-// played. `bars` gives it a length if it has none of its own.
-function sectionClip(sec, state, err, ln, stack, bars) {
-  if (sec.anon) {
-    return blockClip(sec.lines, state, err, anonCtx(sec.ln), stack, sec.bars || bars)
-  }
+// Plays a pattern, with or without a name, with the settings in effect where it's played.
+function sectionClip(sec, state, err, ln, stack) {
+  if (sec.anon) return blockClip(sec.lines, state, err, anonCtx(sec.ln), stack, sec.bars)
   if (stack.includes(sec.name)) {
     err(ln, `${sec.name} plays itself, so it would never end`)
     return null
   }
-  return blockClip(
-    sec.lines,
-    state,
-    err,
-    blockCtx(sec.name, ln),
-    [...stack, sec.name],
-    sec.bars || bars,
-  )
+  return blockClip(sec.lines, state, err, blockCtx(sec.name, ln), [...stack, sec.name], sec.bars)
 }
 
 function undefinedName(name, st) {
-  if (/^x\d+$/.test(name)) return "To repeat, loop for a length: 4 bars loop groove"
+  if (/^x\d+$/.test(name)) return "To repeat, put a length in front: 4 bars groove"
   const word = st.words[name]
   if (word) {
     return word.type === "steps"
@@ -1341,10 +1341,10 @@ function checkSection(sec, state, err, owner = sec.anon ? null : sec.name) {
   const read = readLines(sec.lines, st, err, (named) => checkSection(named, st, err))
   const parts = read.filter((l) => l.kind === "part")
   parts.forEach((l, i) => {
-    if (parts.slice(0, i).some((p) => p.name === l.name)) {
-      err(l.ln, `${l.name} already has a line in ${where}. Put it all on one line`)
+    if (l.name === "chords" && parts.slice(0, i).some((p) => p.name === "chords")) {
+      err(l.ln, secondChords(`in ${where}`))
     }
-    readPart(l, st, meterOf(st).barTicks, err)
+    readPart(l, st, meterOf(st).barTicks, err, true)
   })
   const names = (items, ln) => {
     for (const it of items) {
@@ -1374,16 +1374,9 @@ function shift(clip, by, again) {
   }
 }
 
-const LOOP_ALONE =
-  "loop repeats until what it's in ends, so it goes on a line of its own, " +
-  "or after a length: 4 bars loop groove"
-
-// intro verse 8 bars loop (verse chorus) → items in playing order. Each is a name, a
-// pattern without a name ({#1}, kept in `blocks`) or a bracketed group, with the length
-// in front of it, if any, and whether it loops to fill that length.
-// A line that's one thing with loop in front (loop groove) repeats it until the pattern
-// the line is in ends: the result's `loop` is true and the item is plain.
-// Lengths are arithmetic: (1+2) bars groove.
+// intro verse 8 bars (verse chorus) → items in playing order. Each is a name, a pattern
+// without a name ({#1}, kept in `blocks`) or a bracketed group, with the length in front
+// of it, if any, which it repeats to fill. Lengths are arithmetic: (1+2) bars groove.
 function readSequence(line, ln, err, blocks = {}) {
   const text = line.trim()
   let i = 0
@@ -1411,8 +1404,8 @@ function readSequence(line, ln, err, blocks = {}) {
       if (text[i] === "*") {
         const last = out[out.length - 1]
         fail(
-          "* only multiplies numbers. To repeat, loop for a length: " +
-            `4 bars loop ${last?.name || (last?.items ? "( ... )" : last ? "{ ... }" : "groove")}`,
+          "* only multiplies numbers. To repeat, put a length in front: " +
+            `4 bars ${last?.name || (last?.items ? "( ... )" : last ? "{ ... }" : "groove")}`,
         )
         break
       }
@@ -1431,32 +1424,15 @@ function readSequence(line, ln, err, blocks = {}) {
         bars = len.bars
         i = text.length - len.rest.length
       }
-      // loop in front: it repeats, for the length before it or until the line's block ends
-      const loop = /^loop(?![A-Za-z0-9])\s*/.exec(text.slice(i))
-      if (loop) {
-        i += loop[0].length
-        if (i >= text.length || text[i] === ")") {
-          fail("loop needs something to repeat, e.g. loop groove")
-          break
-        }
-        if (lengthPrefix(text.slice(i)).has) {
-          fail("A length goes in front of loop: 4 bars loop groove")
-          break
-        }
-        if (closing && !bars) {
-          fail(LOOP_ALONE)
-          break
-        }
-      }
       if (text[i] === "(") {
         i++
-        out.push({ items: items(true), bars, loop: !!loop })
+        out.push({ items: items(true), bars })
         continue
       }
       const key = /^\{#\d+\}/.exec(text.slice(i))
       if (key && blocks?.[key[0]]) {
         i += key[0].length
-        out.push({ block: blocks[key[0]], bars, loop: !!loop })
+        out.push({ block: blocks[key[0]], bars })
         continue
       }
       const name = /^[A-Za-z][A-Za-z0-9]*/.exec(text.slice(i))
@@ -1466,7 +1442,7 @@ function readSequence(line, ln, err, blocks = {}) {
           /^\d/.test(tok)
             ? `"${tok}" needs bars after it, e.g. 3 bars groove`
             : `"${tok}" doesn't belong here. This line takes patterns' names, ` +
-                "a length in front (4 bars groove), loop, and ( ) to group",
+                "a length in front (4 bars groove), and ( ) to group",
         )
         break
       }
@@ -1475,28 +1451,19 @@ function readSequence(line, ln, err, blocks = {}) {
         break
       }
       if (name[0] === "loop") {
-        fail("loop is written once, in front of what repeats: 4 bars loop groove")
+        fail(NO_LOOP.sequence)
         break
       }
       i += name[0].length
-      out.push({ name: name[0], bars, loop: !!loop })
+      out.push({ name: name[0], bars })
     }
     return out
   }
   const seq = items(false)
-  if (!ok) return null
-  if (seq.some((it) => it.loop && !it.bars)) {
-    if (seq.length > 1) {
-      err(ln, LOOP_ALONE)
-      return null
-    }
-    seq[0].loop = false
-    return { items: seq, loop: true }
-  }
-  return { items: seq, loop: false }
+  return ok ? seq : null
 }
 
-// Patterns in a row, one after another.
+// Patterns in a row, one after another. A length in front of one repeats it for that long.
 function sequenceClip(items, state, err, ln, stack = []) {
   let t = 0
   const out = { events: [], drumEvents: [], spans: [] }
@@ -1507,17 +1474,13 @@ function sequenceClip(items, state, err, ln, stack = []) {
       err(ln, undefinedName(it.name, state))
       return null
     }
-    // A length in front of a pattern with none of its own is that pattern's length.
-    const own = sec && !sec.bars && !it.loop ? it.bars : 0
     let clip = it.items
       ? sequenceClip(it.items, state, err, ln, stack)
-      : sectionClip(sec, state, err, ln, stack, own)
+      : sectionClip(sec, state, err, ln, stack)
     if (!clip) return null
-    if (it.bars && !own) {
-      // Otherwise it's how long to play for: once, or looped to fill it.
-      clip = it.loop
-        ? layer([], [], state, it.bars, err, playCtx(ln), [{ clip, what: loopName(it), ln }])
-        : layer([], [clip], state, it.bars, err, playCtx(ln))
+    if (it.bars) {
+      const what = loopName(it)
+      clip = layer([], [], [{ clip, what, ln }], state, it.bars, err, playCtx(ln))
       if (!clip) return null
     }
     const moved = shift(clip, t, it.name != null && seen.has(it.name))
@@ -1608,7 +1571,8 @@ export function parseCell(src, inherited = initialState()) {
   const skipIfOpen = (i) => (/\{$/.test(lines[i].text) ? skipBlock(i) : i)
   let anonCount = 0
   // Reads a { ... } block that starts with `rest` (the text after the {) on line `at`.
-  // Returns its lines, the index of its last line, and what follows the closing }.
+  // Returns its lines, the index of its last line, what follows the closing }, and whether
+  // a line was left out as a mistake.
   // A block inside it without a name plays where it's written, like a pattern's name:
   // on its line it becomes {#1}, and the line keeps the block in `blocks`.
   // With `oneLine`, reads a single line instead (the rest of a play), through the line
@@ -1618,6 +1582,7 @@ export function parseCell(src, inherited = initialState()) {
     let i = at
     let text = rest
     let cur = null // the line being read: { ln, text, blocks }
+    let dropped = false // whether a line was left out as a mistake
     const flush = () => {
       const t = cur ? cur.text.trim() : ""
       if (t && /^play(\s|$)/.test(t)) err(cur.ln, "play goes at the top, not inside braces")
@@ -1630,10 +1595,10 @@ export function parseCell(src, inherited = initialState()) {
       if (!brace) {
         cur.text += text
         flush()
-        if (oneLine) return { body, end: i, tail: "" }
+        if (oneLine) return { body, end: i, tail: "", dropped }
         if (++i >= lines.length) {
           err(lines[at].ln, `${what} needs a } to close it`)
-          return { body, end: i, tail: "" }
+          return { body, end: i, tail: "", dropped }
         }
         text = lines[i].text
         continue
@@ -1646,7 +1611,7 @@ export function parseCell(src, inherited = initialState()) {
           continue
         }
         flush()
-        return { body, end: i, tail: text.trim() }
+        return { body, end: i, tail: text.trim(), dropped }
       }
       // A block inside this one
       const head = cur.text.trim()
@@ -1654,7 +1619,7 @@ export function parseCell(src, inherited = initialState()) {
       const inner = readBlock(i, text.trim(), oneLine && what && what !== "play" ? what : "This {")
       if (inner.end >= lines.length) {
         flush()
-        return { body, end: inner.end, tail: "" }
+        return { body, end: inner.end, tail: "", dropped }
       }
       i = inner.end
       text = inner.tail
@@ -1665,11 +1630,21 @@ export function parseCell(src, inherited = initialState()) {
         err(cur.ln, patternHint(head))
         cur.text = ""
       } else if (/:$/.test(head)) {
-        err(cur.ln, `Braces can't go after ${head}. A pattern goes on its own line: { kick: x--- }`)
+        const name = head.slice(0, -1).trim()
+        err(
+          cur.ln,
+          LANES.includes(name)
+            ? `A drum's line can't open braces. To layer ${name}, give it another line: ` +
+                `${name}: x--- on one line and ${name}: --x- on the next`
+            : `Braces can't go after ${head}. A pattern goes on its own line: { kick: x--- }`,
+        )
         cur.text = ""
+        dropped = true
       } else if (!inner.body.length) {
-        err(cur.ln, "These braces have nothing in them")
+        // Unless what was in them was a mistake, already reported
+        if (!inner.dropped) err(cur.ln, "These braces have nothing in them")
         cur.text = ""
+        dropped ||= inner.dropped
       } else {
         const key = `{#${++anonCount}}`
         cur.blocks = {

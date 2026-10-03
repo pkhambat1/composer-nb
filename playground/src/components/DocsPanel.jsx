@@ -24,15 +24,19 @@ A **music cell** is a short script. Run it to hear it, see chord diagrams and a 
 tempo 100
 sound guitar
 
+pattern beat = {
+  kick: x-------
+  snare: ----x---
+  hat: x-
+}
+
 play {
   chords: Am F|C G
-  kick: loop x-------
-  snare: loop ----x---
-  hat: loop x-
+  beat
 }
 \`\`\`
 
-Everything inside the braces plays together. The chords are 2 bars long, and the three drum lines loop for those 2 bars.`,
+A **pattern** is lines that play together, over and over: \`beat\` is half a bar long, and repeats until what it's in ends. A **play** is a timeline, and its own lines play once: the chords play their 2 bars, with the beat repeating under them.`,
   },
   {
     id: "lines",
@@ -59,7 +63,7 @@ A name's type goes in front of it, and \`=\` gives it its value.
 |------|---------------|---------------|
 | \`steps\` | A drum's hits: \`steps pair = X-x-\` | On a drum's line: \`hat: pair pair\` |
 | \`chords\` | Bars of chords: \`chords verse = Am F\\|C G\` | On the chords line: \`chords: verse\` |
-| \`pattern\` | Lines in braces that play together: \`pattern groove = { ... }\` | On a line of its own, or after \`play\` |
+| \`pattern\` | Lines in braces that play together, over and over: \`pattern groove = { ... }\` | On a line of its own, or after \`play\` |
 
 A name only holds its type, and only goes where that type goes. Chords on a drum's line, or steps where a pattern belongs, is an error that names both types. A name without a type is an error too, and the message shows the line to write.
 
@@ -70,15 +74,17 @@ A name only holds its type, and only goes where that type goes. Chords on a drum
 | \`:\` | This instrument plays this |
 | \`=\` | This name is this |
 | \`{ }\` | These lines play together |
-| \`( )\` | A group: \`8 bars loop (verse chorus)\` |
+| \`( )\` | A group: \`8 bars (verse chorus)\` |
 | \`*\` \`/\` | Arithmetic, between two numbers. In \`C/E\` the slash is part of a chord's name |
 
 ## One way to do each thing
 
 | You want | You write |
 |----------|-----------|
-| To repeat something | \`loop\` in front of it |
-| To say how long | A length in front of it: \`3 bars\` |
+| To repeat something | Put it in a pattern. Everything in a pattern repeats until the pattern ends |
+| To play something once | Put it on a play's own line: \`crash: 1\` |
+| To say how long | A length in front of it: \`3 bars\`. In front of a pattern, it repeats the pattern for that long |
+| Two rhythms on one drum | A line for each: two \`snare.ghost:\` lines |
 
 ## Nothing floats
 
@@ -105,7 +111,7 @@ A setting is a reserved word followed by its value. It applies from where it's w
 
 ## Numbers are arithmetic
 
-Wherever a number goes, arithmetic goes: \`tempo 60*2\`, \`(1+2) bars groove\`, \`2*3 bars loop groove\`. So \`*\` and \`/\` only ever multiply and divide.
+Wherever a number goes, arithmetic goes: \`tempo 60*2\`, \`(1+2) bars groove\`, \`2*3 bars groove\`. So \`*\` and \`/\` only ever multiply and divide.
 
 That's why a time isn't written with a slash. \`7/8\` is the number 0.875, and a time is two numbers: \`time 7 over 8\`. \`6 over 8\` and \`3 over 4\` are different times, though they'd divide to the same thing. Write \`3+4 over 4\` for a bar felt as 3 then 4; the drum grid shades the groups.
 
@@ -172,17 +178,26 @@ play chords: verse verse
     group: "Language Reference",
     body: `# Drums
 
-## One instrument per line
+## One drum per line
 
-\`kick\`, \`snare\`, \`hat\`, \`ride\`, \`crash\`, \`tom\` and \`floor\` (the floor tom) each get their own line. The line says which sound, and what follows the colon says when. Some drums have other sounds with lines of their own: \`ride.bell\`, \`hat.open\`, \`hat.pedal\`, \`snare.rim\` (a rimshot) and \`snare.ghost\` (the snare's ghost notes, so they can sit under its main line).
+\`kick\`, \`snare\`, \`hat\`, \`ride\`, \`crash\`, \`tom\` and \`floor\` (the floor tom) are the drums. A line says which one, and what follows the colon says when it's hit. Some drums have other sounds with lines of their own: \`ride.bell\`, \`hat.open\`, \`hat.pedal\`, \`snare.rim\` (a rimshot) and \`snare.ghost\` (the snare's ghost notes, so they can sit under its main line).
 
 Lines play together, so two drums on the same step is two lines with a hit in the same place.
 
-An open hi-hat rings until the next hi-hat hit closes it, like a real one. It also replaces a closed hit at the same moment, so the \`hat\` line can keep going under it:
+A drum can have more than one line. They're layers of it, and in a pattern each repeats at its own length. Where two of them hit at the same moment, that's one hit, the louder:
 
 \`\`\`
-play {
-  hat: loop X-x-
+pattern ghosts = {
+  snare.ghost: --x-
+  snare.ghost: ------------dd--
+}
+\`\`\`
+
+An open hi-hat rings until the next hi-hat hit closes it, like a real one, whether that's a stick on \`hat\` or the foot on \`hat.pedal\`. It also replaces a closed hit at the same moment, so the \`hat\` line can keep going under it:
+
+\`\`\`
+pattern hats = {
+  hat: X-x-
   hat.open: ------X-
 }
 \`\`\`
@@ -231,30 +246,23 @@ steps pair = X-x-
 play hat: pair pair
 \`\`\`
 
-## loop
+## Lines of different lengths
 
-A line plays what's written, once. \`loop\` repeats it until whatever it's in ends.
-
-\`\`\`
-play {
-  chords: Am F|C G
-  hat: loop x-
-}
-\`\`\`
-
-Loops of different lengths drift against each other, which is how you write a polyrhythm:
+In a pattern, every line repeats until the pattern ends, so lines of different lengths drift against each other. That's how you write a polyrhythm:
 
 \`\`\`
 time 7 over 8
 
-play 3 bars {
-  kick: loop x--x---
-  snare: loop ----x--
-  ride.bell: loop x--
+pattern groove = 3 bars {
+  kick: x--x---
+  snare: ----x--
+  ride.bell: x--
 }
+
+play groove
 \`\`\`
 
-The bell repeats every 3 steps against a 7-step kick and snare. A loop has to fit the pattern it's in a whole number of times, and 3 bars is where these line up. With \`play 4 bars\` the bell would stop partway through, so it's an error, and the message says the loops line up every 3 bars.`,
+The bell repeats every 3 steps against a 7-step kick and snare. A line has to fit its pattern a whole number of times, and 3 bars is where these line up. With \`4 bars\` the bell would stop partway through, so it's an error, and the message says the lines line up every 3 bars.`,
   },
   {
     id: "patterns",
@@ -264,17 +272,19 @@ The bell repeats every 3 steps against a 7-step kick and snare. A loop has to fi
 
 ## Patterns
 
-A pattern is lines in braces that play together. Give it a name with its type in front, and it doesn't play until you play it.
+A pattern is lines in braces that play together, over and over: everything in it repeats until the pattern ends. Give it a name with its type in front, and it doesn't play until you play it.
 
 \`\`\`
 time 7 over 8
 
-pattern groove = 3 bars {
-  kick: loop x--x---
-  snare: loop ----x--
-  ride.bell: loop x--
+pattern groove = {
+  kick: x--x---
+  snare: ----x--
+  ride.bell: x--
 }
 \`\`\`
+
+Without a length, a pattern lasts until its lines line up again. Here the 7-step kick and snare and the 3-step bell line up after 21 steps, a bar and a half of 7 over 8.
 
 Named patterns, like settings and other names, carry on into the cells below. A pattern without a name plays right where it's written, anywhere a name could go:
 
@@ -282,7 +292,7 @@ Named patterns, like settings and other names, carry on into the cells below. A 
 play groove { snare: xxxx } groove
 play {
   2 bars {
-    kick: loop x---
+    kick: x---
   }
 }
 \`\`\`
@@ -295,11 +305,11 @@ play {
 play groove
 play 6 bars {
   crash: 1
-  loop groove
+  groove
 }
 \`\`\`
 
-Inside braces, a pattern's name on a line of its own plays that pattern, next to the instrument lines beside it. So the second play above is one crash, with the groove looping under it for 6 bars.
+A play is a timeline: its own lines play once, and a pattern on a line of its own repeats until the play ends. So the second play above is one crash, with the groove repeating under it for 6 bars.
 
 ## In order
 
@@ -307,40 +317,45 @@ Inside braces, a pattern's name on a line of its own plays that pattern, next to
 |-----------|---------|
 | \`intro verse\` | One after the other |
 | \`verse verse\` | Twice |
-| \`(verse chorus)\` | A group, to give a length or loop |
+| \`(verse chorus)\` | A group, to give a length |
 
 \`\`\`
-play intro 16 bars loop (verse chorus) outro
+play intro 16 bars (verse chorus) outro
 \`\`\`
 
-## loop
+Names in a row play once each, even on a line of their own in a play. In a pattern they repeat, like everything else.
 
-\`loop\` is the one way to repeat. In front of what a line plays, it repeats that until the pattern it's in ends. That's the same for an instrument's line and for a pattern on a line of its own:
+## Repeating
+
+There's one way to repeat something: put it in a pattern. An instrument's line repeats until its pattern ends, and so does a pattern on a line of its own:
 
 \`\`\`
-play 4 bars {
-  hat: loop x-
-  loop beat
+pattern beat = {
+  hat: x-
+  kick: x---
+}
+
+pattern verse = 4 bars {
+  chords: Am F|C G
+  beat
 }
 \`\`\`
 
-After a length, it repeats for that long: \`8 bars loop verse\`.
+A length in front of a pattern repeats it for that long: \`8 bars verse\`.
 
-A loop has to fit what it's in a whole number of times. A 3-bar groove loops in 6 bars or 9, not in 4, and the error says where it lines up.
+Whatever repeats has to fit what it's in a whole number of times. A 3-bar groove repeats in 6 bars or 9, not in 4, and the error says where it lines up.
 
 ## Lengths
 
 A length is the one way to say how long, and goes in front of what it measures:
 
 \`\`\`
-pattern groove = 3 bars { kick: loop x--x--- }
-play 3 bars { hat: loop x- }
-play 6 bars loop groove
+pattern fill = 2 bars { hat: x- }
+play 6 bars groove
+play 2 bars { crash: 1 }
 \`\`\`
 
-Without one, a pattern lasts exactly as long as its longest line that isn't a loop, down to a single beat. A pattern with only loops in it needs a length, where you name it or where you play it.
-
-A length with nothing looping plays what's after it once, and leaves the rest silent: \`4 bars hit\`.`,
+Without one, a pattern lasts until its lines line up again, and a play lasts as long as the longest thing in it. A play can be longer than its lines, and the rest is silent: the last play above is one crash, left to ring for 2 bars.`,
   },
   {
     id: "shortcuts",

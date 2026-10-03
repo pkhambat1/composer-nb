@@ -39,15 +39,13 @@ def test_top_of_a_cell_offers_settings_types_and_play():
     assert texts("%%music\ns") == ["step ", "sound ", "steps "]
     assert texts("%%music\nc") == ["capo ", "chords "]
     assert "kick: " not in texts("%%music\n")
-    assert "loop " not in texts("%%music\n")
 
 
-def test_inside_braces_offers_instruments_patterns_and_loop():
+def test_inside_braces_offers_instruments_and_patterns():
     cell = "%%music\npattern groove = { kick: x--x }\nplay {\n  "
-    assert {"kick: ", "ride.bell: ", "chords: ", "groove", "loop ", "tempo ", "steps "} <= set(texts(cell))
+    assert {"kick: ", "ride.bell: ", "chords: ", "groove", "tempo ", "steps "} <= set(texts(cell))
     assert texts(cell + "ri") == ["ride: ", "ride.bell: "]
-    assert texts(cell + "l") == ["loop "]
-    assert texts(cell + "loop g") == ["groove"]
+    assert texts(cell + "l") == []  # no loop: a pattern repeats by itself
     assert texts(cell + "groove g") == ["groove"]
 
 
@@ -58,25 +56,24 @@ def test_settings_offer_their_values():
     assert texts("%%music\ntempo ") == []
 
 
-def test_instrument_lines_offer_loop_and_names_of_their_type():
+def test_instrument_lines_offer_names_of_their_type():
     cell = "%%music\nsteps pair = X-x-\nchords verse = Am F\nplay {\n  "
-    assert texts(cell + "hat: ") == ["loop ", "pair"]
-    assert texts(cell + "hat: loop p") == ["pair"]
+    assert texts(cell + "hat: ") == ["pair"]
+    assert texts(cell + "hat: p") == ["pair"]
     assert texts(cell + "snare: 2 4 a") == ["accent"]
-    assert texts(cell + "chords: ") == ["loop ", "verse"]
+    assert texts(cell + "chords: ") == ["verse"]
     assert texts(cell + "chords: Am ") == ["verse"]
     # A name only goes where its type goes.
     assert texts(cell + "hat: v") == []
     assert texts(cell + "chords: p") == []
 
 
-def test_play_offers_patterns_lengths_and_loop():
+def test_play_offers_patterns_and_lengths():
     cell = "%%music\nsteps pair = x-x-\npattern groove = { kick: x--x }\n"
-    assert texts(cell + "play ") == ["groove", "loop ", *[p + ": " for p in completer.PARTS]]
+    assert texts(cell + "play ") == ["groove", *[p + ": " for p in completer.PARTS]]
     assert texts(cell + "play 3 ") == ["bars ", "bar "]
-    assert texts(cell + "play 3 bars ") == ["loop ", "groove"]
-    assert texts(cell + "play 3 bars loop ") == ["groove"]
-    assert texts(cell + "play 3 bars loop (groove g") == ["groove"]
+    assert texts(cell + "play 3 bars ") == ["groove"]
+    assert texts(cell + "play 3 bars (groove g") == ["groove"]
 
 
 def test_a_type_offers_what_it_holds_after_the_equals():
@@ -84,17 +81,17 @@ def test_a_type_offers_what_it_holds_after_the_equals():
     assert texts(cell + "steps ") == []  # still writing the name
     assert texts(cell + "steps four = ") == ["pair"]
     assert texts(cell + "chords song = ") == ["verse"]
-    assert texts(cell + "pattern outro = ") == ["hit", "loop ", *[p + ": " for p in completer.PARTS]]
+    assert texts(cell + "pattern outro = ") == ["hit", *[p + ": " for p in completer.PARTS]]
     assert texts(cell + "pattern outro = 2 ") == ["bars ", "bar "]
-    assert texts(cell + "pattern outro = 2 bars l") == ["loop "]
+    assert texts(cell + "pattern outro = 2 bars h") == ["hit"]
     assert texts(cell + "pattern outro = hit h") == ["hit"]
-    assert texts(cell + "pattern fill = snare: ") == ["loop ", "pair"]
+    assert texts(cell + "pattern fill = snare: ") == ["pair"]
 
 
 def test_a_name_given_again_means_the_new_thing():
     cell = "%%music\nsteps riff = x-x-\nchords riff = Am F\nplay {\n  "
-    assert texts(cell + "chords: ") == ["loop ", "riff"]
-    assert texts(cell + "hat: ") == ["loop "]
+    assert texts(cell + "chords: ") == ["riff"]
+    assert texts(cell + "hat: ") == []
 
 
 def test_names_without_a_type_are_not_names_yet():
@@ -119,7 +116,7 @@ def test_magic_line_offers_after_and_saved_songs():
 
 def test_names_carry_on_from_the_song_a_cell_continues():
     songs = {"intro": Song("chords riff = Am E7|G D\npattern groove = { kick: x--x }", name="intro")}
-    assert texts("%%music verse after intro\nplay chords: ", songs) == ["loop ", "riff"]
+    assert texts("%%music verse after intro\nplay chords: ", songs) == ["riff"]
     assert "groove" in texts("%%music verse after intro\nplay ", songs)
 
 
