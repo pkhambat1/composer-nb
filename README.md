@@ -1,6 +1,24 @@
 # composer-nb
 
-A small language for chords and drums, and a notebook to hear them in. Try it at [composer-nb.vercel.app](https://composer-nb.vercel.app).
+**Sketch music like you write code.** Chords and drums in a small language you can read at a glance. Run a cell and hear it, with a drum grid, chord shapes for guitar, and a WAV to keep. It runs in your browser, and right inside Jupyter.
+
+**[Open the playground →](https://composer-nb.vercel.app)** · `pip install composer-nb`
+
+<p align="center">
+  <img src="docs/images/playground.png" width="820" alt="The composer-nb playground running a cell: guitar chords with a drum pattern, a waveform player, a drum grid and chord diagrams">
+</p>
+
+## How a cell reads
+
+Every line starts by saying what it is: a setting, a name with its type, an instrument and what it plays, or `play`. Nothing makes a sound unless it's inside a `play`.
+
+<p align="center">
+  <img src="docs/images/how-a-cell-reads.svg" width="820" alt="A cell with each kind of line labelled: a setting, a named pattern, drum lines, play, chords, and a pattern played by name">
+</p>
+
+## Patterns repeat until they line up
+
+Everything in a pattern repeats until the pattern ends. Give lines different lengths and they drift against each other, so odd meters and polyrhythms take a line each:
 
 ```
 // what happens now: crash once, the groove repeating under it
@@ -18,13 +36,39 @@ play 6 bars {
 }
 ```
 
+<p align="center">
+  <img src="docs/images/lines-line-up.svg" width="820" alt="A step grid in 7 over 8: the kick and snare repeat every 7 steps and the ride bell every 3, lining up again after 21 steps">
+</p>
+
+A play is a timeline: its own lines play once, so the crash hits once while the groove repeats under it. Anything that repeats has to fit what it's in, and if it doesn't, the error says where it lines up.
+
+## Say where it hits
+
+Write busy parts as steps (`x-x-`), and sparse ones by the beats they hit on. Steps after a beat say how it's hit:
+
+<p align="center">
+  <img src="docs/images/say-where-it-hits.svg" width="820" alt="The same ghost-note burst written as 28 steps and as -|3 dd, shown on a two-bar grid">
+</p>
+
+## In Jupyter
+
+```bash
+pip install composer-nb
+```
+
+```python
+%load_ext composer_nb
+```
+
+Then start a cell with `%%music`. Each `play` gives a player, a waveform, a drum grid and the chords it heard, and Tab completes as you type. Named cells carry their settings and names into later ones. See the [package README](dsl/README.md) for the rest.
+
 ## What's here
 
 | Folder        | What it is                                                                                                                                                                                   |
 | ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `dsl/`        | The language. `dsl/js/` has the parser, chord builder and audio renderer. `dsl/python/` is the [`composer-nb`](dsl/README.md) Python package, which plays the language in Jupyter notebooks. |
 | `playground/` | A notebook-style web app for writing the language and hearing it. It uses `dsl/` as a package, so both always run the same parser.                                                           |
-| `docs/`       | Design notes and screenshots.                                                                                                                                                                |
+| `docs/`       | Design notes, screenshots, and the images in these READMEs.                                                                                                                                  |
 
 ## Working on it
 
