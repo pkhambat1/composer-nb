@@ -235,8 +235,8 @@ describe("types", () => {
     expect(firstError("steps pair = x-x-\nplay chords: pair")).toMatch(
       /pair is steps, so it goes on a drum's line, not on chords:/,
     )
-    expect(firstError("steps pair = x-x-\nplay kick: 1 pair")).toMatch(
-      /pair is steps, which don't go in a list of beats/,
+    expect(firstError("chords verse = Am F\nplay kick: 1 verse")).toMatch(
+      /verse is chords, which don't go in a list of beats/,
     )
   })
 
@@ -878,10 +878,81 @@ describe("drums", () => {
     expect(o.drumEvents.filter((e) => e.hidden)).toHaveLength(1)
   })
 
-  it("read beats with words after them, and - as an empty bar", () => {
-    const o = parseSource(play("crash: 1|-|1", "tom: 2 accent 4 ghost")).outputs[0]
+  it("read beats, with a step after a beat for how it's hit, and - as an empty bar", () => {
+    const o = parseSource(play("crash: 1|-|1", "tom: 2 X 4 g")).outputs[0]
     expect(hits(o, "crash").map((e) => e.secStart)).toEqual([0, 4])
     expect(hits(o, "tom").map((e) => e.vel)).toEqual([1, 0.3])
+  })
+
+  it("carry steps on from a beat, so a line that's mostly rests says where it hits", () => {
+    const seven = "time 7 over 8\n"
+    expect(sound(seven + "play snare: 2e 4|2e 4")).toBe(
+      sound(seven + "play snare: -----x------x------x------x-"),
+    )
+    expect(sound(seven + "play snare.ghost: -|3 dd")).toBe(
+      sound(seven + "play snare.ghost: ----------------------dd----"),
+    )
+    expect(sound(seven + "play hat.open: -|3& X")).toBe(
+      sound(seven + "play hat.open: ------------------------X---"),
+    )
+    expect(sound("steps burst = dd\nplay snare.ghost: 3 burst")).toBe(
+      sound("play snare.ghost: --------dd------"),
+    )
+    expect(sound("play snare: 2 4 {\n  x-\n  -x\n}")).toBe(sound("play snare: ----x-------xx--"))
+  })
+
+  it("explain steps after a beat that don't fit", () => {
+    expect(firstError("play snare: x- 2")).toMatch(/Say which beat x- starts on: 1 x-/)
+    expect(firstError("play snare: 3 dddd 3e")).toMatch(/The steps after 3 run into 3e/)
+    expect(firstError("play snare: 4 xxxxxx")).toMatch(
+      /The steps after 4 run past the end of the bar/,
+    )
+    expect(firstError("play snare: 2 2")).toMatch(/2 is in this bar twice/)
+    expect(firstError("play snare: 2 x -x")).toMatch(
+      /2 already has steps after it. Write them as one: 2 x-x/,
+    )
+    expect(firstError("play tom: 2 accent")).toMatch(
+      /Say how a beat is hit with a step after it: 2 X for an accent/,
+    )
+    expect(firstError("play tom: 3 double")).toMatch(/3 d for a double/)
+    expect(firstError("play snare.ghost: 2 X")).toMatch(/can't be accented/)
+  })
+
+  it("are steps too, so they can be a layer or a name", () => {
+    const seven = "time 7 over 8\n"
+    const want = sound(seven + "play snare.ghost: --x------x------x-----dd----")
+    expect(sound(seven + "play snare.ghost: {\n  --x----\n  -|3 dd\n}")).toBe(want)
+    expect(sound(seven + "steps burst = -|3 dd\nplay snare.ghost: {\n  --x----\n  burst\n}")).toBe(
+      want,
+    )
+    expect(firstError("burst = -|3 dd")).toMatch(/Put its type in front: steps burst = -\|3 dd/)
+    expect(firstError("step 1/8\nsteps odd = 2e")).toMatch(
+      /2e isn't on a step, so these beats can't be steps/,
+    )
+  })
+
+  it("write a sparse groove by where it hits, the same as all its steps", () => {
+    const groove = (lines) =>
+      `time 7 over 8\ntempo 90\npattern groove = {\n${lines}\n}\nplay 6 bars {\n  crash: 1\n  groove\n}`
+    const long = groove(`  kick: x--x---
+  snare: -----x------x------x------x-
+  snare.ghost: {
+    --x----
+    ----------------------dd----
+  }
+  hat: X-x-
+  hat.open: ------------------------X---
+  hat.pedal: --------------------------x-`)
+    const short = groove(`  kick: x--x---
+  snare: 2e 4
+  snare.ghost: {
+    --x----
+    -|3 dd
+  }
+  hat: X-x-
+  hat.open: -|3& X
+  hat.pedal: -|4`)
+    expect(sound(short)).toBe(sound(long))
   })
 
   it("play a variation on its own lane, with the drum's sound", () => {
@@ -1003,10 +1074,6 @@ describe("one instrument per line", () => {
   it("explains what a block of steps can't hold", () => {
     expect(firstError("play snare: {\n  kick: x---\n}")).toMatch(
       /A block of steps holds steps, one layer a line, like --x-. kick: x--- is an instrument's line/,
-    )
-    expect(firstError("play snare: {\n  2 4\n}")).toMatch(/holds steps, not beats/)
-    expect(firstError("play snare: 2 4 {\n  x-\n}")).toMatch(
-      /This line lists beats, so a block of steps can't go on it/,
     )
     // said on the layer's own line
     expect(parseSource("play snare.ghost: {\n  --x-\n  --g-\n}").errors).toEqual([

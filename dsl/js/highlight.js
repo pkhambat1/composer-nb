@@ -4,7 +4,7 @@
    Token classes (used by CSS):
      .tk-comment, .tk-directive-key (keywords and settings), .tk-directive-val,
      .tk-inst, .tk-word (your own names), .tk-punct, .tk-bar, .tk-root, .tk-quality,
-     .tk-ext, .tk-rest, .tk-slash, .tk-bass, .tk-beat, .tk-mod, .tk-step, .tk-step-acc,
+     .tk-ext, .tk-rest, .tk-slash, .tk-bass, .tk-beat, .tk-step, .tk-step-acc,
      .tk-error
    Whitespace is kept exactly, so the layer lines up with the textarea under it. */
 import { KEYWORDS, LANES, MODIFIERS, PARTS, SETTINGS, TYPES } from "./language.js"
@@ -74,7 +74,8 @@ function valueToken(t, kind) {
   if (kind !== "chord") {
     if (STEPS_RE.test(t)) return stepRun(t)
     if (/^\d+(e|&|a)?$/.test(t)) return [part("tk-beat", t)]
-    if (MODIFIERS.includes(t)) return [part("tk-mod", t)]
+    // accent, ghost and double are old words: a step after the beat says it now (2 X)
+    if (MODIFIERS.includes(t)) return [part("tk-error", t)]
   }
   if (/^[a-z][a-z0-9]+$/.test(t) && !isRoman(t)) return [part("tk-word", t)]
   if (kind === "drum") return [part("tk-error", t)]
