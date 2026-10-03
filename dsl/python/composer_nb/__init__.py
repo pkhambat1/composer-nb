@@ -5,11 +5,13 @@ In Jupyter, load the cell magic and write music in `%%music` cells:
     %load_ext composer_nb
 
     %%music intro
-    tempo: 75
-    sound: guitar
-    Am E7|G D
-    kick: 1 3
-    snare: 2 4
+    tempo 75
+    sound guitar
+    play {
+      chords: Am E7|G D
+      kick: loop x-------
+      snare: loop ----x---
+    }
 
 Or build songs from Python with `Song`.
 """
@@ -28,7 +30,9 @@ __all__ = ["MusicWidget", "Song", "__version__"]
 
 
 def load_ipython_extension(ipython):
-    """Called by `%load_ext composer_nb`; registers the `%%music` cell magic."""
+    """Called by `%load_ext composer_nb`; registers the `%%music` cell magic and its Tab completion."""
+    from .completer import register
     from .magic import MusicMagics
 
     ipython.register_magics(MusicMagics)
+    register(ipython)
