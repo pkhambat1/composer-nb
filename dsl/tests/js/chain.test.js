@@ -24,7 +24,7 @@ describe("parseChain", () => {
       "G",
       "D",
     ])
-    expect(labels(parseChain(["pattern v {\n  chords: F C\n}", "play v * 2"]))).toEqual([
+    expect(labels(parseChain(["v = {\n  chords: F C\n}", "play v * 2"]))).toEqual([
       "F",
       "C",
       "F",

@@ -32,12 +32,12 @@ def test_a_drum_and_a_dot_offers_its_other_sounds():
 
 def test_top_of_a_cell_offers_settings_and_keywords():
     assert texts("%%music\nt") == ["time ", "tempo "]
-    assert texts("%%music\np") == ["pattern ", "play "]
+    assert texts("%%music\np") == ["play "]
     assert "kick: " not in texts("%%music\n")
 
 
-def test_inside_braces_offers_instruments_and_patterns():
-    cell = "%%music\npattern groove { kick: x--x }\nplay {\n  "
+def test_inside_braces_offers_instruments_and_blocks():
+    cell = "%%music\ngroove = { kick: x--x }\nplay {\n  "
     assert {"kick: ", "ride.bell: ", "chords: ", "groove", "tempo "} <= set(texts(cell))
     assert texts(cell + "ri") == ["ride: ", "ride.bell: "]
     assert texts(cell + "groove * 2 g") == ["groove"]
@@ -58,15 +58,27 @@ def test_instrument_lines_offer_loop_words_and_modifiers():
     assert texts(cell + "chords: Am ") == ["pair"]
 
 
-def test_play_offers_patterns_then_bars():
-    cell = "%%music\npattern groove { kick: x--x }\n"
+def test_play_offers_blocks_then_bars():
+    cell = "%%music\ngroove = { kick: x--x }\n"
     assert "groove" in texts(cell + "play ") and "chords: " in texts(cell + "play ")
     assert texts(cell + "play 3 ") == ["bars ", "bar "]
     assert texts(cell + "play 3 bars g") == ["groove"]
 
 
+def test_names_given_with_equals_are_sorted_into_blocks_and_chords():
+    cell = "%%music\nhit = { crash: 1 }\ngroove = 3 bars {\n  kick: loop x-\n}\nfill = snare: xxxx\n"
+    cell += "song = hit groove\nriff = Am F\n"
+    assert texts(cell + "play ") == ["fill", "groove", "hit", "song", *[p + ": " for p in completer.PARTS]]
+    assert texts(cell + "play {\n  hat: ") == ["loop ", "riff"]
+    assert texts(cell + "outro = 2 ") == ["bars ", "bar "]
+    assert texts(cell + "outro = hit g") == ["groove"]
+    again = cell + "riff = { kick: x }\n"  # a name given again means the new thing
+    assert texts(again + "play r") == ["riff", "ride: ", "ride.bell: "]
+    assert texts(again + "play {\n  hat: ") == ["loop "]
+
+
 def test_names_defined_below_the_cursor_are_not_offered():
-    cell = "%%music\nplay \npattern later { kick: x }"
+    cell = "%%music\nplay \nlater = { kick: x }"
     assert "later" not in [t for t, _ in complete(cell, len("%%music\nplay "))[1]]
 
 
@@ -82,7 +94,7 @@ def test_magic_line_offers_after_and_saved_songs():
 
 
 def test_names_carry_on_from_the_song_a_cell_continues():
-    songs = {"intro": Song("riff = Am E7|G D\npattern groove { kick: x--x }", name="intro")}
+    songs = {"intro": Song("riff = Am E7|G D\ngroove = { kick: x--x }", name="intro")}
     assert texts("%%music verse after intro\nplay chords: ", songs) == ["loop ", "riff"]
     assert "groove" in texts("%%music verse after intro\nplay ", songs)
 
@@ -111,7 +123,7 @@ def test_ipython_completes_music_cells(shell):
 
 def test_ipython_keeps_python_names_out_of_music_cells(shell):
     # pass and print would be here too if IPython's own matchers ran.
-    assert kernel_completions(shell, "%%music\np") == [("p", "pattern "), ("p", "play ")]
+    assert kernel_completions(shell, "%%music\np") == [("p", "play ")]
 
 
 @pytest.mark.parametrize("cell", ["%%music\ntempo ", "%%music\nplay {\n  sn2 4 ", "%%music\n// i"])

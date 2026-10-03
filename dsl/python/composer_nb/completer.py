@@ -22,8 +22,10 @@ PARTS = ["chords", *LANES]
 SETTING_VALUES = {"sound": INSTRUMENTS, "kit": KITS}
 
 MAGIC = "%%music"
-WORD_RE = re.compile(r"^\s*([A-Za-z_]\w*)\s*=", re.M)
-PATTERN_RE = re.compile(r"\bpattern\s+([A-Za-z_]\w*)")
+DEF_RE = re.compile(r"^\s*([A-Za-z_]\w*)\s*=(.*)$", re.M)
+# What makes `name = ...` a block rather than chords or steps: a length, braces, or an
+# instrument's line.
+BLOCK_VALUE_RE = re.compile(r"^\s*(?:[\d(][^=]*?\bbars?\b|.*\{|[A-Za-z]\w*(?:\.\w+)?\s*:)")
 # The instrument line the cursor is on: its name, then what's been written after the colon.
 PART_RE = re.compile(r"(?:^|[\s{])([a-z]+(?:\.[a-z]+)?):([^:{}]*)$")
 NUMBER_RE = re.compile(r"^\d+$|\)$")
@@ -48,6 +50,19 @@ def _magic_line(line: str, songs: Dict[str, Song]) -> Optional[Tuple[str, List[O
     return fragment, []
 
 
+def _names(defined: str) -> Tuple[List[str], List[str]]:
+    """Names given with = in `defined`: (chords and steps, blocks)."""
+    words, blocks = set(), set()
+    for name, value in DEF_RE.findall(defined):
+        if name in SETTINGS:
+            continue
+        refers = any(t in blocks for t in re.split(r"[\s()*]+", value))
+        kind, other = (blocks, words) if BLOCK_VALUE_RE.match(value) or refers else (words, blocks)
+        kind.add(name)
+        other.discard(name)  # a name given again means the new thing
+    return sorted(words), sorted(blocks)
+
+
 def _statement(head: str, body: str, patterns: List[str]) -> List[Option]:
     """What can come next on a line that isn't an instrument's."""
     inside = (body + head).count("{") > (body + head).count("}")
@@ -58,9 +73,10 @@ def _statement(head: str, body: str, patterns: List[str]) -> List[Option]:
         settings = _options([s + " " for s in SETTINGS], "keyword")
         if inside:
             return parts + names + settings
-        return settings + [("pattern ", "keyword"), ("play ", "keyword")]
+        return settings + [("play ", "keyword")]
     first, last = words[0], words[-1]
-    if first in ("play", "pattern") and len(words) > 1 and NUMBER_RE.search(last):
+    named = len(words) > 2 and words[1] == "="  # groove = 3 bars {
+    if (first == "play" or named) and len(words) > 1 and NUMBER_RE.search(last):
         return _options(["bars ", "bar "], "keyword")
     if first == "play":
         return names + (parts if len(words) == 1 else [])
@@ -68,8 +84,8 @@ def _statement(head: str, body: str, patterns: List[str]) -> List[Option]:
         return [("over ", "keyword")]
     if first in SETTING_VALUES and len(words) == 1:
         return _options(SETTING_VALUES[first], "value")
-    if inside and first not in SETTINGS and first != "pattern":
-        return names  # a line that plays patterns in order: intro verse * 2
+    if named or (inside and first not in SETTINGS):
+        return names  # blocks to play in order: intro verse * 2
     return []
 
 
@@ -95,8 +111,7 @@ def complete(text: str, cursor: int, songs: Optional[Dict[str, Song]] = None):
     after = re.search(r"\bafter\s+(\w+)", magic_line)
     inherited = songs[after.group(1)].chain if after and after.group(1) in songs else []
     defined = "\n".join([*inherited, body])
-    words = sorted(set(WORD_RE.findall(defined)))
-    patterns = sorted(set(PATTERN_RE.findall(defined)))
+    words, patterns = _names(defined)
 
     variation = re.search(r"([a-z]+)\.$", head)
     part = PART_RE.search(head)

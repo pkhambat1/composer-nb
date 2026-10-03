@@ -27,8 +27,8 @@ export const APP_CONSTANTS = {
 A notebook for sketching music. In a **music cell**:
 
 - \`tempo 90\` is a setting: a reserved word and its value
-- \`verse = Am F|C G\` is a variable: your own name for steps or chords
-- \`pattern groove { ... }\` is a pattern: lines that play together
+- \`verse = Am F|C G\` names steps or chords: \`=\` always gives something a name
+- \`groove = { ... }\` names a block: lines in braces that play together
 - \`kick: x--x---\` inside braces is an instrument and what it plays, one instrument per line
 - \`play { ... }\` plays what's after it, a block or one line
 
@@ -41,7 +41,7 @@ Press **Shift+Enter** to run a cell, or **Run All** to run everything. The full 
       source: `// what happens now: crash once, groove twice
 time 7 over 8
 
-pattern groove 3 bars {
+groove = 3 bars {
   kick: loop x--x---
   snare: loop ----x--
   ride.bell: loop x--

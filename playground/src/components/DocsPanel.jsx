@@ -45,8 +45,8 @@ Every line starts by saying what it is.
 | Line | What it is |
 |------|------------|
 | \`tempo 90\` | A **setting**: a reserved word and its value. No \`=\`, because it isn't a variable |
-| \`verse = Am F\\|C G\` | A **variable**: your own name for steps or chords. Only these get \`=\` |
-| \`pattern groove { ... }\` | A **pattern**: lines that play together. Braces always follow a keyword |
+| \`verse = Am F\\|C G\` | A **name** for steps or chords. \`=\` always gives something a name |
+| \`groove = { ... }\` | A **block** with a name: lines in braces that play together |
 | \`kick: x--x---\` | Inside braces, an **instrument** and what it plays |
 | \`play { ... }\` | **Plays** what's after it: a block, or one line |
 
@@ -221,23 +221,32 @@ The bell repeats every 3 steps against a 7-step kick and snare.`,
   },
   {
     id: "patterns",
-    title: "Patterns and play",
+    title: "Blocks and play",
     group: "Language Reference",
-    body: `# Patterns and play
+    body: `# Blocks and play
 
-## pattern
+## Blocks
 
-A pattern names some lines that play together. It doesn't play until you play it.
+A block is lines in braces that play together. \`=\` gives it a name, and it doesn't play until you play it.
 
 \`\`\`
-pattern groove 3 bars {
+groove = 3 bars {
   kick: loop x--x---
   snare: loop ----x--
   ride.bell: loop x--
 }
 \`\`\`
 
-Patterns, like settings and variables, carry on into the cells below.
+Named blocks, like settings and other names, carry on into the cells below. A block without a name plays right where it's written, anywhere a name could go:
+
+\`\`\`
+play groove { snare: xxxx } * 2
+play {
+  4 bars {
+    kick: loop x---
+  }
+}
+\`\`\`
 
 ## play
 
@@ -251,7 +260,7 @@ play {
 }
 \`\`\`
 
-Inside braces, a pattern's name on a line of its own plays that pattern, next to the instrument lines beside it. So the second play above is one crash over the groove twice. A pattern can play other patterns the same way.
+Inside braces, a block's name on a line of its own plays that block, next to the instrument lines beside it. So the second play above is one crash over the groove twice. A block can play other blocks the same way.
 
 ## In order, and again
 
@@ -270,12 +279,12 @@ play intro (verse chorus) * 2
 A length goes in front of what it measures:
 
 \`\`\`
-pattern groove 3 bars { kick: loop x--x--- }
+groove = 3 bars { kick: loop x--x--- }
 play 3 bars groove
 play 2 bars { hat: loop x- }
 \`\`\`
 
-Without one, a pattern lasts exactly as long as its longest line that isn't a loop, down to a single beat. A pattern with only loops in it needs a length, where you define it or where you play it.`,
+Without one, a block lasts exactly as long as its longest line that isn't a loop, down to a single beat. A block with only loops in it needs a length, where you name it or where you play it.`,
   },
   {
     id: "shortcuts",
