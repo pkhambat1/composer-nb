@@ -5,6 +5,7 @@
   "type": "module",
   "exports": {
     ".": "./js/music-engine.js",
+    "./language": "./js/language.js",
     "./chord-lookup": "./js/chord-lookup.js",
     "./highlight": "./js/highlight.js"
   },
@@ -14,6 +15,7 @@
     "test:watch": "vitest"
   },
   "dependencies": {
+    "@tombatossals/chords-db": "0.5.1",
     "tonal": "^6.4.2",
     "tone": "14.8.49"
   },

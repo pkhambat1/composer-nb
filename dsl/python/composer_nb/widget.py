@@ -10,7 +10,7 @@ class MusicWidget(anywidget.AnyWidget):
     """Notebook player for composer-nb source.
 
     `sources` is a chain of cell sources: the last one is played, and each
-    earlier one only hands its settings (key, tempo, instrument, ...) forward.
+    earlier one only hands its settings and words (tempo, sound, ...) forward.
     Parsing and audio both happen in the browser, in the same engine the
     playground uses.
     """

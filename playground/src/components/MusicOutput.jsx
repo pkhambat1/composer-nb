@@ -3,6 +3,7 @@ import React from "react"
 import WaveSurfer from "wavesurfer.js"
 import * as MusicEngine from "@composer-nb/dsl"
 import ChordDiagram from "./ChordDiagram.jsx"
+import DrumGrid from "./DrumGrid.jsx"
 
 function themeColors(theme, accent) {
   if (theme === "retro") {
@@ -41,6 +42,66 @@ function themeColors(theme, accent) {
   }
 }
 
+const noTime = () => 0
+
+// Everything below the playback row: settings summary, drum grid, chord diagrams, errors.
+function CellDetails({ parsed, accent, getTime = noTime, playing = false }) {
+  const chords = parsed.events.filter((e) => e.chord && !e.repeat)
+  const meta = parsed.blocks
+    .filter((b) => !b.drumEvents.length)
+    .map((b) => `${b.time} · ${b.tempo} bpm · ${b.bars} bar${b.bars === 1 ? "" : "s"}${b.times > 1 ? ` × ${b.times}` : ""}`)
+  if (parsed.blocks.length > 1) meta.unshift(`${parsed.blocks.length} blocks, one after another`)
+  if (parsed.fromAbove.length) meta.push(`from cells above: ${parsed.fromAbove.join(", ")}`)
+  return (
+    <>
+      {meta.length > 0 && <div className="music-meta">{meta.join("  ·  ")}</div>}
+      {parsed.warnings?.map((w) => (
+        <div key={w} className="music-meta music-warning">
+          {w}
+        </div>
+      ))}
+
+      {parsed.drumEvents.length > 0 && (
+        <div className="out-section">
+          <div className="out-section-label">Drums</div>
+          <DrumGrid blocks={parsed.blocks} getTime={getTime} playing={playing} />
+        </div>
+      )}
+
+      {chords.length > 0 && (
+        <div className="out-section">
+          <div className="out-section-label">Chord diagrams</div>
+          <div className="chord-strip">
+            {chords.map((e, i) => (
+              <div key={i} className="chord-chip">
+                <span className="chord-label">{e.chord.label}</span>
+                <ChordDiagram chord={e.chord} instrument={e.instrument} accent={accent} />
+                <span className="chord-notes">
+                  {e.chord.noteNames.map((n) => n.replace(/\d+$/, "")).join(" ")}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {parsed.errors && parsed.errors.length > 0 && (
+        <div className="parse-errors">
+          <span className="pe-icon">!</span>
+          <div className="pe-list">
+            {parsed.errors.slice(0, 4).map((e, i) => (
+              <div key={i} className="pe-row">
+                <span className="pe-line">line {e.line}</span>
+                <span className="pe-msg">{e.msg}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </>
+  )
+}
+
 function formatTime(sec) {
   if (!sec || sec < 0) return "0:00"
   const m = Math.floor(sec / 60)
@@ -71,6 +132,11 @@ export default function MusicOutput({
   React.useEffect(() => {
     onPlaybackFinishedRef.current = onPlaybackFinished
   }, [onPlaybackFinished])
+
+  const getTime = React.useCallback(
+    () => (ready && wsRef.current ? wsRef.current.getCurrentTime() : 0),
+    [ready],
+  )
 
   const output = cell.output
   const buffer = output?.kind === "rendered" ? output.buffer : null
@@ -220,34 +286,7 @@ export default function MusicOutput({
             </div>
           </div>
 
-          <div className="out-section">
-            <div className="out-section-label">Chord diagrams</div>
-            <div className="chord-strip">
-              {parsed.events
-                .filter((e) => e.chord)
-                .map((e, i) => (
-                  <div key={i} className="chord-chip">
-                    <span className="chord-label">{e.chord.label}</span>
-                    <ChordDiagram chord={e.chord} instrument={parsed.directives.inst} accent={accent} />
-                    <span className="chord-notes">{e.chord.noteNames.map((n) => n.replace(/\d+$/, "")).join(" ")}</span>
-                  </div>
-                ))}
-            </div>
-          </div>
-
-          {parsed.errors && parsed.errors.length > 0 && (
-            <div className="parse-errors">
-              <span className="pe-icon">!</span>
-              <div className="pe-list">
-                {parsed.errors.slice(0, 4).map((e, i) => (
-                  <div key={i} className="pe-row">
-                    <span className="pe-line">line {e.line}</span>
-                    <span className="pe-msg">{e.msg}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
+          <CellDetails parsed={parsed} accent={accent} />
         </div>
       </div>
     )
@@ -269,6 +308,15 @@ export default function MusicOutput({
             ))}
           </div>
         </div>
+      </div>
+    )
+  }
+
+  if (output.kind === "info") {
+    return (
+      <div className="cell-output cell-output-info">
+        <div className="out-prompt">Out [{runCount}]:</div>
+        <div className="info-msg">{output.message}</div>
       </div>
     )
   }
@@ -350,37 +398,12 @@ export default function MusicOutput({
           </div>
         </div>
 
-        <div className="out-section">
-          <div className="out-section-label">Chord diagrams</div>
-          <div className="chord-strip">
-            {parsed.events
-              .filter((e) => e.chord)
-              .map((e, i) => (
-                <div
-                  key={i}
-                  className="chord-chip"
-                >
-                  <span className="chord-label">{e.chord.label}</span>
-                  <ChordDiagram chord={e.chord} instrument={parsed.directives.inst} accent={accent} />
-                  <span className="chord-notes">{e.chord.noteNames.map((n) => n.replace(/\d+$/, "")).join(" ")}</span>
-                </div>
-              ))}
-          </div>
-        </div>
-
-        {parsed.errors && parsed.errors.length > 0 && (
-          <div className="parse-errors">
-            <span className="pe-icon">!</span>
-            <div className="pe-list">
-              {parsed.errors.slice(0, 4).map((e, i) => (
-                <div key={i} className="pe-row">
-                  <span className="pe-line">line {e.line}</span>
-                  <span className="pe-msg">{e.msg}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+        <CellDetails
+          parsed={parsed}
+          accent={accent}
+          getTime={getTime}
+          playing={!!displayPlaying}
+        />
       </div>
     </div>
   )

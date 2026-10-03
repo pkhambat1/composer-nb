@@ -2,40 +2,31 @@ import { describe, it, expect, vi } from "vitest"
 
 vi.mock("tone", () => ({}))
 
-const { parseSource, parseChain, DEFAULT_DIRECTIVES } = await import("../../js/music-engine.js")
+const { parseSource, parseChain } = await import("../../js/music-engine.js")
+
+const labels = (p) => p.chords.map((e) => e.label)
 
 describe("parseChain", () => {
-  it("starts from the settings the previous cell ended on", () => {
-    const parsed = parseChain(["@key Bm\n@tempo 120\n@inst guitar\nBm F#", "G D"])
-    expect(parsed.directives).toMatchObject({ key: "Bm", tempo: 120, inst: "guitar" })
-    expect(parsed.chords.map((e) => e.label)).toEqual(["G", "D"])
+  it("starts from the settings the earlier cells ended on", () => {
+    const p = parseChain(["sound: guitar\ntempo: 90\ncapo: 2\nAm", "G D"])
+    expect(p.errors).toEqual([])
+    expect(p.blocks[0].tempo).toBe(90)
+    expect(p.chords.map((e) => `${e.instrument} capo ${e.capo}`)).toEqual(["guitar capo 2", "guitar capo 2"])
   })
 
-  it("lets the cell override what it inherits", () => {
-    const parsed = parseChain(["@tempo 120\nC", "@tempo 80\nF"])
-    expect(parsed.directives.tempo).toBe(80)
+  it("carries words as well as settings", () => {
+    expect(labels(parseChain(["intro = Am E7 | G D", "intro"]))).toEqual(["Am", "E7", "G", "D"])
   })
 
-  it("carries settings through every link in the chain", () => {
-    const parsed = parseChain(["@key D", "@tempo 140", "I IV"])
-    expect(parsed.directives).toMatchObject({ key: "D", tempo: 140 })
-    expect(parsed.chords.map((e) => e.label)).toEqual(["D", "G"])
+  it("only plays the last cell", () => {
+    expect(labels(parseChain(["C F", "G"]))).toEqual(["G"])
+  })
+
+  it("lets the last cell change what it inherits", () => {
+    expect(parseChain(["tempo: 120\nC", "tempo: 80\nF"]).blocks[0].tempo).toBe(80)
   })
 
   it("matches parseSource for a single cell", () => {
-    expect(parseChain(["@key A\nI V"]).chords.map((e) => e.label)).toEqual(
-      parseSource("@key A\nI V").chords.map((e) => e.label),
-    )
-  })
-
-  it("drops an inherited capo silently when the instrument changes", () => {
-    const parsed = parseChain(["@inst guitar\n@capo 2\nC", "@inst piano\nC"])
-    expect(parsed.errors).toEqual([])
-  })
-
-  it("does not mutate the defaults", () => {
-    parseSource("@tempo 200\nC", { key: "E" })
-    expect(DEFAULT_DIRECTIVES.tempo).toBe(96)
-    expect(DEFAULT_DIRECTIVES.key).toBe("C")
+    expect(labels(parseChain(["key: A\nI V"]))).toEqual(labels(parseSource("key: A\nI V")))
   })
 })

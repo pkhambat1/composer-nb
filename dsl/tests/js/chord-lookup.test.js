@@ -1,20 +1,9 @@
-import { describe, it, expect, vi, beforeAll } from "vitest"
+import { describe, it, expect, vi } from "vitest"
 
 vi.mock("tone", () => ({}))
 
-// Real chords-db payload, fetched once for all tests.
-let dbPayload
-beforeAll(async () => {
-  const res = await fetch(
-    "https://cdn.jsdelivr.net/npm/@tombatossals/chords-db@0.5.1/lib/guitar.json",
-  )
-  dbPayload = await res.json()
-})
-
 async function loadLib() {
   const lib = await import("../../js/chord-lookup.js")
-  // Stub global fetch so load() returns our fixed payload.
-  globalThis.fetch = vi.fn().mockResolvedValue({ ok: true, json: async () => dbPayload })
   await lib.load()
   return lib
 }

@@ -1,15 +1,14 @@
 # composer-nb
 
-A small language for sketching chord progressions, and a notebook to hear them in.
+A small language for chords and drums, and a notebook to hear them in.
 
 ```
-@key Am
-@tempo 75
-@inst guitar
-Am E7
-G D
-F C
-Dm E7
+-- what happens now
+time: 7/8
+crash: 1|.|.
+ride: b..
+kick: x..x...
+snare: ....x..
 ```
 
 ## What's here

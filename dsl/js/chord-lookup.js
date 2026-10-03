@@ -1,8 +1,5 @@
-/* Guitar chord positions from @tombatossals/chords-db (loaded at runtime). */
+/* Guitar chord positions from @tombatossals/chords-db (bundled, lazy-loaded chunk). */
 import { Chord, Interval, Note } from "tonal"
-
-const CHORDS_DB_URL =
-  "https://cdn.jsdelivr.net/npm/@tombatossals/chords-db@0.5.1/lib/guitar.json"
 
 let db = null
 const positionCache = new Map()
@@ -52,15 +49,10 @@ const ALIAS_SUFFIX = {
 
 export function load() {
   if (db) return Promise.resolve(db)
-  return fetch(CHORDS_DB_URL)
-    .then((res) => {
-      if (!res.ok) throw new Error("chords-db " + res.status)
-      return res.json()
-    })
-    .then((data) => {
-      db = data
-      return db
-    })
+  return import("@tombatossals/chords-db/lib/guitar.json").then((mod) => {
+    db = mod.default
+    return db
+  })
 }
 
 function displayKey(key) {

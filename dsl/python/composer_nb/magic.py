@@ -37,7 +37,7 @@ class MusicMagics(Magics):
 
         %%music                    play this cell on its own
         %%music intro              ...and save it as `intro`
-        %%music verse after intro  start from the settings `intro` ended on
+        %%music verse after intro  start from the settings and words `intro` ended with
         """
         name, after_name = parse_magic_line(line)
         after = None

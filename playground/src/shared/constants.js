@@ -24,50 +24,41 @@ export const APP_CONSTANTS = {
       type: "text",
       source: `# Music Composer Notebook
 
-A notebook for sketching chord progressions. Each **code cell** below is parsed as music — use \`@key\`, \`@tempo\`, \`@inst\` directives, then a stream of chord tokens.
+A notebook for sketching music. In a **music cell**:
 
-**Chord tokens:**
-- Absolute: \`Cmaj7\`, \`F#m\`, \`Bb7\`, \`Dm9\`, \`G7sus4\`, \`Em7b5\`, \`C/E\`
-- Roman: \`I\`, \`ii\`, \`V7\`, \`vi\`, \`viio\`, \`bVII\`, \`Imaj7\`
+- \`Am E7|G D\` plays chords, with \`|\` between bars. They're piano unless you set \`sound: guitar\` (or epiano, organ, pad, bass)
+- \`snare: 2 4\` hits the snare on beats 2 and 4 of every bar
+- \`ride: b..\` is a loop: the ride bell, then two rests, over and over
 
-**Rhythm:** suffix a chord with \`.w\` (whole), \`.h\` (half), \`.q\` (quarter), \`.e\` (eighth). \`~\` is a rest. Without a suffix, chords split the bar evenly.
+Settings like \`time: 7/8\` and \`tempo: 120\` apply from where you write them, including in the cells below. \`--\` starts a comment.
 
-Comments use \`--\` (double dash), so \`#\` stays free for sharps like \`F#m\`, \`C#maj7\`.
-
-Press **Shift+Enter** to render a cell, or use **Run All** to render everything.`,
+Press **Shift+Enter** to run a cell, or **Run All** to run everything. The full reference is under **Language** in the sidebar.`,
     },
     {
       type: "music",
-      source: `@inst guitar
-@capo 5
-@tempo 90
-@beats 4
-
--- Trains (Porcupine Tree) Chorus
-A Am
-C Cmaj7
-D A
-C Cmaj7
-
-Cadd9
-Em`,
+      source: `-- what happens now
+time: 7/8
+crash: 1|.|.
+ride: b..
+kick: x..x...
+snare: ....x..`,
     },
     {
       type: "music",
-      source: `@key Am
-@tempo 75
-@inst guitar
-@capo 2
-
--- Hotel California (Eagles) Intro
-Am E7
-G D
-F C
-Dm E7
-Am E7
-G D
-F C
-Dm E7`,
+      source: `-- trains chorus
+time: 4/4
+tempo: 90
+capo: 5
+sound: guitar
+A Am|C Cmaj7|D A|C Cmaj7|Cadd9|Em`,
+    },
+    {
+      type: "music",
+      source: `-- hotel california intro
+tempo: 75
+capo: 2
+repeat 2:
+  Am E7|G D|F C|Dm E7`,
     },
   ],
 }

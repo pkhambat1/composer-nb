@@ -175,3 +175,72 @@
   flex-shrink: 0;
   color: var(--cnb-error);
 }
+
+/* Drum grid: one row per drum, one cell per step, counted 1 e & a. */
+.cnb-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.cnb-grid-head {
+  margin-top: 4px;
+  color: var(--cnb-mute);
+  font-family: var(--cnb-mono);
+  font-size: 11px;
+}
+.cnb-bar {
+  display: grid;
+  gap: 2px;
+  align-items: center;
+}
+.cnb-lane {
+  color: var(--cnb-mute);
+  font-family: var(--cnb-mono);
+  font-size: 11px;
+  white-space: nowrap;
+}
+.cnb-bar-num {
+  font-size: 10px;
+}
+.cnb-cell {
+  height: 16px;
+  border-radius: 3px;
+  background: color-mix(in srgb, var(--cnb-text) 6%, transparent);
+  color: var(--cnb-paper);
+  font-family: var(--cnb-mono);
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 16px;
+  text-align: center;
+  overflow: hidden;
+}
+.cnb-alt {
+  background: color-mix(in srgb, var(--cnb-text) 11%, transparent);
+}
+.cnb-hit {
+  background: color-mix(in srgb, var(--cnb-accent) 62%, var(--cnb-paper));
+}
+.cnb-acc {
+  background: var(--cnb-accent);
+}
+.cnb-ghost {
+  opacity: 0.45;
+}
+.cnb-cell.cnb-now {
+  outline: 1.5px solid var(--cnb-text);
+  outline-offset: -1px;
+}
+.cnb-count {
+  color: var(--cnb-mute);
+  font-family: var(--cnb-mono);
+  font-size: 10px;
+  text-align: center;
+}
+.cnb-count-beat {
+  color: var(--cnb-text);
+  font-weight: 600;
+}
+.cnb-count.cnb-now {
+  color: var(--cnb-accent);
+  font-weight: 700;
+}

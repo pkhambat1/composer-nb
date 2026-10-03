@@ -14,37 +14,30 @@ const PAGES = [
     group: "Getting Started",
     body: `# Composer.nb
 
-A Jupyter-style notebook for sketching chord progressions. Each **code cell** is parsed as music using a simple DSL — set directives like key, tempo, and instrument, then write chord tokens.
+A Jupyter-style notebook for sketching music: chord progressions, drum grooves, and the two together.
 
-The app renders audio from your chord progressions, displays waveforms, guitar/piano chord diagrams, and lets you export to WAV.
-
-## How it works
-
-1. Write chord progressions in code cells using the music DSL
-2. Hit **Shift+Enter** to render a cell, or **Run All** to render everything
-3. Listen to playback, view chord diagrams, and export audio
+In a **music cell**, chords go on a line of their own and each drum gets its own line. Run the cell to hear it, see chord diagrams and a drum grid, and export a WAV.
 
 ## Cell types
 
-| Type | Description |
-|------|-------------|
-| **Music cells** | Write chord progressions using the DSL. Each cell is parsed, rendered to audio, and displayed with chord diagrams. |
-| **Text cells** | Markdown cells for notes, section headers, and annotations. Supports headings, bold, italic, code, lists, and links. |
+| Type | What it holds |
+|------|---------------|
+| **Music cells** | Instruments, settings and words. They render to audio. |
+| **Text cells** | Markdown notes: headings, **bold**, *italic*, \`code\`, lists and links. |
 
 ## Quick example
 
 \`\`\`
-@tempo 120
-@inst guitar
+time: 4/4
+tempo: 100
+sound: guitar
+Am F|C G
+kick: 1 3
+snare: 2 4
+hat: x.
+\`\`\`
 
--- Verse
-Am F C G
-Am F C.h G.h
-
--- Chorus
-F G Am Em
-F G C
-\`\`\``,
+Lines next to each other play together. This block lasts 2 bars because the chords do; the drum lines repeat to fill it.`,
   },
   {
     id: "quickstart",
@@ -52,299 +45,271 @@ F G C
     group: "Getting Started",
     body: `# Quickstart
 
-Write your first chord progression in 60 seconds.
-
-## Step 1: Set up directives
-
-Every music cell starts with directives that configure the key, tempo, and instrument.
+## 1. Set the time and tempo
 
 \`\`\`
-@key C
-@tempo 100
-@inst piano
+time: 4/4
+tempo: 100
 \`\`\`
 
-## Step 2: Write chords
+Settings apply from where you write them onward, including in the cells below.
 
-Each line is one bar. Chords on a line split the bar evenly.
+## 2. Add chords
 
-\`\`\`
-C Am F G
-\`\`\`
-
-This gives you four chords, one beat each, in a single bar.
-
-## Step 3: Add structure with comments
-
-Use \`--\` for comments. Section labels help organize your progression:
+Write them on a line of their own. \`|\` separates bars, and the chords in a bar split it evenly. They play on piano unless you pick another \`sound\`:
 
 \`\`\`
-@key G
-@tempo 90
-@inst guitar
-
--- Verse
-G Em C D
-G Em C D
-
--- Chorus
-C D G Em
-C D G
+sound: guitar
+C Am|F G
 \`\`\`
 
-## Step 4: Run the cell
+## 3. Add drums
 
-Press **Shift+Enter** to render. You'll see:
-- A waveform with playback controls
-- Chord diagrams (guitar fingerings or piano keys)
-- Export to WAV button
-
-## Step 5: Customize rhythm
-
-Add duration suffixes to control how long each chord lasts:
+Give each drum its own line and list the beats it plays in every bar:
 
 \`\`\`
--- Half notes (2 beats each)
-Am.h G.h
-
--- One chord per bar (whole note)
-Am
-G
-F
-E
+kick: 1 3
+snare: 2 4
 \`\`\`
 
-> **Tip:** If you don't add a duration suffix, chords on a line split the bar evenly. One chord per line = one whole bar.`,
+## 4. Run it
+
+Press **Shift+Enter**. You'll get playback, chord diagrams, a drum grid and a WAV button.
+
+> **Tip:** Lines in the same block play together. A blank line starts a new block, which plays after the one before it.`,
   },
   {
-    id: "directives",
-    title: "Directives",
+    id: "settings",
+    title: "Settings",
     group: "Language Reference",
-    body: `# Directives
+    body: `# Settings
 
-Directives start with \`@\` and configure the cell. Place them at the top of a cell before any chord tokens.
+Settings are written \`name: value\`. A setting applies to the whole block it's in and to everything after it, including the cells below, so a cell can inherit its tempo from the cell above. A cell's output lists anything it inherited.
 
-## Available directives
+|Setting|Default|Meaning|
+|---------|---------|---------|
+|\`time\`|\`4/4\`|Beats per bar over the note that gets the beat: \`4/4\`, \`7/8\`, \`(3+4)/4\`|
+|\`tempo\`|\`120\`|Quarter notes per minute|
+|\`step\`|\`1/16\`|How long each step of a loop is: \`1/16\`, \`1/8\`, or \`1/12\` for triplets|
+|\`bars\`|automatic|How many bars this block plays (this block only)|
+|\`sound\`|\`piano\`|Instrument for chord lines: \`piano\`, \`epiano\`, \`organ\`, \`pad\`, \`bass\`, \`guitar\`|
+|\`key\`|\`C\`|Key for Roman numeral chords: \`C\`, \`Am\`, \`Bb\`, \`F#m\`|
+|\`capo\`|\`0\`|Capo fret for guitar lines, 0 to 12|
+|\`octave\`|\`3\`|Octave chords are voiced in, 1 to 6|
+|\`kit\`|\`rock\`|Drum sound: \`rock\` (a recorded kit) or \`synth\`|
 
-| Directive | Default | Description |
-|-----------|---------|-------------|
-| \`@key\` | \`C\` | Key signature (only affects roman numeral chords) |
-| \`@tempo\` | \`96\` | Beats per minute |
-| \`@inst\` | \`piano\` | Instrument (\`piano\` or \`guitar\`) |
-| \`@beats\` | \`4\` | Beats per bar (time signature numerator) |
-| \`@octave\` | \`3\` | Base octave (0–8) |
-| \`@capo\` | \`0\` | Capo fret (0–12, guitar only) |
+## Counting
 
-## Key signatures
+A beat is a quarter note everywhere: \`tempo\` counts quarter notes, and drum beats are counted \`1 e & a 2 e & a\`. A 7/8 bar is three and a half beats long, so it ends on \`4e\`.
 
-The \`@key\` directive accepts a root note with optional mode:
+## Added-up time
 
-\`\`\`
-@key C        -- C major
-@key Am       -- A minor
-@key F#m      -- F# minor
-@key Bb       -- Bb major
-\`\`\`
-
-\`@key\` only affects roman numeral chords. \`IV\` in the key of C resolves to F major, but in the key of G it resolves to C major. Absolute chords like \`Am\` or \`F#m\` are unaffected.
-
-## Instruments
-
-| Value | Description |
-|-------|-------------|
-| \`piano\` | Piano voicing with keyboard chord diagrams |
-| \`guitar\` | Guitar voicing with fingering chord diagrams |
-
-## Capo (guitar only)
-
-\`@capo N\` puts a virtual capo on fret \`N\` (0–12). Only applies when \`@inst guitar\`; ignored on other instruments with a warning.
-
-Chord *labels* stay capo-relative — i.e. they name the shape you'd finger as if the capo were the nut — but the *sounding* notes are transposed up by \`N\` semitones, and the note names shown reflect actual pitches.
-
-\`\`\`
-@inst guitar
-@capo 6
-
-C G Am F     -- shapes labeled C/G/Am/F, sounds as F# C# D#m B
-\`\`\`
-
-## Changing directives mid-cell
-
-You can change directives partway through a cell. This is useful for time signature changes:
-
-\`\`\`
-@key Am
-@tempo 120
-
--- Verse (4/4)
-@beats 4
-Am G F E
-
--- Bridge (3/4)
-@beats 3
-Dm Am G
-\`\`\``,
+Bars that group unevenly are written with brackets: \`(3+4)/4\` is a bar of seven quarter notes, felt as 3 then 4. The drum grid shades the groups.`,
   },
   {
     id: "chords",
-    title: "Chord Tokens",
+    title: "Chords",
     group: "Language Reference",
-    body: `# Chord Tokens
+    body: `# Chords
 
-Chord tokens are the core of the music DSL. Each token represents a chord to be played.
+## Instruments
 
-## Absolute chords
-
-Standard chord names with any quality suffix:
+Chords go on a line of their own and play on the \`sound\` setting: \`piano\` (the default), \`epiano\`, \`organ\`, \`pad\`, \`bass\` or \`guitar\`. Like any setting, it carries on into the cells below, so you set it once.
 
 \`\`\`
-C       -- C major
-Am      -- A minor
-F#m     -- F# minor
-Bb7     -- Bb dominant 7th
-Cmaj7   -- C major 7th
-Dm9     -- D minor 9th
-G7sus4  -- G dominant 7th suspended 4th
-Em7b5   -- E half-diminished 7th
+sound: guitar
+Am E7|G D|F C|Dm E7
 \`\`\`
 
-## Supported qualities
-
-| Suffix | Quality |
-|--------|---------|
-| _(none)_ | Major |
-| \`m\` | Minor |
-| \`7\` | Dominant 7th |
-| \`maj7\` | Major 7th |
-| \`m7\` | Minor 7th |
-| \`dim\` | Diminished |
-| \`dim7\` | Diminished 7th |
-| \`aug\` | Augmented |
-| \`sus2\` | Suspended 2nd |
-| \`sus4\` | Suspended 4th |
-| \`6\` | Major 6th |
-| \`m6\` | Minor 6th |
-| \`9\` | Dominant 9th |
-| \`m9\` | Minor 9th |
-| \`11\` | Dominant 11th |
-| \`add9\` | Add 9 |
-| \`m7b5\` | Half-diminished |
-| \`7sus4\` | Dominant 7th sus4 |
-
-## Slash chords
-
-Use \`/\` to specify a bass note:
+To play a second instrument at the same time, start its line with its name:
 
 \`\`\`
-C/E     -- C major over E bass
-Am/G    -- A minor over G bass
-F#m/C#  -- F# minor over C# bass
+sound: piano
+C Am|F G
+bass: C A|F G
 \`\`\`
 
-## Roman numeral chords
+## Bars and rhythm
 
-Roman numerals are resolved against the \`@key\` directive. Uppercase = major, lowercase = minor:
-
-\`\`\`
-@key C
-
-I       -- C major
-ii      -- D minor
-iii     -- E minor
-IV      -- F major
-V       -- G major
-vi      -- A minor
-viidim  -- B diminished
-\`\`\`
-
-### Chromatic alterations
-
-Use \`b\` or \`#\` before the numeral:
+|You write|Meaning|
+|-----------|---------|
+|\`\\|\`|A bar line|
+|\`Am F\`|The chords in a bar split it evenly|
+|\`.\`|Hold the chord before for another slot|
+|\`_\`|Silence for a slot|
+|\`%\`|Repeat the bar before|
 
 \`\`\`
-bVII    -- Bb major (in key of C)
-#IV     -- F# (in key of C)
+C . . G|Am . F G|%|F . _ .
 \`\`\`
 
-### Quality suffixes on roman numerals
+The first bar is C for three beats and G for one. A bar has to split evenly into sixteenth notes, so three chords in a 4/4 bar is an error: write \`Am . F G\` instead.
+
+## Long progressions
+
+Chord lines next to each other carry on from one another, each starting a new bar:
 
 \`\`\`
-V7      -- G dominant 7th (in key of C)
-Imaj7   -- C major 7th
-ii7     -- D minor 7th
+Am E7|G D|F C|Dm E7
+F C|G D
 \`\`\`
 
-`,
+To play it twice, put \`repeat 2:\` above it and indent it (see Repeats). A named line (\`bass:\`, \`hat:\`) continues onto the next line when that line starts with \`|\`.
+
+## Chord names
+
+Any standard chord name works: \`C\`, \`Am\`, \`F#m\`, \`Bb7\`, \`Cmaj7\`, \`Dm9\`, \`G7sus4\`, \`Em7b5\`, \`Cadd9\`. A slash sets the bass note: \`C/E\`.
+
+## Roman numerals
+
+Roman numerals follow the \`key\` setting. Uppercase is major and lowercase is minor; \`°\` (or \`o\`) is diminished and \`ø\` half-diminished. A \`b\` or \`#\` in front moves the root.
+
+\`\`\`
+key: C
+I vi|IV V7|bVII IV|ii7 vii°
+\`\`\`
+
+In C that plays C Am, F G7, Bb F, then Dm7 Bdim.`,
   },
   {
-    id: "rhythm",
-    title: "Rhythm & Duration",
+    id: "drums",
+    title: "Drums",
     group: "Language Reference",
-    body: `# Rhythm & Duration
+    body: `# Drums
 
-## Duration suffixes
+## The kit
 
-Suffix a chord token with a dot and a letter to set its duration:
+\`kick\`, \`snare\`, \`hat\`, \`ride\`, \`crash\`, \`tom\` and \`floor\` (the floor tom). Each drum gets its own line, and there are two ways to say when it plays.
 
-| Suffix | Beats | Name |
-|--------|-------|------|
-| \`.w\` | 4 | Whole note |
-| \`.h\` | 2 | Half note |
-| \`.q\` | 1 | Quarter note |
-| \`.e\` | 0.5 | Eighth note |
-| \`.s\` | 0.25 | Sixteenth note |
+## Beats
 
-### Examples
+List the beats a drum plays in every bar. A beat is a quarter note, split as \`1 e & a\`:
 
 \`\`\`
-Am.w    -- A minor for 4 beats (whole bar)
-Am.h    -- A minor for 2 beats
-Am.q    -- A minor for 1 beat
-Am.e    -- A minor for half a beat
+kick: 1 2& 3
+snare: 2 4
+crash: 1|.
 \`\`\`
 
-## Dotted notes
+\`|\` separates bars, \`.\` is an empty bar and \`%\` repeats the bar before. The crash line above hits once every 2 bars.
 
-Add a trailing dot to extend the duration by 50%. Each additional dot adds half of the previous addition (standard music-notation rule).
+A word after a beat changes how it's played:
 
-| Suffix | Beats | Name |
-|--------|-------|------|
-| \`.q.\` | 1.5 | Dotted quarter |
-| \`.h.\` | 3 | Dotted half |
-| \`.e.\` | 0.75 | Dotted eighth |
-| \`.q..\` | 1.75 | Double-dotted quarter |
-
-\`\`\`
-Am.h. Dm.q    -- 3 + 1 = 4 beats
-C.q. F.e G.e  -- 1.5 + 0.5 + 0.5 = 2.5 beats
-\`\`\`
-
-## Implicit duration
-
-Chords without a duration suffix split the remaining beats in the bar evenly:
+|Word|Meaning|
+|------|---------|
+|\`accent\`|Hit it harder|
+|\`ghost\`|Barely touch it|
+|\`double\`|Two quick strokes|
+|\`open\`|Open hi-hat (\`hat\` only)|
+|\`pedal\`|Hi-hat closed with the foot (\`hat\` only)|
+|\`bell\`|The bell of the ride (\`ride\` only)|
 
 \`\`\`
-@beats 4
-
-Am F C G     -- 1 beat each (4 chords, 4 beats)
-Am G         -- 2 beats each (2 chords, 4 beats)
-Am           -- 4 beats (1 chord, entire bar)
+snare: 2 accent 4 4a ghost
+hat: 1 2 3 4 open 4& pedal
 \`\`\`
 
-### Mixing explicit and implicit
+## Loops
+
+A loop is a row of steps that repeats on its own, whatever the bar lines are doing. Each step lasts one \`step\` (a sixteenth note unless you change it).
+
+|Step|Meaning|
+|------|---------|
+|\`x\`|Hit|
+|\`g\`|Ghost note|
+|\`d\`|Double stroke|
+|\`o\`|Open hi-hat (\`hat\` only)|
+|\`p\`|Pedal hi-hat (\`hat\` only)|
+|\`b\`|Ride bell (\`ride\` only)|
+|\`.\`|Rest|
+
+A capital letter adds an accent: \`X\`, \`O\`, \`B\`.
 
 \`\`\`
-Am.h F G     -- Am gets 2 beats, F and G split the remaining 2 (1 each)
+hat: X.x.X.x.X.x.X.O.
 \`\`\`
 
-## Rests
+## Loops against the bar
 
-Use \`~\` or \`_\` for rests. Duration suffixes work on rests too:
+Loops of different lengths drift against each other and against the bar line, which makes polyrhythms easy:
 
 \`\`\`
-Am.h ~.h     -- A minor for 2 beats, then 2 beats of silence
-C ~ G ~      -- Alternating chords and rests, 1 beat each
-\`\`\``,
+time: 7/8
+crash: 1|.|.
+ride: b..
+kick: x..x...
+snare: ....x..
+\`\`\`
+
+The ride bell repeats every 3 steps against a 7-step kick and snare. A block plays until all of its lines line up again, here after 3 bars, and the crash only hits at the start of them. Indent it under \`repeat 2:\` to play it all twice.`,
+  },
+  {
+    id: "words",
+    title: "Words and blocks",
+    group: "Language Reference",
+    body: `# Words and blocks
+
+## Lines
+
+Every line is one of these:
+
+|Line|Meaning|
+|------|---------|
+|\`tempo: 120\`|A setting|
+|\`snare: 2 4\`|An instrument and what it plays|
+|\`Am F \\|C G\`|Chords, played on the \`sound\` setting|
+|\`repeat 2:\`|Plays the lines indented under it again|
+|\`fill = x x d d\`|A word you can reuse|
+|\`-- note\`|A comment|
+
+## Words
+
+A word names a rhythm or a progression once so you can reuse it. Define it with \`=\`, then use it in a loop or a chord line:
+
+\`\`\`
+pair = X.x.
+intro = Am E7|G D
+
+hat: pair pair pair pair
+intro intro
+\`\`\`
+
+A chord word always covers whole bars. Like settings, words carry on into the cells below.
+
+## Blocks
+
+Lines next to each other form a block and play together. A blank line starts a new block, which plays after the one before it; the editor draws a dashed line there. A block with only settings or words in it doesn't play anything, it just sets things up.
+
+Every line in a block repeats: a chord or beat line every few bars, a loop every few steps. The block lasts until they all line up again, up to 16 bars. Write \`bars:\` to choose the length yourself.
+
+## Repeats
+
+\`repeat 2:\` plays the lines indented under it twice. The repeat ends at the first line that isn't indented under it, and whatever comes next plays after it:
+
+\`\`\`
+time: 7/8
+repeat 2:
+  crash: 1|.|.
+  ride: b..
+  kick: x..x...
+  snare: ....x..
+snare: 1 2 3 4
+\`\`\`
+
+That plays the 3-bar groove twice, so the crash hits at the start of each time through, then one bar of snare.
+
+Indent further to put a repeat inside a repeat. Blank lines inside a repeat still start a new block, and every block inside it repeats:
+
+\`\`\`
+time: 7/8
+repeat 2:
+  repeat 3:
+    kick: x..x...
+  crash: 1
+  snare: 2 4
+\`\`\`
+
+That's the kick figure three times, then a bar of crash and snare, and all of that twice. Settings changed inside a repeat stay changed after it. A repeat plays 1 to 16 times. In the editor, Tab indents and Enter keeps the indentation, adding a level after a \`repeat\` line.`,
   },
   {
     id: "shortcuts",
@@ -354,35 +319,37 @@ C ~ G ~      -- Alternating chords and rests, 1 beat each
 
 ## Cell execution
 
-| Key | Action |
+|Key|Action|
 |-----|--------|
-| \`Shift+Enter\` | Run cell and move to next (or insert new cell at end) |
-| \`Ctrl+Enter\` / \`Cmd+Enter\` | Run cell without moving |
-| \`Alt+Enter\` | Run cell and insert new cell below |
+|\`Shift+Enter\`|Run cell and move to next (or insert new cell at end)|
+|\`Ctrl+Enter\` / \`Cmd+Enter\`|Run cell without moving|
+|\`Alt+Enter\`|Run cell and insert new cell below|
 
 ## Navigation
 
-| Key | Action |
+|Key|Action|
 |-----|--------|
-| \`J\` or \`↓\` | Select next cell |
-| \`K\` or \`↑\` | Select previous cell |
-| \`Enter\` | Enter edit mode on selected cell |
-| \`Esc\` | Exit edit mode (back to command mode) |
+|\`J\` or \`↓\`|Select next cell|
+|\`K\` or \`↑\`|Select previous cell|
+|\`Enter\`|Enter edit mode on selected cell|
+|\`Esc\`|Exit edit mode (back to command mode)|
 
 ## Cell management
 
-| Key | Action |
+|Key|Action|
 |-----|--------|
-| \`A\` | Insert new music cell above |
-| \`B\` | Insert new music cell below |
-| \`DD\` | Delete selected cell (press D twice quickly) |
-| \`Z\` | Undo last delete |
+|\`A\`|Insert new music cell above|
+|\`B\`|Insert new music cell below|
+|\`DD\`|Delete selected cell (press D twice quickly)|
+|\`Z\`|Undo last delete|
 
 ## Code editing
 
-| Key | Action |
+|Key|Action|
 |-----|--------|
-| \`Cmd+/\` or \`Ctrl+/\` | Toggle comment on selected lines |
+|\`Cmd+/\` or \`Ctrl+/\`|Toggle comment on selected lines|
+|\`Tab\` / \`Shift+Tab\`|Indent / outdent the selected lines (for \`repeat\`)|
+|\`Enter\`|New line at the same indentation, one level in after \`repeat 2:\`|
 
 > **Note:** Navigation and cell management shortcuts only work in **command mode** (when not editing a cell). Press \`Esc\` first to exit edit mode.`,
   },
@@ -548,7 +515,7 @@ function DocsPanel({ style }) {
               <div className="docs-nav-group-label">{g}</div>
               {PAGES.filter((p) => p.group === g).map((p) => (
                 <button
-                  key={p.id}
+                  key= {p.id}
                   className={"docs-nav-item" + (p.id === activeId ? " docs-nav-active" : "")}
                   onClick={() => scrollTo(p.id)}
                 >
@@ -561,8 +528,8 @@ function DocsPanel({ style }) {
         <div className="docs-scroll" ref={contentRef} onClick={handleContentClick}>
           {allHtml.map((page) => (
             <article
-              key={page.id}
-              id={`docs-${page.id}`}
+              key= {page.id}
+              id= {`docs-${page.id}`}
               className="docs-article"
               dangerouslySetInnerHTML={{ __html: page.html }}
             />

@@ -970,9 +970,10 @@ body {
 .tk-directive-val {
   color: var(--tk-directive-val);
 }
+/* No padding or margin on any token: the highlight layer must stay exactly as wide
+   as the textarea text under it, or the caret and selection drift off the letters. */
 .tk-bar {
   color: var(--tk-bar);
-  padding: 0 2px;
 }
 .tk-root {
   color: var(--tk-root-abs);
@@ -1691,4 +1692,135 @@ body {
 .docs-article strong {
   font-weight: 600;
   color: var(--text);
+}
+
+/* Music language tokens (see lib/highlight.js) */
+.tk-inst {
+  color: var(--tk-root-maj);
+  font-weight: 600;
+}
+.tk-word {
+  color: var(--tk-quality);
+}
+.tk-punct {
+  color: var(--tk-slash);
+}
+.tk-beat {
+  color: var(--tk-rhythm);
+  font-weight: 500;
+}
+.tk-mod {
+  color: var(--tk-ext);
+}
+.tk-step {
+  color: var(--tk-rhythm);
+}
+.tk-step-acc {
+  font-weight: 600;
+}
+/* A blank line between two blocks: they play one after the other. Drawn without taking
+   up space so the highlight layer stays aligned with the textarea. */
+.tk-blank::before {
+  content: "";
+  position: absolute;
+  left: var(--code-pad-x);
+  right: var(--code-pad-x);
+  margin-top: 0.72em;
+  border-top: 1px dashed var(--border);
+}
+
+/* Music cell output: settings summary, drum grid, info */
+.music-meta {
+  grid-column: 1 / -1;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-mute);
+  padding: 6px 0 0;
+}
+.drum-grid {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 2px 0 6px;
+}
+.dg-head {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-dim);
+  margin: 2px 0 4px;
+}
+.dg-bar {
+  display: grid;
+  gap: 2px;
+  align-items: center;
+  margin-bottom: 6px;
+}
+.dg-lane {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-dim);
+  white-space: nowrap;
+}
+.dg-bar-num {
+  color: var(--text-mute);
+  font-size: 10px;
+}
+.dg-cell {
+  height: 16px;
+  border-radius: 3px;
+  background: var(--border-soft);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 16px;
+  text-align: center;
+  color: var(--paper);
+  overflow: hidden;
+}
+.dg-alt {
+  background: var(--border);
+}
+.dg-hit {
+  background: color-mix(in srgb, var(--accent) 62%, var(--paper));
+}
+.dg-acc {
+  background: var(--accent);
+}
+.dg-ghost {
+  opacity: 0.45;
+}
+.dg-dbl {
+  background: linear-gradient(
+    90deg,
+    var(--accent) 0 42%,
+    transparent 42% 58%,
+    var(--accent) 58% 100%
+  );
+}
+.dg-cell.dg-now {
+  outline: 1.5px solid var(--text);
+  outline-offset: -1px;
+}
+.dg-count {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  text-align: center;
+  color: var(--text-mute);
+}
+.dg-count-beat {
+  color: var(--text);
+  font-weight: 600;
+}
+.dg-count.dg-now {
+  color: var(--accent);
+  font-weight: 700;
+}
+.cell-output-info .info-msg {
+  font-size: 12px;
+  color: var(--text-dim);
+  padding: 8px 4px;
+}
+.music-warning {
+  color: var(--busy-bar);
 }

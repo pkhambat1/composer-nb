@@ -85,17 +85,24 @@ export default function App() {
       const runId = Symbol()
       abortRef.current = runId
       try {
-        const parsed = MusicEngine.parseSource(c.source)
+        // Settings and words carry on from the music cells above, like variables in Jupyter.
+        let inherited = MusicEngine.initialState()
+        for (const prev of cells.slice(0, cells.indexOf(c))) {
+          if (prev.type === "music") inherited = MusicEngine.parseSource(prev.source, inherited).state
+        }
+        const parsed = MusicEngine.parseSource(c.source, inherited)
         if (abortRef.current !== runId) return
         if (parsed.errors && parsed.errors.length > 0) {
           const lines = parsed.errors.map((e) => `Line ${e.line}: ${e.msg}`).join("\n")
           updateCell(id, { status: "idle", output: { kind: "error", error: lines } })
           return
         }
-        const isEmpty = parsed.chords.length === 0
-        if (isEmpty) {
-          const msg = "No chords. Try `Cmaj7  Am7  Dm7  G7`."
-          updateCell(id, { status: "idle", output: { kind: "error", error: msg } })
+        if (parsed.events.length === 0 && parsed.drumEvents.length === 0) {
+          const message =
+            "Nothing to play here. Settings and words in this cell carry on to the cells below. " +
+            "To hear something, add an instrument line such as piano: C Am F G or snare: 2 4."
+          setRunCounter(runCounter + 1)
+          updateCell(id, { status: "idle", runCount: runCounter + 1, output: { kind: "info", message } })
           return
         }
         const nextCount = runCounter + 1

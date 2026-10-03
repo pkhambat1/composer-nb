@@ -1,14 +1,15 @@
-"""composer-nb: a small language for chord progressions, played inside notebooks.
+"""composer-nb: a small language for chords and drums, played inside notebooks.
 
 In Jupyter, load the cell magic and write music in `%%music` cells:
 
     %load_ext composer_nb
 
     %%music intro
-    @key Am
-    @tempo 75
-    Am E7
-    G D
+    tempo: 75
+    sound: guitar
+    Am E7|G D
+    kick: 1 3
+    snare: 2 4
 
 Or build songs from Python with `Song`.
 """

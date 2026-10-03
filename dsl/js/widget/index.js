@@ -1,6 +1,6 @@
 /* anywidget front end for the Python library: parses a chain of cell sources,
-   renders the last one to audio, and shows a player, the settings in effect,
-   chord chips and parse errors. */
+   renders the last one to audio, and shows a player, what each block plays, a drum
+   grid, chord chips and parse errors. */
 import "./widget.css"
 import {
   parseChain,
@@ -9,6 +9,7 @@ import {
   bufferDuration,
   bufferToWav,
 } from "../music-engine.js"
+import { TPQ } from "../language.js"
 
 // Tone.Offline swaps Tone's global context while it renders, so two cells
 // rendering at once (Run All) would trample each other. Render one at a time.
@@ -34,13 +35,104 @@ function formatTime(sec) {
   return Math.floor(sec / 60) + ":" + String(Math.floor(sec % 60)).padStart(2, "0")
 }
 
-function describeSettings(d) {
-  const parts = [`key ${d.key}`, `${d.tempo} bpm`, d.inst, `${d.beats} beats/bar`]
-  if (d.inst === "guitar" && d.capo > 0) parts.push(`capo ${d.capo}`)
-  return parts.join(" · ")
+function describeBlock(b) {
+  const bars = `${b.bars} bar${b.bars === 1 ? "" : "s"}${b.times > 1 ? ` × ${b.times}` : ""}`
+  return `${b.time} · ${b.tempo} bpm · ${bars}`
 }
 
-function renderPlayer(slot, buffer, filename) {
+// What the chords play on, e.g. "guitar, capo 2".
+function describeSounds(parsed) {
+  const seen = new Map()
+  for (const e of parsed.chords) seen.set(e.instrument, e.capo)
+  return [...seen].map(([inst, capo]) => (capo ? `${inst}, capo ${capo}` : inst)).join(" · ")
+}
+
+// --- Drum grid: each block drawn once, bar by bar, counted 1 e & a -------------
+
+const LANES = ["crash", "ride", "hat", "tom", "floor", "snare", "kick"]
+const SAY = { 1: [""], 2: ["", "&"], 3: ["", "&", "a"], 4: ["", "e", "&", "a"] }
+const ART = { open: "o", pedal: "p", bell: "b" }
+
+function renderDrumGrid(blocks) {
+  const grid = h("div", "cnb-grid")
+  blocks.forEach((block, bi) => {
+    if (!block.drumEvents.length) return
+    const per = Math.round((block.barTicks / TPQ) * block.res)
+    const cellTicks = TPQ / block.res
+    const lanes = LANES.filter((d) => block.drumEvents.some((e) => e.inst === d))
+    const hits = new Map()
+    for (const e of block.drumEvents) {
+      if (e.hidden) continue
+      const k = e.inst + "@" + Math.round(e.tick / cellTicks)
+      if (!hits.has(k) || e.vel > hits.get(k).vel) hits.set(k, e)
+    }
+    // Shade alternate groups in added-up meters like (3+4)/4, otherwise alternate beats.
+    const groupEnds = []
+    let acc = 0
+    for (const g of block.groups) groupEnds.push((acc += (g * 4) / block.unit))
+    const shaded = (col) => {
+      const q = col / block.res
+      return block.groups.length > 1
+        ? groupEnds.findIndex((end) => q < end - 1e-9) % 2 === 1
+        : Math.floor(q) % 2 === 1
+    }
+
+    if (blocks.length > 1) grid.append(h("div", "cnb-grid-head", describeBlock(block)))
+    for (let bar = 0; bar < block.bars; bar++) {
+      const row = h("div", "cnb-bar")
+      row.style.gridTemplateColumns = `44px repeat(${per}, minmax(0, 1fr))`
+      for (const lane of lanes) {
+        row.append(h("div", "cnb-lane", lane))
+        for (let col = 0; col < per; col++) {
+          const e = hits.get(lane + "@" + (bar * per + col))
+          let cls = "cnb-cell" + (shaded(col) ? " cnb-alt" : "")
+          if (e) cls += " cnb-hit" + (e.accent ? " cnb-acc" : "") + (e.ghost ? " cnb-ghost" : "")
+          const cell = h("div", cls, e ? ART[e.art] || "" : "")
+          cell.dataset.k = `${bi}-${bar}-${col}`
+          row.append(cell)
+        }
+      }
+      row.append(h("div", "cnb-lane cnb-bar-num", block.bars > 1 ? `bar ${bar + 1}` : ""))
+      for (let col = 0; col < per; col++) {
+        const sub = col % block.res
+        const count = h(
+          "div",
+          "cnb-count" + (sub ? "" : " cnb-count-beat"),
+          sub ? (SAY[block.res]?.[sub] ?? "·") : String(Math.floor(col / block.res) + 1),
+        )
+        count.dataset.k = `${bi}-${bar}-${col}`
+        row.append(count)
+      }
+      grid.append(row)
+    }
+  })
+
+  // Marks the step playing at `t` seconds. A block that plays more than once is drawn
+  // once, so the playhead goes round it again each time.
+  let lastKey = null
+  const setTime = (t, active) => {
+    let key = null
+    if (active) {
+      const bi = blocks.findIndex((b) => b.plays.some((at) => t >= at && t < at + b.durSec))
+      if (bi >= 0) {
+        const b = blocks[bi]
+        const at = b.plays.find((s) => t >= s && t < s + b.durSec)
+        const tick = (t - at) / b.secPerTick
+        const bar = Math.floor(tick / b.barTicks)
+        key = `${bi}-${bar}-${Math.floor((tick - bar * b.barTicks) / (TPQ / b.res))}`
+      }
+    }
+    if (key === lastKey) return
+    grid.querySelectorAll(".cnb-now").forEach((el) => el.classList.remove("cnb-now"))
+    if (key) grid.querySelectorAll(`[data-k="${key}"]`).forEach((el) => el.classList.add("cnb-now"))
+    lastKey = key
+  }
+  return { grid, setTime }
+}
+
+// --- Player --------------------------------------------------------------------
+
+function renderPlayer(slot, buffer, filename, onTime) {
   const audioUrl = URL.createObjectURL(bufferToWav(buffer))
   const audio = new Audio(audioUrl)
   const duration = bufferDuration(buffer)
@@ -87,6 +179,7 @@ function renderPlayer(slot, buffer, filename) {
     const pct = duration ? Math.min(1, audio.currentTime / duration) : 0
     progress.style.width = pct * 100 + "%"
     time.textContent = `${formatTime(audio.currentTime)} / ${formatTime(duration)}`
+    onTime(audio.currentTime, !audio.paused || audio.currentTime > 0)
     if (!audio.paused) frame = requestAnimationFrame(tick)
   }
   const setPlaying = (playing) => {
@@ -129,6 +222,8 @@ function renderPlayer(slot, buffer, filename) {
   }
 }
 
+// --- Cell ----------------------------------------------------------------------
+
 function renderCell(el, model) {
   const name = model.get("name")
   const after = model.get("after")
@@ -140,7 +235,10 @@ function renderCell(el, model) {
   const head = h("div", "cnb-head")
   if (name) head.append(h("span", "cnb-name", name))
   if (after) head.append(h("span", "cnb-after", `after ${after}`))
-  head.append(h("span", "cnb-settings", describeSettings(parsed.directives)))
+  const summary = parsed.blocks.length === 1 ? [describeBlock(parsed.blocks[0])] : []
+  if (parsed.blocks.length > 1) summary.push(`${parsed.blocks.length} blocks, one after another`)
+  if (parsed.chords.length) summary.push(describeSounds(parsed))
+  head.append(h("span", "cnb-settings", summary.join(" · ")))
   root.append(head)
 
   // Holds the status line until the audio is ready, then the player.
@@ -149,9 +247,13 @@ function renderCell(el, model) {
   slot.append(status)
   root.append(slot)
 
-  if (parsed.chords.length) {
+  const { grid, setTime } = renderDrumGrid(parsed.blocks)
+  if (grid.childElementCount) root.append(grid)
+
+  const firstTime = parsed.chords.filter((e) => !e.repeat)
+  if (firstTime.length) {
     const chips = h("div", "cnb-chords")
-    for (const ev of parsed.chords) {
+    for (const ev of firstTime) {
       const chip = h("div", "cnb-chip")
       chip.append(
         h("span", "cnb-chip-label", ev.chord.label),
@@ -166,27 +268,32 @@ function renderCell(el, model) {
     root.append(chips)
   }
 
-  if (parsed.errors.length) {
-    const errors = h("div", "cnb-errors")
-    for (const err of parsed.errors) {
+  const errors = h("div", "cnb-errors")
+  const showMessages = (list) => {
+    errors.replaceChildren()
+    for (const m of list) {
       const row = h("div", "cnb-error")
-      if (err.line) row.append(h("span", "cnb-error-line", `line ${err.line}`))
-      row.append(h("span", "cnb-error-msg", err.msg))
+      if (m.line) row.append(h("span", "cnb-error-line", `line ${m.line}`))
+      row.append(h("span", "cnb-error-msg", m.msg))
       errors.append(row)
     }
-    root.append(errors)
+    if (list.length && !errors.isConnected) root.append(errors)
   }
+  showMessages(parsed.errors)
 
   el.replaceChildren(root)
 
-  if (!parsed.chords.length) {
-    status.textContent = "Nothing to play yet. Add some chords."
+  if (!parsed.events.length && !parsed.drumEvents.length) {
+    status.textContent = "Nothing to play yet. Add some chords or drums."
   } else {
     status.textContent = "Rendering audio…"
     queueRender(parsed)
       .then((buffer) => {
         if (disposed) return
-        disposePlayer = renderPlayer(slot, buffer, `${name || "composer-nb"}.wav`)
+        disposePlayer = renderPlayer(slot, buffer, `${name || "composer-nb"}.wav`, setTime)
+        if (parsed.warnings?.length) {
+          showMessages([...parsed.errors, ...parsed.warnings.map((msg) => ({ msg }))])
+        }
       })
       .catch((err) => {
         if (disposed) return

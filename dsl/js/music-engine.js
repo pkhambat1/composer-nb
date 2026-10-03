@@ -1,468 +1,27 @@
-/* Music DSL parser + chord builder + Tone.js offline renderer + waveform draw + WAV export. */
+/* Music engine: parses music cells (see language.js) and renders them to audio with
+   Tone.js, plus waveform drawing and WAV export. */
 import * as Tone from "tone"
-import { Chord, Note, Interval } from "tonal"
 import * as ChordLookup from "./chord-lookup.js"
+import * as Drums from "./drums.js"
+import { midiToName } from "./chords.js"
+import { initialState, parseCell } from "./language.js"
 
-const NOTE_TO_PC = {
-  C: 0,
-  "C#": 1,
-  Db: 1,
-  D: 2,
-  "D#": 3,
-  Eb: 3,
-  E: 4,
-  F: 5,
-  "F#": 6,
-  Gb: 6,
-  G: 7,
-  "G#": 8,
-  Ab: 8,
-  A: 9,
-  "A#": 10,
-  Bb: 10,
-  B: 11,
-}
-const PC_TO_NAME = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"]
+export { midiToName, parseKey, buildChord } from "./chords.js"
+export { initialState } from "./language.js"
 
-export function midiToName(m) {
-  const pc = ((m % 12) + 12) % 12
-  const oct = Math.floor(m / 12) - 1
-  return PC_TO_NAME[pc] + oct
+// Parses one music cell. `inherited` is the state (settings and words) left by the cells
+// above it; the result's `state` is what this cell hands on to the cells below.
+export function parseSource(src, inherited) {
+  return parseCell(src, inherited)
 }
 
-const MAJOR_SCALE = [0, 2, 4, 5, 7, 9, 11]
-const MINOR_SCALE = [0, 2, 3, 5, 7, 8, 10]
-
-// Diatonic chord qualities by scale degree (0-6)
-const MAJOR_QUALITIES = ["major", "minor", "minor", "major", "major", "minor", "dim"]
-const MINOR_QUALITIES = ["minor", "dim", "major", "minor", "minor", "major", "major"]
-
-const ROMAN = {
-  I: 0,
-  II: 1,
-  III: 2,
-  IV: 3,
-  V: 4,
-  VI: 5,
-  VII: 6,
-  i: 0,
-  ii: 1,
-  iii: 2,
-  iv: 3,
-  v: 4,
-  vi: 5,
-  vii: 6,
-}
-
-export function parseKey(str) {
-  if (!str) return { root: "C", mode: "major", tonicPc: 0 }
-  const m = /^([A-G][b#]?)(?:\s*(m|min|minor|maj|major))?$/i.exec(str.trim())
-  if (!m) return { root: "C", mode: "major", tonicPc: 0 }
-  const root = m[1][0].toUpperCase() + m[1].slice(1)
-  const mode = /^m(in)?$/i.test(m[2] || "") ? "minor" : "major"
-  return { root, mode, tonicPc: NOTE_TO_PC[root] }
-}
-
-// --- Duration suffix split ----------------------------------------------
-
-const DUR_LETTERS = { w: 4, h: 2, q: 1, e: 0.5, s: 0.25 }
-
-function splitDurationSuffix(raw) {
-  // Allow N trailing dots for augmentation: `.q.` = dotted quarter (1.5x),
-  // `.q..` = double-dotted (1.75x). Multiplier is 2 − 2^−dots.
-  const dotM = raw.match(/^(.+?)\.(w|h|q|e|s)(\.*)$/)
-  if (dotM) {
-    const base = DUR_LETTERS[dotM[2]]
-    const dots = dotM[3].length
-    return { core: dotM[1], beats: base * (2 - Math.pow(2, -dots)) }
-  }
-  const colonM = raw.match(/^(.+?):(\d+(?:\.\d+)?)$/)
-  if (colonM) return { core: colonM[1], beats: parseFloat(colonM[2]) }
-  return { core: raw, beats: null }
-}
-
-// --- Chord tokenizer / resolver -----------------------------------------
-
-function tokenizeChord(tok) {
-  const slash = tok.split("/")
-  const main = slash[0]
-  const bassStr = slash[1]
-
-  const romanRe = /^([#b])?(VII|VI|IV|V|III|II|I|vii|vi|iv|v|iii|ii|i)(.*)$/
-  const r = romanRe.exec(main)
-  if (r) {
-    return {
-      kind: "roman",
-      accidental: r[1] || "",
-      roman: r[2],
-      suffix: r[3] || "",
-      slashBass: bassStr || null,
-    }
-  }
-  const absRe = /^([A-G][b#]?)(.*)$/
-  const a = absRe.exec(main)
-  if (a) {
-    return {
-      kind: "abs",
-      rootStr: a[1],
-      suffix: a[2] || "",
-      slashBass: bassStr || null,
-    }
-  }
-  return null
-}
-
-function applyAccidental(pc, accidental) {
-  if (accidental === "#") return (pc + 1) % 12
-  if (accidental === "b") return (pc + 11) % 12
-  return pc
-}
-
-function resolveRoot(tok, key) {
-  if (tok.kind === "abs") {
-    return {
-      rootPc: NOTE_TO_PC[tok.rootStr],
-      suffix: tok.suffix,
-      baseQuality: "major",
-      slashBass: tok.slashBass,
-    }
-  }
-  const degree = ROMAN[tok.roman]
-  const scale = key.mode === "minor" ? MINOR_SCALE : MAJOR_SCALE
-  const qualities = key.mode === "minor" ? MINOR_QUALITIES : MAJOR_QUALITIES
-  let pc = (key.tonicPc + scale[degree]) % 12
-  pc = applyAccidental(pc, tok.accidental)
-  return {
-    rootPc: pc,
-    suffix: tok.suffix,
-    baseQuality: qualities[degree],
-    slashBass: tok.slashBass,
-  }
-}
-
-function intervalsFromSuffix(suffix, baseQuality) {
-  let s = suffix || ""
-  let intervals = baseQuality === "dim" ? [0, 3, 6] : baseQuality === "minor" ? [0, 3, 7] : [0, 4, 7]
-
-  if (/^dim/i.test(s)) {
-    intervals = [0, 3, 6]
-    s = s.replace(/^dim/i, "")
-  } else if (/^(ø|m7b5|hdim)/i.test(s)) {
-    intervals = [0, 3, 6, 10]
-    s = s.replace(/^(ø|m7b5|hdim)/i, "")
-  } else if (/^(aug|\+)/i.test(s)) {
-    intervals = [0, 4, 8]
-    s = s.replace(/^(aug|\+)/i, "")
-  } else if (/^sus2/i.test(s)) {
-    intervals = [0, 2, 7]
-    s = s.replace(/^sus2/i, "")
-  } else if (/^sus(4)?/i.test(s)) {
-    intervals = [0, 5, 7]
-    s = s.replace(/^sus(4)?/i, "")
-  } else if (/^maj/i.test(s) || /^M(?!in)/.test(s) || /^Δ/.test(s)) {
-    intervals = [0, 4, 7]
-    s = s.replace(/^maj|^M(?!in)|^Δ/, "")
-  } else if (/^m(in)?(?!aj)/i.test(s)) {
-    intervals = [0, 3, 7]
-    s = s.replace(/^m(in)?/i, "")
-  }
-
-  const isMaj7 = /maj/i.test(suffix) || /Δ/.test(suffix) || /(?:^|[^a-zA-Z])M\d/.test(suffix)
-  const isDim7 = /dim7/i.test(suffix)
-  const has7 = /(?:^|[^1])7/.test(s) || /9|11|13/.test(s)
-  const has9 = /(?:add)?9/.test(s)
-  const has11 = /11/.test(s)
-  const has13 = /13/.test(s)
-  const hasAdd9 = /add9/i.test(s) && !/^.*[^d]9/.test(s)
-
-  if (isDim7) intervals.push(9)
-  else if (has7) intervals.push(isMaj7 ? 11 : 10)
-
-  if (has9 || hasAdd9) intervals.push(14)
-  if (has11) intervals.push(17)
-  if (has13) intervals.push(21)
-
-  if (/b5/i.test(s) && !intervals.includes(6)) {
-    const idx = intervals.indexOf(7)
-    if (idx >= 0) intervals[idx] = 6
-  }
-  if (/#5/i.test(s)) {
-    const idx = intervals.indexOf(7)
-    if (idx >= 0) intervals[idx] = 8
-  }
-  if (/b9/i.test(s)) {
-    const idx = intervals.indexOf(14)
-    if (idx >= 0) intervals[idx] = 13
-    else intervals.push(13)
-  }
-  if (/#9/i.test(s)) {
-    const idx = intervals.indexOf(14)
-    if (idx >= 0) intervals[idx] = 15
-    else intervals.push(15)
-  }
-  if (/#11/i.test(s)) {
-    const idx = intervals.indexOf(17)
-    if (idx >= 0) intervals[idx] = 18
-    else intervals.push(18)
-  }
-  if (/b13/i.test(s)) {
-    const idx = intervals.indexOf(21)
-    if (idx >= 0) intervals[idx] = 20
-    else intervals.push(20)
-  }
-
-  intervals = Array.from(new Set(intervals)).sort((a, b) => a - b)
-  return intervals
-}
-
-function tokenToSymbol(tok, key) {
-  if (tok.kind === "abs") return tok.rootStr + (tok.suffix || "")
-  const resolved = resolveRoot(tok, key)
-  const rootName = PC_TO_NAME[resolved.rootPc]
-  let qual = ""
-  if (resolved.baseQuality === "minor") qual = "m"
-  else if (resolved.baseQuality === "dim") qual = "dim"
-  return rootName + qual + (tok.suffix || "")
-}
-
-function buildChordWithTonal(symbol, slashBass, oct, tokenStr, rootPcFallback) {
-  const ch = Chord.get(symbol)
-  if (ch.empty || !ch.intervals.length) return null
-
-  const tonicPc =
-    ch.tonic != null && ch.tonic !== ""
-      ? Note.chroma(ch.tonic)
-      : rootPcFallback
-  if (tonicPc == null || isNaN(tonicPc)) return null
-
-  let bass = (oct + 1) * 12 + tonicPc - 12
-  if (slashBass) {
-    const m = /^([A-Ga-g])([#b]?)$/.exec(slashBass)
-    if (!m) return null
-    const b = Note.get(m[1].toUpperCase() + m[2])
-    if (b.empty || b.chroma == null) return null
-    bass = (oct + 1) * 12 + b.chroma - 12
-  }
-
-  const rootMidi = (oct + 1) * 12 + tonicPc
-  let voicing = ch.intervals.map((iv) => rootMidi + Interval.semitones(iv))
-  while (voicing.length > 1 && voicing[voicing.length - 1] - voicing[0] > 24) voicing.pop()
-
-  const label =
-    ch.symbol + (slashBass ? "/" + slashBass : "")
-
-  return {
-    input: tokenStr,
-    label,
-    rootPc: tonicPc,
-    bassMidi: bass,
-    notesMidi: voicing,
-    noteNames: voicing.map((m) => Note.fromMidi(m) || midiToName(m)),
-    bassName: Note.fromMidi(bass) || midiToName(bass),
-  }
-}
-
-export function buildChord(tokenStr, key, octave) {
-  if (!tokenStr) return null
-  const oct = typeof octave === "number" && !isNaN(octave) ? octave : 3
-  const tok = tokenizeChord(tokenStr)
-  if (!tok) return null
-  const resolved = resolveRoot(tok, key)
-  const symbol = tokenToSymbol(tok, key)
-
-  const tonalChord = buildChordWithTonal(
-    symbol,
-    resolved.slashBass,
-    oct,
-    tokenStr,
-    resolved.rootPc,
-  )
-  if (tonalChord) return tonalChord
-
-  const intervals = intervalsFromSuffix(resolved.suffix, resolved.baseQuality)
-
-  let bass = (oct - 1 + 1) * 12 + resolved.rootPc
-  if (resolved.slashBass) {
-    const m = /^([A-Ga-g])([#b]?)$/.exec(resolved.slashBass)
-    if (!m) return null
-    const pc = NOTE_TO_PC[m[1].toUpperCase() + m[2]]
-    if (pc == null) return null
-    bass = (oct - 1 + 1) * 12 + pc
-  }
-
-  const rootMidi = (oct + 1) * 12 + resolved.rootPc
-  let voicing = intervals.map((iv) => rootMidi + iv)
-  while (voicing.length > 1 && voicing[voicing.length - 1] - voicing[0] > 24) voicing.pop()
-
-  const rootName = PC_TO_NAME[resolved.rootPc]
-  let qualityLabel = ""
-  if (intervals.includes(3) && intervals.includes(6)) qualityLabel = "dim"
-  else if (intervals.includes(3)) qualityLabel = "m"
-  else if (intervals.includes(8) && intervals.includes(4)) qualityLabel = "+"
-  const suffixLabel = (resolved.suffix || "")
-    .replace(/^m(in)?(?!aj)/i, "")
-    .replace(/^maj/i, "maj")
-    .replace(/^dim/i, "")
-  const label =
-    rootName + qualityLabel + suffixLabel + (resolved.slashBass ? "/" + resolved.slashBass : "")
-
-  return {
-    input: tokenStr,
-    label,
-    rootPc: resolved.rootPc,
-    bassMidi: bass,
-    notesMidi: voicing,
-    noteNames: voicing.map(midiToName),
-    bassName: midiToName(bass),
-  }
-}
-
-// Transpose a chord's sounding pitches up by `semis` (capo fret). The label
-// is intentionally left alone so chips/diagrams keep showing the shape name
-// the user wrote, while playback and note names reflect actual pitches.
-function applyCapo(chord, semis) {
-  if (!semis) return
-  chord.notesMidi = chord.notesMidi.map((m) => m + semis)
-  chord.bassMidi = chord.bassMidi + semis
-  chord.noteNames = chord.notesMidi.map(midiToName)
-  chord.bassName = midiToName(chord.bassMidi)
-}
-
-// --- Source parser -------------------------------------------------------
-
-export const DEFAULT_DIRECTIVES = {
-  key: "C",
-  tempo: 96,
-  inst: "piano",
-  beats: 4,
-  octave: 3,
-  capo: 0,
-}
-
-// `inherited` seeds the directives, so a cell can continue from another
-// cell's settings (`after intro`). The cell's own directives still win.
-export function parseSource(src, inherited = {}) {
-  const directives = { ...DEFAULT_DIRECTIVES, ...inherited }
-  const errors = []
-  const lines = src.split("\n")
-  let capoLine = null
-
-  for (let li = 0; li < lines.length; li++) {
-    const raw = lines[li]
-    const line = raw.split("--")[0].trim()
-    if (!line) continue
-    if (line.startsWith("@")) {
-      const m = /^@(\w+)\s+(.+)$/.exec(line)
-      if (m) {
-        const k = m[1].toLowerCase()
-        const v = m[2].trim()
-        if (k === "key") directives.key = v
-        else if (k === "tempo" || k === "bpm") directives.tempo = parseFloat(v) || 96
-        else if (k === "inst" || k === "instrument") directives.inst = v.toLowerCase()
-        else if (k === "beats") directives.beats = parseFloat(v) || 4
-        else if (k === "octave" || k === "oct") {
-          const n = parseInt(v, 10)
-          if (!isNaN(n) && n >= 0 && n <= 8) directives.octave = n
-          else errors.push({ line: li + 1, token: v, msg: `@octave must be 0–8 (got "${v}")` })
-        } else if (k === "capo") {
-          const n = parseInt(v, 10)
-          if (!isNaN(n) && n >= 0 && n <= 12) {
-            directives.capo = n
-            capoLine = li + 1
-          } else errors.push({ line: li + 1, token: v, msg: `@capo must be 0–12 (got "${v}")` })
-        }
-      }
-    }
-  }
-
-  const key = parseKey(directives.key)
-  const capoActive = directives.inst === "guitar" && directives.capo > 0
-  // A capo inherited from an earlier guitar cell is silently dropped when
-  // this cell switches instrument; only complain about one written here.
-  if (capoLine != null && directives.capo > 0 && directives.inst !== "guitar") {
-    errors.push({ line: capoLine, token: "@capo", msg: "@capo only applies to @inst guitar" })
-  }
-  const bars = []
-
-  for (let li = 0; li < lines.length; li++) {
-    const raw = lines[li]
-    const line = raw.split("--")[0].trim()
-    if (!line || line.startsWith("@")) continue
-    const parts = line.split(/\s+/).filter((p) => p && p !== "|" && p !== "||")
-    if (!parts.length) continue
-
-    const items = parts.map((tokRaw) => {
-      const cleaned = tokRaw.replace(/,$/, "")
-      const { core, beats: explicitBeats } = splitDurationSuffix(cleaned)
-      if (core === "~" || core === "_") {
-        return { isRest: true, beatsExplicit: explicitBeats, raw: tokRaw, line: li + 1 }
-      }
-      const chord = buildChord(core, key, directives.octave)
-      if (!chord) {
-        errors.push({ line: li + 1, token: tokRaw, msg: `couldn't parse "${tokRaw}"` })
-        return { isError: true, beatsExplicit: explicitBeats, raw: tokRaw, line: li + 1 }
-      }
-      if (capoActive) applyCapo(chord, directives.capo)
-      return { chord, beatsExplicit: explicitBeats, raw: tokRaw, line: li + 1 }
-    })
-
-    const totalBeats = directives.beats
-    let explicitSum = 0
-    let implicitCount = 0
-    for (const it of items) {
-      if (it.beatsExplicit != null) explicitSum += it.beatsExplicit
-      else implicitCount++
-    }
-    const remainder = Math.max(0, totalBeats - explicitSum)
-    const implicitShare = implicitCount > 0 ? remainder / implicitCount : 0
-    for (const it of items) {
-      it.beats = it.beatsExplicit != null ? it.beatsExplicit : implicitShare
-    }
-
-    bars.push(items)
-  }
-
-  const beatSec = 60 / directives.tempo
-  const events = []
-  let beatCursor = 0
-  for (const bar of bars) {
-    for (const it of bar) {
-      if (it.beats <= 0) continue
-      const event = {
-        beatStart: beatCursor,
-        beats: it.beats,
-        secStart: beatCursor * beatSec,
-        secDur: it.beats * beatSec,
-        isRest: !!it.isRest,
-        isError: !!it.isError,
-        raw: it.raw,
-        line: it.line,
-      }
-      if (it.chord) {
-        event.chord = it.chord
-        event.midiNotes = it.chord.notesMidi
-        event.bassMidi = it.chord.bassMidi
-        event.label = it.chord.label
-      }
-      events.push(event)
-      beatCursor += it.beats
-    }
-  }
-
-  const totalBeatsFinal = beatCursor
-  const totalSec = totalBeatsFinal * beatSec
-  const chords = events.filter((e) => e.chord && !e.isError)
-
-  return { kind: "chord", directives, key, bars, events, chords, totalBeats: totalBeatsFinal, totalSec, errors }
-}
-
-// Parse the last source in `sources`, starting from the settings the earlier
-// ones ended on. Only the last source is played; the rest just hand over
-// their directives.
+// Parses the last of `sources`, starting from the settings and words the earlier ones
+// ended with. Only the last one plays; the Jupyter widget uses this for
+// `%%music verse after intro`, where the link is by name rather than by position.
 export function parseChain(sources) {
-  let inherited = {}
-  for (const src of sources.slice(0, -1)) inherited = parseSource(src, inherited).directives
-  return parseSource(sources[sources.length - 1] ?? "", inherited)
+  let state = initialState()
+  for (const src of sources.slice(0, -1)) state = parseCell(src, state).state
+  return parseCell(sources[sources.length - 1] ?? "", state)
 }
 
 // --- Synths --------------------------------------------------------------
@@ -572,84 +131,118 @@ function makeSynth(T, kind) {
 }
 
 export async function renderToBuffer(parsed) {
-  const inst = parsed.directives.inst
-  const stagger = inst === "guitar" ? 0.012 : inst === "pad" ? 0.05 : inst === "organ" ? 0 : 0.008
-  const bassVel = inst === "guitar" ? 0.6 : 0.7
-  const chordVel = inst === "guitar" ? 0.55 : 0.55
+  const chordEvents = parsed.events.filter((ev) => ev.chord)
 
   // For guitar, swap Tonal's compact voicing for the chord-db's idiomatic
   // voicing so the audio matches the diagram AND the actual pitches a real
   // guitar produces at those frets (Cadd9 = C3 E3 G3 D4 E4, low E open = E2).
   // Bass becomes the lowest fretted string and the artificial -12 doubling is
   // suppressed — both pushed the chord below playable guitar range.
-  if (inst === "guitar") {
+  if (chordEvents.some((ev) => ev.instrument === "guitar")) {
     try {
       await ChordLookup.load()
-      const capo = parsed.directives.capo > 0 ? parsed.directives.capo : 0
-      for (const ev of parsed.events) {
-        if (!ev.chord) continue
+      for (const ev of chordEvents) {
+        if (ev.instrument !== "guitar") continue
         const pos = ChordLookup.lookupPosition(ev.chord.label)
-        if (pos?.midi?.length) {
-          const voicing = pos.midi.map((m) => m + capo)
-          ev.chord.notesMidi = voicing
-          ev.chord.noteNames = voicing.map(midiToName)
-          ev.chord.bassMidi = voicing[0]
-          ev.chord.bassName = midiToName(voicing[0])
-          ev.chord.fromGuitarPosition = true
-          ev.bassMidi = voicing[0]
-          ev.midiNotes = voicing
+        if (!pos?.midi?.length) continue
+        const voicing = pos.midi.map((m) => m + (ev.capo || 0))
+        ev.chord = {
+          ...ev.chord,
+          notesMidi: voicing,
+          noteNames: voicing.map(midiToName),
+          bassMidi: voicing[0],
+          bassName: midiToName(voicing[0]),
+          fromGuitarPosition: true,
         }
       }
     } catch (_) {
-      // chord-db unavailable (offline / fetch failed) — fall back to Tonal voicing.
+      // chord-db failed to load — fall back to Tonal voicing.
     }
   }
 
-  const totalSec = Math.max(1.0, parsed.totalSec + 1.6)
+  const drumKit = parsed.drumEvents.length ? await Drums.prepareKit(parsed.drumEvents) : null
+  parsed.warnings = drumKit?.missing.length
+    ? ["Couldn't load the recorded drum kit, so the drums use synthesized sounds"]
+    : []
+
+  const totalSec = Math.max(1.0, parsed.totalSec + 1.8)
   const buffer = await Tone.Offline(
-    async ({ transport }) => {
-      const reverb = new Tone.Reverb({
-        decay: 2.2,
-        wet: inst === "guitar" ? 0.14 : inst === "piano" ? 0.14 : 0.18,
-      })
-      await reverb.generate()
-      reverb.toDestination()
-      const synth = makeSynth(Tone, inst)
-      synth.connect(reverb)
+    async () => {
+      const master = new Tone.Limiter(-1).toDestination()
+      const synths = {}
+      for (const inst of new Set(chordEvents.map((ev) => ev.instrument))) {
+        const reverb = new Tone.Reverb({
+          decay: 2.2,
+          wet: inst === "guitar" || inst === "piano" ? 0.14 : 0.18,
+        })
+        await reverb.generate()
+        reverb.connect(master)
+        synths[inst] = makeSynth(Tone, inst)
+        synths[inst].connect(reverb)
+      }
+      if (drumKit) await Drums.schedule(drumKit, parsed.drumEvents, master)
 
       await Tone.loaded()
 
-      for (const ev of parsed.events) {
-        if (ev.isRest || !ev.chord) continue
-        const dur = ev.secDur * 0.96
-        const usingPos = ev.chord.fromGuitarPosition
-        if (!usingPos) {
-          synth.triggerAttackRelease(midiToName(ev.bassMidi), dur, ev.secStart, bassVel)
-          if (inst === "guitar" && ev.chord.notesMidi[0]) {
-            synth.triggerAttackRelease(
-              midiToName(ev.chord.notesMidi[0] - 12),
-              dur,
-              ev.secStart + 0.006,
-              bassVel * 0.85,
-            )
-          }
-        }
-        ev.chord.noteNames.forEach((n, idx) => {
-          // When using a real guitar position the lowest note IS the bass, so
-          // start the strum at the very beginning and give it a small velocity
-          // bump; otherwise stagger the chord notes after the separate bass hit.
-          const offset = usingPos ? idx * stagger : (idx + 1) * stagger
-          const vel = usingPos && idx === 0 ? bassVel : chordVel
-          synth.triggerAttackRelease(n, dur, ev.secStart + offset, vel)
-        })
-      }
+      for (const ev of chordEvents) playChord(synths[ev.instrument], ev)
     },
     totalSec,
     2,
     Tone.getContext().sampleRate,
   )
 
-  return buffer
+  return trimSilence(buffer, parsed.totalSec)
+}
+
+// The render runs on past the music so reverb and long notes can ring out, but
+// short drum hits leave most of that tail silent. Cut it once the sound has faded
+// well below the loudest moment, never before the music's own end, so a cell ending
+// on a rest keeps its length. A short fade-out keeps the cut from clicking.
+function trimSilence(buffer, musicSec) {
+  const channels = Array.from({ length: buffer.numberOfChannels }, (_, c) => buffer.getChannelData(c))
+  let peak = 0
+  for (const ch of channels) for (let i = 0; i < ch.length; i++) peak = Math.max(peak, Math.abs(ch[i]))
+  const threshold = peak * 0.01 // 40 dB below the peak: inaudible under the music
+  let last = Math.ceil(musicSec * buffer.sampleRate)
+  for (let i = buffer.length - 1; i > last; i--) {
+    if (channels.some((ch) => Math.abs(ch[i]) > threshold)) {
+      last = i
+      break
+    }
+  }
+  const fade = Math.round(0.05 * buffer.sampleRate)
+  const end = last + fade
+  if (end >= buffer.length) return buffer
+  for (const ch of channels) for (let i = last; i < end; i++) ch[i] *= (end - i) / fade
+  return buffer.slice(0, end / buffer.sampleRate)
+}
+
+function playChord(synth, ev) {
+  const inst = ev.instrument
+  const stagger = inst === "guitar" ? 0.012 : inst === "pad" ? 0.05 : inst === "organ" ? 0 : 0.008
+  const bassVel = inst === "guitar" ? 0.6 : 0.7
+  const chordVel = 0.55
+  const dur = ev.secDur * 0.96
+  const usingPos = ev.chord.fromGuitarPosition
+  if (!usingPos) {
+    synth.triggerAttackRelease(midiToName(ev.chord.bassMidi), dur, ev.secStart, bassVel)
+    if (inst === "guitar" && ev.chord.notesMidi[0]) {
+      synth.triggerAttackRelease(
+        midiToName(ev.chord.notesMidi[0] - 12),
+        dur,
+        ev.secStart + 0.006,
+        bassVel * 0.85,
+      )
+    }
+  }
+  ev.chord.noteNames.forEach((n, idx) => {
+    // When using a real guitar position the lowest note IS the bass, so
+    // start the strum at the very beginning and give it a small velocity
+    // bump; otherwise stagger the chord notes after the separate bass hit.
+    const offset = usingPos ? idx * stagger : (idx + 1) * stagger
+    const vel = usingPos && idx === 0 ? bassVel : chordVel
+    synth.triggerAttackRelease(n, dur, ev.secStart + offset, vel)
+  })
 }
 
 // --- Pitch-class helpers + chord diagrams -------------------------------
