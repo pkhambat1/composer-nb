@@ -114,5 +114,14 @@ def test_ipython_keeps_python_names_out_of_music_cells(shell):
     assert kernel_completions(shell, "%%music\np") == [("p", "pattern "), ("p", "play ")]
 
 
+@pytest.mark.parametrize("cell", ["%%music\ntempo ", "%%music\nplay {\n  sn2 4 ", "%%music\n// i"])
+def test_ipython_offers_nothing_where_music_has_nothing(shell, cell):
+    assert kernel_completions(shell, cell) == []
+
+
+def test_ipython_still_completes_the_magic_name(shell):
+    assert ("%%mus", "%%music") in kernel_completions(shell, "%%mus")
+
+
 def test_python_cells_are_left_alone(shell):
     assert ("pri", "print") in kernel_completions(shell, "pri")

@@ -141,8 +141,24 @@ def register(shell) -> None:
             "completions": [SimpleCompletion(text=t, type=kind) for t, kind in options],
             "matched_fragment": fragment,
             # Python names mean nothing in a music cell, so IPython's own matchers stay out.
-            # (IPython only honours this when there's something to offer.)
             "suppress": True,
         }
 
     matchers.append(music_matcher)
+
+    # IPython ignores suppress when a matcher has nothing to offer, so a spot with no music
+    # completions (tempo |) would fall back to Python names. Drop the other matchers' results
+    # there too. _complete is private, so if it isn't there, keep IPython's behaviour.
+    completer = shell.Completer
+    original = getattr(completer, "_complete", None)
+    if original is None:
+        return
+
+    def _complete(**kwargs):
+        results = original(**kwargs)
+        ours = results.get(identifier)
+        if ours and ours.get("suppress"):
+            return {identifier: ours}
+        return results
+
+    completer._complete = _complete
