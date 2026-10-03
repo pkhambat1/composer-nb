@@ -92,7 +92,10 @@ function makeSynthKit(output) {
   }).connect(output)
   const hat = new Tone.NoiseSynth({ envelope: { attack: 0.001, decay: 0.05, sustain: 0 } })
   hat.connect(highpass(7500))
-  const openHat = new Tone.NoiseSynth({ envelope: { attack: 0.001, decay: 0.5, sustain: 0 } })
+  // A short release, so the next hi-hat hit can close it
+  const openHat = new Tone.NoiseSynth({
+    envelope: { attack: 0.001, decay: 0.5, sustain: 0, release: 0.03 },
+  })
   openHat.connect(highpass(7000))
   const cymbal = new Tone.MetalSynth({
     envelope: { attack: 0.001, decay: 1.4, release: 0.2 },

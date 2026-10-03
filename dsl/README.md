@@ -141,6 +141,8 @@ play {
 }
 ```
 
+An open hi-hat rings until the next hi-hat hit closes it, and replaces a closed hit at the same moment, so `hat: loop X-x-` can keep going under `hat.open: ------X-`.
+
 Steps are one character each, a 16th note unless `step` says otherwise: `x` hit, `X` accent, `g` ghost (on the snare, use `snare.ghost`), `d` double, `-` nothing. Beats are counted `1 e & a 2 e & a`, with `accent`, `ghost` or `double` after a beat to change how it's hit.
 
 ### Patterns and play

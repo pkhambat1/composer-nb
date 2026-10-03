@@ -894,6 +894,16 @@ describe("drums", () => {
     expect(hits(o, "ride.bell").map((e) => [e.inst, e.art])).toEqual([["ride", "bell"]])
   })
 
+  it("let an open hi-hat replace a closed hit at the same moment, until the next hit", () => {
+    const o = parseSource(play("hat: loop X-x-", "hat.open: ----X---")).outputs[0]
+    expect(hits(o, "hat").map((e) => e.secStart / 0.125)).toEqual([0, 2, 6])
+    expect(hits(o, "hat.open").map((e) => e.secStart / 0.125)).toEqual([4])
+    // the same when the open hit comes from another pattern played alongside
+    const lift = "pattern lift = { hat.open: ----X--- }\n"
+    const p = parseSource(lift + play("hat: loop X-x-", "lift")).outputs[0]
+    expect(hits(p, "hat").map((e) => e.secStart / 0.125)).toEqual([0, 2, 6])
+  })
+
   it("play the snare's ghost notes and rimshots on lines of their own", () => {
     const o = parseSource(play("snare: ----x---", "snare.ghost: --x---dd", "snare.rim: x-------"))
       .outputs[0]

@@ -1218,7 +1218,15 @@ function layer(parts, clips, st, bars, err, ctx, looped = []) {
   const inside = (e) => e.secStart < durSec - 1e-9
   const all = own ? [own, ...once] : once
   const events = all.flatMap((c) => c.events).filter(inside)
-  const drumEvents = all.flatMap((c) => c.drumEvents).filter(inside)
+  // A hi-hat can't be open and closed at once, so an open hit replaces a closed one at the
+  // same moment. The next hi-hat hit closes it.
+  const moment = (e) => Math.round(e.secStart * 1e6)
+  const opened = new Set(
+    all.flatMap((c) => c.drumEvents.filter((e) => e.lane === "hat.open").map(moment)),
+  )
+  const drumEvents = all
+    .flatMap((c) => c.drumEvents)
+    .filter((e) => inside(e) && !(e.lane === "hat" && opened.has(moment(e))))
   events.sort((a, b) => a.secStart - b.secStart)
   drumEvents.sort((a, b) => a.secStart - b.secStart)
   // The grid follows the longest sequence, then this block's own bars after it.

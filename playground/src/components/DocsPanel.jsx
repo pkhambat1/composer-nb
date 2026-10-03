@@ -178,6 +178,15 @@ play chords: verse verse
 
 Lines play together, so two drums on the same step is two lines with a hit in the same place.
 
+An open hi-hat rings until the next hi-hat hit closes it, like a real one. It also replaces a closed hit at the same moment, so the \`hat\` line can keep going under it:
+
+\`\`\`
+play {
+  hat: loop X-x-
+  hat.open: ------X-
+}
+\`\`\`
+
 ## Steps
 
 A row of steps, one character each. Each step lasts one \`step\` (a sixteenth note unless you change it).
