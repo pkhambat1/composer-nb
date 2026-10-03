@@ -56,3 +56,11 @@ For each release:
 2. Create a GitHub release with a tag that matches, like `v0.1.0`.
 
 The workflow builds the widget and the package, checks that the tag matches the version, and uploads it to PyPI.
+
+## Releasing the playground
+
+The playground is a static site on [Vercel](https://vercel.com), built from this repository. Its build settings are in [`vercel.json`](vercel.json): it builds the `playground` workspace and serves `playground/dist`.
+
+One-time setup, on [vercel.com/new](https://vercel.com/new): import the `pkhambat1/composer-nb` repository and deploy it, leaving the root directory and build settings as they are.
+
+After that there is nothing to do for each release. Every merge to `main` deploys the playground, and every pull request gets a preview link.
