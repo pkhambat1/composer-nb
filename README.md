@@ -3,12 +3,19 @@
 A small language for chords and drums, and a notebook to hear them in.
 
 ```
--- what happens now
-time: 7/8
-crash: 1|.|.
-ride.bell: x..
-kick: x..x...
-snare: ....x..
+// what happens now: crash once, groove twice
+time 7 over 8
+
+groove = 3 bars {
+  kick: loop x--x---
+  snare: loop ----x--
+  ride.bell: loop x--
+}
+
+play {
+  crash: 1
+  groove * 2
+}
 ```
 
 ## What's here
