@@ -36,16 +36,16 @@ describe("capo needs a guitar", () => {
     expect(firstError("capo 2\nplay chords: C")).toMatch(
       /capo only works on guitar. Add sound guitar/,
     )
-    expect(firstError("pattern v {\n  capo 2\n  chords: C\n}\nplay v")).toMatch(
+    expect(firstError("v = {\n  capo 2\n  chords: C\n}\nplay v")).toMatch(
       /capo only works on guitar/,
     )
   })
 
   it("accepts a capo when the chords play on guitar", () => {
     expect(parseSource("sound guitar\ncapo 2\nplay chords: C").errors).toEqual([])
-    expect(
-      parseSource("pattern v {\n  sound guitar\n  capo 2\n  chords: C\n}\nplay v").errors,
-    ).toEqual([])
+    expect(parseSource("v = {\n  sound guitar\n  capo 2\n  chords: C\n}\nplay v").errors).toEqual(
+      [],
+    )
   })
 
   it("doesn't mind capo 0", () => {

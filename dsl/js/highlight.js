@@ -13,6 +13,7 @@ import { isRoman } from "./chords.js"
 const ROMAN_RE = /^([#b])?(VII|VI|IV|V|III|II|I|vii|vi|iv|v|iii|ii|i)([°oø]?)(.*)$/
 const STEPS_RE = /^[-xXgdD]+$/
 const NAME_RE = /^[A-Za-z][A-Za-z0-9]*$/
+const TRACK_RE = /^[A-Za-z][A-Za-z0-9]*(?:\.[A-Za-z0-9]+)?\s*:/
 
 const part = (c, s) => ({ c, s })
 
@@ -164,15 +165,8 @@ function line(code) {
     // } * 2: what follows a block is more to play in a row
     out.push(part("tk-punct", "}"), ...names(body.slice(1)))
   } else if (word === "pattern" && /^(\s|$)/.test(after)) {
-    // pattern groove 3 bars {
-    const m = /^(\s+)([A-Za-z][A-Za-z0-9]*)?(\s*)(.*)$/.exec(after) || []
-    out.push(part("tk-directive-key", word), part(null, m[1] || ""))
-    if (m[2]) out.push(part("tk-word", m[2]))
-    out.push(part(null, m[3] || ""))
-    const len = length(m[4] || "")
-    out.push(...len.parts)
-    if (len.rest.startsWith("{")) out.push(...braces(len.rest))
-    else if (len.rest) out.push(part("tk-error", len.rest))
+    // pattern groove {: the old way to name a block (groove = { now)
+    out.push(part("tk-error", word), ...names(after))
   } else if (word === "play" && /^(\s|$)/.test(after)) {
     // play groove * 2, play 3 bars { ... }, play kick: x--x
     const space = /^\s*/.exec(after)[0]
@@ -195,12 +189,15 @@ function line(code) {
       )
     }
   } else if (word && /^\s*=/.test(after)) {
-    // verse = Am E7|G D: a variable
-    const m = /^(\s*)(=)(.*)$/.exec(after)
+    // verse = Am E7|G D names chords or steps; groove = 3 bars { ... } names a block
+    const m = /^(\s*)(=)(\s*)(.*)$/.exec(after)
     const reserved =
       SETTINGS.includes(word) || PARTS.includes(word) || word === "play" || word === "pattern"
     out.push(part(reserved ? "tk-error" : "tk-word", word), part(null, m[1]), part("tk-punct", "="))
-    out.push(...(m[3].includes("{") ? [part("tk-error", m[3])] : values(m[3], "word")))
+    out.push(part(null, m[3]))
+    const len = length(m[4])
+    const block = len.parts.length || m[4].includes("{") || TRACK_RE.test(m[4])
+    out.push(...(block ? [...len.parts, ...playable(len.rest)] : values(m[4], "word")))
   } else out.push(...playable(body))
   return out
 }
