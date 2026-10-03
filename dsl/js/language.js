@@ -9,8 +9,8 @@
      kick: x--x---            inside braces, an instrument and what it plays. The colon
                               only ever means this. A drum takes steps (or beats: 1 2& 3),
                               chords: takes chords. Lines play together, so two drums on
-                              one step is two lines, and a drum can have more than one
-                              line: they play as layers of it.
+                              one step is two lines. Each instrument has one line in a
+                              block; to layer a drum, its line takes a block of steps.
      play { }                 plays what's after it, a pattern or one line, and gives one
                               output with a player and a drum grid. Nothing plays unless
                               it's inside a play.
@@ -24,6 +24,10 @@
    times.
    Every number is arithmetic: (1+2) bars groove, tempo 60*2. So * and / only ever do
    arithmetic, and a time is two numbers (7 over 8), not a fraction.
+   { } is a block: what's in it evaluates to one value, played together. Usually that's a
+   pattern; after a drum's colon it's that drum's steps, one layer a line, which repeat
+   until they line up again. In a block, where two lines hit the same drum at the same
+   moment, the lower line wins, and a rest never does.
    What's set or named inside braces stays inside. // starts a comment. Blank lines and
    indentation mean nothing. Settings and names carry on into later cells.
    Pure (no audio), so the notebook can also use it to pass state from cell to cell. */
@@ -103,6 +107,11 @@ const OLD_KIT = {
   "high tom": "tom",
   "low tom": "tom",
 }
+// A block written inside a line: {#1} on the line, and the block in the line's `blocks`.
+const BLOCK_KEY = /^\{#\d+\}$/
+const CHORDS_BLOCK =
+  "Chords play one at a time, so they can't be layered in a block. Put them on one line: chords: Am F|C G"
+
 const LINE_SHAPES =
   "Each line is a setting (tempo 90), a name with its type (chords verse = Am F, " +
   "pattern groove = { ... }), play, or inside braces an instrument and what it plays " +
@@ -456,7 +465,7 @@ const CHORD_MARKS = ["|", "-", "_", "%"]
 
 // steps name = X-x-, chords name = Am E7|G D: steps or chords to hand to an instrument.
 // What's written has to be the type that's declared.
-function defineWord(type, name, value, ln, state, err) {
+function defineWord(type, name, value, ln, state, err, blocks = null) {
   const problem = nameProblem(name, value)
   if (problem) return err(ln, problem)
   if (name !== name.toLowerCase()) {
@@ -476,8 +485,14 @@ function defineWord(type, name, value, ln, state, err) {
   const tokens = []
   for (const t of tokenize(value)) {
     const w = state.words[t]
-    if (w && w.type !== type) return err(ln, `${t} is ${w.type}, so it can't go in ${type}`)
-    if (w) tokens.push(...(type === "steps" ? w.tokens : ["|", ...w.tokens, "|"]))
+    if (blocks?.[t]) {
+      // steps ghosts = { ... }: a block of steps is steps
+      if (type !== "steps") return err(ln, CHORDS_BLOCK)
+      const run = stepBlock(blocks[t], state, err)
+      if (run == null) return
+      tokens.push(run)
+    } else if (w && w.type !== type) return err(ln, `${t} is ${w.type}, so it can't go in ${type}`)
+    else if (w) tokens.push(...(type === "steps" ? w.tokens : ["|", ...w.tokens, "|"]))
     else if (state.sections[t]) {
       return err(ln, `${t} is a pattern, so it can't go in ${type}`)
     } else if (t === "loop") {
@@ -534,11 +549,28 @@ function patternText(value) {
   return !!track && !/\s/.test(track[1])
 }
 
+// Whether everything in a block is steps, or names of steps: a drum's block of layers.
+function holdsSteps(block, st) {
+  return block.lines.every((l) =>
+    tokenize(l.text).every((t) =>
+      l.blocks?.[t] ? holdsSteps(l.blocks[t], st) : isStepRun(t) || st.words[t]?.type === "steps",
+    ),
+  )
+}
+
 // What a value is, from how it's written: a pattern (braces, a length, an instrument's
-// line, or other patterns' names), steps or chords.
-function shapeOf(value, st) {
-  if (patternText(value)) return "pattern"
+// line, or other patterns' names), steps or chords. Braces holding steps are steps.
+function shapeOf(value, st, blocks = null) {
   const tokens = tokenize(value)
+  if (
+    tokens.some((t) => blocks?.[t]) &&
+    tokens.every((t) =>
+      blocks?.[t] ? holdsSteps(blocks[t], st) : isStepRun(t) || st.words[t]?.type === "steps",
+    )
+  ) {
+    return "steps"
+  }
+  if (patternText(value)) return "pattern"
   if (tokens.some((t) => st.sections[t])) return "pattern"
   const key = parseKey(st.key)
   const steps = tokens.every((t) => isStepRun(t) || st.words[t]?.type === "steps")
@@ -581,7 +613,9 @@ function classifyDecl({ type, name, value }, { ln, blocks }, err, st) {
     err(ln, `${type ? type + " " : ""}${name} = needs something after the =`)
     return null
   }
-  const shape = shapeOf(value, st)
+  const shape = shapeOf(value, st, blocks)
+  // How the value reads in a message, with its blocks as { ... }
+  const shown = value.replace(/\{#\d+\}/g, "{ ... }").replace(/\s+/g, " ")
   if (!type) {
     if (!patternText(value)) {
       if (SETTINGS.includes(lower)) {
@@ -610,25 +644,35 @@ function classifyDecl({ type, name, value }, { ln, blocks }, err, st) {
       return null
     }
     // The name still gets defined, so one missing type is one message.
-    const shown = value.replace(/\{#\d+\}/g, "{ ... }").replace(/\s+/g, " ")
     err(ln, `Say what ${name} is. Put its type in front: ${shape} ${name} = ${shown}`)
     type = shape
   } else if (type === "pattern" && shape !== "pattern") {
     const line = shape === "steps" ? "kick" : "chords"
     err(
       ln,
-      `${value} is ${shape}, not a pattern. Write ${shape} ${name} = ${value}, ` +
-        `or give them an instrument: pattern ${name} = ${line}: ${value}`,
+      `${shown} is ${shape}, not a pattern. Write ${shape} ${name} = ${shown}, ` +
+        `or give them an instrument: pattern ${name} = ${line}: ${shown}`,
     )
     return null
-  } else if (type !== "pattern" && patternText(value)) {
+  } else if (
+    type === "chords" &&
+    !lengthPrefix(value).has &&
+    tokenize(value).some((t) => blocks?.[t]) &&
+    tokenize(value).every(
+      (t) => !blocks?.[t] || !blocks[t].lines.some((l) => TRACK_RE.test(l.text)),
+    )
+  ) {
+    // chords verse = { ... } holding chords, not instruments' lines
+    err(ln, CHORDS_BLOCK)
+    return null
+  } else if (type !== shape && patternText(value)) {
     // Anything else that isn't the declared type is said more exactly by defineWord.
     err(ln, `That's a pattern, not ${type}. Write pattern ${name} = ...`)
     return null
   }
   return type === "pattern"
     ? { kind: "blockdef", ln, name, value, blocks }
-    : { kind: "word", ln, type, name, value }
+    : { kind: "word", ln, type, name, value, blocks }
 }
 
 // Sorts one line (not play) into a setting, a word, a named pattern ("blockdef"), an
@@ -725,15 +769,15 @@ function classify({ ln, text, blocks }, err, st) {
       return null
     }
     const [drum, art = "hit"] = name.split(".")
-    return { kind: "part", ln, name, value, drum, art }
+    return { kind: "part", ln, name, value, drum, art, blocks }
   }
   err(ln, unknownInstrument(name))
   return null
 }
 
 // ---------------------------------------------------------------------------
-// Parts: what one line plays. Each becomes a pattern that plays once over its own
-// length, or, with loop, over and over until what it's in ends.
+// Parts: what one line plays. In a pattern it repeats until the pattern ends; in a play it
+// plays once.
 // ---------------------------------------------------------------------------
 
 function chordSlot(tok, part, st, key, err) {
@@ -887,7 +931,7 @@ function hit(part, tick, mods, kit) {
 function pushHit(out, part, tick, mods, doubleGap, kit) {
   const ev = hit(part, tick, mods, kit)
   out.push(ev)
-  if (mods.double) out.push({ ...ev, tick: tick + doubleGap, hidden: true })
+  if (mods.double) out.push({ ...ev, tick: tick + doubleGap, hidden: true, gap: doubleGap })
 }
 
 // Beats: crash: 1, snare: 2 4|2 4& — positions in bars, counted 1 e & a.
@@ -928,9 +972,10 @@ function beatPattern(part, tokens, st, barTicks, err) {
         fail("Use - for an empty bar: 1|-|-")
       } else if (tok === "-" || tok === "%") {
         fail(`${tok} stands for a whole bar, so it goes between bar lines on its own: 1 3|${tok}`)
-      } else if (isStepRun(tok)) {
+      } else if (isStepRun(tok) || BLOCK_KEY.test(tok)) {
         fail(
-          `"${tok}" is steps, but this line lists beats. Use beats (1 2& 3) or steps (x-x-), not both`,
+          `${BLOCK_KEY.test(tok) ? "This line lists beats, so a block of steps can't go on it" : `"${tok}" is steps, but this line lists beats`}. ` +
+            "Use beats (1 2& 3) or steps (x-x-), not both",
         )
       } else if (st.words[tok]) {
         fail(`${tok} is ${st.words[tok].type}, which don't go in a list of beats`)
@@ -1017,6 +1062,13 @@ function stepPattern(part, tokens, st, err) {
     }
   }
   for (const tok of tokens) {
+    const block = part.blocks?.[tok]
+    if (block) {
+      const run = stepBlock(block, st, err, part)
+      if (run == null) ok = false
+      else addRun(run)
+      continue
+    }
     const w = st.words[tok]
     if (!w) {
       addRun(tok)
@@ -1049,6 +1101,73 @@ function stepPattern(part, tokens, st, err) {
   }
 }
 
+// A drum's block of steps, one layer a line: snare.ghost: { --x- / ------------ddd- }.
+// The layers play together, each repeating until they all line up again, and where two
+// hit the same step the lower line wins. A rest never does, so a layer only changes the
+// steps it hits. Returns the steps as one run (--x---x---x-ddd-), or null after saying
+// what's wrong. With `part`, each layer is checked as that drum's steps, on its own line.
+function stepBlock(block, st, err, part = null) {
+  const layers = []
+  for (const line of block.lines) layers.push(stepLayer(line, st, err, part))
+  if (layers.includes(null)) return null
+  const length = layers.reduce((a, r) => lcm(a, r.length), 1)
+  if (length * st.stepTicks > MAX_BARS * meterOf(st).barTicks) {
+    err(block.ln, `This block's layers only line up again after more than ${MAX_BARS} bars`)
+    return null
+  }
+  let run = ""
+  for (let k = 0; k < length; k++) {
+    let step = "-"
+    for (const r of layers) if (r[k % r.length] !== "-") step = r[k % r.length]
+    run += step
+  }
+  return run
+}
+
+// One layer in a block of steps: steps, names of steps or blocks of steps, in a row.
+function stepLayer(line, st, err, part) {
+  const fail = (msg) => {
+    err(line.ln, msg)
+    return null
+  }
+  if (TRACK_RE.test(line.text)) {
+    return fail(
+      `A block of steps holds steps, one layer a line, like --x-. ${line.text} is an instrument's line, which goes in a pattern`,
+    )
+  }
+  const check = (run, where) => {
+    if (!part) return true
+    const here = { ...part, ln: line.ln }
+    return [...run].every((c) => stepMods(c, here, err, where) !== undefined)
+  }
+  let run = ""
+  for (const tok of tokenize(line.text)) {
+    const w = st.words[tok]
+    if (line.blocks?.[tok]) {
+      const inner = stepBlock(line.blocks[tok], st, err, part)
+      if (inner == null) return null
+      run += inner
+    } else if (w?.type === "steps") {
+      if (!check(w.tokens.join(""), ` (in ${tok})`)) return null
+      run += w.tokens.join("")
+    } else if (isStepRun(tok)) {
+      if (!check(tok, "")) return null
+      run += tok
+    } else if (w) {
+      return fail(`${tok} is ${w.type}, so it can't be a layer of steps`)
+    } else if (st.sections[tok]) {
+      return fail(`${tok} is a pattern, so it can't be a layer of steps`)
+    } else if (tok === "loop") {
+      return fail("loop isn't needed: a block's layers repeat until they line up again")
+    } else if (/^\d/.test(tok) || tok === "|" || tok === "%") {
+      return fail("A block of steps holds steps, not beats: --x- rather than 2 4")
+    } else if (/^[a-z][a-z0-9]+$/.test(tok)) {
+      return fail(`"${tok}" isn't defined above. Name it first: steps ${tok} = x-x-`)
+    } else return fail(`"${tok}" isn't a step. ${STEP_HELP}`)
+  }
+  return run
+}
+
 // One instrument's line. `repeats` says whether it's in a pattern, where lines repeat,
 // for saying what to write instead of loop.
 function readPart(part, st, barTicks, err, repeats) {
@@ -1062,6 +1181,10 @@ function readPart(part, st, barTicks, err, repeats) {
       part.ln,
       "A length goes in front of what's played, not on one line: play 2 bars { ... }, or pattern groove = 2 bars {",
     )
+    return null
+  }
+  if (part.name === "chords" && tokens.some((t) => BLOCK_KEY.test(t))) {
+    err(part.ln, CHORDS_BLOCK)
     return null
   }
   let pattern
@@ -1203,8 +1326,11 @@ function layer(parts, once, repeated, st, bars, err, ctx) {
   const own = read.map((p) => {
     const line = { ln: p.part.ln, events: [], drumEvents: [], spans: [] }
     for (const e of p.expand(totalTicks, ctx.repeats)) {
-      if (p.kind === "drum") line.drumEvents.push({ ...e, secStart: e.tick * secPerTick })
-      else line.events.push({ ...e, secStart: e.tick * secPerTick, secDur: e.ticks * secPerTick })
+      if (p.kind === "drum") {
+        // A double's second stroke keeps how far it is from the first, to go with it.
+        const gap = e.gap ? { gapSec: e.gap * secPerTick } : {}
+        line.drumEvents.push({ ...e, secStart: e.tick * secPerTick, ...gap })
+      } else line.events.push({ ...e, secStart: e.tick * secPerTick, secDur: e.ticks * secPerTick })
     }
     return line
   })
@@ -1219,18 +1345,19 @@ function layer(parts, once, repeated, st, bars, err, ctx) {
   const opened = new Set(
     all.flatMap((c) => c.drumEvents.filter((e) => e.lane === "hat.open").map(moment)),
   )
-  // A drum's lines are layers of it: where two hit at the same moment, that's one hit, the
-  // louder.
-  const loudest = new Map()
-  for (const e of all.flatMap((c) => c.drumEvents)) {
-    if (!inside(e) || (e.lane === "hat" && opened.has(moment(e)))) continue
-    const at = `${e.lane} ${moment(e)}`
-    const had = loudest.get(at)
-    if (!had || e.vel > had.vel || (e.vel === had.vel && had.hidden && !e.hidden)) {
-      loudest.set(at, e)
+  // Where two lines hit the same drum at the same moment, the lower line wins, as in a
+  // block of steps. A rest never does, and a double's second stroke goes with its first.
+  const hits = new Map() // drum and moment → the line that won, and its strokes there
+  all.forEach((c, from) => {
+    for (const e of c.drumEvents) {
+      if (!inside(e) || (e.lane === "hat" && opened.has(moment(e)))) continue
+      const at = `${e.lane} ${Math.round((e.secStart - (e.gapSec || 0)) * 1e6)}`
+      const had = hits.get(at)
+      if (had?.from === from) had.strokes.push(e)
+      else hits.set(at, { from, strokes: [e] })
     }
-  }
-  const drumEvents = [...loudest.values()]
+  })
+  const drumEvents = [...hits.values()].flatMap((h) => h.strokes)
   events.sort((a, b) => a.secStart - b.secStart)
   drumEvents.sort((a, b) => a.secStart - b.secStart)
   // The grid follows the longest sequence, then this block's own bars after it.
@@ -1257,7 +1384,7 @@ function readLines(lines, st, err, named) {
     if (!l) continue
     read.push(l)
     if (l.kind === "setting") applySetting(l.name, l.value, l.ln, st, err)
-    else if (l.kind === "word") defineWord(l.type, l.name, l.value, l.ln, st, err)
+    else if (l.kind === "word") defineWord(l.type, l.name, l.value, l.ln, st, err, l.blocks)
     else if (l.kind === "blockdef") {
       const sec = defineBlock(l, st, err)
       if (sec && named) named(sec)
@@ -1269,10 +1396,12 @@ function readLines(lines, st, err, named) {
 // What something that repeats is called when it doesn't fit.
 const loopName = (it) => it.name || (it.items ? "This group" : "This pattern")
 
-// A drum can have several lines in a block, which play as layers of it. Chords can't:
-// they play one at a time.
-const secondChords = (where) =>
-  `chords already has a line ${where}. Chords play one at a time, so put them all on one line`
+// Each instrument has one line in a block. A drum's layers go in a block on that line;
+// chords play one at a time.
+const secondLine = (name, where) =>
+  name === "chords"
+    ? `chords already has a line ${where}. Chords play one at a time, so put them all on one line`
+    : `${name} already has a line ${where}. To layer it, put its lines in a block: ${name}: { ... }`
 
 // Lines in braces are one block: they play together, and what's defined inside stays
 // inside. `bars` is the length written in front of the block, if any. In a pattern every
@@ -1283,8 +1412,8 @@ function blockClip(lines, state, err, ctx, stack, bars = 0) {
   const parts = []
   for (const l of read) {
     if (l.kind !== "part") continue
-    if (l.name === "chords" && parts.some((p) => p.name === "chords")) {
-      err(l.ln, secondChords(ctx.where))
+    if (parts.some((p) => p.name === l.name)) {
+      err(l.ln, secondLine(l.name, ctx.where))
       continue
     }
     parts.push(l)
@@ -1341,8 +1470,8 @@ function checkSection(sec, state, err, owner = sec.anon ? null : sec.name) {
   const read = readLines(sec.lines, st, err, (named) => checkSection(named, st, err))
   const parts = read.filter((l) => l.kind === "part")
   parts.forEach((l, i) => {
-    if (l.name === "chords" && parts.slice(0, i).some((p) => p.name === "chords")) {
-      err(l.ln, secondChords(`in ${where}`))
+    if (parts.slice(0, i).some((p) => p.name === l.name)) {
+      err(l.ln, secondLine(l.name, `in ${where}`))
     }
     readPart(l, st, meterOf(st).barTicks, err, true)
   })
@@ -1585,8 +1714,10 @@ export function parseCell(src, inherited = initialState()) {
     let dropped = false // whether a line was left out as a mistake
     const flush = () => {
       const t = cur ? cur.text.trim() : ""
-      if (t && /^play(\s|$)/.test(t)) err(cur.ln, "play goes at the top, not inside braces")
-      else if (t) body.push({ ...cur, text: t })
+      if (t && /^play(\s|$)/.test(t)) {
+        err(cur.ln, "play goes at the top, not inside braces")
+        dropped = true
+      } else if (t) body.push({ ...cur, text: t })
       cur = null
     }
     for (;;) {
@@ -1626,18 +1757,9 @@ export function parseCell(src, inherited = initialState()) {
       if (/^play(\s|$)/.test(head)) {
         err(cur.ln, "play goes at the top, not inside braces")
         cur.text = ""
+        dropped = true
       } else if (/^(pattern|section|def)(\s|$)/.test(head) && !TYPED_RE.test(head)) {
         err(cur.ln, patternHint(head))
-        cur.text = ""
-      } else if (/:$/.test(head)) {
-        const name = head.slice(0, -1).trim()
-        err(
-          cur.ln,
-          LANES.includes(name)
-            ? `A drum's line can't open braces. To layer ${name}, give it another line: ` +
-                `${name}: x--- on one line and ${name}: --x- on the next`
-            : `Braces can't go after ${head}. A pattern goes on its own line: { kick: x--- }`,
-        )
         cur.text = ""
         dropped = true
       } else if (!inner.body.length) {
@@ -1821,7 +1943,7 @@ export function parseCell(src, inherited = initialState()) {
       }
       const l = classifyDecl(decl, { ln, blocks }, err, state)
       if (!l) continue
-      if (l.kind === "word") defineWord(l.type, l.name, l.value, ln, state, err)
+      if (l.kind === "word") defineWord(l.type, l.name, l.value, ln, state, err, l.blocks)
       else {
         const sec = defineBlock(l, state, err)
         if (sec) checkSection(sec, state, err)

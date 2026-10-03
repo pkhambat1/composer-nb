@@ -68,6 +68,21 @@ def test_instrument_lines_offer_names_of_their_type():
     assert texts(cell + "chords: p") == []
 
 
+def test_a_drums_block_offers_names_of_steps():
+    cell = "%%music\nsteps pair = X-x-\nchords verse = Am F\npattern groove = {\n  snare.ghost: {\n    "
+    assert texts(cell) == ["pair"]
+    assert texts(cell + "p") == ["pair"]
+    assert texts(cell + "--x-\n    {\n      ") == ["pair"]  # a block inside it holds steps too
+    assert "kick: " in texts(cell + "--x-\n  }\n  ")  # closed: back to the pattern's lines
+    assert texts("%%music\nsteps pair = X-x-\nsteps ghosts = {\n  ") == ["pair"]
+    assert texts("%%music\nsteps pair = X-x-\nplay hat: x--- {\n  ") == ["pair"]
+
+
+def test_a_name_is_not_offered_inside_its_own_braces():
+    assert "groove" not in texts("%%music\npattern groove = {\n  ")
+    assert "groove" in texts("%%music\npattern groove = {\n  kick: x\n}\nplay ")
+
+
 def test_play_offers_patterns_and_lengths():
     cell = "%%music\nsteps pair = x-x-\npattern groove = { kick: x--x }\n"
     assert texts(cell + "play ") == ["groove", *[p + ": " for p in completer.PARTS]]

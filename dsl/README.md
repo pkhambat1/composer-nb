@@ -145,7 +145,18 @@ play 2 bars {
 }
 ```
 
-A drum can have more than one line. They're layers of it, each repeating at its own length, and where two hit at the same moment that's one hit, the louder. So the snare's ghost notes can be a steady line and a burst: `snare.ghost: --x-` and `snare.ghost: ------------dd--`.
+Each drum has one line in a block. To layer it, its line takes a block of steps, one layer a line. The layers repeat until they line up again, and where two hit the same step, the lower line wins. A rest never wins, so a layer only changes the steps it hits:
+
+```
+pattern ghosts = {
+  snare.ghost: {
+    --x-
+    ------------ddd-
+  }
+}
+```
+
+A block of steps is steps, so it can be named too: `steps ghosts = { ... }`. Where patterns played together hit the same drum at once, the lower line wins too.
 
 An open hi-hat rings until the next hi-hat hit closes it (a stick on `hat`, or the foot on `hat.pedal`), and replaces a closed hit at the same moment, so `hat: X-x-` can keep going under `hat.open: ------X-`.
 

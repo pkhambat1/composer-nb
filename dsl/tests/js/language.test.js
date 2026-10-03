@@ -82,8 +82,10 @@ describe("lines", () => {
     expect(anyError(play("chords: Am|F", "|C G"))).toMatch(/end of the line above/)
   })
 
-  it("lets a drum have several lines, and chords just one", () => {
-    expect(parseSource(play("kick: x", "kick: x-")).errors).toEqual([])
+  it("gives each instrument one line in a block", () => {
+    expect(firstError(play("kick: x", "kick: x-"))).toMatch(
+      /kick already has a line in this play. To layer it, put its lines in a block: kick: \{ \.\.\. \}/,
+    )
     expect(firstError(play("chords: Am", "chords: F"))).toMatch(
       /chords already has a line in this play. Chords play one at a time, so put them all on one line/,
     )
@@ -779,14 +781,8 @@ describe("blocks without a name", () => {
       /These braces have nothing in them/,
     )
     expect(firstError("play {\n  { tempo 90 }\n}")).toMatch(/Nothing to play in this pattern/)
-    expect(anyError("play {\n  kick: { x }\n}")).toMatch(
-      /A drum's line can't open braces. To layer kick, give it another line: kick: x--- on one line and kick: --x- on the next/,
-    )
-    expect(allErrors("pattern g = {\n  snare.ghost: { --x-- }\n}")).toEqual([
-      "A drum's line can't open braces. To layer snare.ghost, give it another line: snare.ghost: x--- on one line and snare.ghost: --x- on the next",
-    ])
     expect(anyError("play {\n  chords: { Am }\n}")).toMatch(
-      /Braces can't go after chords:\. A pattern goes/,
+      /Chords play one at a time, so they can't be layered in a block/,
     )
     expect(firstError("play {\n  groove {\n    kick: x\n  }\n}")).toMatch(/"groove" isn't defined/)
     expect(anyError("play {\n  pattern b = {\n    kick: x\n  }\n}")).toMatch(
@@ -963,20 +959,70 @@ describe("one instrument per line", () => {
     expect(hits(o, "ride.bell")).toHaveLength(14)
   })
 
-  it("layers a drum's lines, each repeating at its own length", () => {
+  it("layers a drum in a block of steps, each layer repeating until they line up", () => {
     const o = parseSource(
-      "pattern g = {\n  snare.ghost: --x-\n  snare.ghost: ------------dd--\n}\nplay g",
+      "pattern g = {\n  snare.ghost: {\n    --x-\n    ------------dd--\n  }\n}\nplay g",
     ).outputs[0]
     expect(o.durSec).toBe(2)
     expect(hits(o, "snare.ghost").map((e) => e.secStart / 0.125)).toEqual([2, 6, 10, 12, 13, 14])
   })
 
-  it("hits a drum once where its lines meet, as loud as the louder", () => {
-    const o = parseSource(play("snare: x---x---", "snare: X-------")).outputs[0]
-    expect(hits(o, "snare").map((e) => [e.secStart / 0.125, e.accent])).toEqual([
-      [0, true],
-      [4, false],
+  it("lets a lower layer win where two hit the same step, and never a rest", () => {
+    expect(sound("play snare: {\n  x-x-\n  --X-\n}")).toBe(sound("play snare: x-X-"))
+    expect(sound("play snare: {\n  X-x-\n  x---\n}")).toBe(sound("play snare: x-x-"))
+    // A double's second stroke goes with its first.
+    expect(sound("play snare: {\n  d---\n  x---\n}")).toBe(sound("play snare: x---"))
+    expect(sound("play snare: {\n  x---\n  d---\n}")).toBe(sound("play snare: d---"))
+  })
+
+  it("makes a block of steps steps, to name, put in a row or nest", () => {
+    const want = sound("play snare.ghost: --x---x---x-ddx-")
+    expect(sound("play snare.ghost: {\n  --x-\n  ------------dd--\n}")).toBe(want)
+    expect(sound("steps ghosts = {\n  --x-\n  ------------dd--\n}\nplay snare.ghost: ghosts")).toBe(
+      want,
+    )
+    expect(sound("play hat: x--- {\n  x-\n  -x\n}")).toBe(sound("play hat: x---xx"))
+    expect(sound("steps pair = x-\nplay hat: {\n  {\n    pair\n    -x\n  }\n  ----\n}")).toBe(
+      sound("play hat: xxxx"),
+    )
+  })
+
+  it("lets a lower line win where two lines hit the same drum at once", () => {
+    const below = parseSource(play("{ snare: X--- }", "snare: x-x-")).outputs[0]
+    expect(hits(below, "snare").map((e) => [e.secStart / 0.125, e.accent])).toEqual([
+      [0, false],
+      [2, false],
     ])
+    const above = parseSource(play("snare: x-x-", "{ snare: X--- }")).outputs[0]
+    expect(hits(above, "snare").map((e) => [e.secStart / 0.125, e.accent])).toEqual([
+      [0, true],
+      [2, false],
+    ])
+  })
+
+  it("explains what a block of steps can't hold", () => {
+    expect(firstError("play snare: {\n  kick: x---\n}")).toMatch(
+      /A block of steps holds steps, one layer a line, like --x-. kick: x--- is an instrument's line/,
+    )
+    expect(firstError("play snare: {\n  2 4\n}")).toMatch(/holds steps, not beats/)
+    expect(firstError("play snare: 2 4 {\n  x-\n}")).toMatch(
+      /This line lists beats, so a block of steps can't go on it/,
+    )
+    // said on the layer's own line
+    expect(parseSource("play snare.ghost: {\n  --x-\n  --g-\n}").errors).toEqual([
+      { line: 3, msg: '"g": every hit on snare.ghost is a ghost note already, so write x' },
+    ])
+    expect(firstError("play chords: {\n  Am F\n}")).toMatch(
+      /Chords play one at a time, so they can't be layered in a block/,
+    )
+    expect(firstError("chords verse = {\n  Am F\n}")).toMatch(/Chords play one at a time/)
+    expect(firstError("ghosts = {\n  --x-\n}")).toMatch(
+      /Put its type in front: steps ghosts = \{ \.\.\. \}/,
+    )
+    expect(firstError("pattern g = {\n  --x-\n}")).toMatch(/\{ \.\.\. \} is steps, not a pattern/)
+    expect(
+      firstError("play kick: {\n  x------\n  x--------\n  x----------\n  x------------\n}"),
+    ).toMatch(/This block's layers only line up again after more than 64 bars/)
   })
 
   it("has no kit line that names drums by letter", () => {

@@ -73,7 +73,7 @@ A name only holds its type, and only goes where that type goes. Chords on a drum
 |--------|---------|
 | \`:\` | This instrument plays this |
 | \`=\` | This name is this |
-| \`{ }\` | These lines play together |
+| \`{ }\` | A **block**: its lines play together as one value. Usually a pattern; after a drum's colon, that drum's steps |
 | \`( )\` | A group: \`8 bars (verse chorus)\` |
 | \`*\` \`/\` | Arithmetic, between two numbers. In \`C/E\` the slash is part of a chord's name |
 
@@ -84,7 +84,7 @@ A name only holds its type, and only goes where that type goes. Chords on a drum
 | To repeat something | Put it in a pattern. Everything in a pattern repeats until the pattern ends |
 | To play something once | Put it on a play's own line: \`crash: 1\` |
 | To say how long | A length in front of it: \`3 bars\`. In front of a pattern, it repeats the pattern for that long |
-| Two rhythms on one drum | A line for each: two \`snare.ghost:\` lines |
+| Two rhythms on one drum | A block of layers on its line: \`snare.ghost: { ... }\` |
 
 ## Nothing floats
 
@@ -178,20 +178,24 @@ play chords: verse verse
     group: "Language Reference",
     body: `# Drums
 
-## One drum per line
+## One line per drum
 
 \`kick\`, \`snare\`, \`hat\`, \`ride\`, \`crash\`, \`tom\` and \`floor\` (the floor tom) are the drums. A line says which one, and what follows the colon says when it's hit. Some drums have other sounds with lines of their own: \`ride.bell\`, \`hat.open\`, \`hat.pedal\`, \`snare.rim\` (a rimshot) and \`snare.ghost\` (the snare's ghost notes, so they can sit under its main line).
 
 Lines play together, so two drums on the same step is two lines with a hit in the same place.
 
-A drum can have more than one line. They're layers of it, and in a pattern each repeats at its own length. Where two of them hit at the same moment, that's one hit, the louder:
+Each drum has one line in a block. To layer it, its line takes a block of steps, one layer a line. The layers repeat until they line up again, and where two hit the same step, the lower line wins. A rest never wins, so a layer only changes the steps it hits:
 
 \`\`\`
 pattern ghosts = {
-  snare.ghost: --x-
-  snare.ghost: ------------dd--
+  snare.ghost: {
+    --x-
+    ------------ddd-
+  }
 }
 \`\`\`
+
+The ghost notes play on every \`&\`, and the burst at the end of the bar replaces the last one. A block of steps is steps, so it can be named too: \`steps ghosts = { ... }\`. Patterns played together work the same way: where two of their lines hit the same drum at once, the lower line wins.
 
 An open hi-hat rings until the next hi-hat hit closes it, like a real one, whether that's a stick on \`hat\` or the foot on \`hat.pedal\`. It also replaces a closed hit at the same moment, so the \`hat\` line can keep going under it:
 
