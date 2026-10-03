@@ -89,11 +89,14 @@ function values(text, kind) {
   )
 }
 
-// groove * 2 (verse chorus) * 3, 3 bars groove: names, counts and lengths.
+// groove * 2 (verse chorus) * 3, 3 bars groove, groove { snare: xxxx }: names, counts,
+// lengths and blocks without a name.
 function names(text) {
-  return pieces(text, /(\s+|[()*])/).map((p) => {
+  const open = text.indexOf("{")
+  if (open >= 0) return [...names(text.slice(0, open)), ...braces(text.slice(open))]
+  return pieces(text, /(\s+|[()*{}])/).map((p) => {
     if (/^\s+$/.test(p)) return part(null, p)
-    if (p === "(" || p === ")" || p === "*") return part("tk-punct", p)
+    if ("()*{}".includes(p)) return part("tk-punct", p)
     if (p === "bars" || p === "bar") return part("tk-directive-key", p)
     if (/^[\d./+-]+$/.test(p)) return part("tk-directive-val", p)
     return part(NAME_RE.test(p) ? "tk-word" : "tk-error", p)
@@ -135,12 +138,16 @@ function playable(text) {
 function braces(text) {
   const out = [part("tk-punct", "{")]
   const inner = text.slice(1)
-  const close = inner.lastIndexOf("}")
+  let close = -1
+  for (let i = 0, depth = 0; i < inner.length && close < 0; i++) {
+    if (inner[i] === "{") depth++
+    else if (inner[i] === "}" && depth-- === 0) close = i
+  }
   if (close < 0) return out.concat(inner.trim() ? line(inner) : [part(null, inner)])
   const body = inner.slice(0, close)
   out.push(...(body.trim() ? line(body) : [part(null, body)]), part("tk-punct", "}"))
-  const tail = inner.slice(close + 1)
-  if (tail) out.push(part(tail.trim() ? "tk-error" : null, tail))
+  // { ... } * 2: what follows a block is more to play in a row
+  out.push(...names(inner.slice(close + 1)))
   return out
 }
 
@@ -154,8 +161,8 @@ function line(code) {
   const after = body.slice(word.length)
 
   if (body.startsWith("}")) {
-    out.push(part("tk-punct", "}"))
-    if (body.length > 1) out.push(part(body.slice(1).trim() ? "tk-error" : null, body.slice(1)))
+    // } * 2: what follows a block is more to play in a row
+    out.push(part("tk-punct", "}"), ...names(body.slice(1)))
   } else if (word === "pattern" && /^(\s|$)/.test(after)) {
     // pattern groove 3 bars {
     const m = /^(\s+)([A-Za-z][A-Za-z0-9]*)?(\s*)(.*)$/.exec(after) || []
