@@ -1,6 +1,6 @@
 # composer-nb
 
-A small language for chords and drums, and a notebook to hear them in.
+A small language for chords and drums, and a notebook to hear them in. Try it at [composer-nb.vercel.app](https://composer-nb.vercel.app).
 
 ```
 // what happens now: crash once, the groove looping under it
@@ -61,6 +61,4 @@ The workflow builds the widget and the package, checks that the tag matches the 
 
 The playground is a static site on [Vercel](https://vercel.com), built from this repository. Its build settings are in [`vercel.json`](vercel.json): it builds the `playground` workspace and serves `playground/dist`.
 
-One-time setup, on [vercel.com/new](https://vercel.com/new): import the `pkhambat1/composer-nb` repository and deploy it, leaving the root directory and build settings as they are.
-
-After that there is nothing to do for each release. Every merge to `main` deploys the playground, and every pull request gets a preview link.
+The Vercel project is `composer-nb`, served at [composer-nb.vercel.app](https://composer-nb.vercel.app). There is nothing to do for each release: every merge to `main` deploys the playground, and every pull request gets a preview link.
