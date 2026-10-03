@@ -7,7 +7,7 @@
      .tk-ext, .tk-rest, .tk-slash, .tk-bass, .tk-beat, .tk-mod, .tk-step, .tk-step-acc,
      .tk-error
    Whitespace is kept exactly, so the layer lines up with the textarea under it. */
-import { KEYWORDS, MODIFIERS, PARTS, SETTINGS, TYPES } from "./language.js"
+import { KEYWORDS, LANES, MODIFIERS, PARTS, SETTINGS, TYPES } from "./language.js"
 import { isRoman } from "./chords.js"
 
 const ROMAN_RE = /^([#b])?(VII|VI|IV|V|III|II|I|vii|vi|iv|v|iii|ii|i)([°oø]?)(.*)$/
@@ -67,7 +67,9 @@ function stepRun(t) {
 // One token of what an instrument plays (or of what a steps or chords name holds).
 function valueToken(t, kind) {
   if (t === "|" || t === "%") return [part("tk-bar", t)]
-  if (t === "loop") return [part("tk-directive-key", t)]
+  if (t === "{" || t === "}") return [part("tk-punct", t)] // a drum's block of steps
+  // loop is gone: whether something repeats depends on where it is
+  if (t === "loop") return [part("tk-error", t)]
   if (t === "-" || t === "_") return [part("tk-rest", t)]
   if (kind !== "chord") {
     if (STEPS_RE.test(t)) return stepRun(t)
@@ -85,13 +87,13 @@ function pieces(text, re) {
 }
 
 function values(text, kind) {
-  return pieces(text, /(\s+|\|)/).flatMap((p) =>
+  return pieces(text, /(\s+|\||[{}])/).flatMap((p) =>
     /^\s+$/.test(p) ? [part(null, p)] : valueToken(p, kind),
   )
 }
 
-// intro verse, 6 bars loop (verse chorus), groove { snare: xxxx }: patterns' names,
-// lengths, loop and patterns without a name.
+// intro verse, 6 bars (verse chorus), groove { snare: xxxx }: patterns' names, lengths
+// and patterns without a name.
 function names(text) {
   const open = text.indexOf("{")
   if (open >= 0) return [...names(text.slice(0, open)), ...braces(text.slice(open))]
@@ -100,10 +102,12 @@ function names(text) {
     if (/^\s+$/.test(p)) return part(null, p)
     const wasNumber = number
     number = /^[\d./+-]+$/.test(p) || (number && p === "*")
-    // * only does arithmetic: 2*3 bars. After a name it used to repeat, and loop does now.
+    // * only does arithmetic: 2*3 bars. After a name it used to repeat; a length in front
+    // does that now, and loop is gone.
     if (p === "*") return part(wasNumber ? "tk-punct" : "tk-error", p)
     if ("(){}".includes(p)) return part("tk-punct", p)
-    if (p === "bars" || p === "bar" || p === "loop") return part("tk-directive-key", p)
+    if (p === "loop") return part("tk-error", p)
+    if (p === "bars" || p === "bar") return part("tk-directive-key", p)
     if (number) return part("tk-directive-val", p)
     return part(NAME_RE.test(p) ? "tk-word" : "tk-error", p)
   })
@@ -218,11 +222,31 @@ function line(code) {
   return out
 }
 
+// A line in a drum's block of steps: one layer.
+function layerLine(code) {
+  const lead = /^\s*/.exec(code)[0]
+  return [part(null, lead), ...values(code.slice(lead.length), "drum")]
+}
+
+// What a { holds, from the text in front of it on its line: a drum's steps after kick: or
+// steps name =, and inside another block of steps; otherwise lines.
+function opens(before, outer) {
+  if (outer === "steps") return "steps"
+  const track = /([A-Za-z][A-Za-z0-9]*(?:\.[A-Za-z0-9]+)?)\s*:[^:{}]*$/.exec(before)
+  if (track) return LANES.includes(track[1].toLowerCase()) ? "steps" : "lines"
+  return /^\s*steps\s+[A-Za-z][A-Za-z0-9]*\s*=[^{}]*$/.test(before) ? "steps" : "lines"
+}
+
 export function highlightMusic(src) {
+  const open = [] // what each block still open holds
   return src.split("\n").map((text) => {
     const cut = text.indexOf("//")
     const code = cut < 0 ? text : text.slice(0, cut)
-    const parts = line(code)
+    const parts = open[open.length - 1] === "steps" ? layerLine(code) : line(code)
+    for (let i = 0; i < code.length; i++) {
+      if (code[i] === "{") open.push(opens(code.slice(0, i), open[open.length - 1]))
+      else if (code[i] === "}") open.pop()
+    }
     if (cut >= 0) parts.push(part("tk-comment", text.slice(cut)))
     return parts.filter((p) => p.s !== "")
   })

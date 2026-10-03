@@ -28,9 +28,10 @@ A notebook for sketching music. In a **music cell**:
 
 - \`tempo 90\` is a setting: a reserved word and its value
 - \`steps pair = X-x-\`, \`chords verse = Am F|C G\` and \`pattern groove = { ... }\` are names, with their type in front
-- \`kick: x--x---\` inside braces is an instrument and what it plays, one instrument per line
+- \`kick: x--x---\` inside braces is an instrument and what it plays
 - \`play { ... }\` plays what's after it, a pattern or one line
-- \`loop\` is the one way to repeat, and a length like \`3 bars\` the one way to say how long
+- A pattern repeats everything in it until it ends, and a play's own lines play once
+- A length like \`3 bars\` is the one way to say how long, and in front of a pattern it repeats the pattern for that long
 
 Settings and names carry on into the cells below. \`//\` starts a comment.
 
@@ -38,18 +39,18 @@ Press **Shift+Enter** to run a cell, or **Run All** to run everything. The full 
     },
     {
       type: "music",
-      source: `// what happens now: crash once, the groove looping under it
+      source: `// what happens now: crash once, the groove repeating under it
 time 7 over 8
 
 pattern groove = 3 bars {
-  kick: loop x--x---
-  snare: loop ----x--
-  ride.bell: loop x--
+  kick: x--x---
+  snare: ----x--
+  ride.bell: x--
 }
 
 play 6 bars {
   crash: 1
-  loop groove
+  groove
 }`,
     },
     {

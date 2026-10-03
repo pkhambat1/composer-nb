@@ -28,6 +28,8 @@ DEF_RE = re.compile(r"^\s*(steps|chords|pattern)\s+([A-Za-z_]\w*)\s*=", re.M)
 # The instrument line the cursor is on: its name, then what's been written after the colon.
 PART_RE = re.compile(r"(?:^|[\s{])([a-z]+(?:\.[a-z]+)?):([^:{}]*)$")
 NUMBER_RE = re.compile(r"^\d+$|\)$")
+# What makes a { a drum's block of steps: kick: in front of it, or steps name =
+STEPS_OPENER_RE = re.compile(r"([a-z]+(?:\.[a-z]+)?)\s*:[^:{}]*$|^\s*steps\s+[A-Za-z_]\w*\s*=[^{}]*$")
 
 Option = Tuple[str, str]  # the text to insert and its kind, which picks the icon
 Names = Dict[str, List[str]]  # the names of each type
@@ -58,15 +60,31 @@ def _names(defined: str) -> Names:
     return {t: sorted(n for n, given in types.items() if given == t) for t in TYPES}
 
 
+def _open_blocks(text: str) -> List[Tuple[str, Optional[str]]]:
+    """The blocks still open at the end of `text`: what each holds (a drum's "steps", or
+    "lines"), and the name it's the value of, if any."""
+    open_blocks: List[Tuple[str, Optional[str]]] = []
+    for line in text.split("\n"):
+        code = line.split("//")[0]
+        for i, c in enumerate(code):
+            if c == "{":
+                opener = STEPS_OPENER_RE.search(code[:i])
+                steps = (open_blocks and open_blocks[-1][0] == "steps") or bool(
+                    opener and (opener.group(1) is None or opener.group(1) in LANES)
+                )
+                named = DEF_RE.match(code[:i])
+                open_blocks.append(("steps" if steps else "lines", named and named.group(2)))
+            elif c == "}" and open_blocks:
+                open_blocks.pop()
+    return open_blocks
+
+
 def _sequence(words: List[str], patterns: List[Option], parts: List[Option]) -> List[Option]:
     """What can come next in a row of patterns, after the `words` already written."""
-    loop = [("loop ", "keyword")]
     if not words:
-        return patterns + loop + parts
+        return patterns + parts
     if NUMBER_RE.search(words[-1]):
         return _options(["bars ", "bar "], "keyword")  # a length: 3 bars groove
-    if words[-1] in ("bars", "bar"):
-        return loop + patterns
     return patterns
 
 
@@ -80,7 +98,7 @@ def _statement(head: str, body: str, names: Names) -> List[Option]:
         settings = _options([s + " " for s in SETTINGS], "keyword")
         types = _options([t + " " for t in TYPES], "keyword")
         if inside:
-            return parts + patterns + [("loop ", "keyword")] + settings + types
+            return parts + patterns + settings + types
         return settings + types + [("play ", "keyword")]
     first = words[0]
     if first == "play":
@@ -123,6 +141,10 @@ def complete(text: str, cursor: int, songs: Optional[Dict[str, Song]] = None):
     after = re.search(r"\bafter\s+(\w+)", magic_line)
     inherited = songs[after.group(1)].chain if after and after.group(1) in songs else []
     names = _names("\n".join([*inherited, body]))
+    # A name isn't defined until its braces close.
+    open_blocks = _open_blocks(body + head)
+    unfinished = {name for _, name in open_blocks if name}
+    names = {t: [n for n in found if n not in unfinished] for t, found in names.items()}
 
     variation = re.search(r"([a-z]+)\.$", head)
     part = PART_RE.search(head)
@@ -133,10 +155,10 @@ def complete(text: str, cursor: int, songs: Optional[Dict[str, Song]] = None):
         holds = "chords" if part.group(1) == "chords" else "steps"
         written = part.group(2).split()
         options = _options(names[holds], "variable")
-        if not written:
-            options = [("loop ", "keyword")] + options
-        elif holds == "steps" and any(w[0].isdigit() for w in written):
+        if holds == "steps" and any(w[0].isdigit() for w in written):
             options = _options(MODIFIERS, "keyword")  # beats take accent, ghost, double
+    elif open_blocks and open_blocks[-1][0] == "steps":
+        options = _options(names["steps"], "variable")  # a layer in a drum's block of steps
     else:
         options = _statement(head, body, names)
     return fragment, [o for o in options if o[0].startswith(fragment) and o[0] != fragment]
