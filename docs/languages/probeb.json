@@ -1,0 +1,15 @@
+{
+  "fileTypes": [
+    "probeb"
+  ],
+  "name": "probeb",
+  "patterns": [
+    {
+      "match": "\\bfoo\\b",
+      "name": "keyword.control.probe"
+    }
+  ],
+  "repository": {},
+  "scopeName": "source.probeb",
+  "uuid": "165D3571-322B-4C57-ABAD-9EB3922FB111"
+}

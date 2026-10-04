@@ -1,0 +1,11 @@
+{
+  "name": "probea",
+  "scopeName": "source.probea",
+  "patterns": [
+    {
+      "match": "\\bfoo\\b",
+      "name": "keyword.control.probe"
+    }
+  ],
+  "repository": {}
+}
