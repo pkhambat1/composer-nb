@@ -57,8 +57,8 @@ pattern groove = {
   hat: X-x-
   bar 2 {
     snare.ghost: 2 beats rest, dd, 1 beats rest
-    hat.open:    2 beats rest, --X-, 2 steps rest
-    hat.pedal:   4
+    hat.open: 2 beats rest, --X-, 2 steps rest
+    hat.pedal: 4
   }
 }
 

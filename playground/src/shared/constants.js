@@ -43,8 +43,8 @@ pattern groove = {
   hat: X-x-
   bar 2 {
     snare.ghost: 2 beats rest, dd, 1 beats rest
-    hat.open:    2 beats rest, --X-, 2 steps rest
-    hat.pedal:   4
+    hat.open: 2 beats rest, --X-, 2 steps rest
+    hat.pedal: 4
   }
 }
 
@@ -103,7 +103,7 @@ pattern hands = {
 }
 
 pattern feet = every 3 steps {
-  kick:      X-XX-X--
+  kick: X-XX-X--
   hat.pedal: -x--x-xx
 }
 
@@ -129,8 +129,8 @@ tempo 82.5
 
 pattern groove = {
   ride.bell: x-x-x-xx-x-x
-  snare:     ------x-----
-  kick:      x-x-xx-x-x-x
+  snare: ------x-----
+  kick: x-x-xx-x-x-x
 }
 
 play 4 bars groove`,

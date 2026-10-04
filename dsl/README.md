@@ -187,8 +187,8 @@ pattern groove = {
   hat: X-x-
   bar 2 {
     snare.ghost: 2 beats rest, dd, 1 beats rest
-    hat.open:    2 beats rest, --X-, 2 steps rest
-    hat.pedal:   4
+    hat.open: 2 beats rest, --X-, 2 steps rest
+    hat.pedal: 4
   }
 }
 
@@ -223,7 +223,7 @@ A length can also repeat steps, up to the next comma: `2 beats x-` is `x-x-x-x-`
 
 ```
 pattern feet = every 3 steps {
-  kick:      X-XX-X--
+  kick: X-XX-X--
   hat.pedal: -x--x-xx
 }
 ```

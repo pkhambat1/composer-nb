@@ -267,8 +267,8 @@ pattern groove = {
   hat: X-x-
   bar 2 {
     snare.ghost: 2 beats rest, dd, 1 beats rest
-    hat.open:    2 beats rest, --X-, 2 steps rest
-    hat.pedal:   4
+    hat.open: 2 beats rest, --X-, 2 steps rest
+    hat.pedal: 4
   }
 }
 \`\`\`
@@ -302,7 +302,7 @@ Lengths are always plural, whatever the number: \`1 bars\`, \`1 beats\`. That wa
 time 3 over 4
 
 pattern feet = every 3 steps {
-  kick:      X-XX-X--
+  kick: X-XX-X--
   hat.pedal: -x--x-xx
 }
 
