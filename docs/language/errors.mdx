@@ -1,0 +1,70 @@
+---
+title: "Errors and limits"
+description: "Error format, parser limits and syntax that is no longer accepted."
+---
+
+## Error format
+
+Parsing a cell returns a list of errors. Each error has two fields.
+
+| Field  | Type   | Description                                            |
+| ------ | ------ | ------------------------------------------------------ |
+| `line` | Number | Line number in the cell, counted from 1.               |
+| `msg`  | String | The message. Most messages include the corrected form. |
+
+| Behavior      | Description                                                                                          |
+| ------------- | ---------------------------------------------------------------------------------------------------- |
+| Recovery      | Parsing continues after an error. A cell can report several errors.                                  |
+| Order         | Errors are sorted by line. Identical messages on one line are reported once.                         |
+| Blocks        | A statement that fails and opens a block skips the whole block, so one mistake gives one message.    |
+| Declarations  | The lines and names in a pattern body are checked where the pattern is declared, whether or not it is played. Duration errors (the fit rule, bar range, the 64-bar limit) are reported when it is played. |
+| Display       | The Jupyter widget shows errors below the outputs of the `play` statements that succeeded. The playground shows the errors only. |
+
+Each reference page lists the errors for its statements:
+[Settings](/language/settings#errors),
+[Declarations](/language/declarations#errors),
+[Chord lines](/language/chords#errors),
+[Drum lines](/language/drums#errors),
+[Patterns](/language/patterns#errors),
+[`play`](/language/play#errors),
+[`bar`](/language/bar#errors),
+[`every`](/language/every#errors).
+
+## Limits
+
+| Quantity                    | Limit                                   |
+| --------------------------- | --------------------------------------- |
+| `tempo`                     | 20 to 400                               |
+| `capo`                      | 0 to 12                                 |
+| `octave`                    | 1 to 6                                  |
+| `time` unit                 | 1, 2, 4, 8 or 16                        |
+| Bar duration                | 8 whole notes                           |
+| Length                      | Greater than 0, up to 64 bars           |
+| Bar number                  | 1 to 64                                 |
+| Pattern without a length    | Lines must end together within 64 bars  |
+| Play duration               | 600 seconds                             |
+| Step duration               | At least one twelfth of a beat          |
+| Timing resolution           | 96 ticks per beat                       |
+
+## Removed syntax
+
+The parser recognizes these earlier forms and reports the current form in the error message.
+
+| Earlier form                           | Current form                                                    |
+| -------------------------------------- | --------------------------------------------------------------- |
+| `@tempo 90`                            | `tempo 90`                                                      |
+| `tempo = 90`, `tempo: 90`              | `tempo 90`                                                      |
+| `time 7/8`                             | `time 7 over 8`                                                 |
+| `-- comment`                           | `// comment`                                                    |
+| `groove = { ... }`                     | `pattern groove = { ... }`                                      |
+| `pattern groove { ... }`, `section groove { ... }`, `def groove { ... }` | `pattern groove = { ... }`    |
+| `kick: loop x---`                      | `kick: x---` in a pattern. Lines in a pattern repeat.           |
+| `groove * 2`, `groove x2`              | A length in front: `2 bars groove`                              |
+| `groove for 4 bars`, `{ ... } 4 bars`  | A length in front: `4 bars groove`                              |
+| `step 1/8`                             | `every 2 steps { ... }`                                         |
+| `1 bar`, `2 beat`                      | `1 bars`, `2 beats`                                             |
+| `hat: x-o-`, `ride: b---`              | Separate lines: `hat.open`, `hat.pedal`, `ride.bell`            |
+| `snare: 2 accent`, `snare: 2 ghost`    | Steps: `X`, `g`, `d`                                            |
+| `drums: k--s`, `bd:`, `sd:`, `hh:`     | One line per drum: `kick:`, `snare:`, `hat:`                    |
+| `inst`, `instrument`, `bpm`, `oct`     | `sound`, `tempo`, `octave`                                      |
+| `.` as a rest or hold                  | `-`                                                             |

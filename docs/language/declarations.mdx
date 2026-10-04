@@ -1,0 +1,116 @@
+---
+title: "Declarations"
+description: "Typed names for steps, chords and patterns."
+---
+
+## Syntax
+
+```text
+<type> <name> = <value>
+```
+
+A declaration binds a name to a value. The type is required and is written in front of the name.
+
+## Types
+
+| Type      | Value                                    | Where the name is accepted                                        |
+| --------- | ---------------------------------------- | ----------------------------------------------------------------- |
+| `steps`   | Steps for one drum                       | On a [drum line](/language/drums), and in other `steps` values.   |
+| `chords`  | One or more bars of chords               | On a [`chords` line](/language/chords), and in other `chords` values. |
+| `pattern` | A block, a sequence of patterns, or a single statement | On a [sequence line](/language/patterns#sequence-lines), and after `play`. |
+
+A name holds only its declared type and is accepted only where that type is accepted. Both directions are checked: the value must match the declared type, and each use must match the position.
+
+## steps
+
+```text
+steps <name> = <steps>
+steps <name> = { <layer> ... }
+```
+
+The value is anything a drum line accepts after its colon: a run of steps, parts with lengths, a list of beats, other `steps` names, or a block of layers.
+
+```composer-nb
+steps pair = X-x-
+steps burst = 2 beats rest, dd, 1.5 beats rest
+steps backbeat = 2 4
+steps ghosts = {
+  --x-
+  ------------ddd-
+}
+
+play {
+  hat: pair pair
+  snare: backbeat
+  snare.ghost: ghosts
+}
+```
+
+A list of beats is converted to one bar of steps under the `time` in effect at the declaration.
+
+## chords
+
+```text
+chords <name> = <bars>
+```
+
+The value is anything a `chords` line accepts after its colon. When the name is used, its bars are inserted as whole bars: a bar line is implied before and after the name.
+
+```composer-nb
+chords verse = Am E7|G D
+play chords: verse verse F C
+```
+
+A `chords` value cannot be a block.
+
+## pattern
+
+```text
+pattern <name> = [<length>] { <statements> }
+pattern <name> = <sequence>
+pattern <name> = [<length>] <statement>
+```
+
+Declaring a pattern does not play it. The lines and names in the body are checked at the declaration, so those errors are reported even if the pattern is never played. Duration errors are reported when the pattern is played. See [Patterns](/language/patterns).
+
+```composer-nb
+pattern beat = {
+  kick: x---
+  hat: x-
+}
+pattern fill = 1 bars snare: xxxx
+pattern song = beat beat fill
+
+play song
+```
+
+## Names
+
+| Rule                                 | Applies to         |
+| ------------------------------------ | ------------------ |
+| A letter followed by letters and digits. No underscores. | All types |
+| Not a [reserved word](/language/program-structure#reserved-words). | All types |
+| Not `x` followed by digits, such as `x2`. | All types      |
+| Lowercase only.                      | `steps`, `chords`  |
+| At least two characters.             | `steps`, `chords`  |
+| Not a Roman numeral from `i` to `vii`. | `steps`, `chords` |
+
+A name must be declared above the line that uses it. Declaring a name again replaces the earlier value, including a value of a different type.
+
+## Errors
+
+| Message                                                                                   | Cause                                              |
+| ----------------------------------------------------------------------------------------- | -------------------------------------------------- |
+| `Say what pair is. Put its type in front: steps pair = X-x-`                              | No type. The name is still bound, with the inferred type. |
+| `steps pair needs = before what it holds: steps pair = X-x-`                              | No `=`.                                            |
+| `steps pair = needs something after the =`                                                | No value.                                          |
+| `"Am" is a chord, and pair is steps. For chords, write chords pair = Am F`                | Value does not match the declared type.            |
+| `That's a pattern, not steps. Write pattern pair = ...`                                   | A block or sequence declared as `steps` or `chords`. |
+| `verse is chords, so it goes on the chords: line, not on a drum's`                        | `chords` name on a drum line.                      |
+| `pair is steps, so it goes on a drum's line, not on chords:`                              | `steps` name on a `chords` line.                   |
+| `beat is a pattern, so it goes on a line of its own, not on an instrument's line`         | `pattern` name on an instrument line.              |
+| `"fill" isn't defined above. Name it first: steps fill = x-x-`                            | Name used before its declaration.                  |
+| `bars already means something, so pick another name`                                      | Reserved word used as a name.                      |
+| `kick is an instrument, so it takes a colon: kick: x-`                                    | Instrument used as a name.                         |
+| `Names for steps and chords are lowercase: steps pair = x-`                               | Uppercase letter in a `steps` or `chords` name.    |
+| `Names for steps and chords need at least two letters, because single letters are steps`  | One-character name.                                |

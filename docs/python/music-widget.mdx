@@ -1,0 +1,47 @@
+---
+title: "MusicWidget"
+description: "The anywidget that parses source and renders the player."
+---
+
+```python
+class composer_nb.MusicWidget(sources=[], name="", after="")
+```
+
+`MusicWidget` is an [`anywidget.AnyWidget`](https://anywidget.dev). It sends source text to the browser, where the widget's JavaScript parses it, renders audio and draws the output. [`Song.widget()`](/python/song#widget) creates one. Direct use is needed only to drive the widget without a `Song`.
+
+## Traits
+
+All traits are synchronized with the front end.
+
+<ParamField path="sources" type="list[str]">
+  A chain of cell sources. The last source is played. Each earlier source is parsed only for the settings and declarations it leaves, in order. Defaults to an empty list.
+</ParamField>
+
+<ParamField path="name" type="str">
+  Shown in the output header. Used as the WAV file name; `composer-nb` is used when empty. Defaults to an empty string.
+</ParamField>
+
+<ParamField path="after" type="str">
+  The name of the song this one continues from. Display only. Shown in the output header as `after <name>`. Defaults to an empty string.
+</ParamField>
+
+Assigning to `sources` on a displayed widget re-renders it.
+
+## Rendered output
+
+| Element       | Content                                                                                       |
+| ------------- | --------------------------------------------------------------------------------------------- |
+| Header        | `name`, `after`, and the inherited settings that differ from the defaults.                    |
+| One per `play` | Label, summary, player with waveform, WAV link, drum grid and chords. See [Output](/language/play#output). |
+| Errors        | `line <n>` and the message for each error.                                                    |
+| No `play`     | `Nothing played yet. Add play to hear it.`, or a list of the patterns the source declared.     |
+
+WAV files are named `<name>.wav`, or `<name>-<n>.wav` when the source has more than one `play`.
+
+## Example
+
+```python
+from composer_nb import MusicWidget
+
+MusicWidget(sources=["tempo 90\nsound guitar", "play chords: Am F|C G"], name="demo")
+```

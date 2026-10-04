@@ -1,10 +1,10 @@
 // components/Sidebar.jsx — Left sidebar navigation + theme popover
 import React from "react"
+import { APP_CONSTANTS } from "../shared/constants.js"
 
 const SIDE_TABS = [
   { id: "notebook", label: "Notebook", hint: "Cells & playback" },
   { id: "chords", label: "Chord library", hint: "Browse chord shapes" },
-  { id: "docs", label: "Language", hint: "DSL reference" },
 ]
 
 const THEMES = [
@@ -100,6 +100,16 @@ export default function Sidebar({ sideTab, onTabChange, theme, onSetTheme }) {
             <span className="lhs-tab-hint">{tab.hint}</span>
           </button>
         ))}
+        <a
+          className="lhs-tab"
+          href={APP_CONSTANTS.DOCS_URL}
+          target="_blank"
+          rel="noreferrer"
+          title="Opens the docs site"
+        >
+          <span className="lhs-tab-label">Docs ↗</span>
+          <span className="lhs-tab-hint">Language reference</span>
+        </a>
       </nav>
     </aside>
   )

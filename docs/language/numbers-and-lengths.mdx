@@ -1,0 +1,87 @@
+---
+title: "Numbers and lengths"
+description: "Arithmetic expressions, time units and the length prefix."
+---
+
+## Numbers
+
+A number is an integer or decimal literal: `90`, `1.5`. Any position that accepts a number accepts an arithmetic expression.
+
+| Operator    | Operation                                   |
+| ----------- | ------------------------------------------- |
+| `+` `-`     | Addition, subtraction, unary minus.         |
+| `*` `/`     | Multiplication, division. Binds tighter than `+` and `-`. |
+| `( )`       | Grouping.                                   |
+
+```composer-nb
+tempo 60*2
+pattern beat = { kick: x--- }
+play (1+2) bars beat
+```
+
+`*` and `/` are defined between numbers only. Two consequences:
+
+| Expression    | Result                                                                                         |
+| ------------- | ---------------------------------------------------------------------------------------------- |
+| `time 7/8`    | Error. `7/8` is the number 0.875. A time is two numbers joined by `over`: `time 7 over 8`.      |
+| `groove * 2`  | Error. Repetition is written as a length: `2 bars groove`.                                      |
+
+The `/` in a chord symbol such as `C/E` is part of the symbol, because its operands are not numbers.
+
+## Units
+
+| Unit    | Duration                                                                                              |
+| ------- | ----------------------------------------------------------------------------------------------------- |
+| `steps` | One step. A sixteenth note by default. Changed inside [`every`](/language/every).                     |
+| `beats` | One quarter note, in every time signature.                                                            |
+| `bars`  | One bar of the current [`time`](/language/settings#time): `count × 4 / unit` beats.                    |
+
+`tempo` counts beats per minute. Positions within a beat are counted `1 e & a`, in sixteenth notes.
+
+| `time`       | Beats per bar | Steps per bar | Last position |
+| ------------ | ------------- | ------------- | ------------- |
+| `4 over 4`   | 4             | 16            | `4a`          |
+| `3 over 4`   | 3             | 12            | `3a`          |
+| `6 over 8`   | 3             | 12            | `3a`          |
+| `7 over 8`   | 3.5           | 14            | `4e`          |
+| `5 over 4`   | 5             | 20            | `5a`          |
+
+## Lengths
+
+A length is a number followed by a unit. It is written in front of what it measures.
+
+```text
+<number> <unit>
+```
+
+The unit is always plural, including after `1`: `1 bars`, `1 beats`. `bar` without the `s` is the [`bar`](/language/bar) keyword, which selects a bar by number. A singular unit after a number is an error.
+
+| Position                                                   | Units                    | Effect                                                    |
+| ---------------------------------------------------------- | ------------------------ | --------------------------------------------------------- |
+| `play <length> { ... }`                                    | `bars`                   | Sets the duration of the play.                            |
+| `pattern <name> = <length> { ... }`                        | `bars`                   | Sets the duration of the pattern.                         |
+| `<length> <name>`, `<length> ( ... )`, `<length> { ... }` on a sequence line | `bars` | Repeats the item for that duration.                       |
+| `<length> rest` on a drum line                             | `steps` `beats` `bars`   | Silence for that duration.                                |
+| `<length> <steps>` on a drum line                          | `steps` `beats` `bars`   | Repeats the steps for that duration.                      |
+| `every <length>`                                           | `steps` `beats` `bars`   | Sets the duration of one step.                            |
+
+### Constraints
+
+| Constraint      | Value                                                                                                   |
+| --------------- | ------------------------------------------------------------------------------------------------------- |
+| Minimum         | Greater than 0.                                                                                         |
+| Maximum         | 64 bars.                                                                                                |
+| Fractions       | Accepted: `1.5 bars`, `0.5 beats`.                                                                      |
+| On a drum line  | The length must equal a whole number of steps.                                                          |
+| Repetition      | Whatever a length repeats must fit it a whole number of times. See [Fit rule](/language/patterns#fit-rule). |
+
+```composer-nb
+pattern fill = 2 bars { hat: x- }
+pattern beat = { kick: x--- }
+
+play 4 bars {
+  beat
+  bar 3 to 4 fill
+  snare: 2 beats rest, x---, 1.5 bars rest
+}
+```

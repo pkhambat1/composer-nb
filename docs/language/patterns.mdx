@@ -1,0 +1,151 @@
+---
+title: "Patterns"
+description: "Blocks that repeat: bodies, duration, the fit rule and sequence lines."
+---
+
+A pattern is a block whose statements start together and repeat until the pattern ends. A pattern does not sound until it is played.
+
+## Syntax
+
+```text
+pattern <name> = [<length>] { <statements> }
+pattern <name> = <sequence>
+pattern <name> = [<length>] <statement>
+```
+
+| Part         | Description                                                                                         |
+| ------------ | --------------------------------------------------------------------------------------------------- |
+| `name`       | See [Names](/language/declarations#names).                                                          |
+| `length`     | Optional. A number of `bars`. Sets the pattern's duration.                                          |
+| `statements` | Instrument lines, sequence lines, [`bar`](/language/bar), [`every`](/language/every), settings and declarations. |
+| `sequence`   | Pattern names in a row. See [Sequence lines](#sequence-lines).                                      |
+
+A pattern without a name is written as a bare block, with an optional length in front, anywhere a pattern name is accepted.
+
+```composer-nb
+time 7 over 8
+
+pattern groove = {
+  kick: x--x---
+  snare: ----x--
+  ride.bell: x--
+}
+
+play groove { snare: xxxxxxx } groove
+```
+
+## Body
+
+| Statement in the body           | Behavior                                                              |
+| ------------------------------- | --------------------------------------------------------------------- |
+| Instrument line                 | Repeats until the pattern ends.                                       |
+| Sequence line                   | Plays its items in order, then repeats until the pattern ends.        |
+| `bar <n> ...`                   | Plays in that bar on each pass through the pattern.                   |
+| `every <length> ...`            | Repeats until the pattern ends, at that step duration.                |
+| Setting or declaration          | Local to the pattern.                                                 |
+
+`play` is not accepted inside a block.
+
+## Duration
+
+| Pattern                 | Duration                                                                                                   |
+| ----------------------- | ---------------------------------------------------------------------------------------------------------- |
+| With a length           | The length.                                                                                                |
+| Without a length        | The least common multiple of the durations of everything that repeats in it: the point where its lines all end together. |
+| Without a length, containing `bar <n>` | As above, extended by whole multiples until it contains bar `n`.                            |
+
+In the example above, the kick and snare are 7 steps and the bell is 3 steps, so `groove` lasts 21 steps: one and a half bars of `7 over 8`.
+
+<img src="/images/lines-line-up.svg" alt="Step grid in 7 over 8. The kick and snare repeat every 7 steps and the ride bell every 3. All three end together after 21 steps." />
+
+A pattern without a length whose lines first end together after more than 64 bars is an error. Give it a length.
+
+## Fit rule
+
+Everything that repeats must fit the duration of what contains it a whole number of times. This applies to lines in a pattern, to patterns repeated by a length, and to patterns repeated in a play.
+
+```composer-nb Invalid
+time 7 over 8
+
+pattern groove = 4 bars {
+  kick: x--x---
+  ride.bell: x--
+}
+
+play groove
+```
+
+```text
+The ride.bell line is 3 steps long, which doesn't fit 4 bars a whole number of times. The things repeating here line up every 3 bars
+```
+
+The message reports the shortest duration at which everything fits. Fit is checked when the pattern is played, so a pattern that is declared and never played does not report it.
+
+## Sequence lines
+
+```text
+<item> [<item>] ...
+<item> = [<length>] <name>
+       | [<length>] { <statements> }
+       | [<length>] ( <item> ... )
+```
+
+A sequence line plays its items one after another.
+
+| Item                    | Meaning                                                            |
+| ----------------------- | ------------------------------------------------------------------ |
+| `verse`                 | Plays the pattern once.                                            |
+| `verse verse`           | Plays it twice.                                                    |
+| `{ ... }`               | Plays a pattern without a name once.                               |
+| `4 bars verse`          | Repeats the pattern for 4 bars.                                    |
+| `8 bars (verse chorus)` | Repeats the group `verse` then `chorus` for 8 bars.                |
+
+```composer-nb
+pattern intro = { crash: 1 }
+pattern verse = { kick: x---x--- }
+pattern chorus = {
+  kick: x-x-
+  snare: ----x---
+}
+
+play intro 4 bars (verse chorus) intro
+```
+
+A sequence line is valid in a block, after `play`, and as the value of a `pattern` declaration. `*` is not a repetition operator; use a length.
+
+## Patterns inside patterns
+
+A pattern can play other patterns by name. A pattern cannot play itself, directly or through another pattern.
+
+```composer-nb
+pattern beat = {
+  hat: x-
+  kick: x---
+}
+
+pattern verse = 4 bars {
+  chords: Am F|C G
+  beat
+}
+
+play verse
+```
+
+## Evaluation
+
+A pattern is evaluated each time it is played, with the settings and names in effect at that point. The same pattern played after `tempo 60` and after `tempo 120` has different durations in seconds. See [Scope](/language/program-structure#scope).
+
+## Errors
+
+| Message                                                                                                    | Cause                                               |
+| ---------------------------------------------------------------------------------------------------------- | --------------------------------------------------- |
+| `A pattern gets its name with =: pattern groove = { ... }`                                                 | `pattern groove {` without `=`.                     |
+| `groove needs a type and = to name its braces: pattern groove = {`                                         | `groove {` without a type.                          |
+| `Nothing plays this pattern. Put play in front: play { ... }`                                              | A bare block at top level.                          |
+| `"outro" isn't defined. Patterns so far: intro, verse`                                                     | Unknown name on a sequence line.                    |
+| `groove plays itself, so it would never end`                                                               | Recursive pattern.                                  |
+| `groove has nothing to play`                                                                               | A body with no instrument, sequence, `bar` or `every` statement. |
+| `A length goes in front of what it measures: pattern groove = 4 bars {`                                    | Length written after the block.                     |
+| `* only multiplies numbers. To repeat, put a length in front: 4 bars groove`                               | `groove * 2`.                                       |
+| `What's in groove only lines up again after more than 64 bars. Say how long it is: pattern groove = 4 bars {` | No length, and the lines do not end together within 64 bars. |
+| `play goes at the top, not inside braces`                                                                  | `play` inside a block.                              |

@@ -1,0 +1,55 @@
+---
+title: "Notebook"
+description: "Cells, state and output in the browser playground."
+---
+
+The playground is a notebook that runs in the browser at [composer-nb.vercel.app](https://composer-nb.vercel.app). It uses the same parser and audio engine as the [Python package](/python/installation).
+
+## Cells
+
+| Type  | Content                         | On run                                             |
+| ----- | ------------------------------- | -------------------------------------------------- |
+| Music | composer-nb source.             | Parses the source and renders one output per `play`. |
+| Text  | Markdown.                       | Renders the Markdown.                              |
+
+Music cells take source directly. The `%%music` line is not used.
+
+## State between cells
+
+A music cell starts from the state left by the music cells above it, evaluated in order from the top of the notebook. This is positional: moving a cell changes what it inherits. The cells above do not need to have been run.
+
+| Carried forward                  | Not carried forward                             |
+| -------------------------------- | ----------------------------------------------- |
+| Top-level settings.              | Settings and declarations written inside a block. |
+| Top-level declarations.          | Outputs.                                        |
+
+This differs from Jupyter, where a cell inherits only from the cell named by [`after`](/python/music-magic#state-between-cells).
+
+## Output
+
+| Result                                 | Output                                                                                     |
+| -------------------------------------- | ------------------------------------------------------------------------------------------ |
+| One or more `play` statements succeed  | A player with a waveform, a WAV download, a drum grid, and the chords with a diagram each.  |
+| Any statement fails                    | The errors, one per line, as `Line <n>: <message>`. No audio is rendered.                   |
+| No `play` statement                    | A notice. The cell's settings and declarations still carry forward.                        |
+
+## Views
+
+| Sidebar entry   | Content                                                        |
+| --------------- | -------------------------------------------------------------- |
+| Notebook        | The cells.                                                     |
+| Chord library   | Searchable guitar chord shapes.                                |
+| Docs            | Opens this documentation.                                      |
+
+## Persistence
+
+The notebook is held in memory. Reloading the page restores the starter cells. Audio is kept by downloading the WAV from an output.
+
+## Differences from Jupyter
+
+| Aspect            | Playground                              | Jupyter                                         |
+| ----------------- | --------------------------------------- | ----------------------------------------------- |
+| Cell header       | None.                                   | `%%music [name] [after <name>]`.                |
+| Inherited state   | Music cells above, by position.         | The cell named by `after`.                      |
+| Errors            | Shown in place of the output.           | Shown below the outputs that succeeded.         |
+| Python            | Not available.                          | [`Song`](/python/song) and the full kernel.     |

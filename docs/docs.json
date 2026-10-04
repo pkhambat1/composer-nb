@@ -1,0 +1,81 @@
+{
+  "$schema": "https://mintlify.com/docs.json",
+  "theme": "mint",
+  "name": "composer-nb",
+  "description": "Reference for the composer-nb language, its Python package and the playground.",
+  "colors": {
+    "primary": "#1a73e8",
+    "light": "#8ab4f8",
+    "dark": "#1a73e8"
+  },
+  "favicon": "/favicon.svg",
+  "styling": {
+    "codeblocks": {
+      "theme": {
+        "light": "github-light",
+        "dark": "github-dark"
+      },
+      "languages": {
+        "custom": ["/languages/composer-nb.json"]
+      }
+    }
+  },
+  "navigation": {
+    "groups": [
+      {
+        "group": "Get started",
+        "pages": ["index", "quickstart"]
+      },
+      {
+        "group": "Language",
+        "pages": [
+          "language/program-structure",
+          "language/numbers-and-lengths",
+          "language/settings",
+          "language/declarations",
+          "language/chords",
+          "language/drums",
+          "language/patterns",
+          "language/play",
+          "language/bar",
+          "language/every",
+          "language/errors"
+        ]
+      },
+      {
+        "group": "Python",
+        "pages": [
+          "python/installation",
+          "python/music-magic",
+          "python/song",
+          "python/music-widget"
+        ]
+      },
+      {
+        "group": "Playground",
+        "pages": ["playground/notebook", "playground/keyboard-shortcuts"]
+      }
+    ]
+  },
+  "navbar": {
+    "links": [
+      {
+        "label": "Playground",
+        "href": "https://composer-nb.vercel.app"
+      },
+      {
+        "label": "PyPI",
+        "href": "https://pypi.org/project/composer-nb/"
+      }
+    ],
+    "primary": {
+      "type": "github",
+      "href": "https://github.com/pkhambat1/composer-nb"
+    }
+  },
+  "footer": {
+    "socials": {
+      "github": "https://github.com/pkhambat1/composer-nb"
+    }
+  }
+}

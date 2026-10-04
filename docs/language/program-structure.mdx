@@ -1,0 +1,112 @@
+---
+title: "Program structure"
+description: "Cells, statements, blocks, scope and reserved words."
+---
+
+A program is a cell: a list of statements read top to bottom. A cell produces one output for each `play` statement it contains, and a state that other cells can start from.
+
+## Statements
+
+Every statement starts with a word that identifies its kind.
+
+| Statement       | Form                                                                  | Allowed in                                  | Reference                                    |
+| --------------- | --------------------------------------------------------------------- | ------------------------------------------- | -------------------------------------------- |
+| Setting         | `tempo 90`                                                            | Top level, blocks                           | [Settings](/language/settings)               |
+| Declaration     | `steps fill = x-x-`, `chords verse = Am F`, `pattern groove = { ... }` | Top level, blocks                           | [Declarations](/language/declarations)       |
+| Instrument line | `kick: x--x---`, `chords: Am F`                                       | Blocks                                      | [Drum lines](/language/drums), [Chord lines](/language/chords) |
+| Sequence line   | `intro verse verse`                                                   | Blocks, after `play`, as a pattern's value  | [Patterns](/language/patterns#sequence-lines) |
+| `bar`           | `bar 2 { ... }`                                                       | Blocks                                      | [`bar`](/language/bar)                       |
+| `every`         | `every 3 steps { ... }`                                               | Blocks, after `play`, as a pattern's value  | [`every`](/language/every)                   |
+| `play`          | `play { ... }`                                                        | Top level                                   | [`play`](/language/play)                     |
+
+Only `play` produces output. An instrument line, sequence line, `bar` or `every` written at top level is an error.
+
+## Lexical rules
+
+| Element    | Rule                                                                                         |
+| ---------- | -------------------------------------------------------------------------------------------- |
+| Comment    | `//` to the end of the line.                                                                 |
+| Line       | One statement per line. A block's braces can span lines.                                     |
+| Whitespace | Blank lines and indentation are ignored. Spaces inside a run of steps are ignored.           |
+| Identifier | A letter followed by letters and digits: `[A-Za-z][A-Za-z0-9]*`.                             |
+| Number     | An integer or decimal literal, or an arithmetic expression. See [Numbers and lengths](/language/numbers-and-lengths). |
+
+## Symbols
+
+Each symbol has one meaning in each context where it is accepted.
+
+| Symbol      | Context          | Meaning                                                       |
+| ----------- | ---------------- | ------------------------------------------------------------- |
+| `:`         | Instrument line  | Separates the instrument from what it plays.                  |
+| `=`         | Declaration      | Binds the name to its value.                                  |
+| `{ }`       | Any              | Delimits a block.                                             |
+| `( )`       | Numbers          | Groups an arithmetic expression.                              |
+| `( )`       | Sequence line    | Groups patterns so that a length applies to the group.        |
+| `+ - * /`   | Numbers          | Arithmetic.                                                   |
+| `.`         | Instrument name  | Joins a drum and one of its variations: `hat.open`.           |
+| `\|`        | Chords, steps    | Bar line.                                                     |
+| `,`         | Drum line        | Separates the parts of the line.                              |
+| `-`         | Drum line        | One step with no hit.                                         |
+| `-`         | Chord line       | Holds the previous chord for one slot.                        |
+| `_`         | Chord line       | Silence for one slot.                                         |
+| `%`         | Chord line       | Repeats the previous bar.                                     |
+| `/`         | Chord symbol     | Sets the bass note: `C/E`.                                    |
+
+## Blocks
+
+A block is one or more statements in braces. The statements in a block start at the same time and play together.
+
+| Position                                  | The block is                                                      |
+| ----------------------------------------- | ----------------------------------------------------------------- |
+| After `pattern <name> =`                  | The body of a named pattern.                                      |
+| After `play`                              | The body of the play.                                             |
+| On a sequence line                        | A pattern without a name, played where it is written.             |
+| After `bar <n>` or `every <length>`       | A pattern without a name, limited to those bars or that step duration. |
+| After a drum's colon, or `steps <name> =` | Layers of steps for one drum. See [Layers](/language/drums#layers). |
+
+After `play`, `bar` and `every`, a single statement can stand in place of a block: `play groove` is equivalent to `play { groove }`.
+
+A block holds at most one line for each instrument. A second `kick:` line in the same block is an error.
+
+## Scope
+
+| Rule             | Behavior                                                                                                                              |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| Order            | A setting or declaration takes effect on the line where it is written and applies to the lines after it.                              |
+| Blocks           | A setting or declaration inside a block is local to that block.                                                                       |
+| Redeclaration    | Declaring a name again replaces its earlier value from that line on.                                                                  |
+| Pattern bodies   | A pattern is evaluated where it is played, with the settings and names in effect at that point, not those at its declaration.         |
+| Cell state       | The top-level settings and declarations at the end of a cell form its state. Another cell can start from that state.                  |
+
+```composer-nb
+pattern beat = { kick: x--- }
+
+play 2 bars beat
+
+tempo 60
+play 2 bars beat
+```
+
+The second play runs at tempo 60, because `beat` is evaluated when it is played.
+
+How a cell selects the state it starts from depends on the host:
+
+| Host       | A cell starts from                                                                    |
+| ---------- | ------------------------------------------------------------------------------------- |
+| Playground | The state left by the music cells above it, in order.                                 |
+| Jupyter    | The state of the cell named by `after`, or the defaults. See [`%%music`](/python/music-magic). |
+
+## Reserved words
+
+A reserved word cannot be declared as a name.
+
+| Category              | Words                                                                                                                             |
+| --------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| Settings              | `time` `tempo` `sound` `key` `capo` `octave` `kit`                                                                                |
+| Types                 | `steps` `chords` `pattern`                                                                                                        |
+| Keywords              | `play` `bar` `bars` `beats` `to` `every` `rest` `over`                                                                            |
+| Instruments           | `chords` `kick` `snare` `snare.ghost` `snare.rim` `hat` `hat.open` `hat.pedal` `ride` `ride.bell` `crash` `tom` `floor`           |
+| Sounds                | `piano` `epiano` `organ` `pad` `bass` `guitar`                                                                                    |
+| Reserved, not in use  | `step` `loop` `for` `def` `section` `accent` `ghost` `double`                                                                     |
+
+Names of type `steps` and `chords` have additional rules. See [Declarations](/language/declarations#names).

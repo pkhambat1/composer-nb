@@ -15,18 +15,13 @@ import Toolbar from "./components/Toolbar.jsx"
 import Cell from "./components/Cell.jsx"
 import StatusBar from "./components/StatusBar.jsx"
 import ChordBrowserPanel from "./components/ChordBrowser.jsx"
-import DocsPanel from "./components/DocsPanel.jsx"
 
 // ============================================================================
 // App
 // ============================================================================
 
 export default function App() {
-  const [sideTab, setSideTab] = React.useState(() => {
-    const hash = window.location.hash.replace("#", "")
-    if (hash.startsWith("docs-")) return "docs"
-    return "notebook"
-  })
+  const [sideTab, setSideTab] = React.useState("notebook")
   const [kernelStatus, setKernelStatus] = React.useState("idle")
   const [activeCellId, setActiveCellId] = React.useState(null)
   const [runCounter, setRunCounter] = React.useState(0)
@@ -234,12 +229,7 @@ export default function App() {
     <div className="app-shell">
       <Sidebar
         sideTab={sideTab}
-        onTabChange={(tab) => {
-          setSideTab(tab)
-          if (tab !== "docs" && window.location.hash.startsWith("#docs-")) {
-            history.replaceState(null, "", window.location.pathname)
-          }
-        }}
+        onTabChange={setSideTab}
         theme={theme}
         onSetTheme={(v) => setSetting("theme", v)}
       />
@@ -319,7 +309,6 @@ export default function App() {
 
         </div>
         <ChordBrowserPanel style={{ display: sideTab === "chords" ? undefined : "none" }} />
-        <DocsPanel style={{ display: sideTab === "docs" ? undefined : "none" }} />
       </div>
     </div>
   )
