@@ -54,10 +54,10 @@ pattern groove = {
   kick: x--x---
   snare: 2e 4
   snare.ghost: --x----
-  hat: X-x-
+  hat: ^-x-
   bar 2 {
     snare.ghost: 2 beats rest, dd, 1 beats rest
-    hat.open: 2 beats rest, --X-, 2 steps rest
+    hat.open: 2 beats rest, --^-, 2 steps rest
     hat.pedal: 4
   }
 }
@@ -86,11 +86,11 @@ Then start a cell with `%%music`. Each `play` gives a player, a waveform, a drum
 
 ## What's here
 
-| Folder        | What it is                                                                                                                                                                                   |
-| ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `dsl/`        | The language. `dsl/js/` has the parser, chord builder and audio renderer. `dsl/python/` is the [`composer-nb`](dsl/README.md) Python package, which plays the language in Jupyter notebooks. |
-| `playground/` | A notebook-style web app for writing the language and hearing it. It uses `dsl/` as a package, so both always run the same parser.                                                           |
-| `docs/`       | The [docs site](https://pkhambat.mintlify.site): `.mdx` pages and `docs.json`, built by [Mintlify](https://mintlify.com). Also the images in these READMEs.                                |
+| Folder        | What it is                                                                                                                                                                                                                                                                                             |
+| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `dsl/`        | The language. `dsl/js/` has the parser, chord builder and audio renderer. `dsl/python/` is the [`composer-nb`](dsl/README.md) Python package, which plays the language in Jupyter notebooks. `dsl/js/music.js` is the `composer-nb` npm package, which plays it in Observable notebooks and web pages. |
+| `playground/` | A notebook-style web app for writing the language and hearing it. It uses `dsl/` as a package, so both always run the same parser.                                                                                                                                                                     |
+| `docs/`       | The [docs site](https://pkhambat.mintlify.site): `.mdx` pages and `docs.json`, built by [Mintlify](https://mintlify.com). Also the images in these READMEs.                                                                                                                                            |
 
 ## Working on it
 
@@ -99,7 +99,7 @@ npm install     # installs both folders (npm workspaces)
 npm run dev     # playground at http://localhost:5173
 npm test        # language tests
 npm run lint
-npm run build   # builds the notebook widget and the playground
+npm run build   # builds the notebook widget, the npm bundle and the playground
 npm run docs    # docs site preview at http://localhost:3000
 ```
 
@@ -123,6 +123,13 @@ For each release:
 2. Create a GitHub release with a tag that matches, like `v0.1.0`.
 
 The workflow builds the widget and the package, checks that the tag matches the version, and uploads it to PyPI.
+
+## Releasing the JavaScript package
+
+The player is also an npm package, [`composer-nb`](https://www.npmjs.com/package/composer-nb), for Observable notebooks and web pages. It's published by hand, after `npm login`:
+
+1. Bump `version` in `dsl/package.json`.
+2. Run `npm publish -w dsl`. It builds the bundle first, and asks you to sign in with your passkey in the browser.
 
 ## Releasing the docs
 

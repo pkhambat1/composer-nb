@@ -23,7 +23,7 @@ PARTS = ["chords", *LANES]
 SETTING_VALUES = {"sound": INSTRUMENTS, "kit": KITS}
 
 MAGIC = "%%music"
-# A name and the type in front of it: steps pair = X-x-
+# A name and the type in front of it: steps pair = ^-x-
 DEF_RE = re.compile(r"^\s*(steps|chords|pattern)\s+([A-Za-z_]\w*)\s*=", re.M)
 # The instrument line the cursor is on: its name, then what's been written after the colon.
 PART_RE = re.compile(r"(?:^|[\s{])([a-z]+(?:\.[a-z]+)?):([^:{}]*)$")
@@ -125,7 +125,7 @@ def _statement(head: str, body: str, names: Names) -> List[Option]:
     if first in TYPES:
         if len(words) < 3 or words[2] != "=":
             return []  # still writing the name
-        # After the =, what the type in front holds: steps pair = X-x-
+        # After the =, what the type in front holds: steps pair = ^-x-
         if first == "pattern":
             return _sequence(words[3:], patterns, parts)
         return _options(names[first], "variable")

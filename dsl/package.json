@@ -1,16 +1,40 @@
 {
-  "name": "@composer-nb/dsl",
-  "private": true,
-  "version": "0.1.0",
+  "name": "composer-nb",
+  "version": "0.3.1",
+  "description": "A small language for chords and drums, with a player for Observable notebooks and web pages.",
+  "keywords": [
+    "music",
+    "chords",
+    "drums",
+    "observable",
+    "notebook",
+    "dsl"
+  ],
+  "homepage": "https://github.com/pkhambat1/composer-nb",
+  "bugs": "https://github.com/pkhambat1/composer-nb/issues",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pkhambat1/composer-nb.git",
+    "directory": "dsl"
+  },
+  "author": "Pezanne Khambatta",
   "type": "module",
+  "main": "./dist/composer-nb.js",
   "exports": {
-    ".": "./js/music-engine.js",
+    ".": "./dist/composer-nb.js",
+    "./engine": "./js/music-engine.js",
     "./language": "./js/language.js",
     "./chord-lookup": "./js/chord-lookup.js",
+    "./editing": "./js/editing.js",
     "./highlight": "./js/highlight.js"
   },
+  "files": [
+    "dist",
+    "js"
+  ],
   "scripts": {
-    "build": "vite build",
+    "build": "vite build && vite build --mode npm",
+    "prepack": "npm run build",
     "test": "vitest run",
     "test:watch": "vitest"
   },

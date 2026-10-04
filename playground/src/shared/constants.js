@@ -32,7 +32,7 @@ export const APP_CONSTANTS = {
 
 A groove in seven. The kick, snare and hi-hat repeat in every bar, and \`bar 2\` adds the lift at the end of every second bar: a burst of ghost notes, an open hi-hat, and the foot closing it.
 
-[▶ Listen on YouTube](https://www.youtube.com/watch?v=4ulgVOBpNWA)`,
+[YouTube](https://www.youtube.com/watch?v=4ulgVOBpNWA)`,
     },
     {
       type: "music",
@@ -43,10 +43,10 @@ pattern groove = {
   kick: x--x---
   snare: 2e 4
   snare.ghost: --x----
-  hat: X-x-
+  hat: ^-x-
   bar 2 {
-    snare.ghost: 2 beats rest, dd, 1 beats rest
-    hat.open: 2 beats rest, --X-, 2 steps rest
+    snare.ghost: d3 d3e
+    hat.open: ^3&
     hat.pedal: 4
   }
 }
@@ -64,7 +64,7 @@ play 6 bars {
 
 Lines of different lengths in one pattern. The kick and snare repeat every 7 steps and the ride bell every 3, so they drift against each other and meet again on a bar line every 3 bars. The crash plays once, with the groove repeating under it.
 
-[▶ Listen on YouTube](https://www.youtube.com/watch?v=v0Iv4SYJW-k)`,
+[YouTube](https://www.youtube.com/watch?v=v0Iv4SYJW-k)`,
     },
     {
       type: "music",
@@ -90,14 +90,14 @@ An independence exercise from **Gavin Harrison**
 
 The hands play paradiddles on the snare, accenting each PA with ghost notes in between. The feet play the same paradiddle three times slower: \`every 3 steps\` makes each of their steps last three 16ths. The kick is the right foot, and the hi-hat pedal is the left.
 
-[▶ Watch the lesson on YouTube](https://www.youtube.com/watch?v=XEWmzQ_fJmw)`,
+[YouTube](https://www.youtube.com/watch?v=XEWmzQ_fJmw)`,
     },
     {
       type: "music",
       source: `time 3 over 4
 tempo 100
 
-steps pa = X---
+steps pa = ^---
 steps radiddle = -xxx
 
 pattern hands = {
@@ -106,7 +106,7 @@ pattern hands = {
 }
 
 pattern feet = every 3 steps {
-  kick: X-XX-X--
+  kick: ^-^^-^--
   hat.pedal: -x--x-xx
 }
 
@@ -123,7 +123,7 @@ play 4 bars {
 
 Twelve steps to the bar. The ride bell and the kick each play their own 12-step pattern, the snare lands halfway through the bar, and ghost notes fill every other step.
 
-[▶ Watch on YouTube](https://www.youtube.com/watch?v=YZPtPMCDEs4)`,
+[YouTube](https://www.youtube.com/watch?v=YZPtPMCDEs4)`,
     },
     {
       type: "music",

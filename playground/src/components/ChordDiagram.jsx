@@ -1,6 +1,6 @@
 // components/ChordDiagram.jsx — Chord diagrams: guitar fingering grid & piano keyboard
 import React from "react"
-import * as ChordLookup from "@composer-nb/dsl/chord-lookup"
+import * as ChordLookup from "composer-nb/chord-lookup"
 
 function getChordIntervals(chord) {
   const set = new Set()

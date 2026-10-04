@@ -57,7 +57,7 @@ def test_settings_offer_their_values():
 
 
 def test_instrument_lines_offer_names_of_their_type():
-    cell = "%%music\nsteps pair = X-x-\nchords verse = Am F\nplay {\n  "
+    cell = "%%music\nsteps pair = ^-x-\nchords verse = Am F\nplay {\n  "
     assert texts(cell + "hat: ") == ["pair"]
     assert texts(cell + "hat: p") == ["pair"]
     assert texts(cell + "snare: 2 4 p") == []  # a line of beats holds only beats
@@ -74,13 +74,13 @@ def test_instrument_lines_offer_names_of_their_type():
 
 
 def test_a_drums_block_offers_names_of_steps():
-    cell = "%%music\nsteps pair = X-x-\nchords verse = Am F\npattern groove = {\n  snare.ghost: {\n    "
+    cell = "%%music\nsteps pair = ^-x-\nchords verse = Am F\npattern groove = {\n  snare.ghost: {\n    "
     assert texts(cell) == ["pair"]
     assert texts(cell + "p") == ["pair"]
     assert texts(cell + "--x-\n    {\n      ") == ["pair"]  # a block inside it holds steps too
     assert "kick: " in texts(cell + "--x-\n  }\n  ")  # closed: back to the pattern's lines
-    assert texts("%%music\nsteps pair = X-x-\nsteps ghosts = {\n  ") == ["pair"]
-    assert texts("%%music\nsteps pair = X-x-\nplay hat: x--- {\n  ") == ["pair"]
+    assert texts("%%music\nsteps pair = ^-x-\nsteps ghosts = {\n  ") == ["pair"]
+    assert texts("%%music\nsteps pair = ^-x-\nplay hat: x--- {\n  ") == ["pair"]
 
 
 def test_a_name_is_not_offered_inside_its_own_braces():
@@ -120,7 +120,7 @@ def test_play_offers_patterns_and_lengths():
 
 
 def test_a_type_offers_what_it_holds_after_the_equals():
-    cell = "%%music\nsteps pair = X-x-\nchords verse = Am F\npattern hit = { crash: 1 }\n"
+    cell = "%%music\nsteps pair = ^-x-\nchords verse = Am F\npattern hit = { crash: 1 }\n"
     assert texts(cell + "steps ") == []  # still writing the name
     assert texts(cell + "steps four = ") == ["pair"]
     assert texts(cell + "chords song = ") == ["verse"]

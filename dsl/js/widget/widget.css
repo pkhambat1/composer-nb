@@ -1,22 +1,30 @@
-/* Styles for the notebook widget. Colors come from the host notebook's theme
-   variables (JupyterLab, VS Code) when present, so it follows light/dark. */
+/* Styles for the player. Colors come from the host's theme variables when it has them
+   (--jp-* in JupyterLab and VS Code, --theme-* in Observable), so it follows light/dark. */
+
+/* The node the player is drawn into: a custom element outside Jupyter, inline by default. */
+.cnb-host {
+  display: block;
+}
 
 .cnb {
-  --cnb-accent: var(--jp-brand-color1, #1a73e8);
-  --cnb-text: var(--jp-ui-font-color1, rgba(0, 0, 0, 0.87));
-  --cnb-mute: var(--jp-ui-font-color2, rgba(0, 0, 0, 0.54));
-  --cnb-paper: var(--jp-layout-color1, #fff);
-  --cnb-border: var(--jp-border-color2, rgba(0, 0, 0, 0.12));
-  --cnb-wave: var(--jp-ui-font-color3, rgba(0, 0, 0, 0.38));
-  --cnb-error: var(--jp-error-color1, #b00020);
-  --cnb-mono: var(--jp-code-font-family, ui-monospace, "SF Mono", Menlo, monospace);
+  --cnb-accent: var(--jp-brand-color1, var(--theme-foreground-focus, #1a73e8));
+  --cnb-text: var(--jp-ui-font-color1, var(--theme-foreground, rgba(0, 0, 0, 0.87)));
+  --cnb-mute: var(--jp-ui-font-color2, var(--theme-foreground-muted, rgba(0, 0, 0, 0.54)));
+  --cnb-paper: var(--jp-layout-color1, var(--theme-background, #fff));
+  --cnb-border: var(--jp-border-color2, var(--theme-foreground-faintest, rgba(0, 0, 0, 0.12)));
+  --cnb-wave: var(--jp-ui-font-color3, var(--theme-foreground-fainter, rgba(0, 0, 0, 0.38)));
+  --cnb-error: var(--jp-error-color1, var(--theme-red, #b00020));
+  --cnb-mono: var(
+    --jp-code-font-family,
+    var(--monospace, ui-monospace, "SF Mono", Menlo, monospace)
+  );
 
   display: flex;
   flex-direction: column;
   gap: 8px;
   padding: 4px 0;
   color: var(--cnb-text);
-  font-family: var(--jp-ui-font-family, system-ui, sans-serif);
+  font-family: var(--jp-ui-font-family, var(--sans-serif, system-ui, sans-serif));
   font-size: 13px;
 }
 

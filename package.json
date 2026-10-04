@@ -1,5 +1,5 @@
 {
-  "name": "composer-nb",
+  "name": "composer-nb-workspace",
   "private": true,
   "type": "module",
   "workspaces": [
