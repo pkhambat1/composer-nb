@@ -99,6 +99,10 @@ function values(text, kind) {
       // 2 beats rest: a length in front of what fills it
       if (UNITS.includes(p)) return [part("tk-directive-key", p)]
       if (/^[\d(]/.test(p) && UNITS.includes(words[k + 1])) return [part("tk-directive-val", p)]
+      // after a number only a unit or another beat can follow: 2 beatz, 2 pair, 2 x-
+      if (k > 0 && /^[\d(]/.test(words[k - 1]) && !/^[\d(,|{}]/.test(p)) {
+        return [part("tk-error", p)]
+      }
       if (p === "rest") return [part("tk-rest", p)]
       // always plural, so bar only ever says which bar
       if (["bar", "beat", "step"].includes(p)) return [part("tk-error", p)]
@@ -126,6 +130,8 @@ function names(text) {
     // a length is always plural: 1 bars
     if (p === "bar") return part("tk-error", p)
     if (number) return part("tk-directive-val", p)
+    // after a number only bars can follow, so anything else there is a mistake: 4 barz
+    if (wasNumber) return part("tk-error", p)
     return part(NAME_RE.test(p) ? "tk-word" : "tk-error", p)
   })
 }
