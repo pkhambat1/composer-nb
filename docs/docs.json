@@ -11,10 +11,7 @@
   "favicon": "/favicon.svg",
   "styling": {
     "codeblocks": {
-      "theme": {
-        "light": "github-light",
-        "dark": "github-dark"
-      },
+      "theme": "dracula",
       "languages": {
         "custom": [
           "/languages/composer-nb.json",
