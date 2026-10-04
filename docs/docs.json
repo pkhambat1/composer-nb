@@ -16,7 +16,13 @@
         "dark": "github-dark"
       },
       "languages": {
-        "custom": ["/languages/composer-nb.json", "/docs/languages/composer-nb.json"]
+        "custom": [
+          "/languages/composer-nb.json",
+          "languages/composer-nb.json",
+          "./languages/composer-nb.json",
+          "docs/languages/composer-nb.json",
+          "/docs/languages/composer-nb.json"
+        ]
       }
     }
   },
