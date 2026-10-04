@@ -13,7 +13,7 @@ from .song import Song
 DRUMS = ["crash", "ride", "hat", "tom", "floor", "snare", "kick"]
 VARIATIONS = {"ride": ["bell"], "hat": ["open", "pedal"], "snare": ["ghost", "rim"]}
 INSTRUMENTS = ["piano", "epiano", "organ", "pad", "bass", "guitar"]
-SETTINGS = ["time", "tempo", "step", "sound", "key", "capo", "octave", "kit"]
+SETTINGS = ["time", "tempo", "sound", "key", "capo", "octave", "kit"]
 TYPES = ["steps", "chords", "pattern"]
 KITS = ["rock", "synth"]
 UNITS = ["steps", "beats", "bars"]  # what a length on a drum's line is measured in
@@ -98,11 +98,21 @@ def _statement(head: str, body: str, names: Names) -> List[Option]:
         settings = _options([s + " " for s in SETTINGS], "keyword")
         types = _options([t + " " for t in TYPES], "keyword")
         if inside:
-            return parts + patterns + [("bar ", "keyword")] + settings + types
+            return parts + patterns + [("bar ", "keyword"), ("every ", "keyword")] + settings + types
         return settings + types + [("play ", "keyword")]
     first = words[0]
     if first == "play":
         return _sequence(words[1:], patterns, parts)
+    if first == "pattern" and words[2:4] == ["=", "every"]:
+        words = words[3:]  # pattern feet = every 3 steps ...: a pattern at its own pace
+        first = "every"
+    if first == "every":
+        # every 3 steps ...: how long a step lasts, then what plays at that pace
+        if len(words) < 2:
+            return []  # still writing the number
+        if len(words) == 2:
+            return _options([u + " " for u in UNITS], "keyword")
+        return _sequence(words[3:], patterns, parts)
     if first == "bar":
         # bar 2 ..., bar 3 to 4 ...: a place, then what plays there
         if len(words) < 2:

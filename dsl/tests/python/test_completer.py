@@ -36,7 +36,7 @@ def test_a_drum_and_a_dot_offers_its_other_sounds():
 def test_top_of_a_cell_offers_settings_types_and_play():
     assert texts("%%music\nt") == ["time ", "tempo "]
     assert texts("%%music\np") == ["pattern ", "play "]
-    assert texts("%%music\ns") == ["step ", "sound ", "steps "]
+    assert texts("%%music\ns") == ["sound ", "steps "]
     assert texts("%%music\nc") == ["capo ", "chords "]
     assert "kick: " not in texts("%%music\n")
 
@@ -98,6 +98,17 @@ def test_a_bar_offers_what_can_play_there():
     assert texts(cell + "bar 2 hat: ") == ["pair"]
     assert texts(cell + "bar 3 to ") == []  # the last bar's number
     assert texts(cell + "bar 3 to 4 l") == ["lift"]
+
+
+def test_every_offers_units_then_what_plays():
+    cell = "%%music\nsteps pair = x-x-\npattern lift = { hat.pedal: 4 }\npattern groove = {\n  "
+    assert "every " in texts(cell)
+    assert texts(cell + "ev") == ["every "]
+    assert texts(cell + "every ") == []  # the number
+    assert texts(cell + "every 3 ") == ["steps ", "beats ", "bars "]
+    assert texts(cell + "every 3 steps ") == ["lift", *[p + ": " for p in completer.PARTS]]
+    assert texts(cell + "every 3 steps kick: ") == ["pair"]
+    assert texts("%%music\npattern feet = every 3 ") == ["steps ", "beats ", "bars "]
 
 
 def test_play_offers_patterns_and_lengths():

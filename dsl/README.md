@@ -116,7 +116,6 @@ A name only holds its type, and only goes where that type goes. Chords on a drum
 | -------- | ---------- | ---------------------------------------------------------------------------- |
 | `time`   | `4 over 4` | Notes in a bar, over which note: `7 over 8`, or felt in groups: `3+4 over 4` |
 | `tempo`  | `120`      | Quarter notes per minute                                                     |
-| `step`   | `1/16`     | How long one drum step lasts: `1/8`, or `1/12` for triplets                  |
 | `sound`  | `piano`    | What chords play on: `piano`, `epiano`, `organ`, `pad`, `bass`, `guitar`     |
 | `key`    | `C`        | Key for Roman numeral chords: `C`, `Am`, `Bb`, `F#m`                         |
 | `capo`   | `0`        | Capo fret, 0 to 12. Only with `sound guitar`                                 |
@@ -169,7 +168,7 @@ A block of steps is steps, so it can be named too: `steps ghosts = { ... }`. Whe
 
 An open hi-hat rings until the next hi-hat hit closes it (a stick on `hat`, or the foot on `hat.pedal`), and replaces a closed hit at the same moment, so `hat: X-x-` can keep going under `hat.open: ------X-`.
 
-Steps are a picture of time, one character each, a 16th note unless `step` says otherwise: `x` hit, `X` accent, `g` ghost (on the snare, use `snare.ghost`), `d` double, `-` nothing. Spaces mean nothing, so group them by beat, and `|` marks the end of a bar (it's checked): `kick: x--- ---- x--- ---- | x--- --x- x--- ----`.
+Steps are a picture of time, one character each, a 16th note unless they're inside `every`: `x` hit, `X` accent, `g` ghost (on the snare, use `snare.ghost`), `d` double, `-` nothing. Spaces mean nothing, so group them by beat, and `|` marks the end of a bar (it's checked): `kick: x--- ---- x--- ---- | x--- --x- x--- ----`.
 
 Beats are for plain hits: the beats a drum hits on in each bar, counted `1 e & a 2 e & a`. Beats and steps don't mix on a line, and how a hit is played is always drawn in steps.
 
@@ -217,6 +216,17 @@ play {
 ```
 
 A length can also repeat steps, up to the next comma: `2 beats x-` is `x-x-x-x-`. Lengths are always plural, whatever the number (`1 bars`), so `bars` only ever says how long and `bar` only ever says which one.
+
+### Slower and faster steps
+
+`every` goes in front of a pattern, a block or one line, and says how long a step lasts in it. `every 3 steps` makes each step last three 16ths, `every 2 steps` is eighth notes, and `every 1/3 beats` is triplets:
+
+```
+pattern feet = every 3 steps {
+  kick:      X-XX-X--
+  hat.pedal: -x--x-xx
+}
+```
 
 ### Patterns and play
 

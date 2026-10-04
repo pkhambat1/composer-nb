@@ -89,6 +89,7 @@ A name only holds its type, and only goes where that type goes. Chords on a drum
 | To play something once | Put it on a play's own line: \`crash: 1\` |
 | To say how long | A length in front of it: \`3 bars\`, always plural. In front of a pattern, it repeats the pattern for that long |
 | To say which bar | The bar in front of it: \`bar 2 { ... }\` |
+| To change how long a step lasts | \`every\` in front of it: \`every 3 steps { ... }\` |
 | To rest for a while | A length in front of \`rest\`: \`2 beats rest\` |
 | To say how a drum is hit | Draw it in steps: \`x\` hit, \`X\` accent, \`g\` ghost, \`d\` double |
 | Two rhythms on one drum | A block of layers on its line: \`snare.ghost: { ... }\` |
@@ -109,7 +110,6 @@ A setting is a reserved word followed by its value. It applies from where it's w
 |---------|---------|---------|
 | \`time\` | \`4 over 4\` | How many notes are in a bar, over which note: \`7 over 8\`, \`3+4 over 4\` |
 | \`tempo\` | \`120\` | Quarter notes per minute |
-| \`step\` | \`1/16\` | How long one step lasts, as a fraction of a whole note: \`1/8\`, or \`1/12\` for triplets |
 | \`sound\` | \`piano\` | What chords play on: \`piano\`, \`epiano\`, \`organ\`, \`pad\`, \`bass\`, \`guitar\` |
 | \`key\` | \`C\` | Key for Roman numeral chords: \`C\`, \`Am\`, \`Bb\`, \`F#m\` |
 | \`capo\` | \`0\` | Capo fret, 0 to 12. Only works with \`sound guitar\` |
@@ -215,7 +215,7 @@ pattern hats = {
 
 ## Steps
 
-A drum's line is a picture of time: a row of steps, one character each. Each step lasts one \`step\` (a sixteenth note unless you change it).
+A drum's line is a picture of time: a row of steps, one character each. A step is a sixteenth note, unless it's inside \`every\` (below).
 
 | Step | Meaning |
 |------|---------|
@@ -293,6 +293,26 @@ Commas separate the parts of a line. A part is steps as they're drawn (\`dd\`, o
 A length can also repeat steps, up to the next comma: \`2 beats x-\` is \`x-x-x-x-\`. The steps have to fit the length a whole number of times.
 
 Lengths are always plural, whatever the number: \`1 bars\`, \`1 beats\`. That way \`bars\` only ever says how long, and \`bar\` only ever says which one.
+
+## Slower and faster steps
+
+\`every\` goes in front of a pattern, a block or one line, and says how long a step lasts in it:
+
+\`\`\`
+time 3 over 4
+
+pattern feet = every 3 steps {
+  kick:      X-XX-X--
+  hat.pedal: -x--x-xx
+}
+
+play {
+  snare: Xxxx
+  feet
+}
+\`\`\`
+
+Inside \`feet\` each step lasts three 16ths, so the kick and the pedal move every three steps against the snare's four. \`every 2 steps\` is eighth notes, and \`every 1/3 beats\` is triplets. What's outside the block keeps its own steps.
 
 ## Naming steps
 

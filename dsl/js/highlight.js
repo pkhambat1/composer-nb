@@ -154,6 +154,20 @@ function length(text) {
 
 // What can follow play, or sit inside braces: an instrument's line, or names to play.
 function playable(text) {
+  // every 3 steps { ... }: how long a step lasts, then what plays at that pace
+  const pace = /^(every)(\s+)([^\s{]+)(\s*)([A-Za-z]*)(\s*)(.*)$/.exec(text)
+  if (pace) {
+    const [, word, a, n, b, unit, c, rest] = pace
+    return [
+      part("tk-directive-key", word),
+      part(null, a),
+      part(/^[\d(]/.test(n) ? "tk-directive-val" : "tk-error", n),
+      part(null, b),
+      part(UNITS.includes(unit) ? "tk-directive-key" : "tk-error", unit),
+      part(null, c),
+      ...(rest.startsWith("{") ? braces(rest) : rest ? playable(rest) : []),
+    ]
+  }
   const track = /^([A-Za-z][A-Za-z0-9]*(?:\.[A-Za-z0-9]+)?)(\s*)(:)(.*)$/.exec(text)
   if (track) {
     const name = track[1].toLowerCase()
@@ -234,6 +248,9 @@ function line(code) {
     out.push(...len.parts)
     if (len.rest.startsWith("{")) out.push(...braces(len.rest))
     else if (len.rest) out.push(...playable(len.rest))
+  } else if (word === "step" && /^(\s|$)/.test(after)) {
+    // step 1/8 was a setting. every 2 steps { ... } says it now.
+    out.push(part("tk-error", word), ...names(after))
   } else if (SETTINGS.includes(word) && /^\s/.test(after)) {
     // tempo 90, time 7 over 8
     out.push(part("tk-directive-key", word))
