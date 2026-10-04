@@ -118,7 +118,7 @@ play 4 bars {
 
 **Polyrhythmics** · live studio session at KNKX
 
-Twelve steps to the bar: \`every 1/3 beats\` makes each step a triplet, three to a beat. The ride bell plays a 12-step pattern, the snare lands on beat 3, and the kick hits every other step, so it plays six against the bar's four beats.
+Twelve steps to the bar: \`every 1/3 beats\` makes each step a triplet, three to a beat. The ride bell and the kick each play a 12-step pattern, one hit apart from each other, and the snare lands on beat 3.
 
 [▶ Watch on YouTube](https://www.youtube.com/watch?v=YZPtPMCDEs4)`,
     },
@@ -130,7 +130,7 @@ tempo 110
 pattern groove = every 1/3 beats {
   ride.bell: x-x-x-xx-x-x
   snare:     ------x-----
-  kick:      x-
+  kick:      x-x-xx-x-x-x
 }
 
 play 4 bars groove`,
