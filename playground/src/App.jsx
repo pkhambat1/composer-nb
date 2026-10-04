@@ -6,6 +6,7 @@ import React from "react"
 import * as Tone from "tone"
 import * as MusicEngine from "@composer-nb/dsl"
 import { APP_CONSTANTS } from "./shared/constants.js"
+import { EMBED, embedCell, embedTheme, listenForTheme, reportHeight } from "./shared/embed.js"
 import { useCellManager } from "./hooks/useCellManager.js"
 import { usePlayback } from "./hooks/usePlayback.js"
 import { useKeyboard } from "./hooks/useKeyboard.js"
@@ -27,7 +28,7 @@ export default function App() {
   const [runCounter, setRunCounter] = React.useState(0)
   const abortRef = React.useRef(null)
   // Cell management hook
-  const cm = useCellManager(APP_CONSTANTS.STARTER_CELLS)
+  const cm = useCellManager(EMBED ? [embedCell()] : APP_CONSTANTS.STARTER_CELLS)
   const {
     cells,
     selectedId,
@@ -41,7 +42,9 @@ export default function App() {
     undoDelete,
   } = cm
 
-  const [settings, setSetting] = useTheme(APP_CONSTANTS.THEME_DEFAULTS)
+  const [settings, setSetting] = useTheme(
+    EMBED ? { ...APP_CONSTANTS.THEME_DEFAULTS, theme: embedTheme() } : APP_CONSTANTS.THEME_DEFAULTS,
+  )
   const theme = settings.theme || "light"
   const accent = settings.accent || "#1a73e8"
   const density = settings.density || "cozy"
@@ -56,6 +59,18 @@ export default function App() {
       `'${monoFont}', ui-monospace, Menlo, monospace`,
     )
   }, [theme, accent, density, monoFont])
+
+  // In a frame: follow the page's theme, and tell the page how tall the cell is.
+  const embedRef = React.useRef(null)
+  React.useEffect(() => {
+    if (!EMBED) return
+    const stopTheme = listenForTheme((t) => setSetting("theme", t))
+    const stopHeight = reportHeight(embedRef.current)
+    return () => {
+      stopTheme()
+      stopHeight()
+    }
+  }, [setSetting])
 
   const armAudio = React.useCallback(async () => {
     try {
@@ -223,7 +238,49 @@ export default function App() {
     undoDelete,
     setSelectedId,
     setEditingId,
+    single: EMBED,
   })
+
+  const cellList = (
+    <div className="cells">
+      {cells.map((c, i) => (
+        <Cell
+          key={c.id}
+          cell={c}
+          index={i}
+          selected={c.id === selectedId}
+          editing={c.id === editingId}
+          isActive={c.id === activeCellId}
+          theme={theme}
+          accent={accent}
+          focusedCellId={playback.focusedCellId}
+          isPlaying={playback.isPlaying}
+          onSelect={() => setSelectedId(c.id)}
+          onEnterEdit={() => setEditingId(c.id)}
+          onLeaveEdit={() => setEditingId((cur) => (cur === c.id ? null : cur))}
+          onChange={(v) => updateCell(c.id, { source: v })}
+          onRun={() => queuedRunCell(c.id)}
+          onInterrupt={() => interruptCell(c.id)}
+          onDelete={() => deleteCell(c.id)}
+          onSetPreview={(v) => updateCell(c.id, { previewMode: v })}
+          onTogglePlayback={playback.togglePlayback}
+          onPlaybackFinished={playback.onPlaybackFinished}
+          registerPlayer={playback.registerPlayer}
+          unregisterPlayer={playback.unregisterPlayer}
+          armAudio={armAudio}
+        />
+      ))}
+    </div>
+  )
+
+  // One cell and nothing else: see shared/embed.js
+  if (EMBED) {
+    return (
+      <div className="embed-root" ref={embedRef}>
+        {cellList}
+      </div>
+    )
+  }
 
   return (
     <div className="app-shell">
@@ -274,35 +331,7 @@ export default function App() {
                 setSelectedId(null)
             }}
           >
-            <div className="cells">
-              {cells.map((c, i) => (
-                <Cell
-                  key={c.id}
-                  cell={c}
-                  index={i}
-                  selected={c.id === selectedId}
-                  editing={c.id === editingId}
-                  isActive={c.id === activeCellId}
-                  theme={theme}
-                  accent={accent}
-                  focusedCellId={playback.focusedCellId}
-                  isPlaying={playback.isPlaying}
-                  onSelect={() => setSelectedId(c.id)}
-                  onEnterEdit={() => setEditingId(c.id)}
-                  onLeaveEdit={() => setEditingId((cur) => (cur === c.id ? null : cur))}
-                  onChange={(v) => updateCell(c.id, { source: v })}
-                  onRun={() => queuedRunCell(c.id)}
-                  onInterrupt={() => interruptCell(c.id)}
-                  onDelete={() => deleteCell(c.id)}
-                  onSetPreview={(v) => updateCell(c.id, { previewMode: v })}
-                  onTogglePlayback={playback.togglePlayback}
-                  onPlaybackFinished={playback.onPlaybackFinished}
-                  registerPlayer={playback.registerPlayer}
-                  unregisterPlayer={playback.unregisterPlayer}
-                  armAudio={armAudio}
-                />
-              ))}
-            </div>
+            {cellList}
           </main>
 
           <StatusBar editingId={editingId} kernelStatus={kernelStatus} />
