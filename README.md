@@ -2,7 +2,7 @@
 
 **Sketch music like you write code.** Chords and drums in a small language you can read at a glance. Run a cell and hear it, with a drum grid, chord shapes for guitar, and a WAV to keep. It runs in your browser, and right inside Jupyter.
 
-**[Open the playground →](https://composer-nb.vercel.app)** · **[Docs](https://composer-nb.mintlify.site)** · `pip install composer-nb`
+**[Open the playground →](https://composer-nb.vercel.app)** · **[Docs](https://pkhambat.mintlify.site)** · `pip install composer-nb`
 
 <p align="center">
   <img src="docs/images/playground.png" width="820" alt="The composer-nb playground running a cell: guitar chords with a drum pattern, a waveform player, a drum grid and chord diagrams">
@@ -82,7 +82,7 @@ pip install composer-nb
 %load_ext composer_nb
 ```
 
-Then start a cell with `%%music`. Each `play` gives a player, a waveform, a drum grid and the chords it heard, and Tab completes as you type. Named cells carry their settings and names into later ones. See the [docs](https://composer-nb.mintlify.site) for the full language and Python reference.
+Then start a cell with `%%music`. Each `play` gives a player, a waveform, a drum grid and the chords it heard, and Tab completes as you type. Named cells carry their settings and names into later ones. See the [docs](https://pkhambat.mintlify.site) for the full language and Python reference.
 
 ## What's here
 
@@ -90,7 +90,7 @@ Then start a cell with `%%music`. Each `play` gives a player, a waveform, a drum
 | ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `dsl/`        | The language. `dsl/js/` has the parser, chord builder and audio renderer. `dsl/python/` is the [`composer-nb`](dsl/README.md) Python package, which plays the language in Jupyter notebooks. |
 | `playground/` | A notebook-style web app for writing the language and hearing it. It uses `dsl/` as a package, so both always run the same parser.                                                           |
-| `docs/`       | The [docs site](https://composer-nb.mintlify.site): `.mdx` pages and `docs.json`, built by [Mintlify](https://mintlify.com). Also the images in these READMEs.                                |
+| `docs/`       | The [docs site](https://pkhambat.mintlify.site): `.mdx` pages and `docs.json`, built by [Mintlify](https://mintlify.com). Also the images in these READMEs.                                |
 
 ## Working on it
 

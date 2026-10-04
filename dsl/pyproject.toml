@@ -27,7 +27,7 @@ test = ["pytest>=7"]
 
 [project.urls]
 Homepage = "https://github.com/pkhambat1/composer-nb"
-Documentation = "https://composer-nb.mintlify.site"
+Documentation = "https://pkhambat.mintlify.site"
 Issues = "https://github.com/pkhambat1/composer-nb/issues"
 
 [tool.hatch.build.targets.wheel]
