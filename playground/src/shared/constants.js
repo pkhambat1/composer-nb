@@ -2,7 +2,7 @@
 
 export const APP_CONSTANTS = {
   // The docs site, built by Mintlify from the docs/ folder
-  DOCS_URL: "https://composer-nb.mintlify.site",
+  DOCS_URL: "https://pkhambat.mintlify.site",
 
   // Double-key press timeout (ms) for delete confirmation
   DOUBLE_KEY_TIMEOUT: 400,
