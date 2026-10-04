@@ -1240,6 +1240,7 @@ describe("drums", () => {
     expect(firstError("play hat: x-x-x-xo")).toMatch(/hat\.open: x--/)
     expect(firstError("play hat: 4 open")).toMatch(/hat\.open: 1/)
     expect(firstError("play snare.flam: 1")).toMatch(/Drums with a second sound/)
+    expect(firstError("play tom.floor: x--")).toMatch(/"tom.floor" is floor: floor: x--/)
   })
 
   it("won't accent a ghost note", () => {

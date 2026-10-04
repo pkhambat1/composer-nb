@@ -227,6 +227,8 @@ function unknownInstrument(name) {
   if (INSTRUMENTS.includes(name)) {
     return `Chords go on a chords: line, and sound ${name} picks what plays them`
   }
+  // The floor tom is a drum of its own, not a sound of tom
+  if (name === "tom.floor" || name === "floor.tom") return `"${name}" is floor: floor: x--`
   if (name.includes(".")) {
     const close = LANES.find((l) => l.includes(".") && editDistance(name, l) <= 2)
     if (close) return `"${name}" isn't a drum. Did you mean ${close}?`
