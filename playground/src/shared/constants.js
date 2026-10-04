@@ -66,7 +66,7 @@ Lines of different lengths in one pattern. The kick and snare repeat every 7 ste
     {
       type: "music",
       source: `time 7 over 8
-tempo 120
+tempo 100
 
 pattern groove = 3 bars {
   kick: x--x---
