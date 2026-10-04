@@ -7,10 +7,15 @@ In Jupyter, load the cell magic and write music in `%%music` cells:
     %%music intro
     tempo 75
     sound guitar
+
+    pattern beat = {
+      kick: x-------
+      snare: ----x---
+    }
+
     play {
       chords: Am E7|G D
-      kick: loop x-------
-      snare: loop ----x---
+      beat
     }
 
 Or build songs from Python with `Song`.
