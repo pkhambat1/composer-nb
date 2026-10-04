@@ -3,6 +3,8 @@ title: "every"
 description: "Sets the duration of one step for the statements that follow it."
 ---
 
+import { Cell } from "/snippets/cell.jsx"
+
 `every` sets how long one step lasts for a statement or block. Outside `every`, a step is a sixteenth note.
 
 ## Syntax
@@ -49,6 +51,8 @@ every <length> { <statements> }
 
 ## Example
 
+<Cell>
+
 ```composer-nb
 time 3 over 4
 
@@ -62,6 +66,8 @@ play {
   feet
 }
 ```
+
+</Cell>
 
 Inside `feet`, each step lasts three sixteenth notes. The eight steps of the kick and pedal lines last 24 sixteenths, which is two bars of `3 over 4`. The snare line keeps sixteenth-note steps.
 

@@ -3,6 +3,8 @@ title: "Introduction"
 description: "composer-nb is a text language for chord progressions and drum patterns. A cell of source is parsed and rendered to audio in the browser."
 ---
 
+import { Cell } from "/snippets/cell.jsx"
+
 ## Components
 
 | Component      | Description                                                                              | Reference                                        |
@@ -14,6 +16,8 @@ description: "composer-nb is a text language for chord progressions and drum pat
 The Python package and the playground run the same parser and audio engine. Source that is valid in one is valid in the other.
 
 ## Example
+
+<Cell>
 
 ```composer-nb
 time 7 over 8
@@ -29,6 +33,8 @@ play 6 bars {
   groove
 }
 ```
+
+</Cell>
 
 | Line                        | Statement                                    | Effect                                                             |
 | --------------------------- | -------------------------------------------- | ------------------------------------------------------------------ |

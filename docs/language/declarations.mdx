@@ -3,6 +3,8 @@ title: "Declarations"
 description: "Typed names for steps, chords and patterns."
 ---
 
+import { Cell } from "/snippets/cell.jsx"
+
 ## Syntax
 
 ```text
@@ -30,6 +32,8 @@ steps <name> = { <layer> ... }
 
 The value is anything a drum line accepts after its colon: a run of steps, parts with lengths, a list of beats, other `steps` names, or a block of layers.
 
+<Cell>
+
 ```composer-nb
 steps pair = X-x-
 steps burst = 2 beats rest, dd, 1.5 beats rest
@@ -46,6 +50,8 @@ play {
 }
 ```
 
+</Cell>
+
 A list of beats is converted to one bar of steps under the `time` in effect at the declaration.
 
 ## chords
@@ -56,10 +62,14 @@ chords <name> = <bars>
 
 The value is anything a `chords` line accepts after its colon. When the name is used, its bars are inserted as whole bars: a bar line is implied before and after the name.
 
+<Cell>
+
 ```composer-nb
 chords verse = Am E7|G D
 play chords: verse verse F C
 ```
+
+</Cell>
 
 A `chords` value cannot be a block.
 
@@ -73,6 +83,8 @@ pattern <name> = [<length>] <statement>
 
 Declaring a pattern does not play it. The lines and names in the body are checked at the declaration, so those errors are reported even if the pattern is never played. Duration errors are reported when the pattern is played. See [Patterns](/language/patterns).
 
+<Cell>
+
 ```composer-nb
 pattern beat = {
   kick: x---
@@ -83,6 +95,8 @@ pattern song = beat beat fill
 
 play song
 ```
+
+</Cell>
 
 ## Names
 

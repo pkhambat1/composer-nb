@@ -3,6 +3,8 @@ title: "Program structure"
 description: "Cells, statements, blocks, scope and reserved words."
 ---
 
+import { Cell } from "/snippets/cell.jsx"
+
 A program is a cell: a list of statements read top to bottom. A cell produces one output for each `play` statement it contains, and a state that other cells can start from.
 
 ## Statements
@@ -78,6 +80,8 @@ A block holds at most one line for each instrument. A second `kick:` line in the
 | Pattern bodies   | A pattern is evaluated where it is played, with the settings and names in effect at that point, not those at its declaration.         |
 | Cell state       | The top-level settings and declarations at the end of a cell form its state. Another cell can start from that state.                  |
 
+<Cell>
+
 ```composer-nb
 pattern beat = { kick: x--- }
 
@@ -86,6 +90,8 @@ play 2 bars beat
 tempo 60
 play 2 bars beat
 ```
+
+</Cell>
 
 The second play runs at tempo 60, because `beat` is evaluated when it is played.
 

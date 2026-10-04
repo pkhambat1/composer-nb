@@ -3,6 +3,8 @@ title: "Chord lines"
 description: "The chords instrument line: bars, slots, chord symbols and Roman numerals."
 ---
 
+import { Cell } from "/snippets/cell.jsx"
+
 ## Syntax
 
 ```text
@@ -11,10 +13,14 @@ chords: <bar> [| <bar>] ...
 
 A `chords` line is an instrument line. It is valid inside a block or directly after `play`. It plays on the current [`sound`](/language/settings#sound).
 
+<Cell>
+
 ```composer-nb
 sound guitar
 play chords: C - - G|Am - F G|%|F - _ -
 ```
+
+</Cell>
 
 ## Bars and slots
 
@@ -64,10 +70,14 @@ A Roman numeral names a chord by its scale degree in the current [`key`](/langua
 | `ø`              | Half-diminished (`m7b5`).                            |
 | `quality`        | Appended to the chord: `V7`, `ii7`, `Imaj7`.         |
 
+<Cell>
+
 ```composer-nb
 key C
 play chords: I vi|IV V7|bVII IV|ii7 vii°
 ```
+
+</Cell>
 
 In C this plays `C Am`, `F G7`, `Bb F`, `Dm7 Bdim`.
 

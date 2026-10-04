@@ -3,6 +3,8 @@ title: "bar"
 description: "Places statements in specific bars of a pattern or play."
 ---
 
+import { Cell } from "/snippets/cell.jsx"
+
 `bar` limits what follows it to one bar, or a range of bars, of the pattern or play that contains it.
 
 ## Syntax
@@ -41,6 +43,8 @@ bar <n> to <m> { <statements> }
 
 ## Example
 
+<Cell>
+
 ```composer-nb
 time 7 over 8
 tempo 90
@@ -62,6 +66,8 @@ play 6 bars {
   groove
 }
 ```
+
+</Cell>
 
 `groove` has no length. Its lines end together after 28 steps, which is two bars of `7 over 8`, so it already contains bar 2. The `snare.ghost` line in `bar 2` replaces the outer `snare.ghost` hit that falls on the same moment and leaves the others in place.
 
