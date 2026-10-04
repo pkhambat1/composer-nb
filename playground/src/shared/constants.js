@@ -142,11 +142,11 @@ play 4 bars groove`,
 
 A polyrhythm exercise
 
-Three lines of different lengths in one pattern. The floor tom hits every 3 steps, the kick every 4 and the snare every 5. They drift apart, and only land together again after 60 steps, which is where the pattern ends.`,
+Three lines of different lengths in one pattern. The floor tom hits every 3 steps, the kick every 4 and the snare every 5. They drift apart, and only land together again after 60 steps: five bars of 3 over 4, which is where the pattern ends.`,
     },
     {
       type: "music",
-      source: `time 4 over 4
+      source: `time 3 over 4
 tempo 120
 
 pattern groove = {
