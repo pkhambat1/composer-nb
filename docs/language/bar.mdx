@@ -1,0 +1,80 @@
+---
+title: "bar"
+description: "Places statements in specific bars of a pattern or play."
+---
+
+`bar` limits what follows it to one bar, or a range of bars, of the pattern or play that contains it.
+
+## Syntax
+
+```text
+bar <n> <statement>
+bar <n> { <statements> }
+bar <n> to <m> <statement>
+bar <n> to <m> { <statements> }
+```
+
+| Parameter   | Type                      | Description                                                              |
+| ----------- | ------------------------- | ------------------------------------------------------------------------ |
+| `n`         | Whole number, 1 to 64     | The bar, counted from 1 from the start of the containing pattern or play. |
+| `m`         | Whole number, `n` to 64   | The last bar of a range. The range includes both ends.                   |
+| `statement` | Instrument line or sequence line | What plays in those bars.                                         |
+
+`bar` is valid inside a pattern or a play. It is an error at top level.
+
+## Behavior
+
+| Aspect      | Behavior                                                                                                         |
+| ----------- | ---------------------------------------------------------------------------------------------------------------- |
+| Content     | The statements form a pattern that lasts exactly the named bars. Each one repeats to fill them and must fit a whole number of times. |
+| Placement   | The content starts at the beginning of bar `n` on each pass through the containing pattern or play.              |
+| Mixing      | The content is added to what the containing block plays in those bars. It does not silence other lines.          |
+| Precedence  | A `bar` statement counts as a lower line. Where it hits the same instrument at the same moment as a line above it, the `bar` content is used. See [Simultaneous hits](/language/drums#simultaneous-hits). |
+
+## Effect on duration
+
+| Containing block          | Effect                                                                         |
+| ------------------------- | ------------------------------------------------------------------------------ |
+| Pattern without a length  | The pattern is extended in whole multiples of its duration until it contains bar `m`. |
+| Pattern or play with a length | The length must contain bar `m`. Otherwise it is an error.                 |
+| Play without a length     | The play lasts at least to the end of bar `m`.                                 |
+
+## Example
+
+```composer-nb
+time 7 over 8
+tempo 90
+
+pattern groove = {
+  kick: x--x---
+  snare: 2e 4
+  snare.ghost: --x----
+  hat: X-x-
+  bar 2 {
+    snare.ghost: 2 beats rest, dd, 1 beats rest
+    hat.open: 2 beats rest, --X-, 2 steps rest
+    hat.pedal: 4
+  }
+}
+
+play 6 bars {
+  crash: 1
+  groove
+}
+```
+
+`groove` has no length. Its lines end together after 28 steps, which is two bars of `7 over 8`, so it already contains bar 2. The `snare.ghost` line in `bar 2` replaces the outer `snare.ghost` hit that falls on the same moment and leaves the others in place.
+
+<img src="/images/one-bar-only.svg" alt="A two-bar groove. The kick, snare, ghost note and hi-hat lines repeat in both bars. A bar 2 block adds a burst of doubles, an open hi-hat and a pedal close in bar 2 only." />
+
+## Errors
+
+| Message                                                                                         | Cause                                         |
+| ----------------------------------------------------------------------------------------------- | --------------------------------------------- |
+| `bar takes the number of a bar, then what plays there: bar 2 { ... }, or bar 3 to 4 { ... }`    | No bar number.                                |
+| `bar 2 needs what plays there: bar 2 { ... }`                                                   | Nothing after the bar number.                 |
+| `Bars are counted from 1, up to 64: bar 1, bar 2`                                               | Bar number below 1, above 64 or not whole.    |
+| `bar 4 to 3 runs backwards. The first bar comes first`                                          | `m` less than `n`.                            |
+| `groove is 1 bar long, so it has no bar 2`                                                      | The containing block's length excludes the bar. |
+| `bar 2 { ... } goes inside a pattern or a play, to say where in it`                             | `bar` at top level.                           |
+| `bars is a length, and goes after a number: 6 bars groove. To say which bars, write bar: bar 3 to 4 { ... }` | `bars` used in place of `bar`.   |

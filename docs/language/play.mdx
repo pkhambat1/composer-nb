@@ -1,0 +1,93 @@
+---
+title: "play"
+description: "The statement that produces output."
+---
+
+`play` evaluates what follows it and produces one output. It is the only statement that produces sound, and it is valid at top level only.
+
+## Syntax
+
+```text
+play <sequence>
+play [<length>] { <statements> }
+play [<length>] <instrument line>
+```
+
+| Part              | Description                                                                                   |
+| ----------------- | --------------------------------------------------------------------------------------------- |
+| `sequence`        | Patterns in a row. See [Sequence lines](/language/patterns#sequence-lines).                   |
+| `length`          | Optional. A number of `bars`. Sets the duration of the play.                                  |
+| `statements`      | Instrument lines, sequence lines, [`bar`](/language/bar), [`every`](/language/every), settings and declarations. |
+| `instrument line` | One [drum line](/language/drums) or [chord line](/language/chords).                           |
+
+`play groove` is equivalent to `play { groove }`.
+
+```composer-nb
+pattern groove = {
+  kick: x---x---
+  snare: ----x---
+}
+
+play groove
+play 2 bars chords: Am F
+play 4 bars {
+  crash: 1
+  groove
+}
+```
+
+This cell produces three outputs.
+
+## Body
+
+A play is a timeline. Its statements start together at the beginning of the play.
+
+| Statement in the body                 | Behavior                                              |
+| ------------------------------------- | ----------------------------------------------------- |
+| Instrument line                       | Plays once.                                           |
+| Sequence line with one item           | Repeats until the play ends.                          |
+| Sequence line with two or more items  | Plays its items in order, once.                       |
+| `bar <n> ...`                         | Plays in that bar.                                    |
+| `every <length> ...`                  | Repeats until the play ends, at that step duration.   |
+| Setting or declaration                | Local to the play.                                    |
+
+This differs from a [pattern body](/language/patterns#body), where every statement repeats.
+
+## Duration
+
+| Play             | Duration                                                              |
+| ---------------- | --------------------------------------------------------------------- |
+| With a length    | The length.                                                           |
+| Without a length | The duration of the longest statement in the body.                    |
+
+A play can be longer than its content. The remainder is silent: `play 2 bars { crash: 1 }` is one crash followed by silence to the end of bar 2.
+
+Statements that repeat must fit the play's duration a whole number of times. See [Fit rule](/language/patterns#fit-rule).
+
+A play cannot last longer than 10 minutes at the current tempo.
+
+## Output
+
+| Field    | Content                                                                             |
+| -------- | ----------------------------------------------------------------------------------- |
+| Label    | The `play` line. A multi-line block is shown as `{ … }`.                             |
+| Summary  | Time, tempo and bar count, for example `time 7 over 8 · tempo 120 · 6 bars`, followed by the chord sound and capo if chords are played. |
+| Audio    | The rendered play, with a waveform and a WAV download.                              |
+| Grid     | The drum hits, bar by bar.                                                          |
+| Chords   | Each chord in the order first played.                                               |
+
+Outputs appear in the order of the `play` statements.
+
+## Errors
+
+| Message                                                                                     | Cause                                       |
+| ------------------------------------------------------------------------------------------- | ------------------------------------------- |
+| `play needs something after it: play groove, or play { ... }`                               | Nothing after `play`.                       |
+| `play is a keyword, not a name, so it takes no =: play { ... }`                             | `play = ...`.                               |
+| `play is a keyword, not an instrument, so it takes no colon: play groove`                   | `play: ...`.                                |
+| `play goes at the top, not inside braces`                                                   | `play` inside a block.                      |
+| `This play has nothing in its braces`                                                       | Empty block.                                |
+| `play needs a } to close it`                                                                | Unclosed block.                             |
+| `A length goes in front of what it measures: play 2 bars { ... }`                           | Length written after the block.             |
+| `Nothing plays this line. Write play groove`                                                | A sequence line at top level.               |
+| `This plays for over 10 minutes. Use a shorter length`                                      | Duration above 600 seconds.                 |

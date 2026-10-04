@@ -1,0 +1,102 @@
+---
+title: "Chord lines"
+description: "The chords instrument line: bars, slots, chord symbols and Roman numerals."
+---
+
+## Syntax
+
+```text
+chords: <bar> [| <bar>] ...
+```
+
+A `chords` line is an instrument line. It is valid inside a block or directly after `play`. It plays on the current [`sound`](/language/settings#sound).
+
+```composer-nb
+sound guitar
+play chords: C - - G|Am - F G|%|F - _ -
+```
+
+## Bars and slots
+
+`|` separates bars. Within a bar, the tokens are separated by spaces and divide the bar into equal slots.
+
+| Token            | Meaning                                                        |
+| ---------------- | -------------------------------------------------------------- |
+| Chord symbol     | Starts the chord at this slot.                                 |
+| Roman numeral    | Starts the chord on that degree of the current `key`.          |
+| `-`              | Holds the previous chord for this slot.                        |
+| `_`              | Silence for this slot.                                         |
+| `%`              | Repeats the previous bar. Must be the only token in its bar.   |
+| `chords` name    | Inserts the named bars. A bar line is implied on each side.    |
+
+Each slot must be a whole number of sixteenth notes. A `4 over 4` bar accepts 1, 2, 4, 8 or 16 slots. Three chords in a `4 over 4` bar is an error; write `Am - F G`.
+
+In the example above, bar 1 is C for three beats and G for one, bar 3 repeats bar 2, and bar 4 is F for two beats followed by two beats of silence.
+
+## Chord symbols
+
+```text
+<root>[<quality>][/<bass>]
+```
+
+| Part      | Values                                                                                              |
+| --------- | --------------------------------------------------------------------------------------------------- |
+| `root`    | `A` to `G`, with an optional `#` or `b`.                                                            |
+| `quality` | Empty for major, or a standard suffix: `m`, `7`, `maj7`, `m7`, `9`, `dim`, `aug`, `sus2`, `sus4`, `add9`, `m7b5` and others. `sus` is read as `sus4`. |
+| `bass`    | A note name. Replaces the root as the lowest note.                                                  |
+
+Examples: `C`, `Am`, `F#m`, `Bb7`, `Cmaj7`, `Dm9`, `G7sus4`, `Em7b5`, `Cadd9`, `C/E`.
+
+## Roman numerals
+
+```text
+[b|#]<numeral>[°|o|ø][<quality>]
+```
+
+A Roman numeral names a chord by its scale degree in the current [`key`](/language/settings#key). Degrees are taken from the major scale in a major key and from the natural minor scale in a minor key.
+
+| Element          | Meaning                                              |
+| ---------------- | ---------------------------------------------------- |
+| `I` to `VII`     | Major chord on that degree.                          |
+| `i` to `vii`     | Minor chord on that degree.                          |
+| `b` or `#` prefix | Lowers or raises the root by a semitone.            |
+| `°` or `o`       | Diminished. With `7`, diminished seventh.            |
+| `ø`              | Half-diminished (`m7b5`).                            |
+| `quality`        | Appended to the chord: `V7`, `ii7`, `Imaj7`.         |
+
+```composer-nb
+key C
+play chords: I vi|IV V7|bVII IV|ii7 vii°
+```
+
+In C this plays `C Am`, `F G7`, `Bb F`, `Dm7 Bdim`.
+
+## Voicing
+
+| Sound          | Voicing                                                                                                    |
+| -------------- | ---------------------------------------------------------------------------------------------------------- |
+| All but guitar | Chord tones stacked upward from the root in the current [`octave`](/language/settings#octave), within two octaves. The bass note sounds one octave below. |
+| `guitar`       | The fretboard shape for the chord where one is known, shifted up by [`capo`](/language/settings#capo). Otherwise as above. |
+
+## Repetition
+
+| Location     | Behavior                                              |
+| ------------ | ----------------------------------------------------- |
+| In a pattern | The line repeats until the pattern ends.              |
+| In a play    | The line plays once.                                  |
+
+A block holds one `chords` line. Chords cannot be layered in a block of their own.
+
+## Errors
+
+| Message                                                                                         | Cause                                         |
+| ----------------------------------------------------------------------------------------------- | --------------------------------------------- |
+| `Chords go on a chords: line, e.g. chords: Am F`                                                | Chord symbols with no instrument.             |
+| `A 4 over 4 bar can't be split evenly into 3. Use - to hold a chord for another slot, e.g. Am - F G` | Slot count does not divide the bar.      |
+| `"Hm" isn't a chord I know`                                                                     | Unrecognized chord symbol.                    |
+| `This line starts with - but there's no chord to hold yet`                                      | `-` in the first slot.                        |
+| `% repeats the bar before it, but this is the first bar`                                        | `%` in the first bar.                         |
+| `% stands for a whole bar, so it goes between bar lines on its own: Am F\|%`                    | `%` next to other tokens in a bar.            |
+| `chords already has a line in this play. Chords play one at a time, so put them all on one line` | Second `chords` line in a block.             |
+| `Chords play one at a time, so they can't be layered in a block. Put them on one line: chords: Am F\|C G` | A block after `chords:` or `chords <name> =`. |
+| `capo only works on guitar. Add sound guitar`                                                   | `capo` set in a cell that plays no guitar.    |

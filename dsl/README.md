@@ -1,6 +1,6 @@
 # composer-nb
 
-A small language for chords and drums, played right inside Jupyter notebooks. Run a cell and hear it, with a drum grid, chord shapes for guitar, and a WAV to keep. **[Try it in your browser](https://composer-nb.vercel.app)**, with nothing to install.
+A small language for chords and drums, played right inside Jupyter notebooks. Run a cell and hear it, with a drum grid, chord shapes for guitar, and a WAV to keep. **[Try it in your browser](https://composer-nb.vercel.app)**, with nothing to install. The full reference is in the **[docs](https://composer-nb.mintlify.site)**.
 
 <p align="center">
   <img src="https://raw.githubusercontent.com/pkhambat1/composer-nb/main/docs/images/playground.png" width="820" alt="A composer-nb cell: guitar chords with a drum pattern, a waveform player, a drum grid and chord diagrams">

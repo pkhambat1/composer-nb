@@ -1,0 +1,55 @@
+---
+title: "Introduction"
+description: "composer-nb is a text language for chord progressions and drum patterns. A cell of source is parsed and rendered to audio in the browser."
+---
+
+## Components
+
+| Component      | Description                                                                              | Reference                                        |
+| -------------- | ---------------------------------------------------------------------------------------- | ------------------------------------------------ |
+| Language       | Line-oriented syntax for settings, typed names, instrument lines and `play` statements.   | [Program structure](/language/program-structure) |
+| Python package | `composer-nb` on PyPI. Adds the `%%music` cell magic and the `Song` class to Jupyter.      | [Installation](/python/installation)             |
+| Playground     | Browser notebook at [composer-nb.vercel.app](https://composer-nb.vercel.app). No install. | [Notebook](/playground/notebook)                 |
+
+The Python package and the playground run the same parser and audio engine. Source that is valid in one is valid in the other.
+
+## Example
+
+```composer-nb
+time 7 over 8
+
+pattern groove = 3 bars {
+  kick: x--x---
+  snare: ----x--
+  ride.bell: x--
+}
+
+play 6 bars {
+  crash: 1
+  groove
+}
+```
+
+| Line                        | Statement                                    | Effect                                                             |
+| --------------------------- | -------------------------------------------- | ------------------------------------------------------------------ |
+| `time 7 over 8`             | [Setting](/language/settings)                | Sets the bar to seven eighth notes.                                |
+| `pattern groove = 3 bars {` | [Declaration](/language/declarations)        | Binds `groove` to a three-bar pattern. Nothing sounds yet.         |
+| `kick: x--x---`             | [Drum line](/language/drums)                 | Seven steps on the kick. Repeats until the pattern ends.           |
+| `play 6 bars {`             | [`play`](/language/play)                     | Produces one six-bar output.                                       |
+| `crash: 1`                  | [Drum line](/language/drums)                 | One crash on beat 1. Lines written directly in a `play` play once. |
+| `groove`                    | [Sequence line](/language/patterns#sequence-lines) | Plays `groove`, repeated until the play ends.                |
+
+## Output
+
+Each `play` statement produces one output with these parts:
+
+| Part       | Content                                                                                    |
+| ---------- | ------------------------------------------------------------------------------------------ |
+| Header     | The `play` line and a summary of the form `time 7 over 8 · tempo 120 · 6 bars`.             |
+| Player     | Rendered audio with a waveform. Clicking the waveform seeks.                                |
+| WAV        | The rendered audio as a `.wav` download.                                                    |
+| Drum grid  | One row per drum line, one column per subdivision, drawn bar by bar.                        |
+| Chord list | Each chord played, with its note names. The playground also draws a diagram for each chord. |
+| Errors     | Line number and message for each statement that failed. See [Errors](/language/errors).     |
+
+Audio is rendered in the browser. The `piano` and `guitar` sounds and the `rock` drum kit load samples from the network on first use.

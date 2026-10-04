@@ -1,0 +1,57 @@
+---
+title: "Quickstart"
+description: "Run a cell in Jupyter or in the playground."
+---
+
+## Jupyter
+
+Requires Python 3.9 or later and a notebook front end that supports [anywidget](https://anywidget.dev): JupyterLab, Jupyter Notebook 7, VS Code or Google Colab.
+
+1. Install the package.
+
+   ```bash
+   pip install composer-nb
+   ```
+
+2. Load the extension in a notebook cell.
+
+   ```python
+   %load_ext composer_nb
+   ```
+
+3. Run a `%%music` cell.
+
+   ```composer-nb
+   %%music
+   sound guitar
+
+   pattern beat = {
+     kick: x-------
+     snare: ----x---
+     hat: x-
+   }
+
+   play {
+     chords: Am F|C G
+     beat
+   }
+   ```
+
+The cell output contains a player, a drum grid and the chords played. See [`%%music`](/python/music-magic) for cell names and `after`, and [`Song`](/python/song) for the Python API.
+
+## Playground
+
+1. Open [composer-nb.vercel.app](https://composer-nb.vercel.app).
+2. Select a music cell and press `Shift+Enter`.
+
+The playground takes the same source without the `%%music` line. See [Notebook](/playground/notebook).
+
+## Next
+
+| Topic                                  | Page                                             |
+| -------------------------------------- | ------------------------------------------------ |
+| Statement kinds, blocks and scope      | [Program structure](/language/program-structure) |
+| `time`, `tempo`, `sound` and the rest  | [Settings](/language/settings)                   |
+| Chord syntax                           | [Chord lines](/language/chords)                  |
+| Drum syntax                            | [Drum lines](/language/drums)                    |
+| Repetition and duration                | [Patterns](/language/patterns)                   |

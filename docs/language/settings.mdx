@@ -1,0 +1,143 @@
+---
+title: "Settings"
+description: "Reserved words that set the meter, tempo, key and sounds."
+---
+
+## Syntax
+
+```text
+<setting> <value>
+```
+
+A setting is a reserved word followed by its value. It takes no `=` and no `:`. Writing `tempo = 90` or `tempo: 90` is an error.
+
+## Summary
+
+| Setting              | Value                            | Default    | Applies to               |
+| -------------------- | -------------------------------- | ---------- | ------------------------ |
+| [`time`](#time)      | `<count> over <unit>`            | `4 over 4` | Bar length               |
+| [`tempo`](#tempo)    | Number, 20 to 400                | `120`      | Playback speed           |
+| [`sound`](#sound)    | Sound name                       | `piano`    | `chords` lines           |
+| [`key`](#key)        | Key name                         | `C`        | Roman numeral chords     |
+| [`capo`](#capo)      | Whole number, 0 to 12            | `0`        | Chords on `sound guitar` |
+| [`octave`](#octave)  | Whole number, 1 to 6             | `3`        | Chord voicing            |
+| [`kit`](#kit)        | `rock` or `synth`                | `rock`     | Drum lines               |
+
+## Scope
+
+A setting applies from the line where it is written. At top level it lasts to the end of the cell and is part of the state passed to other cells. Inside a block it is local to the block. A pattern uses the settings in effect where it is played. See [Scope](/language/program-structure#scope).
+
+When a cell starts from another cell's state, its output header lists the inherited settings that differ from the defaults.
+
+## time
+
+```text
+time <count> over <unit>
+```
+
+| Parameter | Type                                 | Description                                                                                         |
+| --------- | ------------------------------------ | --------------------------------------------------------------------------------------------------- |
+| `count`   | Positive whole number, or a sum      | Notes per bar. A sum such as `3+4` gives the same bar length as `7` and sets the grouping shown in the drum grid. |
+| `unit`    | `1`, `2`, `4`, `8` or `16`           | The note value being counted.                                                                       |
+
+A bar lasts `count × 4 / unit` beats, where a beat is a quarter note. A bar cannot be longer than 8 whole notes.
+
+`over` is required. `time 7/8` is an error, because `7/8` is the number 0.875. `6 over 8` and `3 over 4` have the same bar length and are distinct values.
+
+```composer-nb
+time 3+4 over 8
+play { kick: x--x--- }
+```
+
+## tempo
+
+```text
+tempo <number>
+```
+
+Quarter notes per minute, from 20 to 400. Decimals are accepted.
+
+## sound
+
+```text
+sound <name>
+```
+
+The sound that `chords` lines play on.
+
+| Value    | Source                                                             |
+| -------- | ------------------------------------------------------------------ |
+| `piano`  | Sampled grand piano. Samples load from the network.                |
+| `epiano` | Synthesized electric piano.                                        |
+| `organ`  | Synthesized organ.                                                 |
+| `pad`    | Synthesized pad with a slow attack.                                |
+| `bass`   | Synthesized bass.                                                  |
+| `guitar` | Sampled steel-string guitar. Samples load from the network. Chords are played as fretboard shapes where a shape is known. |
+
+A drum name is not a valid value. Drums are written as [drum lines](/language/drums).
+
+## key
+
+```text
+key <note>[m]
+```
+
+The key that [Roman numeral chords](/language/chords#roman-numerals) resolve against. `note` is a letter `A` to `G` with an optional `#` or `b`. A trailing `m` selects a minor key.
+
+| Example  | Key            |
+| -------- | -------------- |
+| `key C`  | C major        |
+| `key Am` | A minor        |
+| `key Bb` | B flat major   |
+| `key F#m`| F sharp minor  |
+
+## capo
+
+```text
+capo <fret>
+```
+
+A whole number from 0 to 12. With `sound guitar`, each chord sounds `fret` semitones higher than written. Chord labels and diagrams keep the written shape.
+
+`capo` has no effect on other sounds. A cell that sets a capo above 0 and plays, but plays no guitar chords, reports `capo only works on guitar. Add sound guitar`. An inherited capo does not trigger this error.
+
+```composer-nb
+sound guitar
+capo 2
+play chords: Am E7|G D
+```
+
+## octave
+
+```text
+octave <number>
+```
+
+A whole number from 1 to 6. Sets the octave of each chord's root. The bass note is placed one octave below the root. Guitar chords played as fretboard shapes ignore this setting.
+
+## kit
+
+```text
+kit <name>
+```
+
+| Value   | Source                                                                                      |
+| ------- | ------------------------------------------------------------------------------------------- |
+| `rock`  | Recorded drum kit. Samples load from the network. A sample that fails to load is replaced by the synthesized sound for that drum. |
+| `synth` | Synthesized drum kit. No network access.                                                    |
+
+## Errors
+
+| Message                                                                        | Cause                                             |
+| ------------------------------------------------------------------------------ | ------------------------------------------------- |
+| `tempo is a setting, not a name, so it takes no =: tempo 90`                   | `=` after a setting.                              |
+| `tempo is a setting, not an instrument, so it takes no colon: tempo 90`        | `:` after a setting.                              |
+| `tempo needs a value after it, e.g. tempo 90`                                  | No value.                                         |
+| `tempo is quarter notes per minute, between 20 and 400`                        | Value out of range or not a number.               |
+| `/ is division, so 7/8 is the number 0.875, not a time. Write time 7 over 8`   | `time` written as a fraction.                     |
+| `The second number of time is the note being counted: 1, 2, 4, 8 or 16`        | Invalid `unit`.                                   |
+| `sound is one of: piano, epiano, organ, pad, bass, guitar`                     | Unknown sound.                                    |
+| `key looks like C, Am, Bb or F#m`                                              | Unknown key.                                      |
+| `capo is a fret number from 0 to 12`                                           | Value out of range or not whole.                  |
+| `octave is a number from 1 to 6`                                               | Value out of range or not whole.                  |
+| `kit is one of: rock, synth`                                                   | Unknown kit.                                      |

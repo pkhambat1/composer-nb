@@ -14,7 +14,7 @@
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "docs": "npx mintlify dev --dir docs"
+    "docs": "cd docs && npx mint dev"
   },
   "devDependencies": {
     "@eslint/js": "^9.13.0",

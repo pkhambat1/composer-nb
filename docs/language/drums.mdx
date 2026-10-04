@@ -1,0 +1,195 @@
+---
+title: "Drum lines"
+description: "Drum instrument lines: instruments, steps, beats, parts with lengths, and layers."
+---
+
+## Syntax
+
+```text
+<drum>: <steps>
+<drum>: <beats>
+<drum>: <part>, <part> ...
+<drum>: { <layer> ... }
+```
+
+A drum line is an instrument line. It is valid inside a block or directly after `play`. It plays on the current [`kit`](/language/settings#kit).
+
+```composer-nb
+play {
+  kick: x---x---x-x-----
+  snare: ----X-------X---
+  snare.ghost: --------------x-
+  hat: 1 2 3 4
+}
+```
+
+## Instruments
+
+| Name          | Sound                                                                |
+| ------------- | -------------------------------------------------------------------- |
+| `kick`        | Bass drum.                                                           |
+| `snare`       | Snare drum.                                                          |
+| `snare.ghost` | Snare ghost notes. Every hit plays at ghost velocity.                |
+| `snare.rim`   | Snare rimshot.                                                       |
+| `hat`         | Closed hi-hat.                                                       |
+| `hat.open`    | Open hi-hat.                                                         |
+| `hat.pedal`   | Hi-hat closed with the foot.                                         |
+| `ride`        | Ride cymbal.                                                         |
+| `ride.bell`   | Ride cymbal bell.                                                    |
+| `crash`       | Crash cymbal.                                                        |
+| `tom`         | Rack tom.                                                            |
+| `floor`       | Floor tom.                                                           |
+
+Each name is a separate line. A block holds one line for each name.
+
+## Steps
+
+A run of steps is a sequence of characters. Each character lasts one step: a sixteenth note, or the duration set by an enclosing [`every`](/language/every).
+
+| Character | Hit                                                        | Velocity |
+| --------- | ---------------------------------------------------------- | -------- |
+| `x`       | Normal hit.                                                | 0.7      |
+| `X`       | Accented hit.                                              | 1.0      |
+| `g`       | Ghost note.                                                | 0.3      |
+| `d`       | Double stroke: two hits, the second half a step later.     | 0.7      |
+| `D`       | Accented double stroke.                                    | 1.0      |
+| `-`       | No hit.                                                    |          |
+
+Spaces between characters are ignored. `|` marks the end of a bar and is validated: a `|` that does not fall on a bar boundary is an error that reports how many steps precede it.
+
+```composer-nb
+play kick: x--- ---- x--- ---- | x--- --x- x--- ----
+```
+
+| Line          | Restriction                                                               |
+| ------------- | ------------------------------------------------------------------------- |
+| `snare`       | `g` is not accepted. Ghost notes go on `snare.ghost`.                     |
+| `snare.ghost` | `X`, `D` and `g` are not accepted. Every hit is already a ghost note.     |
+| All           | `G` is not accepted. A ghost note cannot be accented.                     |
+
+## Beats
+
+A line can list beat positions instead of steps.
+
+```text
+<beat> [<beat>] ...
+<beat> = <number>[e|&|a]
+```
+
+| Suffix | Offset from the beat    |
+| ------ | ----------------------- |
+| none   | On the beat.            |
+| `e`    | One sixteenth later.    |
+| `&`    | Two sixteenths later.   |
+| `a`    | Three sixteenths later. |
+
+A beat is a quarter note in every time signature. A list of beats describes one bar, and each hit is a normal hit.
+
+| Constraint                                                                         |
+| ---------------------------------------------------------------------------------- |
+| Every position must fall inside the bar. A `7 over 8` bar ends on `4e`.            |
+| A position cannot appear twice on a line.                                          |
+| Beats cannot be combined with steps, `\|`, commas or lengths on the same line.     |
+| Accents, ghost notes and doubles are written in steps.                             |
+
+## Parts and lengths
+
+Commas divide a line of steps into parts. A part is either steps as written, or a [length](/language/numbers-and-lengths#lengths) followed by what fills it.
+
+| Part                 | Meaning                                                                      |
+| -------------------- | ---------------------------------------------------------------------------- |
+| `<steps>`            | The steps as written.                                                        |
+| `<length> rest`      | Silence for that length.                                                     |
+| `<length> <steps>`   | The steps repeated to fill that length. They must fit a whole number of times. |
+
+The length is in `steps`, `beats` or `bars` and must equal a whole number of steps.
+
+```composer-nb
+play {
+  snare: 2 beats rest, dd, 1.5 beats rest
+  crash: 1 bars rest, x
+  hat: 2 beats x-, 2 beats rest
+}
+```
+
+A comma is required after a length's part and before the next one. Two runs of steps are separated by a space, not a comma.
+
+## Layers
+
+A block after a drum's colon holds layers of steps, one layer per line.
+
+```composer-nb
+pattern ghosts = {
+  snare.ghost: {
+    --x-
+    ------------ddd-
+  }
+}
+
+play ghosts
+```
+
+| Rule       | Behavior                                                                                         |
+| ---------- | ------------------------------------------------------------------------------------------------ |
+| Length     | Each layer repeats until all layers end together: the least common multiple of their lengths.     |
+| Precedence | Where two layers hit the same step, the lower line is used.                                      |
+| Rests      | A `-` never replaces a hit from another layer.                                                   |
+| Content    | A layer is steps, beats, parts with lengths, or `steps` names. It cannot be an instrument line.   |
+
+The block evaluates to a single run of steps. In the example, the result is `--x---x---x-ddd-`.
+
+## Named steps
+
+A [`steps`](/language/declarations#steps) name is accepted wherever a run of steps is.
+
+```composer-nb
+steps pair = X-x-
+play hat: pair pair
+```
+
+## Simultaneous hits
+
+Lines in a block, and patterns playing at the same time, are mixed by these rules.
+
+| Case                                                        | Result                                                                 |
+| ----------------------------------------------------------- | ---------------------------------------------------------------------- |
+| Different instrument names at the same moment               | Both sound.                                                            |
+| The same instrument name at the same moment, from two lines | The line written lower in the source is used.                          |
+| `hat.open` and `hat` at the same moment                     | Only `hat.open` sounds.                                                |
+| `hat.open` followed by `hat` or `hat.pedal`                 | The open hi-hat rings until the next `hat` or `hat.pedal` hit.         |
+
+```composer-nb
+pattern hats = {
+  hat: X-x-
+  hat.open: ------X-
+}
+
+play 1 bars hats
+```
+
+## Repetition
+
+| Location     | Behavior                                  |
+| ------------ | ----------------------------------------- |
+| In a pattern | The line repeats until the pattern ends.  |
+| In a play    | The line plays once.                      |
+
+Lines of different lengths in one pattern repeat independently. See [Duration](/language/patterns#duration).
+
+## Errors
+
+| Message                                                                                                  | Cause                                         |
+| -------------------------------------------------------------------------------------------------------- | --------------------------------------------- |
+| `An instrument's line goes inside braces: in a pattern, or play { kick: x--- }`                          | Instrument line at top level.                 |
+| `"cymbal" isn't an instrument. Instruments: chords, crash, ride, ride.bell, hat, hat.open, hat.pedal, tom, floor, snare, snare.ghost, snare.rim, kick` | Unknown instrument name. |
+| `kick already has a line in this play. To layer it, put its lines in a block: kick: { ... }`             | Second line for one instrument in a block.    |
+| `"z" isn't a step. Use x (hit), X (accent), g (ghost), d (double) or - (nothing)`                        | Invalid step character.                       |
+| `"g": the snare's ghost notes go on a line of their own: snare.ghost: --x-`                              | `g` on the `snare` line.                      |
+| `"X": snare.ghost hits are ghost notes, so they can't be accented`                                       | Accent on `snare.ghost`.                      |
+| `This \| isn't at the end of a bar: it's after 12 steps, and a 4 over 4 bar is 16 steps`                 | Misplaced bar line.                           |
+| `4& is past the end of a 7 over 8 bar, which ends on 4e`                                                 | Beat outside the bar.                         |
+| `Beats are plain hits in one bar, with nothing else on the line. ...`                                    | Beats mixed with steps or bar lines.          |
+| `A list of beats takes spaces, not commas: 2 4`                                                          | Commas between beats.                         |
+| `rest takes a length in front: 2 beats rest. One step of rest is -`                                      | `rest` without a length.                      |
+| `Lengths are always plural, whatever the number: 1 bars`                                                 | Singular unit.                                |
+| `x-- is 3 steps long, which doesn't fit 2 beats a whole number of times`                                 | Repeated steps do not fill the length evenly. |

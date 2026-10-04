@@ -1,0 +1,5 @@
+# Design notes and screenshots live beside the published pages but aren't documentation.
+# Mintlify publishes every .md and .mdx file it finds, in the navigation or not, so they
+# are excluded here.
+superpowers/
+screenshots/
