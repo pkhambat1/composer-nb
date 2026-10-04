@@ -18,7 +18,7 @@ def texts(cell, songs=None):
 
 
 @pytest.mark.parametrize(
-    "name", ["DRUMS", "VARIATIONS", "INSTRUMENTS", "SETTINGS", "TYPES", "KITS"]
+    "name", ["DRUMS", "VARIATIONS", "INSTRUMENTS", "SETTINGS", "TYPES", "KITS", "UNITS"]
 )
 def test_words_match_the_language(name):
     literal = re.search(rf"^export const {name} = (.+)$", LANGUAGE_JS.read_text(), re.M).group(1)
@@ -36,7 +36,7 @@ def test_a_drum_and_a_dot_offers_its_other_sounds():
 def test_top_of_a_cell_offers_settings_types_and_play():
     assert texts("%%music\nt") == ["time ", "tempo "]
     assert texts("%%music\np") == ["pattern ", "play "]
-    assert texts("%%music\ns") == ["step ", "sound ", "steps "]
+    assert texts("%%music\ns") == ["sound ", "steps "]
     assert texts("%%music\nc") == ["capo ", "chords "]
     assert "kick: " not in texts("%%music\n")
 
@@ -60,8 +60,12 @@ def test_instrument_lines_offer_names_of_their_type():
     cell = "%%music\nsteps pair = X-x-\nchords verse = Am F\nplay {\n  "
     assert texts(cell + "hat: ") == ["pair"]
     assert texts(cell + "hat: p") == ["pair"]
-    assert texts(cell + "snare: 2 4 p") == ["pair"]  # steps after a beat
-    assert texts(cell + "snare: 2 4 a") == []
+    assert texts(cell + "snare: 2 4 p") == []  # a line of beats holds only beats
+    # a length in front of what fills it: 2 beats rest
+    assert texts(cell + "snare: 2 ") == ["steps ", "beats ", "bars "]
+    assert texts(cell + "snare: 2 b") == ["beats ", "bars "]
+    assert texts(cell + "snare: 2 beats ") == ["rest", "pair"]
+    assert texts(cell + "snare: 2 beats rest, ") == ["pair"]
     assert texts(cell + "chords: ") == ["verse"]
     assert texts(cell + "chords: Am ") == ["verse"]
     # A name only goes where its type goes.
@@ -84,10 +88,33 @@ def test_a_name_is_not_offered_inside_its_own_braces():
     assert "groove" in texts("%%music\npattern groove = {\n  kick: x\n}\nplay ")
 
 
+def test_a_bar_offers_what_can_play_there():
+    cell = "%%music\nsteps pair = x-x-\npattern lift = { hat.pedal: 4 }\npattern groove = {\n  "
+    assert "bar " in texts(cell)
+    assert texts(cell + "ba") == ["bar "]
+    assert texts(cell + "bar ") == []  # the bar's number
+    assert texts(cell + "bar 2 ") == ["lift", "to ", *[p + ": " for p in completer.PARTS]]
+    assert texts(cell + "bar 2 hat.") == ["open: ", "pedal: "]
+    assert texts(cell + "bar 2 hat: ") == ["pair"]
+    assert texts(cell + "bar 3 to ") == []  # the last bar's number
+    assert texts(cell + "bar 3 to 4 l") == ["lift"]
+
+
+def test_every_offers_units_then_what_plays():
+    cell = "%%music\nsteps pair = x-x-\npattern lift = { hat.pedal: 4 }\npattern groove = {\n  "
+    assert "every " in texts(cell)
+    assert texts(cell + "ev") == ["every "]
+    assert texts(cell + "every ") == []  # the number
+    assert texts(cell + "every 3 ") == ["steps ", "beats ", "bars "]
+    assert texts(cell + "every 3 steps ") == ["lift", *[p + ": " for p in completer.PARTS]]
+    assert texts(cell + "every 3 steps kick: ") == ["pair"]
+    assert texts("%%music\npattern feet = every 3 ") == ["steps ", "beats ", "bars "]
+
+
 def test_play_offers_patterns_and_lengths():
     cell = "%%music\nsteps pair = x-x-\npattern groove = { kick: x--x }\n"
     assert texts(cell + "play ") == ["groove", *[p + ": " for p in completer.PARTS]]
-    assert texts(cell + "play 3 ") == ["bars ", "bar "]
+    assert texts(cell + "play 3 ") == ["bars "]
     assert texts(cell + "play 3 bars ") == ["groove"]
     assert texts(cell + "play 3 bars (groove g") == ["groove"]
 
@@ -98,7 +125,7 @@ def test_a_type_offers_what_it_holds_after_the_equals():
     assert texts(cell + "steps four = ") == ["pair"]
     assert texts(cell + "chords song = ") == ["verse"]
     assert texts(cell + "pattern outro = ") == ["hit", *[p + ": " for p in completer.PARTS]]
-    assert texts(cell + "pattern outro = 2 ") == ["bars ", "bar "]
+    assert texts(cell + "pattern outro = 2 ") == ["bars "]
     assert texts(cell + "pattern outro = 2 bars h") == ["hit"]
     assert texts(cell + "pattern outro = hit h") == ["hit"]
     assert texts(cell + "pattern fill = snare: ") == ["pair"]

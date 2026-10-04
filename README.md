@@ -42,12 +42,34 @@ play 6 bars {
 
 A play is a timeline: its own lines play once, so the crash hits once while the groove repeats under it. Anything that repeats has to fit what it's in, and if it doesn't, the error says where it lines up.
 
-## Say where it hits
+## Name the bar where something happens
 
-Write busy parts as steps (`x-x-`), and sparse ones by the beats they hit on. Steps after a beat say how it's hit:
+A drum's line is a picture of time (`x--x---`), or the beats it hits on (`2e 4`). Either way it repeats in every bar. For something that happens in one bar only, like a lift at the end of a groove, put the bar in front of it. And instead of counting out a long run of `-`, put a length in front of `rest`:
+
+```
+time 7 over 8
+tempo 90
+
+pattern groove = {
+  kick: x--x---
+  snare: 2e 4
+  snare.ghost: --x----
+  hat: X-x-
+  bar 2 {
+    snare.ghost: 2 beats rest, dd, 1 beats rest
+    hat.open: 2 beats rest, --X-, 2 steps rest
+    hat.pedal: 4
+  }
+}
+
+play 6 bars {
+  crash: 1
+  groove
+}
+```
 
 <p align="center">
-  <img src="docs/images/say-where-it-hits.svg" width="820" alt="The same ghost-note burst written as 28 steps and as -|3 dd, shown on a two-bar grid">
+  <img src="docs/images/one-bar-only.svg" width="820" alt="A groove whose lines repeat in both bars, with a bar 2 block that adds a ghost-note burst, an open hi-hat and a pedal close in bar 2 only">
 </p>
 
 ## In Jupyter

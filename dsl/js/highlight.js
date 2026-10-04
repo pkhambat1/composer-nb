@@ -7,7 +7,7 @@
      .tk-ext, .tk-rest, .tk-slash, .tk-bass, .tk-beat, .tk-step, .tk-step-acc,
      .tk-error
    Whitespace is kept exactly, so the layer lines up with the textarea under it. */
-import { KEYWORDS, LANES, MODIFIERS, PARTS, SETTINGS, TYPES } from "./language.js"
+import { KEYWORDS, LANES, MODIFIERS, PARTS, SETTINGS, TYPES, UNITS } from "./language.js"
 import { isRoman } from "./chords.js"
 
 const ROMAN_RE = /^([#b])?(VII|VI|IV|V|III|II|I|vii|vi|iv|v|iii|ii|i)([°oø]?)(.*)$/
@@ -74,7 +74,7 @@ function valueToken(t, kind) {
   if (kind !== "chord") {
     if (STEPS_RE.test(t)) return stepRun(t)
     if (/^\d+(e|&|a)?$/.test(t)) return [part("tk-beat", t)]
-    // accent, ghost and double are old words: a step after the beat says it now (2 X)
+    // accent, ghost and double are old words: how a hit is played is drawn in steps
     if (MODIFIERS.includes(t)) return [part("tk-error", t)]
   }
   if (/^[a-z][a-z0-9]+$/.test(t) && !isRoman(t)) return [part("tk-word", t)]
@@ -88,9 +88,27 @@ function pieces(text, re) {
 }
 
 function values(text, kind) {
-  return pieces(text, /(\s+|\||[{}])/).flatMap((p) =>
-    /^\s+$/.test(p) ? [part(null, p)] : valueToken(p, kind),
-  )
+  const all = pieces(text, /(\s+|\||[{},])/)
+  const words = all.filter((p) => !/^\s+$/.test(p))
+  let k = -1 // which word this is
+  return all.flatMap((p) => {
+    if (/^\s+$/.test(p)) return [part(null, p)]
+    k++
+    if (p === ",") return [part("tk-punct", p)]
+    if (kind === "drum") {
+      // 2 beats rest: a length in front of what fills it
+      if (UNITS.includes(p)) return [part("tk-directive-key", p)]
+      if (/^[\d(]/.test(p) && UNITS.includes(words[k + 1])) return [part("tk-directive-val", p)]
+      // after a number only a unit or another beat can follow: 2 beatz, 2 pair, 2 x-
+      if (k > 0 && /^[\d(]/.test(words[k - 1]) && !/^[\d(,|{}]/.test(p)) {
+        return [part("tk-error", p)]
+      }
+      if (p === "rest") return [part("tk-rest", p)]
+      // always plural, so bar only ever says which bar
+      if (["bar", "beat", "step"].includes(p)) return [part("tk-error", p)]
+    }
+    return valueToken(p, kind)
+  })
 }
 
 // intro verse, 6 bars (verse chorus), groove { snare: xxxx }: patterns' names, lengths
@@ -108,8 +126,12 @@ function names(text) {
     if (p === "*") return part(wasNumber ? "tk-punct" : "tk-error", p)
     if ("(){}".includes(p)) return part("tk-punct", p)
     if (p === "loop") return part("tk-error", p)
-    if (p === "bars" || p === "bar") return part("tk-directive-key", p)
+    if (p === "bars") return part("tk-directive-key", p)
+    // a length is always plural: 1 bars
+    if (p === "bar") return part("tk-error", p)
     if (number) return part("tk-directive-val", p)
+    // after a number only bars can follow, so anything else there is a mistake: 4 barz
+    if (wasNumber) return part("tk-error", p)
     return part(NAME_RE.test(p) ? "tk-word" : "tk-error", p)
   })
 }
@@ -122,7 +144,8 @@ function length(text) {
     parts: [
       part("tk-directive-val", m[1]),
       part(null, m[2]),
-      part("tk-directive-key", m[3]),
+      // a length is always plural: 1 bars
+      part(m[3] === "bars" ? "tk-directive-key" : "tk-error", m[3]),
       part(null, m[4]),
     ],
     rest: text.slice(m[0].length),
@@ -131,6 +154,20 @@ function length(text) {
 
 // What can follow play, or sit inside braces: an instrument's line, or names to play.
 function playable(text) {
+  // every 3 steps { ... }: how long a step lasts, then what plays at that pace
+  const pace = /^(every)(\s+)([^\s{]+)(\s*)([A-Za-z]*)(\s*)(.*)$/.exec(text)
+  if (pace) {
+    const [, word, a, n, b, unit, c, rest] = pace
+    return [
+      part("tk-directive-key", word),
+      part(null, a),
+      part(/^[\d(]/.test(n) ? "tk-directive-val" : "tk-error", n),
+      part(null, b),
+      part(UNITS.includes(unit) ? "tk-directive-key" : "tk-error", unit),
+      part(null, c),
+      ...(rest.startsWith("{") ? braces(rest) : rest ? playable(rest) : []),
+    ]
+  }
   const track = /^([A-Za-z][A-Za-z0-9]*(?:\.[A-Za-z0-9]+)?)(\s*)(:)(.*)$/.exec(text)
   if (track) {
     const name = track[1].toLowerCase()
@@ -190,6 +227,19 @@ function line(code) {
   } else if ((word === "pattern" || word === "steps") && /^(\s|$)/.test(after)) {
     // pattern groove {: a type without its name and =
     out.push(part("tk-error", word), ...names(after))
+  } else if ((word === "bar" || word === "bars") && /^\s+\S/.test(after)) {
+    // bar 2 { ... }, bar 2 hat.pedal: 4, bar 3 to 4 fill: a place, then what plays there.
+    // bars is only ever a length, so it's a mistake here.
+    const m = /^(\s+)([^\s{]+)(?:(\s+)(to)(\s+)([^\s{]+))?(\s*)(.*)$/.exec(after)
+    out.push(part(word === "bar" ? "tk-directive-key" : "tk-error", word), part(null, m[1]))
+    out.push(part("tk-directive-val", m[2]))
+    if (m[4]) {
+      out.push(part(null, m[3]), part("tk-directive-key", m[4]), part(null, m[5]))
+      out.push(part("tk-directive-val", m[6]))
+    }
+    out.push(part(null, m[7]))
+    if (m[8].startsWith("{")) out.push(...braces(m[8]))
+    else if (m[8]) out.push(...playable(m[8]))
   } else if (word === "play" && /^(\s|$)/.test(after)) {
     // play groove, play 3 bars { ... }, play kick: x--x
     const space = /^\s*/.exec(after)[0]
@@ -198,6 +248,9 @@ function line(code) {
     out.push(...len.parts)
     if (len.rest.startsWith("{")) out.push(...braces(len.rest))
     else if (len.rest) out.push(...playable(len.rest))
+  } else if (word === "step" && /^(\s|$)/.test(after)) {
+    // step 1/8 was a setting. every 2 steps { ... } says it now.
+    out.push(part("tk-error", word), ...names(after))
   } else if (SETTINGS.includes(word) && /^\s/.test(after)) {
     // tempo 90, time 7 over 8
     out.push(part("tk-directive-key", word))

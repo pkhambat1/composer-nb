@@ -13,9 +13,10 @@ from .song import Song
 DRUMS = ["crash", "ride", "hat", "tom", "floor", "snare", "kick"]
 VARIATIONS = {"ride": ["bell"], "hat": ["open", "pedal"], "snare": ["ghost", "rim"]}
 INSTRUMENTS = ["piano", "epiano", "organ", "pad", "bass", "guitar"]
-SETTINGS = ["time", "tempo", "step", "sound", "key", "capo", "octave", "kit"]
+SETTINGS = ["time", "tempo", "sound", "key", "capo", "octave", "kit"]
 TYPES = ["steps", "chords", "pattern"]
 KITS = ["rock", "synth"]
+UNITS = ["steps", "beats", "bars"]  # what a length on a drum's line is measured in
 
 LANES = [lane for d in DRUMS for lane in [d, *(f"{d}.{v}" for v in VARIATIONS.get(d, []))]]
 PARTS = ["chords", *LANES]
@@ -83,7 +84,7 @@ def _sequence(words: List[str], patterns: List[Option], parts: List[Option]) -> 
     if not words:
         return patterns + parts
     if NUMBER_RE.search(words[-1]):
-        return _options(["bars ", "bar "], "keyword")  # a length: 3 bars groove
+        return [("bars ", "keyword")]  # a length, always plural: 3 bars groove
     return patterns
 
 
@@ -97,11 +98,30 @@ def _statement(head: str, body: str, names: Names) -> List[Option]:
         settings = _options([s + " " for s in SETTINGS], "keyword")
         types = _options([t + " " for t in TYPES], "keyword")
         if inside:
-            return parts + patterns + settings + types
+            return parts + patterns + [("bar ", "keyword"), ("every ", "keyword")] + settings + types
         return settings + types + [("play ", "keyword")]
     first = words[0]
     if first == "play":
         return _sequence(words[1:], patterns, parts)
+    if first == "pattern" and words[2:4] == ["=", "every"]:
+        words = words[3:]  # pattern feet = every 3 steps ...: a pattern at its own pace
+        first = "every"
+    if first == "every":
+        # every 3 steps ...: how long a step lasts, then what plays at that pace
+        if len(words) < 2:
+            return []  # still writing the number
+        if len(words) == 2:
+            return _options([u + " " for u in UNITS], "keyword")
+        return _sequence(words[3:], patterns, parts)
+    if first == "bar":
+        # bar 2 ..., bar 3 to 4 ...: a place, then what plays there
+        if len(words) < 2:
+            return []  # still writing the bar's number
+        if len(words) == 2:
+            return patterns + [("to ", "keyword")] + parts
+        if words[2] == "to":
+            return [] if len(words) < 4 else _sequence(words[4:], patterns, parts)
+        return _sequence(words[2:], patterns, parts)
     if first in TYPES:
         if len(words) < 3 or words[2] != "=":
             return []  # still writing the name
@@ -152,7 +172,17 @@ def complete(text: str, cursor: int, songs: Optional[Dict[str, Song]] = None):
     elif part and part.group(1) in PARTS:
         # A drum's line takes steps, the chords line takes chords: only names of that type.
         holds = "chords" if part.group(1) == "chords" else "steps"
-        options = _options(names[holds], "variable")  # steps can follow a beat too: 3 burst
+        options = _options(names[holds], "variable")
+        written = part.group(2).replace(",", " , ").split()
+        last = written[-1] if written else ""
+        if holds == "steps" and NUMBER_RE.search(last):
+            # 2 beats rest: a length, in front of what fills it. Or the line lists beats
+            options = _options([u + " " for u in UNITS], "keyword")
+        elif holds == "steps" and last in UNITS:
+            options = [("rest", "keyword")] + options
+        elif holds == "steps" and not any(w in UNITS for w in written):
+            if any(w[0].isdigit() for w in written):
+                options = []  # a line of beats holds only beats
     elif open_blocks and open_blocks[-1][0] == "steps":
         options = _options(names["steps"], "variable")  # a layer in a drum's block of steps
     else:

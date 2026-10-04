@@ -51,6 +51,7 @@ Every line starts by saying what it is.
 | \`tempo 90\` | A **setting**: a reserved word and its value. No \`=\`, because it isn't a name |
 | \`steps pair = X-x-\` | A **name**, with its **type** in front |
 | \`kick: x--x---\` | Inside braces, an **instrument** and what it plays |
+| \`bar 2 { ... }\` | Inside braces, what plays in **one bar** of the pattern or play it's in |
 | \`play { ... }\` | **Plays** what's after it: a pattern, or one line |
 
 \`//\` starts a comment. Blank lines and indentation mean nothing.
@@ -75,6 +76,9 @@ A name only holds its type, and only goes where that type goes. Chords on a drum
 | \`=\` | This name is this |
 | \`{ }\` | A **block**: its lines play together as one value. Usually a pattern; after a drum's colon, that drum's steps |
 | \`( )\` | A group: \`8 bars (verse chorus)\` |
+| \`\\|\` | A bar line, in chords and in steps |
+| \`-\` | Nothing new on this step or slot: a rest for a drum, and a held chord |
+| \`,\` | On a drum's line, the end of one part and the start of the next |
 | \`*\` \`/\` | Arithmetic, between two numbers. In \`C/E\` the slash is part of a chord's name |
 
 ## One way to do each thing
@@ -83,7 +87,11 @@ A name only holds its type, and only goes where that type goes. Chords on a drum
 |----------|-----------|
 | To repeat something | Put it in a pattern. Everything in a pattern repeats until the pattern ends |
 | To play something once | Put it on a play's own line: \`crash: 1\` |
-| To say how long | A length in front of it: \`3 bars\`. In front of a pattern, it repeats the pattern for that long |
+| To say how long | A length in front of it: \`3 bars\`, always plural. In front of a pattern, it repeats the pattern for that long |
+| To say which bar | The bar in front of it: \`bar 2 { ... }\` |
+| To change how long a step lasts | \`every\` in front of it: \`every 3 steps { ... }\` |
+| To rest for a while | A length in front of \`rest\`: \`2 beats rest\` |
+| To say how a drum is hit | Draw it in steps: \`x\` hit, \`X\` accent, \`g\` ghost, \`d\` double |
 | Two rhythms on one drum | A block of layers on its line: \`snare.ghost: { ... }\` |
 
 ## Nothing floats
@@ -102,7 +110,6 @@ A setting is a reserved word followed by its value. It applies from where it's w
 |---------|---------|---------|
 | \`time\` | \`4 over 4\` | How many notes are in a bar, over which note: \`7 over 8\`, \`3+4 over 4\` |
 | \`tempo\` | \`120\` | Quarter notes per minute |
-| \`step\` | \`1/16\` | How long one step lasts, as a fraction of a whole note: \`1/8\`, or \`1/12\` for triplets |
 | \`sound\` | \`piano\` | What chords play on: \`piano\`, \`epiano\`, \`organ\`, \`pad\`, \`bass\`, \`guitar\` |
 | \`key\` | \`C\` | Key for Roman numeral chords: \`C\`, \`Am\`, \`Bb\`, \`F#m\` |
 | \`capo\` | \`0\` | Capo fret, 0 to 12. Only works with \`sound guitar\` |
@@ -208,7 +215,7 @@ pattern hats = {
 
 ## Steps
 
-A row of steps, one character each. Each step lasts one \`step\` (a sixteenth note unless you change it).
+A drum's line is a picture of time: a row of steps, one character each. A step is a sixteenth note, unless it's inside \`every\` (below).
 
 | Step | Meaning |
 |------|---------|
@@ -226,33 +233,86 @@ play {
 }
 \`\`\`
 
+Spaces mean nothing, so group the steps by beat to make a bar easy to read. \`\\|\` marks the end of a bar, and it's checked: one in the wrong place is an error that says how many steps came before it.
+
+\`\`\`
+play kick: x--- ---- x--- ---- | x--- --x- x--- ----
+\`\`\`
+
 ## Beats
 
-Or say where a drum is hit. A beat is a quarter note, counted \`1 e & a\`. \`\\|\` separates bars, and \`-\` is an empty bar.
+For plain hits, you can list the beats a drum hits on instead. A beat is a quarter note, counted \`1 e & a\`, and the line is one bar:
 
 \`\`\`
 play {
   kick: 1 2& 3
-  snare: 2 X 4
-  snare.ghost: 4a
-  crash: 1|-
+  snare: 2 4
+  crash: 1
 }
 \`\`\`
 
-A beat on its own is a hit. Steps after a beat say how it's hit, and carry on from there: \`2 X\` is an accent on 2, and \`3 dd\` is a burst of doubles from 3. That's the way to write a line that's mostly rests, by where it hits rather than every step:
+Beats and steps don't mix on a line. Beats only say where, so anything about how a hit is played (an accent, a ghost note, a double) is drawn in steps.
+
+## One bar only
+
+In a pattern every line repeats, so a line of beats or a bar of steps plays in every bar. To play something in one bar only, put the bar in front of it:
 
 \`\`\`
 time 7 over 8
 
-pattern lift = {
+pattern groove = {
+  kick: x--x---
   snare: 2e 4
-  snare.ghost: -|3 dd
-  hat.open: -|3& X
-  hat.pedal: -|4
+  snare.ghost: --x----
+  hat: X-x-
+  bar 2 {
+    snare.ghost: 2 beats rest, dd, 1 beats rest
+    hat.open: 2 beats rest, --X-, 2 steps rest
+    hat.pedal: 4
+  }
 }
 \`\`\`
 
-Beats are steps too, so they can be named (\`steps burst = -|3 dd\`), or be a layer in a drum's block.
+\`bar 2 { ... }\` is what happens in bar 2 of the pattern, each time through it. What's inside repeats to fill that bar, like any pattern. Its lines are lower, so where they hit a drum at the same moment as a line above, they win: here the burst of doubles replaces the ghost note under it.
+
+One line needs no braces (\`bar 2 hat.pedal: 4\`), a named pattern can go there (\`bar 4 fill\`), and \`bar 3 to 4 { ... }\` takes a run of bars. A pattern without a length is long enough to have the bars it names.
+
+## Rests with a length
+
+A long run of \`-\` is hard to read and to count. Put a length in front of \`rest\` instead, in \`steps\`, \`beats\` or \`bars\`:
+
+\`\`\`
+play {
+  snare: 2 beats rest, dd, 1.5 beats rest
+  crash: 1 bars rest, x
+}
+\`\`\`
+
+Commas separate the parts of a line. A part is steps as they're drawn (\`dd\`, or \`x--- x---\` with spaces for the eye), or a length with what fills it. So the snare line is two beats of rest, the doubles, then a beat and a half of rest.
+
+A length can also repeat steps, up to the next comma: \`2 beats x-\` is \`x-x-x-x-\`. The steps have to fit the length a whole number of times.
+
+Lengths are always plural, whatever the number: \`1 bars\`, \`1 beats\`. That way \`bars\` only ever says how long, and \`bar\` only ever says which one.
+
+## Slower and faster steps
+
+\`every\` goes in front of a pattern, a block or one line, and says how long a step lasts in it:
+
+\`\`\`
+time 3 over 4
+
+pattern feet = every 3 steps {
+  kick: X-XX-X--
+  hat.pedal: -x--x-xx
+}
+
+play {
+  snare: Xxxx
+  feet
+}
+\`\`\`
+
+Inside \`feet\` each step lasts three 16ths, so the kick and the pedal move every three steps against the snare's four. \`every 2 steps\` is eighth notes, and \`every 1/3 beats\` is triplets. What's outside the block keeps its own steps.
 
 ## Naming steps
 
@@ -372,7 +432,7 @@ play 6 bars groove
 play 2 bars { crash: 1 }
 \`\`\`
 
-Without one, a pattern lasts until its lines line up again, and a play lasts as long as the longest thing in it. A play can be longer than its lines, and the rest is silent: the last play above is one crash, left to ring for 2 bars.`,
+Without one, a pattern lasts until its lines line up again (and long enough to have any bar it names), and a play lasts as long as the longest thing in it. A play can be longer than its lines, and the rest is silent: the last play above is one crash, left to ring for 2 bars.`,
   },
   {
     id: "shortcuts",
