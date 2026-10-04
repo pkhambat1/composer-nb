@@ -1,6 +1,6 @@
 {
-  "name": "probea",
-  "scopeName": "source.probea",
+  "name": "probec",
+  "scopeName": "source.probec",
   "patterns": [
     {
       "match": "\\bfoo\\b",

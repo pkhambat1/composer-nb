@@ -15,9 +15,11 @@
       "languages": {
         "custom": [
           "/languages/composer-nb.json",
-          "/languages/probea.json",
-          "/languages/probeb.json",
-          "/languages/composernb.json"
+          "/languages/probec.json",
+          "languages/probec.json",
+          "/docs/languages/probec.json",
+          "docs/languages/probec.json",
+          "/docs/languages/composer-nb.json"
         ]
       }
     }
