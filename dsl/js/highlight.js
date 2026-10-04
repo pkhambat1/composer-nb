@@ -74,7 +74,7 @@ function valueToken(t, kind) {
   if (kind !== "chord") {
     if (STEPS_RE.test(t)) return stepRun(t)
     if (/^\d+(e|&|a)?$/.test(t)) return [part("tk-beat", t)]
-    // accent, ghost and double are old words: a step after the beat says it now (2 X)
+    // accent, ghost and double are old words: how a hit is played is drawn in steps
     if (MODIFIERS.includes(t)) return [part("tk-error", t)]
   }
   if (/^[a-z][a-z0-9]+$/.test(t) && !isRoman(t)) return [part("tk-word", t)]
@@ -190,6 +190,17 @@ function line(code) {
   } else if ((word === "pattern" || word === "steps") && /^(\s|$)/.test(after)) {
     // pattern groove {: a type without its name and =
     out.push(part("tk-error", word), ...names(after))
+  } else if ((word === "bar" || word === "bars") && /^\s+\S/.test(after)) {
+    // bar 2 { ... }, bar 2 hat.pedal: 4, bars 3 to 4 fill: a place, then what plays there
+    const m = /^(\s+)([^\s{]+)(?:(\s+)(to)(\s+)([^\s{]+))?(\s*)(.*)$/.exec(after)
+    out.push(part("tk-directive-key", word), part(null, m[1]), part("tk-directive-val", m[2]))
+    if (m[4]) {
+      out.push(part(null, m[3]), part("tk-directive-key", m[4]), part(null, m[5]))
+      out.push(part("tk-directive-val", m[6]))
+    }
+    out.push(part(null, m[7]))
+    if (m[8].startsWith("{")) out.push(...braces(m[8]))
+    else if (m[8]) out.push(...playable(m[8]))
   } else if (word === "play" && /^(\s|$)/.test(after)) {
     // play groove, play 3 bars { ... }, play kick: x--x
     const space = /^\s*/.exec(after)[0]

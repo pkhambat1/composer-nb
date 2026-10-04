@@ -97,11 +97,18 @@ def _statement(head: str, body: str, names: Names) -> List[Option]:
         settings = _options([s + " " for s in SETTINGS], "keyword")
         types = _options([t + " " for t in TYPES], "keyword")
         if inside:
-            return parts + patterns + settings + types
+            return parts + patterns + [("bar ", "keyword"), ("bars ", "keyword")] + settings + types
         return settings + types + [("play ", "keyword")]
     first = words[0]
     if first == "play":
         return _sequence(words[1:], patterns, parts)
+    if first in ("bar", "bars"):
+        # bar 2 ..., bars 3 to 4 ...: a place, then what plays there
+        if first == "bars" and len(words) == 2:
+            return [("to ", "keyword")]
+        if len(words) < (4 if first == "bars" else 2):
+            return []  # still writing the bar's number
+        return _sequence(words[4:] if first == "bars" else words[2:], patterns, parts)
     if first in TYPES:
         if len(words) < 3 or words[2] != "=":
             return []  # still writing the name
@@ -152,7 +159,9 @@ def complete(text: str, cursor: int, songs: Optional[Dict[str, Song]] = None):
     elif part and part.group(1) in PARTS:
         # A drum's line takes steps, the chords line takes chords: only names of that type.
         holds = "chords" if part.group(1) == "chords" else "steps"
-        options = _options(names[holds], "variable")  # steps can follow a beat too: 3 burst
+        options = _options(names[holds], "variable")
+        if holds == "steps" and any(w[0].isdigit() for w in part.group(2).split()):
+            options = []  # a line of beats holds only beats
     elif open_blocks and open_blocks[-1][0] == "steps":
         options = _options(names["steps"], "variable")  # a layer in a drum's block of steps
     else:

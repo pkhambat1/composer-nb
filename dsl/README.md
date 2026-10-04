@@ -93,6 +93,7 @@ Every line starts by saying what it is:
 | `tempo 90`          | A setting: a reserved word and its value                               |
 | `steps pair = X-x-` | A name, with its type in front: `steps`, `chords` or `pattern`         |
 | `kick: x--x---`     | Inside braces, an instrument and what it plays                         |
+| `bar 2 { ... }`     | Inside braces, what plays in one bar of the pattern or play it's in    |
 | `play { ... }`      | Plays what's after it, a pattern or one line. Nothing else makes sound |
 
 `//` starts a comment. Blank lines and indentation mean nothing. Settings and names carry on into the cells below.
@@ -168,11 +169,41 @@ A block of steps is steps, so it can be named too: `steps ghosts = { ... }`. Whe
 
 An open hi-hat rings until the next hi-hat hit closes it (a stick on `hat`, or the foot on `hat.pedal`), and replaces a closed hit at the same moment, so `hat: X-x-` can keep going under `hat.open: ------X-`.
 
-Steps are one character each, a 16th note unless `step` says otherwise: `x` hit, `X` accent, `g` ghost (on the snare, use `snare.ghost`), `d` double, `-` nothing. Beats are counted `1 e & a 2 e & a`, and `-` between bar lines is an empty bar. Steps after a beat say how it's hit, and carry on from there: `2 X` is an accent on 2, and `3 dd` a burst of doubles from 3. So a line that's mostly rests is written by where it hits: `snare.ghost: -|3 dd` instead of `snare.ghost: ----------------------dd----`.
+Steps are a picture of time, one character each, a 16th note unless `step` says otherwise: `x` hit, `X` accent, `g` ghost (on the snare, use `snare.ghost`), `d` double, `-` nothing. Spaces mean nothing, so group them by beat, and `|` marks the end of a bar (it's checked): `kick: x--- ---- x--- ---- | x--- --x- x--- ----`.
+
+Beats are for plain hits: the beats a drum hits on in each bar, counted `1 e & a 2 e & a`. Beats and steps don't mix on a line, and how a hit is played is always drawn in steps.
+
+### One bar only
+
+In a pattern every line repeats, so it plays in every bar. To play something in one bar only, put the bar in front of it:
+
+```
+time 7 over 8
+tempo 90
+
+pattern groove = {
+  kick: x--x---
+  snare: 2e 4
+  snare.ghost: --x----
+  hat: X-x-
+  bar 2 {
+    snare.ghost: ---- ---- dd-- --
+    hat.open:    ---- ---- --X- --
+    hat.pedal:   4
+  }
+}
+
+play 6 bars {
+  crash: 1
+  groove
+}
+```
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/pkhambat1/composer-nb/main/docs/images/say-where-it-hits.svg" width="820" alt="The same ghost-note burst written as 28 steps and as -|3 dd, shown on a two-bar grid">
+  <img src="https://raw.githubusercontent.com/pkhambat1/composer-nb/main/docs/images/one-bar-only.svg" width="820" alt="A groove whose lines repeat in both bars, with a bar 2 block that adds a ghost-note burst, an open hi-hat and a pedal close in bar 2 only">
 </p>
+
+`bar 2 { ... }` is what happens in bar 2 of the pattern, each time through it. What's inside repeats to fill the bar, and its lines are lower, so they win where they hit a drum at the same moment as a line above. One line needs no braces (`bar 2 hat.pedal: 4`), a named pattern can go there (`bar 4 fill`), and `bars 3 to 4 { ... }` takes a run of bars.
 
 ### Patterns and play
 
@@ -201,8 +232,9 @@ Putting something in a pattern is the one way to repeat it, and a length is the 
 | `3 bars { ... }`               | A length, always in front of what it measures          |
 | `6 bars groove`                | `groove` repeats for 6 bars                            |
 | `8 bars (a b)`                 | Brackets group: `a` then `b`, repeated for 8 bars      |
+| `bar 2 { ... }`                | A bar, in front of what plays there and nowhere else   |
 
-Without a length, a pattern lasts until its lines line up again, and a play lasts as long as the longest thing in it. A play can be longer than its lines, and the rest is silent: `play 4 bars { crash: 1 }`.
+Without a length, a pattern lasts until its lines line up again (and long enough to have any bar it names), and a play lasts as long as the longest thing in it. A play can be longer than its lines, and the rest is silent: `play 4 bars { crash: 1 }`.
 
 Whatever repeats has to fit what it's in a whole number of times. Lines of different lengths drift against each other, which is how you write a polyrhythm, and the pattern's length has to be one where they line up:
 

@@ -60,8 +60,7 @@ def test_instrument_lines_offer_names_of_their_type():
     cell = "%%music\nsteps pair = X-x-\nchords verse = Am F\nplay {\n  "
     assert texts(cell + "hat: ") == ["pair"]
     assert texts(cell + "hat: p") == ["pair"]
-    assert texts(cell + "snare: 2 4 p") == ["pair"]  # steps after a beat
-    assert texts(cell + "snare: 2 4 a") == []
+    assert texts(cell + "snare: 2 4 p") == []  # a line of beats holds only beats
     assert texts(cell + "chords: ") == ["verse"]
     assert texts(cell + "chords: Am ") == ["verse"]
     # A name only goes where its type goes.
@@ -82,6 +81,18 @@ def test_a_drums_block_offers_names_of_steps():
 def test_a_name_is_not_offered_inside_its_own_braces():
     assert "groove" not in texts("%%music\npattern groove = {\n  ")
     assert "groove" in texts("%%music\npattern groove = {\n  kick: x\n}\nplay ")
+
+
+def test_a_bar_offers_what_can_play_there():
+    cell = "%%music\nsteps pair = x-x-\npattern lift = { hat.pedal: 4 }\npattern groove = {\n  "
+    assert {"bar ", "bars "} <= set(texts(cell))
+    assert texts(cell + "ba") == ["bar ", "bars "]
+    assert texts(cell + "bar ") == []  # the bar's number
+    assert texts(cell + "bar 2 ") == ["lift", *[p + ": " for p in completer.PARTS]]
+    assert texts(cell + "bar 2 hat.") == ["open: ", "pedal: "]
+    assert texts(cell + "bar 2 hat: ") == ["pair"]
+    assert texts(cell + "bars 3 ") == ["to "]
+    assert texts(cell + "bars 3 to 4 l") == ["lift"]
 
 
 def test_play_offers_patterns_and_lengths():
