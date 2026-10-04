@@ -118,7 +118,7 @@ play 4 bars {
 
 **Polyrhythmics** · live studio session at KNKX
 
-Twelve steps to the bar. The ride bell and the kick each play a 12-step pattern, one hit apart from each other, and the snare lands halfway through the bar.
+Twelve steps to the bar. The ride bell and the kick each play their own 12-step pattern, the snare lands halfway through the bar, and ghost notes fill every other step.
 
 [▶ Watch on YouTube](https://www.youtube.com/watch?v=YZPtPMCDEs4)`,
     },
@@ -130,7 +130,8 @@ tempo 82.5
 pattern groove = {
   ride.bell: x-x-x-xx-x-x
   snare: ------x-----
-  kick: x-x-xx-x-x-x
+  snare.ghost: -x
+  kick: x-x-xx--x-xx
 }
 
 play 4 bars groove`,
