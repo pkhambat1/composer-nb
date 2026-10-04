@@ -7,7 +7,7 @@
      .tk-ext, .tk-rest, .tk-slash, .tk-bass, .tk-beat, .tk-step, .tk-step-acc,
      .tk-error
    Whitespace is kept exactly, so the layer lines up with the textarea under it. */
-import { KEYWORDS, LANES, MODIFIERS, PARTS, SETTINGS, TYPES } from "./language.js"
+import { KEYWORDS, LANES, MODIFIERS, PARTS, SETTINGS, TYPES, UNITS } from "./language.js"
 import { isRoman } from "./chords.js"
 
 const ROMAN_RE = /^([#b])?(VII|VI|IV|V|III|II|I|vii|vi|iv|v|iii|ii|i)([°oø]?)(.*)$/
@@ -88,9 +88,23 @@ function pieces(text, re) {
 }
 
 function values(text, kind) {
-  return pieces(text, /(\s+|\||[{}])/).flatMap((p) =>
-    /^\s+$/.test(p) ? [part(null, p)] : valueToken(p, kind),
-  )
+  const all = pieces(text, /(\s+|\||[{},])/)
+  const words = all.filter((p) => !/^\s+$/.test(p))
+  let k = -1 // which word this is
+  return all.flatMap((p) => {
+    if (/^\s+$/.test(p)) return [part(null, p)]
+    k++
+    if (p === ",") return [part("tk-punct", p)]
+    if (kind === "drum") {
+      // 2 beats rest: a length in front of what fills it
+      if (UNITS.includes(p)) return [part("tk-directive-key", p)]
+      if (/^[\d(]/.test(p) && UNITS.includes(words[k + 1])) return [part("tk-directive-val", p)]
+      if (p === "rest") return [part("tk-rest", p)]
+      // always plural, so bar only ever says which bar
+      if (["bar", "beat", "step"].includes(p)) return [part("tk-error", p)]
+    }
+    return valueToken(p, kind)
+  })
 }
 
 // intro verse, 6 bars (verse chorus), groove { snare: xxxx }: patterns' names, lengths
@@ -108,7 +122,9 @@ function names(text) {
     if (p === "*") return part(wasNumber ? "tk-punct" : "tk-error", p)
     if ("(){}".includes(p)) return part("tk-punct", p)
     if (p === "loop") return part("tk-error", p)
-    if (p === "bars" || p === "bar") return part("tk-directive-key", p)
+    if (p === "bars") return part("tk-directive-key", p)
+    // a length is always plural: 1 bars
+    if (p === "bar") return part("tk-error", p)
     if (number) return part("tk-directive-val", p)
     return part(NAME_RE.test(p) ? "tk-word" : "tk-error", p)
   })
@@ -122,7 +138,8 @@ function length(text) {
     parts: [
       part("tk-directive-val", m[1]),
       part(null, m[2]),
-      part("tk-directive-key", m[3]),
+      // a length is always plural: 1 bars
+      part(m[3] === "bars" ? "tk-directive-key" : "tk-error", m[3]),
       part(null, m[4]),
     ],
     rest: text.slice(m[0].length),
@@ -191,9 +208,11 @@ function line(code) {
     // pattern groove {: a type without its name and =
     out.push(part("tk-error", word), ...names(after))
   } else if ((word === "bar" || word === "bars") && /^\s+\S/.test(after)) {
-    // bar 2 { ... }, bar 2 hat.pedal: 4, bars 3 to 4 fill: a place, then what plays there
+    // bar 2 { ... }, bar 2 hat.pedal: 4, bar 3 to 4 fill: a place, then what plays there.
+    // bars is only ever a length, so it's a mistake here.
     const m = /^(\s+)([^\s{]+)(?:(\s+)(to)(\s+)([^\s{]+))?(\s*)(.*)$/.exec(after)
-    out.push(part("tk-directive-key", word), part(null, m[1]), part("tk-directive-val", m[2]))
+    out.push(part(word === "bar" ? "tk-directive-key" : "tk-error", word), part(null, m[1]))
+    out.push(part("tk-directive-val", m[2]))
     if (m[4]) {
       out.push(part(null, m[3]), part("tk-directive-key", m[4]), part(null, m[5]))
       out.push(part("tk-directive-val", m[6]))

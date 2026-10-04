@@ -44,7 +44,7 @@ A play is a timeline: its own lines play once, so the crash hits once while the 
 
 ## Name the bar where something happens
 
-A drum's line is a picture of time (`x--x---`), or the beats it hits on (`2e 4`). Either way it repeats in every bar. For something that happens in one bar only, like a lift at the end of a groove, put the bar in front of it:
+A drum's line is a picture of time (`x--x---`), or the beats it hits on (`2e 4`). Either way it repeats in every bar. For something that happens in one bar only, like a lift at the end of a groove, put the bar in front of it. And instead of counting out a long run of `-`, put a length in front of `rest`:
 
 ```
 time 7 over 8
@@ -56,8 +56,8 @@ pattern groove = {
   snare.ghost: --x----
   hat: X-x-
   bar 2 {
-    snare.ghost: ---- ---- dd-- --
-    hat.open:    ---- ---- --X- --
+    snare.ghost: 2 beats rest, dd, 1 beats rest
+    hat.open:    2 beats rest, --X-, 2 steps rest
     hat.pedal:   4
   }
 }

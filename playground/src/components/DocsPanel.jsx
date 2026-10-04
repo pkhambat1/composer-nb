@@ -78,6 +78,7 @@ A name only holds its type, and only goes where that type goes. Chords on a drum
 | \`( )\` | A group: \`8 bars (verse chorus)\` |
 | \`\\|\` | A bar line, in chords and in steps |
 | \`-\` | Nothing new on this step or slot: a rest for a drum, and a held chord |
+| \`,\` | On a drum's line, the end of one part and the start of the next |
 | \`*\` \`/\` | Arithmetic, between two numbers. In \`C/E\` the slash is part of a chord's name |
 
 ## One way to do each thing
@@ -86,8 +87,9 @@ A name only holds its type, and only goes where that type goes. Chords on a drum
 |----------|-----------|
 | To repeat something | Put it in a pattern. Everything in a pattern repeats until the pattern ends |
 | To play something once | Put it on a play's own line: \`crash: 1\` |
-| To say how long | A length in front of it: \`3 bars\`. In front of a pattern, it repeats the pattern for that long |
+| To say how long | A length in front of it: \`3 bars\`, always plural. In front of a pattern, it repeats the pattern for that long |
 | To say which bar | The bar in front of it: \`bar 2 { ... }\` |
+| To rest for a while | A length in front of \`rest\`: \`2 beats rest\` |
 | To say how a drum is hit | Draw it in steps: \`x\` hit, \`X\` accent, \`g\` ghost, \`d\` double |
 | Two rhythms on one drum | A block of layers on its line: \`snare.ghost: { ... }\` |
 
@@ -264,8 +266,8 @@ pattern groove = {
   snare.ghost: --x----
   hat: X-x-
   bar 2 {
-    snare.ghost: ---- ---- dd-- --
-    hat.open:    ---- ---- --X- --
+    snare.ghost: 2 beats rest, dd, 1 beats rest
+    hat.open:    2 beats rest, --X-, 2 steps rest
     hat.pedal:   4
   }
 }
@@ -273,7 +275,24 @@ pattern groove = {
 
 \`bar 2 { ... }\` is what happens in bar 2 of the pattern, each time through it. What's inside repeats to fill that bar, like any pattern. Its lines are lower, so where they hit a drum at the same moment as a line above, they win: here the burst of doubles replaces the ghost note under it.
 
-One line needs no braces (\`bar 2 hat.pedal: 4\`), a named pattern can go there (\`bar 4 fill\`), and \`bars 3 to 4 { ... }\` takes a run of bars. A pattern without a length is long enough to have the bars it names.
+One line needs no braces (\`bar 2 hat.pedal: 4\`), a named pattern can go there (\`bar 4 fill\`), and \`bar 3 to 4 { ... }\` takes a run of bars. A pattern without a length is long enough to have the bars it names.
+
+## Rests with a length
+
+A long run of \`-\` is hard to read and to count. Put a length in front of \`rest\` instead, in \`steps\`, \`beats\` or \`bars\`:
+
+\`\`\`
+play {
+  snare: 2 beats rest, dd, 1.5 beats rest
+  crash: 1 bars rest, x
+}
+\`\`\`
+
+Commas separate the parts of a line. A part is steps as they're drawn (\`dd\`, or \`x--- x---\` with spaces for the eye), or a length with what fills it. So the snare line is two beats of rest, the doubles, then a beat and a half of rest.
+
+A length can also repeat steps, up to the next comma: \`2 beats x-\` is \`x-x-x-x-\`. The steps have to fit the length a whole number of times.
+
+Lengths are always plural, whatever the number: \`1 bars\`, \`1 beats\`. That way \`bars\` only ever says how long, and \`bar\` only ever says which one.
 
 ## Naming steps
 

@@ -187,8 +187,8 @@ pattern groove = {
   snare.ghost: --x----
   hat: X-x-
   bar 2 {
-    snare.ghost: ---- ---- dd-- --
-    hat.open:    ---- ---- --X- --
+    snare.ghost: 2 beats rest, dd, 1 beats rest
+    hat.open:    2 beats rest, --X-, 2 steps rest
     hat.pedal:   4
   }
 }
@@ -203,7 +203,20 @@ play 6 bars {
   <img src="https://raw.githubusercontent.com/pkhambat1/composer-nb/main/docs/images/one-bar-only.svg" width="820" alt="A groove whose lines repeat in both bars, with a bar 2 block that adds a ghost-note burst, an open hi-hat and a pedal close in bar 2 only">
 </p>
 
-`bar 2 { ... }` is what happens in bar 2 of the pattern, each time through it. What's inside repeats to fill the bar, and its lines are lower, so they win where they hit a drum at the same moment as a line above. One line needs no braces (`bar 2 hat.pedal: 4`), a named pattern can go there (`bar 4 fill`), and `bars 3 to 4 { ... }` takes a run of bars.
+`bar 2 { ... }` is what happens in bar 2 of the pattern, each time through it. What's inside repeats to fill the bar, and its lines are lower, so they win where they hit a drum at the same moment as a line above. One line needs no braces (`bar 2 hat.pedal: 4`), a named pattern can go there (`bar 4 fill`), and `bar 3 to 4 { ... }` takes a run of bars.
+
+### Rests with a length
+
+Instead of counting out a long run of `-`, put a length in front of `rest`, in `steps`, `beats` or `bars`: `2 beats rest`. Commas separate the parts of a line, and a part is steps as they're drawn or a length with what fills it:
+
+```
+play {
+  snare: 2 beats rest, dd, 1.5 beats rest
+  crash: 1 bars rest, x
+}
+```
+
+A length can also repeat steps, up to the next comma: `2 beats x-` is `x-x-x-x-`. Lengths are always plural, whatever the number (`1 bars`), so `bars` only ever says how long and `bar` only ever says which one.
 
 ### Patterns and play
 
@@ -229,7 +242,8 @@ Putting something in a pattern is the one way to repeat it, and a length is the 
 | `pattern beat = { hat: x- }`   | Everything in a pattern repeats until the pattern ends |
 | `play { crash: 1 ... }`        | A play is a timeline, and its own lines play once      |
 | `groove`, on a line of its own | In a play, the pattern repeats until the play ends     |
-| `3 bars { ... }`               | A length, always in front of what it measures          |
+| `3 bars { ... }`               | A length, always plural, in front of what it measures  |
+| `2 beats rest`                 | On a drum's line, silence for that long                |
 | `6 bars groove`                | `groove` repeats for 6 bars                            |
 | `8 bars (a b)`                 | Brackets group: `a` then `b`, repeated for 8 bars      |
 | `bar 2 { ... }`                | A bar, in front of what plays there and nowhere else   |

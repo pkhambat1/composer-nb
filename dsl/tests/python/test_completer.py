@@ -18,7 +18,7 @@ def texts(cell, songs=None):
 
 
 @pytest.mark.parametrize(
-    "name", ["DRUMS", "VARIATIONS", "INSTRUMENTS", "SETTINGS", "TYPES", "KITS"]
+    "name", ["DRUMS", "VARIATIONS", "INSTRUMENTS", "SETTINGS", "TYPES", "KITS", "UNITS"]
 )
 def test_words_match_the_language(name):
     literal = re.search(rf"^export const {name} = (.+)$", LANGUAGE_JS.read_text(), re.M).group(1)
@@ -61,6 +61,11 @@ def test_instrument_lines_offer_names_of_their_type():
     assert texts(cell + "hat: ") == ["pair"]
     assert texts(cell + "hat: p") == ["pair"]
     assert texts(cell + "snare: 2 4 p") == []  # a line of beats holds only beats
+    # a length in front of what fills it: 2 beats rest
+    assert texts(cell + "snare: 2 ") == ["steps ", "beats ", "bars "]
+    assert texts(cell + "snare: 2 b") == ["beats ", "bars "]
+    assert texts(cell + "snare: 2 beats ") == ["rest", "pair"]
+    assert texts(cell + "snare: 2 beats rest, ") == ["pair"]
     assert texts(cell + "chords: ") == ["verse"]
     assert texts(cell + "chords: Am ") == ["verse"]
     # A name only goes where its type goes.
@@ -85,20 +90,20 @@ def test_a_name_is_not_offered_inside_its_own_braces():
 
 def test_a_bar_offers_what_can_play_there():
     cell = "%%music\nsteps pair = x-x-\npattern lift = { hat.pedal: 4 }\npattern groove = {\n  "
-    assert {"bar ", "bars "} <= set(texts(cell))
-    assert texts(cell + "ba") == ["bar ", "bars "]
+    assert "bar " in texts(cell)
+    assert texts(cell + "ba") == ["bar "]
     assert texts(cell + "bar ") == []  # the bar's number
-    assert texts(cell + "bar 2 ") == ["lift", *[p + ": " for p in completer.PARTS]]
+    assert texts(cell + "bar 2 ") == ["lift", "to ", *[p + ": " for p in completer.PARTS]]
     assert texts(cell + "bar 2 hat.") == ["open: ", "pedal: "]
     assert texts(cell + "bar 2 hat: ") == ["pair"]
-    assert texts(cell + "bars 3 ") == ["to "]
-    assert texts(cell + "bars 3 to 4 l") == ["lift"]
+    assert texts(cell + "bar 3 to ") == []  # the last bar's number
+    assert texts(cell + "bar 3 to 4 l") == ["lift"]
 
 
 def test_play_offers_patterns_and_lengths():
     cell = "%%music\nsteps pair = x-x-\npattern groove = { kick: x--x }\n"
     assert texts(cell + "play ") == ["groove", *[p + ": " for p in completer.PARTS]]
-    assert texts(cell + "play 3 ") == ["bars ", "bar "]
+    assert texts(cell + "play 3 ") == ["bars "]
     assert texts(cell + "play 3 bars ") == ["groove"]
     assert texts(cell + "play 3 bars (groove g") == ["groove"]
 
@@ -109,7 +114,7 @@ def test_a_type_offers_what_it_holds_after_the_equals():
     assert texts(cell + "steps four = ") == ["pair"]
     assert texts(cell + "chords song = ") == ["verse"]
     assert texts(cell + "pattern outro = ") == ["hit", *[p + ": " for p in completer.PARTS]]
-    assert texts(cell + "pattern outro = 2 ") == ["bars ", "bar "]
+    assert texts(cell + "pattern outro = 2 ") == ["bars "]
     assert texts(cell + "pattern outro = 2 bars h") == ["hit"]
     assert texts(cell + "pattern outro = hit h") == ["hit"]
     assert texts(cell + "pattern fill = snare: ") == ["pair"]

@@ -15,7 +15,7 @@
                               output with a player and a drum grid. Nothing plays unless
                               it's inside a play.
      bar 2 { }                what plays in bar 2 of what it's in, and nowhere else. One
-                              line needs no braces (bar 2 crash: 1), and bars 3 to 4 { }
+                              line needs no braces (bar 2 crash: 1), and bar 3 to 4 { }
                               takes a run of bars.
    A pattern is a loop: everything in it repeats until the pattern ends, and without a
    length it lasts until its lines line up again. A play is a timeline: its own lines play
@@ -24,7 +24,9 @@
    a name could: intro { snare: xxxx } outro. A length goes in front of what it measures,
    and a pattern given a length repeats for that long: pattern groove = 3 bars {,
    play 6 bars groove. Anything that repeats has to fit what it's in a whole number of
-   times.
+   times. On a drum's line a length measures rest or steps, in steps, beats or bars, and
+   commas separate the line's parts: 2 beats rest, dd, 1 beats rest. Lengths are always
+   plural (1 bars), so bars only ever says how long and bar only ever says which.
    Every number is arithmetic: (1+2) bars groove, tempo 60*2. So * and / only ever do
    arithmetic, and a time is two numbers (7 over 8), not a fraction.
    { } is a block: what's in it evaluates to one value, played together. Usually that's a
@@ -54,8 +56,10 @@ export const KEYWORDS = [
   ...TYPES,
   "play",
   "bars",
+  "beats",
   "bar",
   "to",
+  "rest",
   "over",
   "loop",
   "for",
@@ -330,13 +334,22 @@ function sumTerms(node) {
 // "3 bars groove" → { bars: 3, rest: "groove" }. A length goes in front of what it measures.
 function lengthPrefix(text) {
   const n = /^[\d(]/.test(text) ? numbers(text).sumAt(0) : null
-  const m = n && /^\s*bars?(?![A-Za-z0-9])\s*/.exec(text.slice(n.end))
+  const m = n && /^\s*bars(?![A-Za-z0-9])\s*/.exec(text.slice(n.end))
   return m
     ? { has: true, bars: n.e.value, rest: text.slice(n.end + m[0].length).trim() }
     : { has: false, bars: 0, rest: text }
 }
 
 const fmt = (n) => String(+n.toFixed(4))
+
+// Lengths are always plural, whatever the number (1 bars), so that bar only ever says which
+// bar. Says so for "1 bar", "2 beat" or "8 step", and returns whether it did.
+function singularLength(text, ln, err) {
+  const m = /(\S*(?:\d|\)))\s+(bar|beat|step)(?![A-Za-z0-9])/.exec(text)
+  if (!m) return false
+  err(ln, `Lengths are always plural, whatever the number: ${m[1]} ${m[2]}s`)
+  return true
+}
 
 // pattern groove 3 bars { and older ways to name a pattern, and what to write now.
 function patternHint(text) {
@@ -497,9 +510,12 @@ function defineWord(type, name, value, ln, state, err, blocks = null) {
     )
   }
   if (ROMAN.includes(name)) return err(ln, `${name} is a chord, so pick another name`)
-  if (type === "steps" && listsBeats(tokenize(value))) {
+  // Steps can be written with lengths (2 beats rest, dd), which come back as steps
+  const written = type === "steps" ? stepParts(value, blocks, state, err, ln) : tokenize(value)
+  if (!written) return
+  if (type === "steps" && listsBeats(written)) {
     // steps backbeat = 2 4: beats, as steps
-    const run = beatsAsSteps({ name, art: "hit", ln, blocks }, tokenize(value), state, err)
+    const run = beatsAsSteps({ name, art: "hit", ln, blocks }, written, state, err)
     if (run == null) return
     delete state.sections[name]
     state.words[name] = { type, tokens: [run], line: ln }
@@ -507,7 +523,7 @@ function defineWord(type, name, value, ln, state, err, blocks = null) {
   }
   const key = parseKey(state.key)
   const tokens = []
-  for (const t of tokenize(value)) {
+  for (const t of written) {
     const w = state.words[t]
     if (blocks?.[t]) {
       // steps ghosts = { ... }: a block of steps is steps
@@ -559,7 +575,7 @@ const DEF_RE = /^([A-Za-z][A-Za-z0-9]*)\s*=\s*(.*)$/
 const TYPED_RE = /^(steps|chords|pattern)\s+([A-Za-z][A-Za-z0-9]*)\s*=\s*(.*)$/
 const TRACK_RE = /^([A-Za-z][A-Za-z0-9]*(?:\.[A-Za-z0-9]+)?)\s*:\s*(.*)$/
 // bar 2 ..., bars 3 to 4 ...: a place in front of what plays there
-const PLACE_RE = /^bars?(\s+\S|$)/
+const PLACE_RE = /^bar(\s+\S|$)/
 
 // name = value, with or without a type in front. null if the line isn't one.
 function readDecl(text) {
@@ -592,6 +608,14 @@ function holdsSteps(block, st) {
 // What a value is, from how it's written: a pattern (braces, a length, an instrument's
 // line, or other patterns' names), steps or chords. Braces holding steps are steps.
 function shapeOf(value, st, blocks = null) {
+  // A length in front of rest or steps is steps: 2 beats rest, dd
+  const drawn = (text) => tokenize(text).every((t) => stepsToken(t, st, blocks))
+  const measured = (text) => {
+    const len = lengthAt(text)
+    return !!len && (len.thing === "rest" || (len.thing !== "" && drawn(len.thing)))
+  }
+  const parts = value.split(",").map((p) => p.trim())
+  if (parts.some(measured) && parts.every((p) => measured(p) || drawn(p))) return "steps"
   const tokens = tokenize(value)
   const stepsLike = tokens.every((t) => stepsToken(t, st, blocks))
   if (stepsLike && tokens.some((t) => blocks?.[t])) return "steps"
@@ -702,21 +726,18 @@ function classifyDecl({ type, name, value }, { ln, blocks }, err, st) {
     : { kind: "word", ln, type, name, value, blocks }
 }
 
-// bar 2 { ... }, bar 2 hat.pedal: 4, bars 3 to 4 fill: what plays in those bars of the
+// bar 2 { ... }, bar 2 hat.pedal: 4, bar 3 to 4 fill: what plays in those bars of the
 // block it's in, and nowhere else. Returns { kind: "placed", from, to, line }, where
 // `line` is what plays there, or null after saying what's wrong.
 function readPlace(text, { ln, blocks }, err) {
-  const many = text.startsWith("bars")
   const nums = numbers(text)
-  const first = nums.sumAt(many ? 4 : 3)
-  const to = first && many ? /^\s+to\s+/.exec(text.slice(first.end)) : null
-  const last = many ? to && nums.sumAt(first.end + to[0].length) : first
+  const first = nums.sumAt(3)
+  const to = first && /^\s+to(?![A-Za-z0-9])\s*/.exec(text.slice(first.end))
+  const last = to ? nums.sumAt(first.end + to[0].length) : first
   if (!first || !last) {
     err(
       ln,
-      many
-        ? "bars takes the first and last bar, then what plays there: bars 3 to 4 { ... }"
-        : "bar takes the number of a bar, then what plays there: bar 2 { ... }",
+      "bar takes the number of a bar, then what plays there: bar 2 { ... }, or bar 3 to 4 { ... }",
     )
     return null
   }
@@ -726,15 +747,11 @@ function readPlace(text, { ln, blocks }, err) {
     return null
   }
   if (until < from) {
-    err(ln, `bars ${from} to ${until} runs backwards. The first bar comes first`)
+    err(ln, `bar ${from} to ${until} runs backwards. The first bar comes first`)
     return null
   }
   const rest = text.slice(last.end).trim()
   const shown = text.slice(0, last.end).trim()
-  if (!many && /^to(\s|$)/.test(rest)) {
-    err(ln, `For more than one bar, write bars: bars ${from} to ${from + 1} { ... }`)
-    return null
-  }
   if (!rest) {
     err(ln, `${shown} needs what plays there: ${shown} { ... }`)
     return null
@@ -765,7 +782,15 @@ function classify({ ln, text, blocks }, err, st) {
     return null
   }
 
+  if (singularLength(text, ln, err)) return null
   if (PLACE_RE.test(text)) return readPlace(text, { ln, blocks }, err)
+  if (/^bars(\s|$)/.test(text)) {
+    err(
+      ln,
+      "bars is a length, and goes after a number: 6 bars groove. To say which bars, write bar: bar 3 to 4 { ... }",
+    )
+    return null
+  }
 
   const decl = readDecl(text)
   if (decl) return classifyDecl(decl, { ln, blocks }, err, st)
@@ -1192,6 +1217,137 @@ function stepMods(c, part, err, where) {
   return mods
 }
 
+// What steps can be measured in. Always plural, whatever the number.
+export const UNITS = ["steps", "beats", "bars"]
+
+// "2 beats rest" → the length in front and what it measures, or null if `text` doesn't
+// start with a length.
+function lengthAt(text) {
+  const n = /^[\d(]/.test(text) ? numbers(text).sumAt(0) : null
+  const m = n && /^\s*(steps|beats|bars)(?![A-Za-z0-9])\s*/.exec(text.slice(n.end))
+  if (!m) return null
+  const end = n.end + m[0].length
+  return {
+    n: n.e.value,
+    unit: m[1],
+    shown: text.slice(0, end).trim(),
+    thing: text.slice(end).trim(),
+  }
+}
+
+// What a length measures, when it isn't rest: steps, written out as one run of letters.
+function figureRun(text, blocks, st, err, ln, part) {
+  let run = ""
+  for (const tok of tokenize(text)) {
+    const w = st.words[tok]
+    if (tok === "|") continue
+    if (blocks?.[tok]) {
+      const inner = stepBlock(blocks[tok], st, err, part)
+      if (inner == null) return null
+      run += inner
+    } else if (w?.type === "steps") run += w.tokens.filter((t) => t !== "|").join("")
+    else if (isStepRun(tok)) run += tok
+    else {
+      err(
+        ln,
+        `"${tok}" can't be measured by a length. A length measures rest or steps, up to the next comma: 2 beats rest, 2 beats x-`,
+      )
+      return null
+    }
+  }
+  return run
+}
+
+// A drum's line, as tokens of steps. Its parts are separated by commas. A part is steps as
+// they're drawn (x--x, with spaces for the eye) or a length in front of what fills it:
+// 2 beats rest is silence that long, and 2 beats x- repeats x- for that long. A length's
+// part comes back as the steps it stands for. A line of beats (2e 4) passes through.
+// Returns the tokens, or null after saying what's wrong.
+function stepParts(value, blocks, st, err, ln, part = null) {
+  const fail = (msg) => {
+    err(ln, msg)
+    return null
+  }
+  const parts = value.split(",").map((p) => p.trim())
+  const beats = (p) => p !== "" && tokenize(p).every((t) => BEAT_RE.test(t))
+  if (parts.length > 1 && parts.every(beats)) {
+    return fail(`A list of beats takes spaces, not commas: ${parts.join(" ")}`)
+  }
+  const { barTicks } = meterOf(st)
+  const out = []
+  let drawn = null // the part before, when it was drawn steps
+  for (const text of parts) {
+    if (!text)
+      return fail("A comma goes between two parts of a line, so something goes on each side")
+    const len = lengthAt(text)
+    if (!len) {
+      const tokens = tokenize(text)
+      const unit = tokens.findIndex((t) => UNITS.includes(t))
+      if (unit > 0) {
+        const [before, length] = [tokens.slice(0, unit - 1), tokens.slice(unit - 1)]
+        return fail(
+          before.length
+            ? `A length starts its own part, so put a comma before it: ${before.join(" ")}, ${length.join(" ")}`
+            : `${length.slice(0, 2).join(" ")} needs a number in front: 2 ${tokens[unit]} rest`,
+        )
+      }
+      if (unit === 0) return fail(`${tokens[0]} needs a number in front: 2 ${tokens[0]} rest`)
+      if (tokens.includes("rest")) {
+        return fail("rest takes a length in front: 2 beats rest. One step of rest is -")
+      }
+      if (parts.length > 1 && tokens.some((t) => BEAT_RE.test(t))) {
+        return fail(
+          "Beats don't go on a line with lengths or commas. Draw those hits in steps: 2 beats rest, x---",
+        )
+      }
+      if (drawn != null) {
+        return fail(`A comma ends a length. Between steps a space is enough: ${drawn} ${text}`)
+      }
+      out.push(...tokens)
+      drawn = text
+      continue
+    }
+    drawn = null
+    const unitTicks = { steps: st.stepTicks, beats: TPQ, bars: barTicks }[len.unit]
+    const steps = (len.n * unitTicks) / st.stepTicks
+    if (!(len.n > 0) || len.n * unitTicks > MAX_BARS * barTicks) {
+      return fail(`A length is more than nothing, and up to ${MAX_BARS} bars: 2 beats rest`)
+    }
+    if (!nearWhole(steps)) {
+      return fail(`${len.shown} isn't a whole number of steps, so steps can't fill it`)
+    }
+    const n = Math.round(steps)
+    if (!len.thing) {
+      return fail(
+        `${len.shown} of what? Write ${len.shown} rest, or the steps to repeat: ${len.shown} x-`,
+      )
+    }
+    if (len.thing === "rest") {
+      out.push("-".repeat(n))
+      continue
+    }
+    // A length runs to the next comma, so more after rest, or another length, needs one
+    const things = tokenize(len.thing)
+    const next = things.findIndex((t, k) => k > 0 && UNITS.includes(t))
+    if (things[0] === "rest" || next > 0) {
+      const cut = things[0] === "rest" ? 1 : next - 1
+      return fail(
+        `A comma ends a length, so put one here: ${len.shown} ${things.slice(0, cut).join(" ")}, ${things.slice(cut).join(" ")}`,
+      )
+    }
+    const fig = figureRun(len.thing, blocks, st, err, ln, part)
+    if (fig == null) return null
+    if (!fig || /^-+$/.test(fig)) return fail(`Silence for a length is rest: ${len.shown} rest`)
+    if (n % fig.length) {
+      return fail(
+        `${len.thing} is ${count(fig.length, "step")} long, which doesn't fit ${len.shown} a whole number of times`,
+      )
+    }
+    out.push(fig.repeat(n / fig.length))
+  }
+  return out
+}
+
 // Why a | in steps is in the wrong place, after `n` steps, or null if a bar ends there.
 function barLineProblem(n, st) {
   const { barTicks } = meterOf(st)
@@ -1321,7 +1477,11 @@ function stepLayer(line, st, err, part) {
       `A block of steps holds steps, one layer a line, like --x-. ${line.text} is an instrument's line, which goes in a pattern`,
     )
   }
-  if (listsBeats(tokenize(line.text))) {
+  if (singularLength(line.text, line.ln, err)) return null
+  const here = part ? { ...part, ln: line.ln } : null
+  const tokens = stepParts(line.text, line.blocks, st, err, line.ln, here)
+  if (!tokens) return null
+  if (listsBeats(tokens)) {
     // A layer of beats: 2 4
     const where = {
       name: "steps",
@@ -1331,7 +1491,7 @@ function stepLayer(line, st, err, part) {
       blocks: line.blocks,
       layer: true,
     }
-    return beatsAsSteps(where, tokenize(line.text), st, err)
+    return beatsAsSteps(where, tokens, st, err)
   }
   const check = (run, where) => {
     if (!part) return true
@@ -1339,7 +1499,7 @@ function stepLayer(line, st, err, part) {
     return [...run].every((c) => stepMods(c, here, err, where) !== undefined)
   }
   let run = ""
-  for (const tok of tokenize(line.text)) {
+  for (const tok of tokens) {
     const w = st.words[tok]
     if (tok === "|") {
       const problem = barLineProblem(run.length, st)
@@ -1387,11 +1547,16 @@ function readPart(part, st, barTicks, err, repeats) {
     err(part.ln, CHORDS_BLOCK)
     return null
   }
-  let pattern
-  if (part.name === "chords") pattern = chordPattern(part, tokens, st, barTicks, err)
-  else if (listsBeats(tokens)) {
-    pattern = beatPattern(part, tokens, st, barTicks, err)
-  } else pattern = stepPattern(part, tokens, st, err)
+  if (part.name === "chords") {
+    const pattern = chordPattern(part, tokens, st, barTicks, err)
+    return pattern && { ...pattern, part }
+  }
+  // A drum's line: its parts, with any lengths written out as the steps they stand for
+  const steps = stepParts(part.value, part.blocks, st, err, part.ln, part)
+  if (!steps) return null
+  const pattern = listsBeats(steps)
+    ? beatPattern(part, steps, st, barTicks, err)
+    : stepPattern(part, steps, st, err)
   return pattern && { ...pattern, part }
 }
 
@@ -1432,7 +1597,7 @@ const anonCtx = (ln) => ({
 })
 // What plays in a bar is a pattern that lasts that bar.
 const placeCtx = (l) => {
-  const bars = l.from === l.to ? `bar ${l.from}` : `bars ${l.from} to ${l.to}`
+  const bars = l.from === l.to ? `bar ${l.from}` : `bar ${l.from} to ${l.to}`
   return { ln: l.ln, repeats: true, where: `in ${bars}`, what: `What's in ${bars}` }
 }
 
@@ -2041,6 +2206,10 @@ export function parseCell(src, inherited = initialState()) {
 
     if (text.startsWith("}")) {
       err(ln, "This } doesn't close anything")
+      continue
+    }
+    if (singularLength(text, ln, err)) {
+      i = skipIfOpen(i)
       continue
     }
     // section groove { and def groove {: older ways to name a pattern

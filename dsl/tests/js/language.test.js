@@ -622,11 +622,11 @@ describe("lengths", () => {
   it("take any arithmetic", () => {
     expect(durations("pattern g = { kick: x--- }\nplay (1+2) bars g")).toEqual([6])
     expect(durations("pattern g = { kick: x--- }\nplay 1/2 bars g")).toEqual([1])
-    expect(durations("pattern g = { kick: x--- }\nplay 1 bar g")).toEqual([2])
+    expect(durations("pattern g = { kick: x--- }\nplay 1 bars g")).toEqual([2])
   })
 
   it("cut a play's lines that are longer, and leave room after ones that are shorter", () => {
-    expect(labels("play 1 bar { chords: C|G }")).toEqual(["C"])
+    expect(labels("play 1 bars { chords: C|G }")).toEqual(["C"])
     expect(durations("play 3 bars { chords: C|G }")).toEqual([6])
     expect(labels("play 3 bars { chords: C|G }")).toEqual(["C", "G"])
   })
@@ -637,7 +637,7 @@ describe("lengths", () => {
     expect(hits(o, "kick")).toHaveLength(8)
     expect(labels(AB + "play 4 bars (a b)")).toEqual(["C", "G", "C", "G"])
     // what repeats is the pattern at its own length
-    const g = "pattern g = 1 bar { kick: x--- }\n"
+    const g = "pattern g = 1 bars { kick: x--- }\n"
     expect(hits(parseSource(g + "play 2 bars g").outputs[0], "kick")).toHaveLength(8)
   })
 
@@ -730,7 +730,7 @@ describe("what repeats has to fit", () => {
       /The chords line is 5 bars long, which doesn't fit 6 bars a whole number of times/,
     )
     // A pattern at its own tempo is measured against the tempo of what it's in.
-    const own = (tempo) => `pattern own = {\n  tempo ${tempo}\n  kick: x---\n}\nplay 1 bar own`
+    const own = (tempo) => `pattern own = {\n  tempo ${tempo}\n  kick: x---\n}\nplay 1 bars own`
     expect(hits(parseSource(own(240)).outputs[0], "kick")).toHaveLength(8)
     expect(firstError(own(100))).toMatch(
       /own sets its own tempo, and doesn't fit 1 bar a whole number of times/,
@@ -754,8 +754,8 @@ describe("blocks without a name", () => {
   it("play in a row with names", () => {
     const named = "pattern a = { kick: x--- }\npattern b = { snare: x--- }"
     expect(sound(`${named}\nplay a { snare: x--- } a`)).toEqual(sound(`${named}\nplay a b a`))
-    expect(sound(`${named}\nplay { 1 bar { snare: x--- } }`)).toEqual(
-      sound(`${named}\nplay 1 bar b`),
+    expect(sound(`${named}\nplay { 1 bars { snare: x--- } }`)).toEqual(
+      sound(`${named}\nplay 1 bars b`),
     )
     expect(sound(`${named}\nplay {\n  snare: x---\n} a`)).toEqual(sound(`${named}\nplay b a`))
     expect(sound(`${named}\nplay 2 bars { kick: x- } a`)).toEqual(
@@ -880,6 +880,92 @@ describe("settings", () => {
   })
 })
 
+describe("lengths on a drum's line", () => {
+  it("measure rest, in steps, beats or bars", () => {
+    expect(sound("play snare: 8 steps rest, dd, 6 steps rest")).toBe(
+      sound("play snare: --------dd------"),
+    )
+    expect(sound("play snare: 2 beats rest, dd, 1.5 beats rest")).toBe(
+      sound("play snare: --------dd------"),
+    )
+    expect(sound("play snare: 1 bars rest, x---")).toBe(sound("play snare: ---------------- x---"))
+    expect(sound("play snare: (1+1) beats rest, x---")).toBe(sound("play snare: -------- x---"))
+  })
+
+  it("repeat steps for that long, up to the next comma", () => {
+    expect(sound("play hat: 2 beats x-, dd--")).toBe(sound("play hat: x-x-x-x- dd--"))
+    expect(sound("play hat: 1 beats x- x-, dd--")).toBe(sound("play hat: x-x- dd--"))
+    expect(sound("steps pair = x-\nplay hat: 1 bars pair")).toBe(
+      sound("play hat: x-x-x-x-x-x-x-x-"),
+    )
+    expect(firstError("play hat: 1 beats x--, dd")).toMatch(
+      /x-- is 3 steps long, which doesn't fit 1 beats a whole number of times/,
+    )
+  })
+
+  it("work in a block of layers and in named steps", () => {
+    expect(sound("play snare: {\n  x---\n  2 beats rest, X---, 1 beats rest\n}")).toBe(
+      sound("play snare: x---x---X---x---"),
+    )
+    expect(sound("steps lift = 2 beats rest, dd, 1.5 beats rest\nplay snare: lift")).toBe(
+      sound("play snare: --------dd------"),
+    )
+    expect(firstError("lift = 2 beats rest, dd")).toMatch(
+      /Put its type in front: steps lift = 2 beats rest, dd/,
+    )
+  })
+
+  it("need commas between the parts of a line, and nowhere else", () => {
+    expect(firstError("play snare: 2 beats rest dd")).toMatch(
+      /A comma ends a length, so put one here: 2 beats rest, dd/,
+    )
+    expect(firstError("play snare: 2 beats x- 1 beats rest")).toMatch(
+      /A comma ends a length, so put one here: 2 beats x-, 1 beats rest/,
+    )
+    expect(firstError("play snare: dd 1 beats rest")).toMatch(
+      /A length starts its own part, so put a comma before it: dd, 1 beats rest/,
+    )
+    expect(firstError("play snare: dd, xx")).toMatch(
+      /A comma ends a length. Between steps a space is enough: dd xx/,
+    )
+    expect(firstError("play snare: 2, 4")).toMatch(/A list of beats takes spaces, not commas: 2 4/)
+    expect(firstError("play snare: 2 beats rest,")).toMatch(/something goes on each side/)
+  })
+
+  it("explain what doesn't work", () => {
+    expect(firstError("play snare: 2 beats -, dd")).toMatch(
+      /Silence for a length is rest: 2 beats rest/,
+    )
+    expect(firstError("play snare: rest, dd")).toMatch(
+      /rest takes a length in front: 2 beats rest. One step of rest is -/,
+    )
+    expect(firstError("play snare: 2 beats, dd")).toMatch(
+      /2 beats of what\? Write 2 beats rest, or the steps to repeat: 2 beats x-/,
+    )
+    expect(firstError("play snare: 0.3 beats rest, x")).toMatch(
+      /0.3 beats isn't a whole number of steps/,
+    )
+    expect(firstError("play snare: 2 4, 2 beats rest")).toMatch(
+      /Beats don't go on a line with lengths or commas/,
+    )
+    expect(firstError("pattern rest = { kick: x }")).toMatch(/rest already means something/)
+  })
+})
+
+describe("lengths are always plural", () => {
+  it("so bars says how long, and bar says which", () => {
+    expect(durations("pattern g = { kick: x--- }\nplay 1 bars g")).toEqual([2])
+    expect(firstError("pattern g = { kick: x--- }\nplay 1 bar g")).toMatch(
+      /Lengths are always plural, whatever the number: 1 bars/,
+    )
+    expect(firstError("pattern g = 3 bar { kick: x--- }")).toMatch(/3 bars/)
+    expect(firstError("play {\n  2 bar { kick: x- }\n}")).toMatch(/2 bars/)
+    expect(firstError("play snare: 1 beat rest, x---")).toMatch(/1 beats/)
+    expect(firstError("play snare: {\n  1 step rest, x\n}")).toMatch(/1 steps/)
+    expect(firstError("play (1+1) bar { kick: x- }")).toMatch(/\(1\+1\) bars/)
+  })
+})
+
 describe("what plays in a bar", () => {
   const TWO = "kick: x---x---x---x--- | x---x---x---x---"
 
@@ -891,13 +977,13 @@ describe("what plays in a bar", () => {
     expect(hits(o, "snare").map((e) => e.secStart)).toEqual([2.5, 3.5, 6.5, 7.5])
   })
 
-  it("takes braces, one line, a name, or a run of bars", () => {
+  it("takes braces, one line, a name, or a run of bars: bar 2 to 3", () => {
     const want = played(play(TWO, "bar 2 { snare: xx }"))
     expect(want[0][1].filter((e) => e.startsWith("snare"))).toHaveLength(16)
     expect(played(play(TWO, "bar 2 snare: xx"))).toEqual(want)
     expect(played("pattern fill = { snare: xx }\n" + play(TWO, "bar 2 fill"))).toEqual(want)
     expect(played(play(TWO, "bar 1+1 snare: xx"))).toEqual(want)
-    const o = parseSource(play("kick: 1", "bars 2 to 3 { snare: 2 4 }")).outputs[0]
+    const o = parseSource(play("kick: 1", "bar 2 to 3 { snare: 2 4 }")).outputs[0]
     expect(o.durSec).toBe(6)
     expect(hits(o, "snare").map((e) => e.secStart)).toEqual([2.5, 3.5, 4.5, 5.5])
   })
@@ -912,7 +998,7 @@ describe("what plays in a bar", () => {
     expect(firstError("pattern g = 2 bars {\n  kick: x---\n  bar 3 crash: 1\n}\nplay g")).toMatch(
       /g is 2 bars long, so it has no bar 3/,
     )
-    expect(firstError("play 1 bar {\n  bar 2 crash: 1\n}")).toMatch(
+    expect(firstError("play 1 bars {\n  bar 2 crash: 1\n}")).toMatch(
       /This play is 1 bar long, so it has no bar 2/,
     )
   })
@@ -947,6 +1033,16 @@ describe("what plays in a bar", () => {
     hat.pedal:   4
   }`)
     expect(played(short)).toEqual(played(long))
+    const sugar = groove(`  kick: x--x---
+  snare: 2e 4
+  snare.ghost: --x----
+  hat: X-x-
+  bar 2 {
+    snare.ghost: 2 beats rest, dd, 1 beats rest
+    hat.open:    2 beats rest, --X-, 2 steps rest
+    hat.pedal:   4
+  }`)
+    expect(played(sugar)).toEqual(played(long))
   })
 
   it("explains its mistakes", () => {
@@ -957,15 +1053,12 @@ describe("what plays in a bar", () => {
       /bar 2 needs what plays there: bar 2 \{ \.\.\. \}/,
     )
     expect(firstError(play("kick: x", "bar two kick: x"))).toMatch(
-      /bar takes the number of a bar, then what plays there: bar 2 \{ \.\.\. \}/,
+      /bar takes the number of a bar, then what plays there: bar 2 \{ \.\.\. \}, or bar 3 to 4 \{ \.\.\. \}/,
     )
     expect(firstError(play("kick: x", "bar 0 kick: x"))).toMatch(/Bars are counted from 1/)
-    expect(firstError(play("kick: x", "bar 2 to 3 kick: x"))).toMatch(
-      /For more than one bar, write bars: bars 2 to 3 \{ \.\.\. \}/,
-    )
-    expect(firstError(play("kick: x", "bars 3 to 2 kick: x"))).toMatch(/runs backwards/)
-    expect(firstError(play("kick: x", "bars 2 kick: x"))).toMatch(
-      /bars takes the first and last bar/,
+    expect(firstError(play("kick: x", "bar 3 to 2 kick: x"))).toMatch(/bar 3 to 2 runs backwards/)
+    expect(firstError(play("kick: x", "bars 2 to 3 kick: x"))).toMatch(
+      /bars is a length, and goes after a number: 6 bars groove. To say which bars, write bar: bar 3 to 4 \{ \.\.\. \}/,
     )
     expect(firstError(play("kick: x", "bar 2 hat.open: ---- ---- --X-"))).toMatch(
       /The hat.open line is 12 steps long, which doesn't fit 1 bar/,
