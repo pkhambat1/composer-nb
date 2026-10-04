@@ -23,6 +23,21 @@ const CodeEditor = React.forwardRef(function CodeEditor(props, ref) {
     else if (ref) ref.current = el
   }
 
+  // Auto-grow again when the editor's width changes, which moves where its lines wrap
+  React.useEffect(() => {
+    const ta = localRef.current
+    if (!ta) return
+    let width = ta.clientWidth
+    const observer = new ResizeObserver(() => {
+      if (ta.clientWidth === width) return
+      width = ta.clientWidth
+      ta.style.height = "auto"
+      ta.style.height = ta.scrollHeight + 2 + "px"
+    })
+    observer.observe(ta)
+    return () => observer.disconnect()
+  }, [])
+
   // Auto-grow
   React.useEffect(() => {
     const ta = localRef.current

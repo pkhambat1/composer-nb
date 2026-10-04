@@ -23,6 +23,7 @@ export function useKeyboard({
   undoDelete,
   setSelectedId,
   setEditingId,
+  single = false, // one cell that can't be added to or deleted: the embedded cell
 }) {
   // Double-key press tracking for DD delete
   const dPressedRef = useRef(false)
@@ -40,6 +41,7 @@ export function useKeyboard({
         e.preventDefault()
         if (selectedId) {
           runCell(selectedId)
+          if (single) return
           const idx = findIndex(selectedId)
           if (idx < cells.length - 1) {
             const nextId = cells[idx + 1].id
@@ -65,7 +67,7 @@ export function useKeyboard({
         e.preventDefault()
         if (selectedId) {
           runCell(selectedId)
-          insertCell(selectedId, "below", "music")
+          if (!single) insertCell(selectedId, "below", "music")
         }
         return
       }
@@ -90,6 +92,7 @@ export function useKeyboard({
         setEditingId(selectedId)
         return
       }
+      if (single) return
 
       // A: insert cell above
       if (e.key === "a" || e.key === "A") {
@@ -156,5 +159,6 @@ export function useKeyboard({
     undoDelete,
     setSelectedId,
     setEditingId,
+    single,
   ])
 }

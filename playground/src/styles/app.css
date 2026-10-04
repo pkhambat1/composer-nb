@@ -1613,3 +1613,20 @@ body {
 .music-warning {
   color: var(--busy-bar);
 }
+
+/* Embed mode: one cell in a frame, with nothing around it (see shared/embed.js) */
+.embed-root .cells {
+  max-width: none;
+}
+.embed-root .cell {
+  grid-template-columns: 1fr;
+  margin: 0;
+  border-color: var(--border-soft);
+}
+.embed-root .cell-prompt,
+.embed-root .cell-menu-wrap {
+  display: none;
+}
+.embed-root .cell-body {
+  padding-left: var(--cell-pad-x);
+}
