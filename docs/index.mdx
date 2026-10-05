@@ -9,11 +9,24 @@ import { Cell } from "/snippets/cell.jsx"
 
 | Component      | Description                                                                              | Reference                                        |
 | -------------- | ---------------------------------------------------------------------------------------- | ------------------------------------------------ |
-| Language       | Line-oriented syntax for settings, typed names, instrument lines and `play` statements.   | [Program structure](/language/program-structure) |
+| Language       | One line per drum, one line for chords, and patterns that arrange them into a song.       | [Where to start](#where-to-start)                |
 | Python package | `composer-nb` on PyPI. Adds the `%%music` cell magic and the `Song` class to Jupyter.      | [Installation](/python/installation)             |
 | Playground     | Browser notebook at [composer-nb.vercel.app](https://composer-nb.vercel.app). No install. | [Notebook](/playground/notebook)                 |
 
 The Python package and the playground run the same parser and audio engine. Source that is valid in one is valid in the other.
+
+## Where to start
+
+| To write                                   | Page                                             |
+| ------------------------------------------ | ------------------------------------------------ |
+| A drum part from sheet music               | [From sheet music](/drums/notation)              |
+| A drum part from scratch                   | [Drum lines](/drums/lines)                       |
+| Triplets and other note values             | [Note values](/drums/note-values)                |
+| A chord progression                        | [Chord lines](/chords/lines)                     |
+| Guitar, capo, key and other chord settings | [Sound, key and capo](/chords/sound)             |
+| The time signature and tempo               | [Time and tempo](/song/time-and-tempo)           |
+| A groove that loops, a fill, a song's form | [Patterns](/song/patterns)                       |
+| The grammar, scope and limits              | [Program structure](/reference/program-structure) |
 
 ## Example
 
@@ -38,12 +51,12 @@ play 6 bars {
 
 | Line                        | Statement                                    | Effect                                                             |
 | --------------------------- | -------------------------------------------- | ------------------------------------------------------------------ |
-| `time 7 over 8`             | [Setting](/language/settings)                | Sets the bar to seven eighth notes.                                |
-| `pattern groove = 3 bars {` | [Declaration](/language/declarations)        | Binds `groove` to a three-bar pattern. Nothing sounds yet.         |
-| `kick: x--x---`             | [Drum line](/language/drums)                 | Seven steps on the kick. Repeats until the pattern ends.           |
-| `play 6 bars {`             | [`play`](/language/play)                     | Produces one six-bar output.                                       |
-| `crash: 1`                  | [Drum line](/language/drums)                 | One crash on beat 1. Lines written directly in a `play` play once. |
-| `groove`                    | [Sequence line](/language/patterns#sequence-lines) | Plays `groove`, repeated until the play ends.                |
+| `time 7 over 8`             | [`time`](/song/time-and-tempo#time)          | Sets the bar to seven eighth notes.                                |
+| `pattern groove = 3 bars {` | [Pattern](/song/patterns)              | Binds `groove` to a three-bar pattern. Nothing sounds yet.         |
+| `kick: x--x---`             | [Drum line](/drums/lines)                 | Seven steps on the kick. Repeats until the pattern ends.           |
+| `play 6 bars {`             | [`play`](/song/play)                     | Produces one six-bar output.                                       |
+| `crash: 1`                  | [Drum line](/drums/lines)                 | One crash on beat 1. Lines written directly in a `play` play once. |
+| `groove`                    | [Sequence line](/song/patterns#sequence-lines) | Plays `groove`, repeated until the play ends.                |
 
 ## Output
 
@@ -56,6 +69,6 @@ Each `play` statement produces one output with these parts:
 | WAV        | The rendered audio as a `.wav` download.                                                    |
 | Drum grid  | One row per drum line, one column per subdivision, drawn bar by bar.                        |
 | Chord list | Each chord played, with its note names. The playground also draws a diagram for each chord. |
-| Errors     | Line number and message for each statement that failed. See [Errors](/language/errors).     |
+| Errors     | Line number and message for each statement that failed. See [Errors](/reference/errors).     |
 
 Audio is rendered in the browser. The `piano` and `guitar` sounds and the `rock` drum kit load samples from the network on first use.

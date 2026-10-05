@@ -2,7 +2,7 @@
   "$schema": "https://mintlify.com/docs.json",
   "theme": "mint",
   "name": "composer-nb",
-  "description": "Reference for the composer-nb language, its Python package and the playground.",
+  "description": "Reference for the composer-nb language for drums and chords, its Python package and the playground.",
   "colors": {
     "primary": "#1a73e8",
     "light": "#8ab4f8",
@@ -27,19 +27,36 @@
         "pages": ["index", "quickstart"]
       },
       {
-        "group": "Language",
+        "group": "Drums",
         "pages": [
-          "language/program-structure",
-          "language/numbers-and-lengths",
-          "language/settings",
-          "language/declarations",
-          "language/chords",
-          "language/drums",
-          "language/patterns",
-          "language/play",
-          "language/bar",
-          "language/every",
-          "language/errors"
+          "drums/notation",
+          "drums/lines",
+          "drums/note-values"
+        ]
+      },
+      {
+        "group": "Chords",
+        "pages": [
+          "chords/lines",
+          "chords/sound"
+        ]
+      },
+      {
+        "group": "Song structure",
+        "pages": [
+          "song/time-and-tempo",
+          "song/patterns",
+          "song/play"
+        ]
+      },
+      {
+        "group": "Language reference",
+        "pages": [
+          "reference/program-structure",
+          "reference/settings",
+          "reference/names",
+          "reference/numbers-and-lengths",
+          "reference/errors"
         ]
       },
       {
@@ -53,7 +70,10 @@
       },
       {
         "group": "Playground",
-        "pages": ["playground/notebook", "playground/keyboard-shortcuts"]
+        "pages": [
+          "playground/notebook",
+          "playground/keyboard-shortcuts"
+        ]
       }
     ]
   },
@@ -77,5 +97,51 @@
     "socials": {
       "github": "https://github.com/pkhambat1/composer-nb"
     }
-  }
+  },
+  "redirects": [
+    {
+      "source": "/language/drums",
+      "destination": "/drums/lines"
+    },
+    {
+      "source": "/language/every",
+      "destination": "/drums/note-values"
+    },
+    {
+      "source": "/language/chords",
+      "destination": "/chords/lines"
+    },
+    {
+      "source": "/language/patterns",
+      "destination": "/song/patterns"
+    },
+    {
+      "source": "/language/play",
+      "destination": "/song/play"
+    },
+    {
+      "source": "/language/bar",
+      "destination": "/song/patterns#bar"
+    },
+    {
+      "source": "/language/program-structure",
+      "destination": "/reference/program-structure"
+    },
+    {
+      "source": "/language/settings",
+      "destination": "/reference/settings"
+    },
+    {
+      "source": "/language/declarations",
+      "destination": "/reference/names"
+    },
+    {
+      "source": "/language/numbers-and-lengths",
+      "destination": "/reference/numbers-and-lengths"
+    },
+    {
+      "source": "/language/errors",
+      "destination": "/reference/errors"
+    }
+  ]
 }

@@ -13,13 +13,13 @@ Every statement starts with a word that identifies its kind.
 
 | Statement       | Form                                                                  | Allowed in                                  | Reference                                    |
 | --------------- | --------------------------------------------------------------------- | ------------------------------------------- | -------------------------------------------- |
-| Setting         | `tempo 90`                                                            | Top level, blocks                           | [Settings](/language/settings)               |
-| Declaration     | `steps fill = x-x-`, `chords verse = Am F`, `pattern groove = { ... }` | Top level, blocks                           | [Declarations](/language/declarations)       |
-| Instrument line | `kick: x--x---`, `chords: Am F`                                       | Blocks                                      | [Drum lines](/language/drums), [Chord lines](/language/chords) |
-| Sequence line   | `intro verse verse`                                                   | Blocks, after `play`, as a pattern's value  | [Patterns](/language/patterns#sequence-lines) |
-| `bar`           | `bar 2 { ... }`                                                       | Blocks                                      | [`bar`](/language/bar)                       |
-| `every`         | `every 3 steps { ... }`                                               | Blocks, after `play`, as a pattern's value  | [`every`](/language/every)                   |
-| `play`          | `play { ... }`                                                        | Top level                                   | [`play`](/language/play)                     |
+| Setting         | `tempo 90`                                                            | Top level, blocks                           | [Settings](/reference/settings)               |
+| Declaration     | `steps fill = x-x-`, `chords verse = Am F`, `pattern groove = { ... }` | Top level, blocks                           | [Names and types](/reference/names)       |
+| Instrument line | `kick: x--x---`, `chords: Am F`                                       | Blocks                                      | [Drum lines](/drums/lines), [Chord lines](/chords/lines) |
+| Sequence line   | `intro verse verse`                                                   | Blocks, after `play`, as a pattern's value  | [Patterns](/song/patterns#sequence-lines) |
+| `bar`           | `bar 2 { ... }`                                                       | Blocks                                      | [Patterns](/song/patterns#bar)               |
+| `every`         | `every 3 steps { ... }`                                               | Blocks, after `play`, as a pattern's value  | [Note values](/drums/note-values)            |
+| `play`          | `play { ... }`                                                        | Top level                                   | [`play`](/song/play)                     |
 
 Only `play` produces output. An instrument line, sequence line, `bar` or `every` written at top level is an error.
 
@@ -31,7 +31,7 @@ Only `play` produces output. An instrument line, sequence line, `bar` or `every`
 | Line       | One statement per line. A block's braces can span lines.                                     |
 | Whitespace | Blank lines and indentation are ignored. Spaces inside a run of steps are ignored.           |
 | Identifier | A letter followed by letters and digits: `[A-Za-z][A-Za-z0-9]*`.                             |
-| Number     | An integer or decimal literal, or an arithmetic expression. See [Numbers and lengths](/language/numbers-and-lengths). |
+| Number     | An integer or decimal literal, or an arithmetic expression. See [Numbers and lengths](/reference/numbers-and-lengths). |
 
 ## Symbols
 
@@ -64,7 +64,7 @@ A block is one or more statements in braces. The statements in a block start at 
 | After `play`                              | The body of the play.                                             |
 | On a sequence line                        | A pattern without a name, played where it is written.             |
 | After `bar <n>` or `every <length>`       | A pattern without a name, limited to those bars or that step duration. |
-| After a drum's colon, or `steps <name> =` | Layers of steps for one drum. See [Layers](/language/drums#layers). |
+| After a drum's colon, or `steps <name> =` | Layers of steps for one drum. See [Layers](/drums/lines#layers). |
 
 After `play`, `bar` and `every`, a single statement can stand in place of a block: `play groove` is equivalent to `play { groove }`.
 
@@ -115,4 +115,4 @@ A reserved word cannot be declared as a name.
 | Sounds                | `piano` `epiano` `organ` `pad` `bass` `guitar`                                                                                    |
 | Reserved, not in use  | `step` `loop` `for` `def` `section` `accent` `ghost` `double`                                                                     |
 
-Names of type `steps` and `chords` have additional rules. See [Declarations](/language/declarations#names).
+Names of type `steps` and `chords` have additional rules. See [Names](/reference/names#names).
