@@ -5,7 +5,7 @@ description: "The time signature and the tempo: how long a bar is, and how fast 
 
 import { Cell } from "/snippets/cell.jsx"
 
-`time` and `tempo` apply to everything a cell plays, drums and chords alike. Both are [settings](/reference/settings): a word followed by its value, in effect from the line where it is written.
+`time` and `tempo` apply to everything a cell plays: drums, notes and chords alike. Both are [settings](/reference/settings): a word followed by its value, in effect from the line where it is written.
 
 | Setting           | Value                 | Default    |
 | ----------------- | --------------------- | ---------- |
@@ -20,7 +20,7 @@ time <count> over <unit>
 
 | Parameter | Type                                 | Description                                                                                         |
 | --------- | ------------------------------------ | --------------------------------------------------------------------------------------------------- |
-| `count`   | Positive whole number, or a sum      | Notes per bar. A sum such as `3+4` gives the same bar length as `7` and sets the grouping shown in the drum grid. |
+| `count`   | Positive whole number, or a sum      | Notes per bar. A sum such as `3+4` gives the same bar length as `7` and sets the grouping shown in the grid. |
 | `unit`    | `1`, `2`, `4`, `8` or `16`           | The note value being counted.                                                                       |
 
 A bar lasts `count × 4 / unit` beats, where a beat is a quarter note. A bar cannot be longer than 8 whole notes.

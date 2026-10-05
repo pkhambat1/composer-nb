@@ -1,4 +1,4 @@
-"""composer-nb: a small language for chords and drums, played inside notebooks.
+"""composer-nb: a small language for chords, notes and drums, played inside notebooks.
 
 In Jupyter, load the cell magic and write music in `%%music` cells:
 
@@ -6,7 +6,6 @@ In Jupyter, load the cell magic and write music in `%%music` cells:
 
     %%music intro
     tempo 75
-    sound guitar
 
     pattern beat = {
       kick: x-------
@@ -14,7 +13,7 @@ In Jupyter, load the cell magic and write music in `%%music` cells:
     }
 
     play {
-      chords: Am E7|G D
+      guitar: chords Am E7|G D
       beat
     }
 

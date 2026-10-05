@@ -55,7 +55,7 @@ function makeSynth(T, kind) {
     s.volume.value = -6
     return s
   }
-  if (kind === "epiano") {
+  if (kind === "piano.electric") {
     const s = new T.PolySynth(T.FMSynth, {
       harmonicity: 3,
       modulationIndex: 10,
@@ -94,6 +94,31 @@ function makeSynth(T, kind) {
     s.volume.value = -2
     return s
   }
+  if (kind === "guitar.electric") {
+    const s = new T.Sampler({
+      urls: {
+        E2: "E2.mp3",
+        A2: "A2.mp3",
+        C3: "C3.mp3",
+        E3: "E3.mp3",
+        G3: "G3.mp3",
+        A3: "A3.mp3",
+        C4: "C4.mp3",
+        E4: "E4.mp3",
+        G4: "G4.mp3",
+        A4: "A4.mp3",
+        C5: "C5.mp3",
+        E5: "E5.mp3",
+      },
+      release: 1.2,
+      baseUrl:
+        "https://gleitz.github.io/midi-js-soundfonts/MusyngKite/electric_guitar_clean-mp3/",
+    })
+    // These samples are recorded quietly: this puts a riff or a chart about level with the
+    // piano playing the same thing.
+    s.volume.value = 12
+    return s
+  }
   if (kind === "bass") {
     const s = new T.PolySynth(T.MonoSynth, {
       oscillator: { type: "sawtooth" },
@@ -130,19 +155,23 @@ function makeSynth(T, kind) {
   return s
 }
 
+// A guitar's chords are played as shapes on its neck, whichever guitar it is.
+const isGuitar = (inst) => inst.split(".")[0] === "guitar"
+
 export async function renderToBuffer(parsed) {
   const chordEvents = parsed.events.filter((ev) => ev.chord)
+  const noteEvents = parsed.events.filter((ev) => ev.note)
 
   // For guitar, swap Tonal's compact voicing for the chord-db's idiomatic
   // voicing so the audio matches the diagram AND the actual pitches a real
   // guitar produces at those frets (Cadd9 = C3 E3 G3 D4 E4, low E open = E2).
   // Bass becomes the lowest fretted string and the artificial -12 doubling is
   // suppressed — both pushed the chord below playable guitar range.
-  if (chordEvents.some((ev) => ev.instrument === "guitar")) {
+  if (chordEvents.some((ev) => isGuitar(ev.instrument))) {
     try {
       await ChordLookup.load()
       for (const ev of chordEvents) {
-        if (ev.instrument !== "guitar") continue
+        if (!isGuitar(ev.instrument)) continue
         const pos = ChordLookup.lookupPosition(ev.chord.label)
         if (!pos?.midi?.length) continue
         const voicing = pos.midi.map((m) => m + (ev.capo || 0))
@@ -170,10 +199,10 @@ export async function renderToBuffer(parsed) {
     async () => {
       const master = new Tone.Limiter(-1).toDestination()
       const synths = {}
-      for (const inst of new Set(chordEvents.map((ev) => ev.instrument))) {
+      for (const inst of new Set(parsed.events.map((ev) => ev.instrument))) {
         const reverb = new Tone.Reverb({
           decay: 2.2,
-          wet: inst === "guitar" || inst === "piano" ? 0.14 : 0.18,
+          wet: isGuitar(inst) || inst === "piano" ? 0.14 : 0.18,
         })
         await reverb.generate()
         reverb.connect(master)
@@ -185,6 +214,15 @@ export async function renderToBuffer(parsed) {
       await Tone.loaded()
 
       for (const ev of chordEvents) playChord(synths[ev.instrument], ev)
+      // A note sounds until the next one on its line, so its length is already worked out.
+      for (const ev of noteEvents) {
+        synths[ev.instrument].triggerAttackRelease(
+          ev.note.name,
+          ev.secDur * 0.96,
+          ev.secStart,
+          ev.vel,
+        )
+      }
     },
     totalSec,
     2,
@@ -219,14 +257,14 @@ function trimSilence(buffer, musicSec) {
 
 function playChord(synth, ev) {
   const inst = ev.instrument
-  const stagger = inst === "guitar" ? 0.012 : inst === "pad" ? 0.05 : inst === "organ" ? 0 : 0.008
-  const bassVel = inst === "guitar" ? 0.6 : 0.7
+  const stagger = isGuitar(inst) ? 0.012 : inst === "pad" ? 0.05 : inst === "organ" ? 0 : 0.008
+  const bassVel = isGuitar(inst) ? 0.6 : 0.7
   const chordVel = 0.55
   const dur = ev.secDur * 0.96
   const usingPos = ev.chord.fromGuitarPosition
   if (!usingPos) {
     synth.triggerAttackRelease(midiToName(ev.chord.bassMidi), dur, ev.secStart, bassVel)
-    if (inst === "guitar" && ev.chord.notesMidi[0]) {
+    if (isGuitar(inst) && ev.chord.notesMidi[0]) {
       synth.triggerAttackRelease(
         midiToName(ev.chord.notesMidi[0] - 12),
         dur,

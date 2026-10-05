@@ -1,0 +1,235 @@
+---
+title: "Note lines"
+description: "One line per instrument: note names drawn on the steps, octaves, notes that ring or stop, accents, and lines that play together."
+---
+
+import { Cell } from "/snippets/cell.jsx"
+
+## Syntax
+
+```text
+<instrument>: <notes>
+<instrument>: { <layer> ... }
+```
+
+A note line names a [pitched instrument](/pitched/instruments#instruments) and draws its notes on the steps. It reads like a [drum line](/drums/lines), with a note where a drum has its `x`. A note line is valid inside a block or directly after `play`.
+
+<Cell>
+
+```composer-nb
+time 7 over 8
+
+pattern groove = {
+  kick: x--x---
+  snare: ----x--
+  hat: x-
+  guitar.electric: F---GF-F--
+}
+
+play groove
+```
+
+</Cell>
+
+The guitar's ten steps repeat against the drums' seven. The pattern lasts until they end together, after five bars. See [A riff and drums together](/song/patterns#a-riff-and-drums-together).
+
+## Notes
+
+```text
+[^|~]<letter>[#|b][<octave>]
+```
+
+| Part     | Values                                                                                                                         |
+| -------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| `letter` | `A` to `G`, a capital.                                                                                                         |
+| `#`, `b` | Optional. Raises or lowers the note by a semitone: `F#`, `Bb`.                                                                 |
+| `octave` | Optional. A digit from `0` to `8`. `C4` is middle C. Without one, the note is in the current [`octave`](/pitched/instruments#octave). |
+| `^`, `~` | Optional, in front of the letter. An accented note, or a soft one.                                                             |
+
+A note is one step, however many characters it takes. `F#--E2-` is five steps.
+
+## Steps
+
+Each note, `-` or `_` lasts one step: a sixteenth note, or [another note value](/drums/note-values) set by an enclosing `every`.
+
+| Step     | Meaning                                                             | Velocity |
+| -------- | ------------------------------------------------------------------- | -------- |
+| Note     | Starts the note. It sounds until the next note or `_` on its line.  | 0.7      |
+| `^` note | Starts the note, accented.                                          | 1.0      |
+| `~` note | Starts the note, soft.                                              | 0.3      |
+| `-`      | Nothing new. A note that is sounding carries on.                    |          |
+| `_`      | Stops the note. A step of silence.                                  |          |
+
+Spaces between steps are ignored. `|` marks the end of a bar and is validated, as on a drum line.
+
+<Cell>
+
+```composer-nb
+play piano: C4-E4-G4-__ ^C5---~G4-__
+```
+
+</Cell>
+
+| Line           | Where its last note stops                                                    |
+| -------------- | ---------------------------------------------------------------------------- |
+| In a pattern   | At the first note or `_` of the next time through. The note carries over the repeat. |
+| In a play      | Where the line ends.                                                         |
+
+A line in a pattern that begins with silence begins with `_`. A `-` there lets the last note of the time before ring on.
+
+## Note lengths
+
+A note lasts from its own step to the next note or `_`, so its length is the note and the `-` after it. With a step as a sixteenth note:
+
+| Note value          | Steps | Written            |
+| ------------------- | ----- | ------------------ |
+| Sixteenth note      | 1     | `F`                |
+| Eighth note         | 2     | `F-`               |
+| Dotted eighth note  | 3     | `F--`              |
+| Quarter note        | 4     | `F---`             |
+| Dotted quarter note | 6     | `F-----`           |
+| Half note           | 8     | `F-------`         |
+| Whole note          | 16    | `F---------------` |
+
+A rest is written the same way with `_` in place of the note: `_---` is a quarter rest. For triplets and other note values, see [Note values](/drums/note-values).
+
+<Cell>
+
+```composer-nb
+play piano: E4---E4---F4---G4--- | G4---F4---E4---D4---
+```
+
+</Cell>
+
+## Octaves
+
+A note without a number is in the octave the [`octave`](/pitched/instruments#octave) setting names, which is 3 unless set. A number on a note applies to that note only. The number goes up at each C: the note below `C4` is `B3`.
+
+| Note | Where it is                                                              |
+| ---- | ------------------------------------------------------------------------ |
+| `C4` | Middle C.                                                                |
+| `A4` | The A above middle C, the note an orchestra tunes to.                    |
+| `E2` | A guitar's lowest open string. Its open strings are `E2 A2 D3 G3 B3 E4`. |
+| `E1` | A bass guitar's lowest open string. Its open strings are `E1 A1 D2 G2`.  |
+
+Guitar and bass music is printed an octave above where it sounds. The numbers here are the sounding pitch, so the note printed as middle C in guitar music is written `C3`.
+
+<Cell>
+
+```composer-nb
+octave 2
+
+pattern line = {
+  bass: E---E-G-A---A-G-
+  hat: x-
+}
+
+play 2 bars line
+```
+
+</Cell>
+
+On a note line `E7` is the note E in octave 7. On a [chord line](/pitched/chords) it is the chord E7. A line is one or the other, so the two never meet.
+
+## Layers
+
+A line plays one note at a time. For notes that sound together, a block after the instrument's colon holds layers, one layer per line.
+
+<Cell>
+
+```composer-nb
+play piano: {
+  C5-D5-E5-G5-E5-D5-C5---
+  C3---------------
+}
+```
+
+</Cell>
+
+| Rule    | Behavior                                                                                                      |
+| ------- | ------------------------------------------------------------------------------------------------------------- |
+| Length  | Each layer repeats until all layers end together: the least common multiple of their lengths.                 |
+| Voices  | Each layer is a voice of its own. A note on one layer does not stop a note on another.                        |
+| Content | A layer is a run of notes, `notes` names, or a [chart](/pitched/chords) with `chords` in front. It cannot be an instrument line. |
+
+A chart as a layer puts chords under a tune on one instrument.
+
+<Cell>
+
+```composer-nb
+pattern verse = {
+  piano: {
+    chords Am F|C G
+    E5---C5---
+  }
+  kick: 1 3
+  snare: 2 4
+}
+
+play verse
+```
+
+</Cell>
+
+## Named notes
+
+A [`notes`](/reference/names#notes) name is accepted wherever a run of notes is.
+
+<Cell>
+
+```composer-nb
+notes riff = F---GF-F--
+play guitar.electric: riff riff
+```
+
+</Cell>
+
+## Simultaneous notes
+
+Lines in a block, and patterns playing at the same time, are mixed by these rules.
+
+| Case                                                               | Result                                           |
+| ------------------------------------------------------------------ | ------------------------------------------------ |
+| Different instruments at the same moment                           | Both sound.                                      |
+| Layers of one instrument's block                                   | All sound.                                       |
+| The same instrument starting a note at the same moment, from two lines | The line written lower in the source is used. |
+
+The last case arises with [`bar`](/song/patterns#bar), which counts as a lower line: its notes replace the notes that start at the same moments on the line above.
+
+## Repetition
+
+| Location     | Behavior                                 |
+| ------------ | ---------------------------------------- |
+| In a pattern | The line repeats until the pattern ends. |
+| In a play    | The line plays once.                     |
+
+Lines of different lengths in one pattern repeat independently, drums and pitched instruments alike. See [Duration](/song/patterns#duration).
+
+## What a note line does not take
+
+| Not accepted                         | Write instead                                               |
+| ------------------------------------ | ----------------------------------------------------------- |
+| Chord names on the steps: `-Am-Am-`  | A [chart](/pitched/chords): `chords _ Am _ Am`.             |
+| Lengths: `2 beats rest, F---`        | Steps: `--------F---`.                                      |
+| Beats: `1 3`                         | Steps.                                                      |
+| Lowercase letters: `f---`            | Capitals: `F---`.                                           |
+
+## Errors
+
+| Message                                                                                                                    | Cause                                         |
+| -------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------- |
+| `Notes go on an instrument's line, e.g. guitar: F---G---`                                                                   | Notes with no instrument.                     |
+| `"H---" isn't a note. Notes are A to G, with # or b after them and an octave when it's needed: F, F#, Bb, E2`               | Not a note name.                              |
+| `"f---": notes are capital letters, A to G: guitar: F---G---`                                                               | Lowercase note.                               |
+| `"C9--": octaves run from 0 to 8`                                                                                           | Octave out of range.                          |
+| `"^---": ^ and ~ go in front of a note: ^F, ~G`                                                                             | `^` or `~` with no note after it.             |
+| `"x---" is a drum's steps. On guitar a step is a note: guitar: F---G---`                                                    | Drum steps on a pitched instrument's line.    |
+| `"Am" is a chord, and these are notes. For chords, write guitar: chords Am F`                                               | A chart without `chords` in front.            |
+| `"Am---": chord names don't go on the steps. Chords are written in a chart, where _ leaves a slot silent: guitar: chords _ Am _ Am` | A chord name in a run of steps.       |
+| `Notes are drawn step by step, without lengths: - lets a note ring on, and _ is a step of silence`                          | A length on a note line.                      |
+| `A line's notes need no word in front: piano: F---`                                                                         | `notes` after the colon.                      |
+| `"F---" is notes, and kick is a drum. Notes go on a pitched instrument's line: guitar: F---`                                | Notes on a drum line.                         |
+| `This \| isn't at the end of a bar: it's after 8 steps, and a 4 over 4 bar is 16 steps`                                     | Misplaced bar line.                           |
+| `A block is everything piano plays, so nothing goes beside it: piano: { ... }`                                              | A block next to notes on one line.            |
+| `A block after piano: holds what piano plays, one layer a line. kick: x--- is an instrument's line, which goes in a pattern` | An instrument line inside the block.         |
+| `piano already has a line in this play. To layer it, put its lines in a block: piano: { ... }`                              | Second line for one instrument in a block.    |

@@ -36,17 +36,16 @@ A cell starts from the default settings unless it names another cell with `after
 %%music intro
 tempo 75
 capo 2
-sound guitar
 chords riff = Am E7|G D
-play chords: riff
+play guitar: chords riff
 ```
 
 ```composer-nb
 %%music verse after intro
-play chords: F C|Dm E7 riff
+play guitar: chords F C|Dm E7 riff
 ```
 
-`verse` plays at tempo 75 on guitar with a capo at fret 2, and can use `riff`. The output header lists the inherited settings: `from intro: tempo 75, sound guitar, capo 2`.
+`verse` plays at tempo 75 with a capo at fret 2, and can use `riff`. The output header lists the inherited settings: `from intro: tempo 75, capo 2`.
 
 A setting or declaration in `verse` applies to `verse` and to cells that continue from it. It does not change `intro`.
 
@@ -60,10 +59,11 @@ Inside a `%%music` cell, Tab completes:
 | `%%music name after `            | Names of songs in the namespace.                                         |
 | Start of a line, top level       | Settings, types, `play`.                                                 |
 | Start of a line, inside a block  | Instrument names, pattern names, `bar`, `every`, settings, types.        |
-| After `sound` or `kit`           | The accepted values.                                                     |
+| After `kit`                      | The accepted values.                                                     |
 | After `ride.`, `hat.`, `snare.`, `tom.` | The variations of that drum.                                      |
+| After `guitar.`, `piano.`        | The instrument's other sound: `electric`.                                |
 | On a drum line                   | `steps` names. After a number, the units. After a unit, `rest`.          |
-| On a `chords` line               | `chords` names.                                                          |
+| On a pitched instrument's line   | `chords`, and `notes` names. After `chords`, `chords` names.             |
 | After `play`                     | Pattern names and instrument names.                                      |
 
 Names declared in the cells that the current cell continues from are included. Python completions are suppressed inside the cell.

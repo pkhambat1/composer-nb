@@ -50,16 +50,16 @@ def shell():
 
 
 def test_named_cell_is_saved(shell):
-    song = shell.run_cell_magic("music", "intro", "key D\nplay chords: I IV")
+    song = shell.run_cell_magic("music", "intro", "key D\nplay piano: chords I IV")
     assert isinstance(song, Song)
     assert shell.user_ns["intro"] is song
 
 
 def test_after_links_to_the_named_song(shell):
     intro = shell.run_cell_magic("music", "intro", "key D")
-    verse = shell.run_cell_magic("music", "verse after intro", "play chords: I IV")
+    verse = shell.run_cell_magic("music", "verse after intro", "play piano: chords I IV")
     assert verse.after is intro
-    assert verse.chain == ["key D", "play chords: I IV"]
+    assert verse.chain == ["key D", "play piano: chords I IV"]
 
 
 def test_anonymous_cell_is_not_saved(shell):

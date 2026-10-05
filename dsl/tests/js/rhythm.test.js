@@ -4,7 +4,7 @@ vi.mock("tone", () => ({}))
 
 const { parseSource } = await import("../../js/music-engine.js")
 
-const play = (chords) => parseSource(`play chords: ${chords}`)
+const play = (chords) => parseSource(`play piano: chords ${chords}`)
 // Chord lengths in beats (quarter notes).
 const beats = (chords) => play(chords).chords.map((e) => e.secDur * 2)
 const labels = (chords) => play(chords).chords.map((e) => e.label)

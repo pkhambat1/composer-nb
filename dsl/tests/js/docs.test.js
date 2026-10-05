@@ -7,7 +7,7 @@ import { describe, it, expect } from "vitest"
 import { existsSync, readdirSync, readFileSync } from "node:fs"
 import { join } from "node:path"
 import { fileURLToPath } from "node:url"
-import { initialState, LANES, parseCell } from "../../js/language.js"
+import { initialState, LANES, parseCell, PITCHED } from "../../js/language.js"
 
 const DOCS = fileURLToPath(new URL("../../../docs", import.meta.url))
 // Design notes sit beside the pages but aren't published (see docs/.mintignore).
@@ -86,6 +86,14 @@ describe("docs drums", () => {
       expect(LANES.filter((name) => !text.includes(mention(name)))).toEqual([])
     })
   }
+})
+
+// The same for the instruments that play notes and chords, and their table.
+describe("docs pitched instruments", () => {
+  it("pitched/instruments.mdx has every pitched instrument", () => {
+    const text = read("pitched/instruments.mdx")
+    expect(PITCHED.filter((name) => !text.includes("| `" + name + "`"))).toEqual([])
+  })
 })
 
 // The anchor Mintlify gives a heading: lowercase, punctuation dropped, spaces to hyphens.

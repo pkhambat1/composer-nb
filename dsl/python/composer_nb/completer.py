@@ -18,9 +18,10 @@ VARIATIONS = {
     "snare": ["ghost", "rim"],
 }
 SPLIT = ["tom"]  # drums that are only their variations: tom is three drums
-INSTRUMENTS = ["piano", "epiano", "organ", "pad", "bass", "guitar"]
-SETTINGS = ["time", "tempo", "sound", "key", "capo", "octave", "kit"]
-TYPES = ["steps", "chords", "pattern"]
+# Instruments that play notes and chords, each on a line of its own like a drum
+PITCHED = ["guitar", "guitar.electric", "piano", "piano.electric", "organ", "pad", "bass"]
+SETTINGS = ["time", "tempo", "key", "capo", "octave", "kit"]
+TYPES = ["steps", "notes", "chords", "pattern"]
 KITS = ["rock", "synth"]
 UNITS = ["steps", "beats", "bars"]  # what a length on a drum's line is measured in
 
@@ -29,16 +30,22 @@ LANES = [
     for d in DRUMS
     for lane in [*([] if d in SPLIT else [d]), *(f"{d}.{v}" for v in VARIATIONS.get(d, []))]
 ]
-PARTS = ["chords", *LANES]
-SETTING_VALUES = {"sound": INSTRUMENTS, "kit": KITS}
+PARTS = [*PITCHED, *LANES]
+# What can follow an instrument's name and a dot: ride.bell, guitar.electric
+SOUNDS = dict(VARIATIONS)
+for _name in PITCHED:
+    if "." in _name:
+        SOUNDS.setdefault(_name.split(".")[0], []).append(_name.split(".")[1])
+SETTING_VALUES = {"kit": KITS}
 
 MAGIC = "%%music"
 # A name and the type in front of it: steps pair = ^-x-
-DEF_RE = re.compile(r"^\s*(steps|chords|pattern)\s+([A-Za-z_]\w*)\s*=", re.M)
+DEF_RE = re.compile(r"^\s*(steps|notes|chords|pattern)\s+([A-Za-z_]\w*)\s*=", re.M)
 # The instrument line the cursor is on: its name, then what's been written after the colon.
 PART_RE = re.compile(r"(?:^|[\s{])([a-z]+(?:\.[a-z]+)?):([^:{}]*)$")
 NUMBER_RE = re.compile(r"^\d+$|\)$")
-# What makes a { a drum's block of steps: kick: in front of it, or steps name =
+# What makes a { an instrument's block of layers: kick: or piano: in front of it, or
+# steps name =
 STEPS_OPENER_RE = re.compile(r"([a-z]+(?:\.[a-z]+)?)\s*:[^:{}]*$|^\s*steps\s+[A-Za-z_]\w*\s*=[^{}]*$")
 
 Option = Tuple[str, str]  # the text to insert and its kind, which picks the icon
@@ -71,22 +78,35 @@ def _names(defined: str) -> Names:
 
 
 def _open_blocks(text: str) -> List[Tuple[str, Optional[str]]]:
-    """The blocks still open at the end of `text`: what each holds (a drum's "steps", or
-    "lines"), and the name it's the value of, if any."""
+    """The blocks still open at the end of `text`: what each holds (a drum's "steps", a
+    pitched instrument's "layers", or "lines"), and the name it's the value of, if any."""
     open_blocks: List[Tuple[str, Optional[str]]] = []
     for line in text.split("\n"):
         code = line.split("//")[0]
         for i, c in enumerate(code):
             if c == "{":
                 opener = STEPS_OPENER_RE.search(code[:i])
-                steps = (open_blocks and open_blocks[-1][0] == "steps") or bool(
-                    opener and (opener.group(1) is None or opener.group(1) in LANES)
-                )
+                holds = "lines"
+                if open_blocks and open_blocks[-1][0] != "lines":
+                    holds = open_blocks[-1][0]
+                elif opener and (opener.group(1) is None or opener.group(1) in LANES):
+                    holds = "steps"
+                elif opener and opener.group(1) in PITCHED:
+                    holds = "layers"
                 named = DEF_RE.match(code[:i])
-                open_blocks.append(("steps" if steps else "lines", named and named.group(2)))
+                open_blocks.append((holds, named and named.group(2)))
             elif c == "}" and open_blocks:
                 open_blocks.pop()
     return open_blocks
+
+
+def _pitched(written: List[str], names: Names) -> List[Option]:
+    """What can come next on a pitched instrument's line: notes, or chords and then a chart."""
+    if not written:
+        return [("chords ", "keyword")] + _options(names["notes"], "variable")
+    if written[0] == "chords":  # the word in front is what makes a line a chart
+        return _options(names["chords"], "variable")
+    return _options(names["notes"], "variable")
 
 
 def _sequence(words: List[str], patterns: List[Option], parts: List[Option]) -> List[Option]:
@@ -177,11 +197,13 @@ def complete(text: str, cursor: int, songs: Optional[Dict[str, Song]] = None):
 
     variation = re.search(r"([a-z]+)\.$", head)
     part = PART_RE.search(head)
-    if variation:  # ride. -> ride.bell
-        options = _options([v + ": " for v in VARIATIONS.get(variation.group(1), [])], "property")
+    if variation:  # ride. -> ride.bell, guitar. -> guitar.electric
+        options = _options([v + ": " for v in SOUNDS.get(variation.group(1), [])], "property")
+    elif part and part.group(1) in PITCHED:
+        options = _pitched(part.group(2).split(), names)
     elif part and part.group(1) in PARTS:
-        # A drum's line takes steps, the chords line takes chords: only names of that type.
-        holds = "chords" if part.group(1) == "chords" else "steps"
+        # A drum's line takes steps: only names of steps.
+        holds = "steps"
         options = _options(names[holds], "variable")
         written = part.group(2).replace(",", " , ").split()
         last = written[-1] if written else ""
@@ -195,6 +217,8 @@ def complete(text: str, cursor: int, songs: Optional[Dict[str, Song]] = None):
                 options = []  # a line of beats holds only beats
     elif open_blocks and open_blocks[-1][0] == "steps":
         options = _options(names["steps"], "variable")  # a layer in a drum's block of steps
+    elif open_blocks and open_blocks[-1][0] == "layers":
+        options = _pitched(head.split(), names)  # a layer in a pitched instrument's block
     else:
         options = _statement(head, body, names)
     return fragment, [o for o in options if o[0].startswith(fragment) and o[0] != fragment]

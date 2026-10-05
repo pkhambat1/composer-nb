@@ -1,6 +1,6 @@
 ---
 title: "Settings"
-description: "The seven settings, what they share, and where each one is described."
+description: "The six settings, what they share, and where each one is described."
 ---
 
 ## Syntax
@@ -17,13 +17,14 @@ A setting is a reserved word followed by its value. It takes no `=` and no `:`. 
 | -------------------- | -------------------------------- | ---------- | ------------------------ |
 | [`time`](/song/time-and-tempo#time)      | `<count> over <unit>`            | `4 over 4` | Bar length               |
 | [`tempo`](/song/time-and-tempo#tempo)    | Number, 20 to 400                | `120`      | Playback speed           |
-| [`sound`](/chords/sound#sound)    | Sound name                       | `piano`    | `chords` lines           |
-| [`key`](/chords/sound#key)        | Key name                         | `C`        | Roman numeral chords     |
-| [`capo`](/chords/sound#capo)      | Whole number, 0 to 12            | `0`        | Chords on `sound guitar` |
-| [`octave`](/chords/sound#octave)  | Whole number, 1 to 6             | `3`        | Chord voicing            |
+| [`key`](/pitched/instruments#key)        | Key name                  | `C`        | Roman numeral chords     |
+| [`capo`](/pitched/instruments#capo)      | Whole number, 0 to 12     | `0`        | Chords on a guitar's line |
+| [`octave`](/pitched/instruments#octave)  | Whole number, 1 to 6      | `3`        | Chord voicing, and notes with no octave |
 | [`kit`](/drums/lines#kit)        | `rock` or `synth`                | `rock`     | Drum lines               |
 
-Each setting is described with what it applies to: [Time and tempo](/song/time-and-tempo), [Sound, key and capo](/chords/sound) and [Kit](/drums/lines#kit).
+Each setting is described with what it applies to: [Time and tempo](/song/time-and-tempo), [Instruments, key and capo](/pitched/instruments) and [Kit](/drums/lines#kit).
+
+The instrument a line plays on is not a setting. It is the line's name: `guitar: chords Am F`. See [Instruments](/pitched/instruments#instruments).
 
 ## Scope
 
@@ -40,3 +41,4 @@ These apply to every setting. The errors for one setting's value are listed on i
 | `tempo is a setting, not a name, so it takes no =: tempo 90`                   | `=` after a setting.                              |
 | `tempo is a setting, not an instrument, so it takes no colon: tempo 90`        | `:` after a setting.                              |
 | `tempo needs a value after it, e.g. tempo 90`                                  | No value.                                         |
+| `sound is gone. The instrument is the line's name now: guitar: chords Am F\|C G` | The earlier `sound` setting.                   |

@@ -436,7 +436,7 @@ function PianoDiagram({ chord }) {
 }
 
 const ChordDiagram = React.memo(function ChordDiagram({ chord, instrument }) {
-  if (instrument === "guitar") return <GuitarDiagram chord={chord} />
+  if (instrument.split(".")[0] === "guitar") return <GuitarDiagram chord={chord} />
   return <PianoDiagram chord={chord} />
 })
 export default ChordDiagram

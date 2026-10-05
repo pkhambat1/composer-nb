@@ -7,13 +7,24 @@
      .tk-ext, .tk-rest, .tk-slash, .tk-bass, .tk-beat, .tk-step, .tk-step-acc,
      .tk-error
    Whitespace is kept exactly, so the layer lines up with the textarea under it. */
-import { KEYWORDS, LANES, MODIFIERS, PARTS, SETTINGS, TYPES, UNITS } from "./language.js"
+import {
+  KEYWORDS,
+  LANES,
+  MODIFIERS,
+  PARTS,
+  PITCHED,
+  SETTINGS,
+  TYPES,
+  UNITS,
+} from "./language.js"
 import { isRoman } from "./chords.js"
 
 const ROMAN_RE = /^([#b])?(VII|VI|IV|V|III|II|I|vii|vi|iv|v|iii|ii|i)([°oø]?)(.*)$/
 const STEPS_RE = /^[-x^~d]+$/
 // A beat, with how it's hit in front when that isn't a plain hit: 4, 2e, ^4, ~3a, d3&
 const BEAT_RE = /^[\^~d]?\d+(e|&|a)?$/
+// Notes drawn on steps: F---GF-F--, with # or b, an octave, and ^ or ~ in front
+const NOTES_RE = /^(?:-|_|[\^~]?[A-G][#b]?[0-8]?)+$/
 const NAME_RE = /^[A-Za-z][A-Za-z0-9]*$/
 const TRACK_RE = /^[A-Za-z][A-Za-z0-9]*(?:\.[A-Za-z0-9]+)?\s*:/
 
@@ -64,12 +75,28 @@ function stepRun(t) {
   )
 }
 
-// One token of what an instrument plays (or of what a steps or chords name holds).
+// F---G~F-^E2: each note coloured as the step it is, with its mark and octave.
+function noteRun(t) {
+  return t
+    .match(/-|_|[\^~]?[A-G][#b]?[0-8]?/g)
+    .map((n) =>
+      n === "-" || n === "_"
+        ? part("tk-rest", n)
+        : part(n[0] === "^" ? "tk-step tk-step-acc" : "tk-step", n),
+    )
+}
+
+// One token of what an instrument plays (or of what a steps, notes or chords name holds).
 function valueToken(t, kind) {
   if (t === "|" || t === "%") return [part("tk-bar", t)]
-  if (t === "{" || t === "}") return [part("tk-punct", t)] // a drum's block of steps
+  if (t === "{" || t === "}") return [part("tk-punct", t)] // an instrument's block of layers
   // loop is gone: whether something repeats depends on where it is
   if (t === "loop") return [part("tk-error", t)]
+  if (kind === "notes") {
+    if (NOTES_RE.test(t)) return noteRun(t)
+    const name = /^[a-z][a-z0-9]+$/.test(t) && !isRoman(t) && !TYPES.includes(t)
+    return [part(name ? "tk-word" : "tk-error", t)]
+  }
   if (t === "-" || t === "_") return [part("tk-rest", t)]
   if (kind !== "chord") {
     if (STEPS_RE.test(t)) return stepRun(t)
@@ -87,13 +114,20 @@ function pieces(text, re) {
   return text.split(re).filter((p) => p !== "")
 }
 
+// `kind` is what the value is: a drum's steps ("drum"), notes, a chart of chords ("chord"),
+// what a pitched instrument's line holds ("pitched": notes, or chords and then a chart),
+// or anything a name could hold ("word").
 function values(text, kind) {
   const all = pieces(text, /(\s+|\||[{},])/)
   const words = all.filter((p) => !/^\s+$/.test(p))
+  // piano: chords Am F|C G: the word, then the chart
+  const chart = kind === "pitched" && words[0] === "chords"
+  if (kind === "pitched") kind = chart ? "chord" : "notes"
   let k = -1 // which word this is
   return all.flatMap((p) => {
     if (/^\s+$/.test(p)) return [part(null, p)]
     k++
+    if (chart && k === 0) return [part("tk-directive-key", p)]
     if (p === ",") return [part("tk-punct", p)]
     if (kind === "drum") {
       // 2 beats rest: a length in front of what fills it
@@ -172,11 +206,13 @@ function playable(text) {
   if (track) {
     const name = track[1].toLowerCase()
     const known = PARTS.includes(name)
+    // chords: was a line of its own; its chords are on an instrument's line now
+    const kind = name === "chords" ? "chord" : PITCHED.includes(name) ? "pitched" : "drum"
     return [
       part(known ? "tk-inst" : "tk-error", track[1]),
       part(null, track[2]),
       part("tk-punct", ":"),
-      ...values(track[4], name === "chords" ? "chord" : "drum"),
+      ...values(track[4], kind),
     ]
   }
   return names(text)
@@ -223,8 +259,8 @@ function line(code) {
     if (word === "pattern") {
       const len = length(value)
       out.push(...len.parts, ...playable(len.rest))
-    } else out.push(...values(value, word === "chords" ? "chord" : "drum"))
-  } else if ((word === "pattern" || word === "steps") && /^(\s|$)/.test(after)) {
+    } else out.push(...values(value, { chords: "chord", notes: "notes" }[word] || "drum"))
+  } else if (["pattern", "steps", "notes"].includes(word) && /^(\s|$)/.test(after)) {
     // pattern groove {: a type without its name and =
     out.push(part("tk-error", word), ...names(after))
   } else if ((word === "bar" || word === "bars") && /^\s+\S/.test(after)) {
@@ -248,8 +284,9 @@ function line(code) {
     out.push(...len.parts)
     if (len.rest.startsWith("{")) out.push(...braces(len.rest))
     else if (len.rest) out.push(...playable(len.rest))
-  } else if (word === "step" && /^(\s|$)/.test(after)) {
-    // step 1/8 was a setting. every 2 steps { ... } says it now.
+  } else if ((word === "step" || word === "sound") && /^(\s|$)/.test(after)) {
+    // step 1/8 and sound guitar were settings. every 2 steps { ... } and the instrument's
+    // own line (guitar: ...) say them now.
     out.push(part("tk-error", word), ...names(after))
   } else if (SETTINGS.includes(word) && /^\s/.test(after)) {
     // tempo 90, time 7 over 8
@@ -276,18 +313,23 @@ function line(code) {
   return out
 }
 
-// A line in a drum's block of steps: one layer.
-function layerLine(code) {
+// A line in an instrument's block: one layer, of a drum's steps or of what a pitched
+// instrument plays.
+function layerLine(code, holds) {
   const lead = /^\s*/.exec(code)[0]
-  return [part(null, lead), ...values(code.slice(lead.length), "drum")]
+  return [part(null, lead), ...values(code.slice(lead.length), holds === "steps" ? "drum" : holds)]
 }
 
 // What a { holds, from the text in front of it on its line: a drum's steps after kick: or
-// steps name =, and inside another block of steps; otherwise lines.
+// steps name =, a pitched instrument's layers after piano:, and the same inside another
+// block of them; otherwise lines.
 function opens(before, outer) {
-  if (outer === "steps") return "steps"
+  if (outer === "steps" || outer === "pitched") return outer
   const track = /([A-Za-z][A-Za-z0-9]*(?:\.[A-Za-z0-9]+)?)\s*:[^:{}]*$/.exec(before)
-  if (track) return LANES.includes(track[1].toLowerCase()) ? "steps" : "lines"
+  if (track) {
+    const name = track[1].toLowerCase()
+    return LANES.includes(name) ? "steps" : PITCHED.includes(name) ? "pitched" : "lines"
+  }
   return /^\s*steps\s+[A-Za-z][A-Za-z0-9]*\s*=[^{}]*$/.test(before) ? "steps" : "lines"
 }
 
@@ -296,7 +338,8 @@ export function highlightMusic(src) {
   return src.split("\n").map((text) => {
     const cut = text.indexOf("//")
     const code = cut < 0 ? text : text.slice(0, cut)
-    const parts = open[open.length - 1] === "steps" ? layerLine(code) : line(code)
+    const holds = open[open.length - 1]
+    const parts = holds === "steps" || holds === "pitched" ? layerLine(code, holds) : line(code)
     for (let i = 0; i < code.length; i++) {
       if (code[i] === "{") open.push(opens(code.slice(0, i), open[open.length - 1]))
       else if (code[i] === "}") open.pop()

@@ -1579,6 +1579,10 @@ body {
 .dg-ghost {
   opacity: 0.45;
 }
+/* A note that's still sounding from the step before */
+.dg-held {
+  background: color-mix(in srgb, var(--accent) 24%, var(--paper));
+}
 .dg-dbl {
   background: linear-gradient(
     90deg,

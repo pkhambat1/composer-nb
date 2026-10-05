@@ -238,18 +238,20 @@ play 1 bars hats
 
 Lines of different lengths in one pattern repeat independently. See [Duration](/song/patterns#duration).
 
-A pattern can hold a `chords` line beside its drum lines. See [Chords and drums together](/song/patterns#chords-and-drums-together).
+A pattern can hold a guitar, bass or piano part beside its drum lines. See [A riff and drums together](/song/patterns#a-riff-and-drums-together) and [Chords and drums together](/song/patterns#chords-and-drums-together).
 
 ## Errors
 
 | Message                                                                                                  | Cause                                         |
 | -------------------------------------------------------------------------------------------------------- | --------------------------------------------- |
 | `An instrument's line goes inside braces: in a pattern, or play { kick: x--- }`                          | Instrument line at top level.                 |
-| `"cymbal" isn't an instrument. Instruments: chords, crash, ride, ride.bell, hat, hat.open, hat.pedal, tom.high, tom.low, tom.floor, snare, snare.ghost, snare.rim, kick` | Unknown instrument name. |
+| `"cymbal" isn't an instrument. Instruments: guitar, guitar.electric, piano, piano.electric, organ, pad, bass, crash, ride, ride.bell, hat, hat.open, hat.pedal, tom.high, tom.low, tom.floor, snare, snare.ghost, snare.rim, kick` | Unknown instrument name. |
 | `tom is three drums now: tom.high, tom.low or tom.floor`                                                 | A `tom:` line.                                |
 | `floor is tom.floor now: tom.floor: x--`                                                                 | A `floor:` line.                              |
 | `kick already has a line in this play. To layer it, put its lines in a block: kick: { ... }`             | Second line for one instrument in a block.    |
 | `"z" isn't a step. Use x (hit), ^ (accent), ~ (ghost), d (double) or - (nothing)`                        | Invalid step character.                       |
+| `"F---" is notes, and kick is a drum. Notes go on a pitched instrument's line: guitar: F---`             | Notes on a drum line.                         |
+| `"Am" is a chord, and kick is a drum. Chords go on a pitched instrument's line: piano: chords Am`        | A chord on a drum line.                       |
 | `"~": the snare's ghost notes go on a line of their own: snare.ghost: --x-`                              | `~` on the `snare` line.                      |
 | `"^": snare.ghost hits are ghost notes, so they can't be accented`                                       | Accent on `snare.ghost`.                      |
 | `"X-x-": accents are ^ now, so write ^-x-`                                                               | A capital for an accent.                      |

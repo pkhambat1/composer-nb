@@ -23,8 +23,6 @@ Requires Python 3.9 or later and a notebook front end that supports [anywidget](
 
    ```composer-nb
    %%music
-   sound guitar
-
    pattern beat = {
      kick: x-------
      snare: ----x---
@@ -32,12 +30,12 @@ Requires Python 3.9 or later and a notebook front end that supports [anywidget](
    }
 
    play {
-     chords: Am F|C G
+     guitar: chords Am F|C G
      beat
    }
    ```
 
-The cell output contains a player, a drum grid and the chords played. See [`%%music`](/python/music-magic) for cell names and `after`, and [`Song`](/python/song) for the Python API.
+The cell output contains a player, a grid and the chords played. See [`%%music`](/python/music-magic) for cell names and `after`, and [`Song`](/python/song) for the Python API.
 
 ## Playground
 
@@ -52,7 +50,8 @@ The playground takes the same source without the `%%music` line. See [Notebook](
 | -------------------------------------- | ------------------------------------------------ |
 | Drum syntax, from a chart              | [From sheet music](/drums/notation)              |
 | Drum syntax                            | [Drum lines](/drums/lines)                       |
-| Chord syntax                           | [Chord lines](/chords/lines)                     |
+| Note syntax, for riffs and bass lines  | [Note lines](/pitched/notes)                     |
+| Chord syntax                           | [Chord lines](/pitched/chords)                   |
 | Repetition, duration and song form     | [Patterns](/song/patterns)                       |
 | Time signature and tempo               | [Time and tempo](/song/time-and-tempo)           |
-| Guitar, capo and key                   | [Sound, key and capo](/chords/sound)             |
+| Guitar, capo and key                   | [Instruments, key and capo](/pitched/instruments) |

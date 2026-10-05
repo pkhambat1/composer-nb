@@ -8,7 +8,8 @@ import {
   bufferDuration,
   bufferToWav,
 } from "../music-engine.js"
-import { LANES, TPQ } from "../language.js"
+import { TPQ } from "../language.js"
+import { gridRows } from "../grid.js"
 
 // Tone.Offline swaps Tone's global context while it renders, so two cells
 // rendering at once (Run All) would trample each other. Render one at a time, and skip
@@ -40,30 +41,24 @@ function describeBlock(b) {
   return `time ${b.time} · tempo ${b.tempo} · ${bars}`
 }
 
-// What the chords play on, e.g. "guitar, capo 2".
+// The pitched instruments that play, e.g. "guitar, capo 2 · bass".
 function describeSounds(output) {
   const seen = new Map()
-  for (const e of output.chords) seen.set(e.instrument, e.capo)
+  for (const e of output.events) seen.set(e.instrument, e.capo || seen.get(e.instrument))
   return [...seen].map(([inst, capo]) => (capo ? `${inst}, capo ${capo}` : inst)).join(" · ")
 }
 
-// --- Drum grid: each block drawn once, bar by bar, counted 1 e & a -------------
+// --- Grid: each block's drums and notes drawn once, bar by bar, counted 1 e & a ---
 
 const SAY = { 1: [""], 2: ["", "&"], 3: ["", "&", "a"], 4: ["", "e", "&", "a"] }
 
 function renderDrumGrid(blocks) {
   const grid = h("div", "cnb-grid")
   blocks.forEach((block, bi) => {
-    if (!block.drumEvents.length) return
-    const per = Math.round((block.barTicks / TPQ) * block.res)
-    const cellTicks = TPQ / block.res
-    const lanes = LANES.filter((d) => block.drumEvents.some((e) => e.lane === d))
-    const hits = new Map()
-    for (const e of block.drumEvents) {
-      if (e.hidden) continue
-      const k = e.lane + "@" + Math.round(e.tick / cellTicks)
-      if (!hits.has(k) || e.vel > hits.get(k).vel) hits.set(k, e)
-    }
+    if (!block.drumEvents.length && !block.noteEvents.length) return
+    const { per, rows } = gridRows(block)
+    // Wide enough for the longest line name, e.g. guitar.electric
+    const labels = Math.max(...rows.map((r) => r.label.length), 5) + 1
     // Shade alternate groups in added-up meters like (3+4)/4, otherwise alternate beats.
     const groupEnds = []
     let acc = 0
@@ -78,14 +73,16 @@ function renderDrumGrid(blocks) {
     if (blocks.length > 1) grid.append(h("div", "cnb-grid-head", describeBlock(block)))
     for (let bar = 0; bar < block.bars; bar++) {
       const row = h("div", "cnb-bar")
-      row.style.gridTemplateColumns = `68px repeat(${per}, minmax(0, 1fr))`
-      for (const lane of lanes) {
-        row.append(h("div", "cnb-lane", lane))
+      row.style.gridTemplateColumns = `${labels}ch repeat(${per}, minmax(0, 1fr))`
+      for (const { label, cells } of rows) {
+        row.append(h("div", "cnb-lane", label))
         for (let col = 0; col < per; col++) {
-          const e = hits.get(lane + "@" + (bar * per + col))
+          const e = cells.get(bar * per + col)
           let cls = "cnb-cell" + (shaded(col) ? " cnb-alt" : "")
-          if (e) cls += " cnb-hit" + (e.accent ? " cnb-acc" : "") + (e.ghost ? " cnb-ghost" : "")
-          const cell = h("div", cls)
+          if (e?.hit)
+            cls += " cnb-hit" + (e.accent ? " cnb-acc" : "") + (e.ghost ? " cnb-ghost" : "")
+          else if (e?.held) cls += " cnb-held"
+          const cell = h("div", cls, e?.text)
           cell.dataset.k = `${bi}-${bar}-${col}`
           row.append(cell)
         }
@@ -228,7 +225,7 @@ function renderOutput(output, filename, messages) {
   const head = h("div", "cnb-output-head")
   head.append(h("span", "cnb-play-line", output.label))
   const summary = output.blocks.map(describeBlock)
-  if (output.chords.length) summary.push(describeSounds(output))
+  if (output.events.length) summary.push(describeSounds(output))
   head.append(h("span", "cnb-settings", summary.join(" · ")))
   box.append(head)
 

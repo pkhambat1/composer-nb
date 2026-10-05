@@ -32,7 +32,7 @@ Assigning to `sources` on a displayed widget re-renders it.
 | Element       | Content                                                                                       |
 | ------------- | --------------------------------------------------------------------------------------------- |
 | Header        | `name`, `after`, and the inherited settings that differ from the defaults.                    |
-| One per `play` | Label, summary, player with waveform, WAV link, drum grid and chords. See [Output](/song/play#output). |
+| One per `play` | Label, summary, player with waveform, WAV link, grid and chords. See [Output](/song/play#output). |
 | Errors        | `line <n>` and the message for each error.                                                    |
 | No `play`     | `Nothing played yet. Add play to hear it.`, or a list of the patterns the source declared.     |
 
@@ -43,5 +43,5 @@ WAV files are named `<name>.wav`, or `<name>-<n>.wav` when the source has more t
 ```python
 from composer_nb import MusicWidget
 
-MusicWidget(sources=["tempo 90\nsound guitar", "play chords: Am F|C G"], name="demo")
+MusicWidget(sources=["tempo 90\ncapo 2", "play guitar: chords Am F|C G"], name="demo")
 ```

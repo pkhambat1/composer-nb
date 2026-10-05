@@ -1,6 +1,6 @@
 ---
 title: "Note values"
-description: "Eighth notes, triplets, thirty-seconds and polyrhythms on drum lines: every sets how long one step lasts."
+description: "Eighth notes, triplets, thirty-seconds and polyrhythms: every sets how long one step lasts, on drum lines and note lines."
 ---
 
 import { Cell } from "/snippets/cell.jsx"
@@ -21,7 +21,7 @@ play {
 
 The hi-hat plays eighth-note triplets, three to a beat, against a kick and snare counted in the usual way.
 
-`every` changes drum steps only. It does not change [beats](/drums/lines#beats) or [chord lines](/chords/lines).
+`every` changes steps: a drum line's, and a [note line](/pitched/notes)'s. It does not change [beats](/drums/lines#beats) or [chord lines](/pitched/chords).
 
 ## Syntax
 
@@ -63,6 +63,7 @@ every <length> { <statements> }
 | Content       | The statements form a pattern without a name. Its lines repeat, and its duration follows the [pattern rules](/song/patterns#duration). |
 | Repetition    | The pattern repeats until the containing pattern or play ends, and must fit it a whole number of times. |
 | Steps         | Each step character, and each `steps` unit in a length, lasts the new duration.                       |
+| Notes         | Each step of a [note line](/pitched/notes) lasts the new duration.                                    |
 | Beats         | Beat positions are unchanged. A beat is always a quarter note.                                        |
 | Chords        | Chord lines are unchanged. Chord slots divide the bar.                                                |
 

@@ -44,11 +44,13 @@ function themeColors(theme, accent) {
 
 const noTime = () => 0
 
-// Everything below the playback row: settings summary, drum grid, chord diagrams, errors.
+// Everything below the playback row: settings summary, the grid of drums and notes, chord
+// diagrams, errors.
 function CellDetails({ parsed, accent, getTime = noTime, playing = false }) {
   const chords = parsed.events.filter((e) => e.chord && !e.repeat)
+  const drawn = (b) => b.drumEvents.length > 0 || b.noteEvents.length > 0
   const meta = parsed.blocks
-    .filter((b) => !b.drumEvents.length)
+    .filter((b) => !drawn(b))
     .map((b) => `time ${b.time} · tempo ${b.tempo} · ${b.bars} bar${b.bars === 1 ? "" : "s"}`)
   if (parsed.outputs.length > 1) meta.unshift(`${parsed.outputs.length} plays, one after another`)
   if (parsed.fromAbove.length) meta.push(`from cells above: ${parsed.fromAbove.join(", ")}`)
@@ -61,9 +63,9 @@ function CellDetails({ parsed, accent, getTime = noTime, playing = false }) {
         </div>
       ))}
 
-      {parsed.drumEvents.length > 0 && (
+      {parsed.blocks.some(drawn) && (
         <div className="out-section">
-          <div className="out-section-label">Drums</div>
+          <div className="out-section-label">{parsed.notes.length ? "Steps" : "Drums"}</div>
           <DrumGrid blocks={parsed.blocks} getTime={getTime} playing={playing} />
         </div>
       )}

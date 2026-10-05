@@ -7,12 +7,12 @@ class Song:
     """A cell's worth of composer-nb source.
 
     Pass `after` to start from the settings and definitions another song ended
-    with (tempo, sound, your own names, ...). The link is to that song object, not to whichever cell
+    with (tempo, key, your own names, ...). The link is to that song object, not to whichever cell
     sits above, so moving cells around or running them out of order doesn't
     change what a song sounds like.
 
-        intro = Song("tempo 75\\nsound guitar\\nplay chords: Am E7|G D", name="intro")
-        verse = Song("play chords: F C|Dm E7", after=intro, name="verse")
+        intro = Song("tempo 75\\nplay guitar: chords Am E7|G D", name="intro")
+        verse = Song("play guitar: chords F C|Dm E7", after=intro, name="verse")
     """
 
     def __init__(self, source: str, *, after: Optional["Song"] = None, name: Optional[str] = None):

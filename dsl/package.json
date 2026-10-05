@@ -1,7 +1,7 @@
 {
   "name": "composer-nb",
-  "version": "0.3.1",
-  "description": "A small language for chords and drums, with a player for Observable notebooks and web pages.",
+  "version": "0.4.0",
+  "description": "A small language for drums, notes and chords, with a player for Observable notebooks and web pages.",
   "keywords": [
     "music",
     "chords",
@@ -26,6 +26,7 @@
     "./language": "./js/language.js",
     "./chord-lookup": "./js/chord-lookup.js",
     "./editing": "./js/editing.js",
+    "./grid": "./js/grid.js",
     "./highlight": "./js/highlight.js"
   },
   "files": [

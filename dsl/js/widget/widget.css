@@ -234,6 +234,10 @@
 .cnb-ghost {
   opacity: 0.45;
 }
+/* A note that's still sounding from the step before */
+.cnb-held {
+  background: color-mix(in srgb, var(--cnb-accent) 24%, var(--cnb-paper));
+}
 .cnb-cell.cnb-now {
   outline: 1.5px solid var(--cnb-text);
   outline-offset: -1px;
