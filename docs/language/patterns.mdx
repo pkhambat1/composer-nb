@@ -3,6 +3,8 @@ title: "Patterns"
 description: "Blocks that repeat: bodies, duration, the fit rule and sequence lines."
 ---
 
+import { Cell } from "/snippets/cell.jsx"
+
 A pattern is a block whose statements start together and repeat until the pattern ends. A pattern does not sound until it is played.
 
 ## Syntax
@@ -22,6 +24,8 @@ pattern <name> = [<length>] <statement>
 
 A pattern without a name is written as a bare block, with an optional length in front, anywhere a pattern name is accepted.
 
+<Cell>
+
 ```composer-nb
 time 7 over 8
 
@@ -33,6 +37,8 @@ pattern groove = {
 
 play groove { snare: xxxxxxx } groove
 ```
+
+</Cell>
 
 ## Body
 
@@ -100,6 +106,8 @@ A sequence line plays its items one after another.
 | `4 bars verse`          | Repeats the pattern for 4 bars.                                    |
 | `8 bars (verse chorus)` | Repeats the group `verse` then `chorus` for 8 bars.                |
 
+<Cell>
+
 ```composer-nb
 pattern intro = { crash: 1 }
 pattern verse = { kick: x---x--- }
@@ -111,11 +119,15 @@ pattern chorus = {
 play intro 4 bars (verse chorus) intro
 ```
 
+</Cell>
+
 A sequence line is valid in a block, after `play`, and as the value of a `pattern` declaration. `*` is not a repetition operator; use a length.
 
 ## Patterns inside patterns
 
 A pattern can play other patterns by name. A pattern cannot play itself, directly or through another pattern.
+
+<Cell>
 
 ```composer-nb
 pattern beat = {
@@ -130,6 +142,8 @@ pattern verse = 4 bars {
 
 play verse
 ```
+
+</Cell>
 
 ## Evaluation
 

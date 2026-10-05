@@ -3,6 +3,8 @@ title: "Settings"
 description: "Reserved words that set the meter, tempo, key and sounds."
 ---
 
+import { Cell } from "/snippets/cell.jsx"
+
 ## Syntax
 
 ```text
@@ -44,10 +46,14 @@ A bar lasts `count × 4 / unit` beats, where a beat is a quarter note. A bar can
 
 `over` is required. `time 7/8` is an error, because `7/8` is the number 0.875. `6 over 8` and `3 over 4` have the same bar length and are distinct values.
 
+<Cell>
+
 ```composer-nb
 time 3+4 over 8
 play { kick: x--x--- }
 ```
+
+</Cell>
 
 ## tempo
 
@@ -101,11 +107,15 @@ A whole number from 0 to 12. With `sound guitar`, each chord sounds `fret` semit
 
 `capo` has no effect on other sounds. A cell that sets a capo above 0 and plays, but plays no guitar chords, reports `capo only works on guitar. Add sound guitar`. An inherited capo does not trigger this error.
 
+<Cell>
+
 ```composer-nb
 sound guitar
 capo 2
 play chords: Am E7|G D
 ```
+
+</Cell>
 
 ## octave
 

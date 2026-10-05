@@ -3,6 +3,8 @@ title: "Drum lines"
 description: "Drum instrument lines: instruments, steps, beats, parts with lengths, and layers."
 ---
 
+import { Cell } from "/snippets/cell.jsx"
+
 ## Syntax
 
 ```text
@@ -14,6 +16,8 @@ description: "Drum instrument lines: instruments, steps, beats, parts with lengt
 
 A drum line is an instrument line. It is valid inside a block or directly after `play`. It plays on the current [`kit`](/language/settings#kit).
 
+<Cell>
+
 ```composer-nb
 play {
   kick: x---x---x-x-----
@@ -22,6 +26,8 @@ play {
   hat: 1 2 3 4
 }
 ```
+
+</Cell>
 
 ## Instruments
 
@@ -56,9 +62,13 @@ A run of steps is a sequence of characters. Each character lasts one step: a six
 
 Spaces between characters are ignored. `|` marks the end of a bar and is validated: a `|` that does not fall on a bar boundary is an error that reports how many steps precede it.
 
+<Cell>
+
 ```composer-nb
 play kick: x--- ---- x--- ---- | x--- --x- x--- ----
 ```
+
+</Cell>
 
 | Line          | Restriction                                                               |
 | ------------- | ------------------------------------------------------------------------- |
@@ -122,6 +132,8 @@ Commas divide a line of steps into parts. A part is either steps as written, or 
 
 The length is in `steps`, `beats` or `bars` and must equal a whole number of steps.
 
+<Cell>
+
 ```composer-nb
 play {
   snare: 2 beats rest, dd, 1.5 beats rest
@@ -130,11 +142,15 @@ play {
 }
 ```
 
+</Cell>
+
 A comma is required after a length's part and before the next one. Two runs of steps are separated by a space, not a comma.
 
 ## Layers
 
 A block after a drum's colon holds layers of steps, one layer per line.
+
+<Cell>
 
 ```composer-nb
 pattern ghosts = {
@@ -146,6 +162,8 @@ pattern ghosts = {
 
 play ghosts
 ```
+
+</Cell>
 
 | Rule       | Behavior                                                                                         |
 | ---------- | ------------------------------------------------------------------------------------------------ |
@@ -160,10 +178,14 @@ The block evaluates to a single run of steps. In the example, the result is `--x
 
 A [`steps`](/language/declarations#steps) name is accepted wherever a run of steps is.
 
+<Cell>
+
 ```composer-nb
 steps pair = ^-x-
 play hat: pair pair
 ```
+
+</Cell>
 
 ## Simultaneous hits
 
@@ -176,6 +198,8 @@ Lines in a block, and patterns playing at the same time, are mixed by these rule
 | `hat.open` and `hat` at the same moment                     | Only `hat.open` sounds.                                                |
 | `hat.open` followed by `hat` or `hat.pedal`                 | The open hi-hat rings until the next `hat` or `hat.pedal` hit.         |
 
+<Cell>
+
 ```composer-nb
 pattern hats = {
   hat: ^-x-
@@ -184,6 +208,8 @@ pattern hats = {
 
 play 1 bars hats
 ```
+
+</Cell>
 
 ## Repetition
 
