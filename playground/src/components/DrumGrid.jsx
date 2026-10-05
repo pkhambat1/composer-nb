@@ -39,7 +39,7 @@ function DrumBlock({ block, index }) {
               <div className="dg-lane">{row.label}</div>
               {Array.from({ length: per }, (_, col) => {
                 const e = row.cells.get(bar * per + col)
-                let cls = "dg-cell" + (shaded(col) ? " dg-alt" : "")
+                let cls = "dg-cell" + (shaded(col) ? " dg-alt" : "") + (e?.note ? " dg-note" : "")
                 if (e?.hit) {
                   cls += " dg-hit"
                   if (e.accent) cls += " dg-acc"

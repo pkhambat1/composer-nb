@@ -52,7 +52,7 @@ export const VARIATIONS = {
   ride: ["bell"],
   hat: ["open", "pedal"],
   tom: ["high", "low", "floor"],
-  snare: ["ghost", "rim"],
+  snare: ["ghost", "rim", "cross"],
 }
 // Drums that are only their variations, with no line of their own: tom is three drums.
 export const SPLIT = ["tom"]
@@ -76,28 +76,11 @@ export const PARTS = [...PITCHED, ...LANES]
 export const SETTINGS = ["time", "tempo", "key", "capo", "octave", "kit"]
 // The types a name can have. Its type goes in front of it: steps pair = ^-x-
 export const TYPES = ["steps", "notes", "chords", "pattern"]
-// loop, for, def and section are old words, kept so they're explained rather than taken as
-// names.
-export const KEYWORDS = [
-  ...TYPES,
-  "play",
-  "bars",
-  "beats",
-  "bar",
-  "to",
-  "every",
-  "rest",
-  "over",
-  "step",
-  "loop",
-  "for",
-  "def",
-  "section",
-]
-// Old words for how a beat is hit, kept so they're explained: a step in front of the beat
-// says it now (^2).
-export const MODIFIERS = ["accent", "ghost", "double"]
+export const KEYWORDS = [...TYPES, "play", "bars", "beats", "bar", "to", "every", "rest", "over"]
 export const KITS = ["rock", "synth"]
+// Instruments with more than one sound. Naming the instrument and a sound is a setting,
+// like kit: guitar.electric muted. The first sound is the one it has until then.
+export const SOUNDS = { "guitar.electric": ["clean", "muted"] }
 const SETTING_EXAMPLE = {
   time: "7 over 8",
   tempo: "90",
@@ -118,54 +101,8 @@ const STEPS = {
   "~": { ghost: true },
   d: { double: true },
 }
-// Old ways of asking for a variation, and the line that does it now.
-const VARIATION_LINE = {
-  b: "ride.bell",
-  o: "hat.open",
-  p: "hat.pedal",
-  bell: "ride.bell",
-  open: "hat.open",
-  pedal: "hat.pedal",
-}
 const ROMAN = ["i", "ii", "iii", "iv", "v", "vi", "vii"]
-// sound and epiano are old words, kept so they're explained rather than taken as names.
-const TAKEN = new Set([
-  ...SETTINGS,
-  ...DRUMS,
-  ...PARTS,
-  ...KEYWORDS,
-  ...MODIFIERS,
-  "sound",
-  "epiano",
-])
-const RENAMED = {
-  inst: "The instrument is the line's name: guitar: chords Am F|C G",
-  instrument: "The instrument is the line's name: guitar: chords Am F|C G",
-  beats: "Use time 4 over 4",
-  bpm: "Use tempo 120",
-  oct: "Use octave 3",
-  group: "Put the grouping in the time: time 2+2+3 over 8",
-  pattern: "Give each drum its own line, e.g. ride.bell: x--",
-  repeat:
-    "Put the lines in a pattern, which repeats: pattern verse = { ... }, then play 8 bars verse",
-  drums: "Each drum gets its own line: kick: x--x---, snare: ----x--",
-  bd: "Use kick",
-  sd: "Use snare",
-  hh: "Use hat",
-}
-const OLD_KIT = {
-  "ride bell": "ride.bell",
-  "open hat": "hat.open",
-  "hat open": "hat.open",
-  "hat pedal": "hat.pedal",
-  "pedal hat": "hat.pedal",
-  "high tom": "tom.high",
-  "tom high": "tom.high",
-  "low tom": "tom.low",
-  "tom low": "tom.low",
-  "floor tom": "tom.floor",
-  "tom floor": "tom.floor",
-}
+const TAKEN = new Set([...SETTINGS, ...DRUMS, ...PARTS, ...KEYWORDS])
 // A block written inside a line: {#1} on the line, and the block in the line's `blocks`.
 const BLOCK_KEY = /^\{#\d+\}$/
 const CHORDS_BLOCK =
@@ -188,13 +125,20 @@ export function initialState() {
     capo: 0,
     octave: 3,
     kit: "rock",
+    sounds: {}, // instrument → its sound, for instruments set to one other than the first
     words: {}, // names for steps, notes and chords: { type, tokens }
     sections: {}, // names for patterns
   }
 }
 
 function cloneState(s) {
-  return { ...s, groups: [...s.groups], words: { ...s.words }, sections: { ...s.sections } }
+  return {
+    ...s,
+    groups: [...s.groups],
+    sounds: { ...s.sounds },
+    words: { ...s.words },
+    sections: { ...s.sections },
+  }
 }
 
 // A time the way it's written: 7 over 8, or 3+4 over 4.
@@ -257,24 +201,12 @@ function editDistance(a, b) {
 const closest = (name, names) =>
   names.map((n) => [n, editDistance(name, n)]).sort((a, b) => a[1] - b[1])[0]
 
-// sound was the setting that picked what played the chords: line. Each instrument has a
-// line of its own now. Remembers the sound that was asked for, so the chords: line after
-// it can say where its chords go.
-function soundGone(value, st) {
-  const drum = LANES.find((l) => l === value || l.split(".")[0] === value)
-  if (drum) return `Drums get a line of their own, e.g. ${drum}: 1 3`
-  const asked = value === "epiano" ? "piano.electric" : value
-  st.oldSound = PITCHED.includes(asked) ? asked : "piano"
-  return `sound is gone. The instrument is the line's name now: ${st.oldSound}: chords Am F|C G`
-}
-
 // For `name: value` where name isn't an instrument.
 function unknownInstrument(name) {
-  if (RENAMED[name]) return RENAMED[name]
-  if (name === "epiano") return "epiano is piano.electric now"
-  // The toms were tom and floor
-  if (name === "tom") return "tom is three drums now: tom.high, tom.low or tom.floor"
-  if (name === "floor" || name === "floor.tom") return `${name} is tom.floor now: tom.floor: x--`
+  if (SPLIT.includes(name)) {
+    const lanes = LANES.filter((l) => l.startsWith(name + "."))
+    return `"${name}" isn't a drum. The ${name}s are ${lanes.slice(0, -1).join(", ")} and ${lanes.at(-1)}`
+  }
   if (name.includes(".")) {
     const drum = name.split(".")[0]
     if (PITCHED.includes(drum)) {
@@ -419,9 +351,9 @@ function singularLength(text, ln, err) {
   return true
 }
 
-// pattern groove 3 bars { and older ways to name a pattern, and what to write now.
+// pattern groove 3 bars {: a pattern without its =.
 function patternHint(text) {
-  const m = /^(?:pattern|section|def)\s+([A-Za-z][A-Za-z0-9]*)\s*([^{=]*)/.exec(text)
+  const m = /^pattern\s+([A-Za-z][A-Za-z0-9]*)\s*([^{=]*)/.exec(text)
   const len = lengthPrefix((m?.[2] || "").trim())
   const size = len.has ? `${fmt(len.bars)} bars ` : ""
   return `A pattern gets its name with =: pattern ${m?.[1] || "groove"} = ${size}{ ... }`
@@ -532,6 +464,15 @@ function applySetting(name, value, ln, state, err) {
     state.kit = value
     return true
   }
+  if (SOUNDS[name]) {
+    if (!SOUNDS[name].includes(value)) {
+      err(ln, `${name}'s sound is one of: ${SOUNDS[name].join(", ")}`)
+      return false
+    }
+    if (value === SOUNDS[name][0]) delete state.sounds[name]
+    else state.sounds[name] = value
+    return true
+  }
   return false
 }
 
@@ -604,17 +545,10 @@ function defineWord(type, name, value, ln, state, err, blocks = null) {
     else if (w) tokens.push(...(type === "steps" ? w.tokens : ["|", ...w.tokens, "|"]))
     else if (state.sections[t]) {
       return err(ln, `${t} is a pattern, so it can't go in ${type}`)
-    } else if (t === "loop") {
-      return err(
-        ln,
-        `loop isn't part of ${type}, and isn't needed: everything in a pattern repeats until it ends`,
-      )
     } else if (
       type === "steps" ? isStepRun(t) || t === "|" : CHORD_MARKS.includes(t) || buildChord(t, key)
     ) {
       tokens.push(t)
-    } else if (type === "steps" && oldSteps(t)) {
-      return err(ln, `"${t}": ${oldSteps(t)}`)
     } else if (/^[a-z][a-z0-9]+$/.test(t) && !isRoman(t) && !/^[-xd]+$/.test(t)) {
       return err(ln, `"${t}" isn't defined above. Name it first: ${type} ${t} = ...`)
     } else if (drawsNotes(t)) {
@@ -734,10 +668,6 @@ function defineBlock(l, st, err) {
 // mistakes that leave nothing to define.
 function classifyDecl({ type, name, value }, { ln, blocks }, err, st) {
   const lower = name.toLowerCase()
-  if (!type && lower === "sound") {
-    err(ln, soundGone(value, st))
-    return null
-  }
   if (!type && TYPES.includes(lower)) {
     err(
       ln,
@@ -757,10 +687,6 @@ function classifyDecl({ type, name, value }, { ln, blocks }, err, st) {
     if (!patternText(value)) {
       if (SETTINGS.includes(lower)) {
         err(ln, `${lower} is a setting, not a name, so it takes no =: ${lower} ${value}`)
-        return null
-      }
-      if (RENAMED[lower]) {
-        err(ln, RENAMED[lower])
         return null
       }
       if (evalNumber(value)) {
@@ -878,23 +804,6 @@ function paceTicks(l, st, err) {
   return null
 }
 
-// step 1/8 was a setting. What it says now, with every in front of what it applies to.
-function oldStep(text) {
-  const n = evalNumber(text.slice(4))
-  const ticks = n ? n.value * 4 * TPQ : 0
-  let now = "2 steps"
-  if (n && nearWhole(ticks) && ticks >= 8) {
-    const t = Math.round(ticks)
-    if (t === TPQ / 4) {
-      return "step is gone, and this line isn't needed: a step is a 16th note. To change that, put every in front of what it applies to: every 2 steps { ... }"
-    }
-    const d = gcd(t, TPQ)
-    now =
-      t % (TPQ / 4) ? `${t / d}${TPQ / d > 1 ? "/" + TPQ / d : ""} beats` : `${t / (TPQ / 4)} steps`
-  }
-  return `step is gone. Say how long a step lasts in front of what it applies to: every ${now} { ... }`
-}
-
 // Sorts one line (not play) into a setting, a word, a named pattern ("blockdef"), an
 // instrument line ("part"), patterns to play ("sequence"), something in a bar ("placed")
 // or something at its own pace ("paced"). Returns null when the line
@@ -902,36 +811,9 @@ function oldStep(text) {
 // `st` is the state so far, for the names it has.
 function classify({ ln, text, blocks }, err, st) {
   const sections = st.sections
-  if (/^--(\s|$)/.test(text) || /(^|\s)--\s+[A-Za-z]{2,}/.test(text)) {
-    err(ln, "Comments start with // now")
-    return null
-  }
-  if (text.startsWith("@")) {
-    err(
-      ln,
-      `"${text.split(/\s+/)[0]}" is the old syntax. Write a setting as its name and value, e.g. key Am`,
-    )
-    return null
-  }
-  const two = /^([a-z]+ [a-z]+)\s*[:=]/i.exec(text)
-  if (two && OLD_KIT[two[1].toLowerCase()]) {
-    err(ln, `"${two[1]}" is now ${OLD_KIT[two[1].toLowerCase()]}`)
-    return null
-  }
-
-  const sound = /^sound(?:\s*[:=]\s*|\s+|$)(.*)$/.exec(text)
-  if (sound) {
-    err(ln, soundGone(sound[1].trim(), st))
-    return null
-  }
-
   if (singularLength(text, ln, err)) return null
   if (PLACE_RE.test(text)) return readPlace(text, { ln, blocks }, err)
   if (EVERY_RE.test(text)) return readPace(text, { ln, blocks }, err)
-  if (/^step(\s|$)/.test(text)) {
-    err(ln, oldStep(text))
-    return null
-  }
   if (/^bars(\s|$)/.test(text)) {
     err(
       ln,
@@ -953,15 +835,22 @@ function classify({ ln, text, blocks }, err, st) {
     else if (noEquals && !(noEquals[1] === "chords" && buildChord(noEquals[2], parseKey(st.key)))) {
       const [, type, name, value] = noEquals
       err(ln, `${type} ${name} needs = before what it holds: ${type} ${name} = ${value}`)
-    } else if (/^loop\s+[A-Za-z][A-Za-z0-9.]*\s*:/.test(text)) {
-      err(ln, NO_LOOP.pattern)
-    } else if (/^repeat\b/i.test(text)) err(ln, RENAMED.repeat)
-    else if (/^(pattern|section|def)(\s|$)/.test(text)) {
+    } else if (/^pattern(\s|$)/.test(text)) {
       err(ln, patternHint(text))
+    } else if (
+      PITCHED.includes(first.toLowerCase()) &&
+      /^[a-z]+$/.test(after) &&
+      !st.words[after]
+    ) {
+      // guitar.electric muted: an instrument and the sound it plays from here on
+      const name = first.toLowerCase()
+      if (SOUNDS[name]) return { kind: "setting", ln, name, value: after }
+      const choice = Object.entries(SOUNDS).map(([i, s]) => `${i} (${s.join(", ")})`)
+      err(ln, `${name} has one sound. Instruments with more: ${choice.join(", ")}`)
     } else if (PARTS.includes(first.toLowerCase()) && after) {
       err(ln, `Put a colon after ${first}: ${first}: ${after}`)
     } else if (first === "chords" && after) {
-      err(ln, `Chords go on an instrument's line: ${st.oldSound || "piano"}: ${text}`)
+      err(ln, `Chords go on an instrument's line: ${"piano"}: ${text}`)
     } else if (first === "notes" && after) {
       err(ln, `Notes go on an instrument's line: guitar: ${spaceNotes(after)}`)
     } else if (SETTINGS.includes(first.toLowerCase())) {
@@ -979,20 +868,11 @@ function classify({ ln, text, blocks }, err, st) {
       !sections[first.replace(/^\(+/, "").split("*")[0]] &&
       buildChord(first, parseKey("C"))
     ) {
-      err(ln, `Chords go on an instrument's line, e.g. ${st.oldSound || "piano"}: chords ${text}`)
+      err(ln, `Chords go on an instrument's line, e.g. ${"piano"}: chords ${text}`)
     } else if (!tokens.some((t) => sections[t]) && tokens.some(drawsNotes)) {
       err(ln, `Notes go on an instrument's line, e.g. guitar: ${spaceNotes(text)}`)
     } else if (/^[A-Za-z(*\d{]/.test(first)) {
       // intro verse verse: patterns to play, one after another
-      const trailing = /^(?:(.*\S)\s+)?for\s+(\S+)\s+bars?$/.exec(text)
-      if (trailing || /(^|\s)for(\s|$)/.test(text)) {
-        err(
-          ln,
-          "A length goes in front of what it measures, without for: " +
-            (trailing ? `${trailing[2]} bars ${trailing[1] || "groove"}` : "3 bars groove"),
-        )
-        return null
-      }
       const items = readSequence(text, ln, err, blocks)
       return items && { kind: "sequence", ln, items }
     } else err(ln, LINE_SHAPES)
@@ -1009,14 +889,6 @@ function classify({ ln, text, blocks }, err, st) {
   }
   if (SETTINGS.includes(name)) {
     err(ln, `${name} is a setting, not an instrument, so it takes no colon: ${name} ${value}`)
-    return null
-  }
-  if (name === "chords") {
-    const inst = st.oldSound || "piano"
-    err(
-      ln,
-      `chords: is gone. Chords go on their instrument's line: ${inst}: chords ${value || "Am F|C G"}`,
-    )
     return null
   }
   if (PARTS.includes(name)) {
@@ -1043,10 +915,6 @@ const isGuitar = (name) => name.split(".")[0] === "guitar"
 function chordSlot(tok, part, st, key, err) {
   if (tok === "-") return { hold: true }
   if (tok === "_") return { rest: true }
-  if (tok === ".") {
-    err(part.ln, "Use - to hold a chord for another slot, e.g. Am - F G")
-    return null
-  }
   if (tok === "%") {
     err(part.ln, "% stands for a whole bar, so it goes between bar lines on its own: Am F|%")
     return null
@@ -1125,6 +993,7 @@ function chordPattern(part, tokens, st, barTicks, err) {
     return null
   }
   const capo = isGuitar(part.name) ? st.capo : 0
+  const sound = st.sounds[part.name]
   return {
     kind: "pitched",
     ticks: bars.length * barTicks,
@@ -1149,6 +1018,7 @@ function chordPattern(part, tokens, st, barTicks, err) {
             chord: s.chord,
             label: s.chord.label,
             instrument: part.name,
+            ...(sound && { sound }),
             capo,
             repeat: b >= bars.length,
             line: part.ln,
@@ -1201,87 +1071,6 @@ const BEAT_RE = /^([\^~dx])?(\d+)(e|&|a)?$/
 // Whether a line lists beats (2e ^4) rather than steps (x-x-). The two never mix.
 const listsBeats = (tokens) => tokens.some((t) => /^[\^~dx]?\d/.test(t))
 
-// X, D and g were how a step was accented or ghosted. For steps written that way, says
-// what's written now; otherwise null.
-function oldSteps(tok) {
-  if (!/^[-xXgGdD^~]+$/.test(tok) || !/[XgGD]/.test(tok)) return null
-  const why = []
-  if (/X/.test(tok)) why.push("accents are ^ now")
-  if (/[gG]/.test(tok)) why.push("ghost notes are ~ now")
-  if (/D/.test(tok)) why.push("a double can't be accented any more")
-  return `${why.join(", and ")}, so write ${todaySteps(tok)}`
-}
-const todaySteps = (tok) => tok.replace(/X/g, "^").replace(/[gG]/g, "~").replace(/D/g, "d")
-// The same for a drum's line, which may not take today's spelling either (~ on the snare).
-function oldStepsOn(part, tok) {
-  const now = oldSteps(tok)
-  if (!now || !part) return now
-  const steps = [...todaySteps(tok)].map((c) => STEPS[c]).filter(Boolean)
-  return steps.map((m) => ghostLineProblem(part, m.ghost, m.accent)).find(Boolean) || now
-}
-
-// A bar of steps the way it's best written, a beat to a group: ---- ---- --^- --
-function drawBar(cells, st) {
-  const perBeat = TPQ / st.stepTicks
-  if (!Number.isInteger(perBeat) || perBeat < 2) return cells.join("")
-  const groups = []
-  for (let k = 0; k < cells.length; k += perBeat) groups.push(cells.slice(k, k + perBeat).join(""))
-  return groups.join(" ")
-}
-
-// Beats used to take bar lines, empty bars, and a word or steps after a beat (2 accent,
-// -|3& X). What such a line says, written today's way, or null when that isn't simple to
-// say. One step after a beat goes in front of it now (^3&); more are drawn as the bar.
-function beatsToday(part, tokens, st, barTicks) {
-  const stepTicks = st.stepTicks
-  if (barTicks % stepTicks) return null
-  const letter = { accent: "^", ghost: "~", double: "d" }
-  const bars = [] // each bar: its steps, how to write it, and whether anything hits in it
-  for (const bar of splitBars(tokens)) {
-    if (bar.length === 1 && bar[0] === "%") {
-      if (!bars.length) return null
-      bars.push(bars[bars.length - 1])
-      continue
-    }
-    const cells = Array(barTicks / stepTicks).fill("-")
-    const beats = [] // the bar as beats, while a step in front of each can say it
-    let plain = true
-    let asBeats = true
-    let at = null
-    for (const tok of bar.length === 1 && bar[0] === "-" ? [] : bar) {
-      const m = BEAT_RE.exec(tok)
-      if (m && !m[1]) {
-        const tick = Math.round((Number(m[2]) - 1 + SUB[m[3] || ""]) * TPQ)
-        if (Number(m[2]) < 1 || tick >= barTicks || tick % stepTicks) return null
-        at = tick / stepTicks
-        cells[at] = "x"
-        beats.push(tok)
-      } else if (at != null && (letter[tok] || isStepRun(todaySteps(tok)))) {
-        const run = letter[tok] || todaySteps(tok)
-        for (let k = 0; k < run.length && at + k < cells.length; k++) cells[at + k] = run[k]
-        if (run.length > 1 || run === "-") asBeats = false
-        else if (run !== "x") beats[beats.length - 1] = run + beats[beats.length - 1]
-        at = null
-        plain = false
-      } else return null
-    }
-    bars.push({
-      cells,
-      text: plain ? bar.join(" ") : asBeats ? beats.join(" ") : drawBar(cells, st),
-      empty: cells.every((c) => c === "-"),
-    })
-  }
-  const hit = bars.filter((b) => !b.empty)
-  if (!hit.length) return null
-  // A layer in a block of steps, or steps being named, has no instrument in front
-  const line = part.drum && !part.layer ? `${part.name}: ` : ""
-  if (bars.length === 1) return line + bars[0].text
-  // One bar with something in it: that bar, named
-  if (line && hit.length === 1) return `bar ${bars.indexOf(hit[0]) + 1} ${line}${hit[0].text}`
-  if (bars.length > 4) return null
-  return line + bars.map((b) => drawBar(b.cells, st)).join(" | ")
-}
-
 // Beats: crash: 1, snare: 2e ^4 — the beats a drum hits on in every bar, counted 1 e & a.
 // A beat on its own is a plain hit, and a step in front says another way to hit it: ^4
 // (accent), ~3a (ghost), d3 (double). Nothing else goes on the line, and what happens in
@@ -1295,31 +1084,14 @@ function readBeats(part, tokens, st, barTicks, err) {
     err(part.ln, msg)
     ok = false
   }
-  for (const tok of tokens) {
-    if (!MODIFIERS.includes(tok)) continue
-    const problem = ghostLineProblem(part, tok === "ghost", tok === "accent")
-    if (problem) {
-      fail(`"${tok}": ${problem}`)
-      return null
-    }
-  }
-  // Bar lines, empty bars and steps after a beat were ways to write these. Said once, with
-  // the line as it's written now.
-  const old = (t) =>
-    t === "|" ||
-    t === "%" ||
-    isStepRun(todaySteps(t)) ||
-    MODIFIERS.includes(t) ||
-    st.words[t]?.type === "steps" ||
-    !!part.blocks?.[t]
-  if (tokens.some(old)) {
-    const now = beatsToday(part, tokens, st, barTicks)
+  // Steps, bar lines or a block beside beats: a line is one or the other.
+  const notBeat = (t) =>
+    t === "|" || t === "%" || isStepRun(t) || st.words[t]?.type === "steps" || !!part.blocks?.[t]
+  if (tokens.some(notBeat)) {
     const drum = part.drum ? part.name : "snare"
     fail(
-      "Beats are one bar's hits, with nothing else on the line. " +
-        (now
-          ? `Write this as ${now}`
-          : `To say how a beat is hit, put its step in front: ^4 (accent), ~4 (ghost), d4 (double). For one bar only, name it: bar 2 ${drum}: 2 4`),
+      "Beats are one bar's hits, with nothing else on the line. To say how a beat is hit, " +
+        `put its step in front: ^4 (accent), ~4 (ghost), d4 (double). For one bar only, name it: bar 2 ${drum}: 2 4`,
     )
     return null
   }
@@ -1341,8 +1113,6 @@ function readBeats(part, tokens, st, barTicks, err) {
       } else if (hits.some((h) => h.tick === Math.round(q * TPQ))) {
         fail(`${beat} is on this line twice`)
       } else hits.push({ tick: Math.round(q * TPQ), mods, tok })
-    } else if (VARIATION_LINE[tok]) {
-      fail(`"${tok}" is a line of its own now, e.g. ${VARIATION_LINE[tok]}: 1`)
     } else if (word) {
       fail(`${tok} is ${word.type}, which don't go in a list of beats`)
     } else if (st.sections[tok]) {
@@ -1583,17 +1353,7 @@ function stepPattern(part, tokens, st, err) {
   const addRun = (tok, viaWord) => {
     const where = viaWord ? ` (in ${viaWord})` : ""
     if (!isStepRun(tok)) {
-      const old = /^[-.xXgdD^~oOpPbB]+$/.test(tok) && /[oOpPbB]/.exec(tok)
-      if (old) {
-        err(
-          part.ln,
-          `"${tok}"${where}: ${old[0]} is a line of its own now, e.g. ${VARIATION_LINE[old[0].toLowerCase()]}: x--`,
-        )
-      } else if (oldSteps(tok)) {
-        err(part.ln, `"${tok}"${where}: ${oldStepsOn(part, tok)}`)
-      } else if (/^[-.x^~d]+$/.test(tok)) {
-        err(part.ln, `"${tok}"${where}: use - for a rest, e.g. x--x---`)
-      } else if (/^[a-z][a-z0-9]+$/.test(tok)) {
+      if (/^[a-z][a-z0-9]+$/.test(tok)) {
         err(
           part.ln,
           st.sections[tok]
@@ -1745,10 +1505,6 @@ function stepLayer(line, st, err, part) {
       return fail(`${tok} is ${w.type}, so it can't be a layer of steps`)
     } else if (st.sections[tok]) {
       return fail(`${tok} is a pattern, so it can't be a layer of steps`)
-    } else if (tok === "loop") {
-      return fail("loop isn't needed: a block's layers repeat until they line up again")
-    } else if (oldSteps(tok)) {
-      return fail(`"${tok}": ${oldStepsOn(part, tok)}`)
     } else if (/^[a-z][a-z0-9]+$/.test(tok)) {
       return fail(`"${tok}" isn't defined above. Name it first: steps ${tok} = x-x-`)
     } else return fail(`"${tok}" isn't a step. ${STEP_HELP}`)
@@ -1925,6 +1681,7 @@ function noteVoice(line, part, st, err) {
 function notePattern(part, steps, st) {
   const stepTicks = st.stepTicks
   const octave = st.octave
+  const sound = st.sounds[part.name]
   const sharp = { "#": 1, b: -1 }
   return {
     kind: "pitched",
@@ -1947,6 +1704,7 @@ function notePattern(part, steps, st) {
           note: { midi, name: midiToName(midi) },
           label: s.label,
           instrument: part.name,
+          ...(sound && { sound }),
           voice: 0,
           vel: s.accent ? 1 : s.ghost ? 0.3 : 0.7,
           accent: s.accent,
@@ -2031,21 +1789,8 @@ function pitchedPattern(part, st, barTicks, err) {
   }
 }
 
-// One instrument's line. `repeats` says whether it's in a pattern, where lines repeat,
-// for saying what to write instead of loop.
-function readPart(part, st, barTicks, err, repeats) {
-  const tokens = tokenize(part.value)
-  if (tokens.includes("loop")) {
-    err(part.ln, repeats ? NO_LOOP.pattern : NO_LOOP.play)
-    return null
-  }
-  if (tokens.includes("for")) {
-    err(
-      part.ln,
-      "A length goes in front of what's played, not on one line: play 2 bars { ... }, or pattern groove = 2 bars {",
-    )
-    return null
-  }
+// One instrument's line.
+function readPart(part, st, barTicks, err) {
   if (part.pitched) {
     const pattern = pitchedPattern(part, st, barTicks, err)
     return pattern && { ...pattern, part }
@@ -2087,6 +1832,9 @@ const blockCtx = (name, ln) => ({
   sized: `pattern ${name} = 4 bars {`,
 })
 const playCtx = (ln) => ({ ln, repeats: false, where: "in this play", what: "This play" })
+// A play's own length is how long its output is: what's in it is cut there, so it doesn't
+// have to fit.
+const outputCtx = (ln) => ({ ...playCtx(ln), cuts: true })
 const anonCtx = (ln) => ({
   ln,
   repeats: true,
@@ -2098,17 +1846,6 @@ const anonCtx = (ln) => ({
 const placeCtx = (l) => {
   const bars = l.from === l.to ? `bar ${l.from}` : `bar ${l.from} to ${l.to}`
   return { ln: l.ln, repeats: true, where: `in ${bars}`, what: `What's in ${bars}` }
-}
-
-// loop is gone: what repeats is decided by where something is.
-const NO_LOOP = {
-  pattern: "loop isn't needed: everything in a pattern repeats until the pattern ends",
-  play:
-    "loop isn't needed, but a play's own lines play once. To repeat a line, put it in a " +
-    "pattern: pattern beat = { kick: x--- }, then play 4 bars beat",
-  sequence:
-    "loop isn't needed: a pattern on a line of its own repeats until what it's in ends, " +
-    "and a length in front repeats it for that long: 6 bars groove",
 }
 
 const gcd = (a, b) => (b ? gcd(b, a % b) : a)
@@ -2148,10 +1885,10 @@ function checkLoops(loops, total, st, barTicks, err) {
   return false
 }
 
-// `clip` played end to end until `durSec`.
+// `clip` played end to end until `durSec`. The last time through may be cut short.
 function tile(clip, durSec) {
   const out = { events: [], drumEvents: [], spans: [] }
-  const times = Math.round(durSec / clip.durSec)
+  const times = Math.ceil(durSec / clip.durSec - 1e-6)
   for (let k = 0; k < times; k++) {
     const moved = shift(clip, k * clip.durSec, k > 0)
     out.events.push(...moved.events)
@@ -2166,11 +1903,12 @@ function tile(clip, durSec) {
 // `once` clip that was put in a bar says the last bar it's in (`until`).
 // In a pattern (ctx.repeats) the lines repeat too, and without `bars` it lasts until
 // everything in it lines up again. In a play the lines play once, and it lasts as long as
-// the longest thing in it. Whatever repeats has to fit.
+// the longest thing in it. Whatever repeats has to fit, except in a play with a length of
+// its own (ctx.cuts), which stops there.
 function layer(parts, once, repeated, st, bars, err, ctx) {
   const meter = meterOf(st)
   const { barTicks, secPerTick } = meter
-  const read = parts.map((p) => readPart(p, st, barTicks, err, ctx.repeats)).filter(Boolean)
+  const read = parts.map((p) => readPart(p, st, barTicks, err)).filter(Boolean)
   if (read.length < parts.length) return null
   if (!read.length && !once.length && !repeated.length) return null
   const loops = [
@@ -2209,7 +1947,7 @@ function layer(parts, once, repeated, st, bars, err, ctx) {
     )
     return null
   }
-  if (!checkLoops(loops, totalTicks, st, barTicks, err)) return null
+  if (!(ctx.cuts && bars) && !checkLoops(loops, totalTicks, st, barTicks, err)) return null
   const durSec = totalTicks * secPerTick
   const own = read.map((p) => {
     const line = { ln: p.part.ln, events: [], drumEvents: [], spans: [] }
@@ -2240,7 +1978,11 @@ function layer(parts, once, repeated, st, bars, err, ctx) {
       sounded.set(at, { from, e })
     }
   })
-  const events = all.flatMap((c) => c.events).filter((e) => inside(e) && !lost.has(e))
+  const events = all
+    .flatMap((c) => c.events)
+    .filter((e) => inside(e) && !lost.has(e))
+    // A note still sounding at the end stops there.
+    .map((e) => (e.secStart + e.secDur > durSec ? { ...e, secDur: durSec - e.secStart } : e))
   // A hi-hat can't be open and closed at once, so an open hit replaces a closed one at the
   // same moment. The next hi-hat hit closes it.
   const opened = new Set(
@@ -2368,7 +2110,6 @@ function sectionClip(sec, state, err, ln, stack) {
 }
 
 function undefinedName(name, st) {
-  if (/^x\d+$/.test(name)) return "To repeat, put a length in front: 4 bars groove"
   const word = st.words[name]
   if (word) {
     return word.type === "steps"
@@ -2392,7 +2133,7 @@ function checkSection(sec, state, err, owner = sec.anon ? null : sec.name) {
     if (parts.slice(0, i).some((p) => p.name === l.name)) {
       err(l.ln, secondLine(l.name, `in ${where}`))
     }
-    readPart(l, st, meterOf(st).barTicks, err, true)
+    readPart(l, st, meterOf(st).barTicks, err)
   })
   const names = (items, ln) => {
     for (const it of items) {
@@ -2503,14 +2244,6 @@ function readSequence(line, ln, err, blocks = {}) {
             : `"${tok}" doesn't belong here. This line takes patterns' names, ` +
                 "a length in front (4 bars groove), and ( ) to group",
         )
-        break
-      }
-      if (/^x\d+$/.test(name[0])) {
-        fail(undefinedName(name[0], {}))
-        break
-      }
-      if (name[0] === "loop") {
-        fail(NO_LOOP.sequence)
         break
       }
       i += name[0].length
@@ -2700,7 +2433,7 @@ export function parseCell(src, inherited = initialState()) {
         err(cur.ln, "play goes at the top, not inside braces")
         cur.text = ""
         dropped = true
-      } else if (/^(pattern|section|def)(\s|$)/.test(head) && !TYPED_RE.test(head)) {
+      } else if (/^pattern(\s|$)/.test(head) && !TYPED_RE.test(head)) {
         err(cur.ln, patternHint(head))
         cur.text = ""
         dropped = true
@@ -2722,11 +2455,11 @@ export function parseCell(src, inherited = initialState()) {
   // Nothing follows a closing brace. `front(n)` is the right way to write a length there.
   const checkTail = (tail, ln, front) => {
     if (!tail) return true
-    const after = /^(?:for\s+)?(\S+)\s+bars?$/.exec(tail)
+    const after = /^(\S+)\s+bars$/.exec(tail)
     err(
       ln,
-      after || /^for(\s|$)/.test(tail)
-        ? `A length goes in front of what it measures: ${front(after ? after[1] : 3)}`
+      after
+        ? `A length goes in front of what it measures: ${front(after[1])}`
         : "Nothing can follow a }",
     )
     return false
@@ -2747,11 +2480,8 @@ export function parseCell(src, inherited = initialState()) {
       i = skipIfOpen(i)
       continue
     }
-    // section groove { and def groove {: older ways to name a pattern
-    if (
-      /^(section|def)(\s|$)/.test(text) ||
-      /^pattern(\s+[A-Za-z][A-Za-z0-9]*)?\s*(=.*)?$/.test(text)
-    ) {
+    // pattern groove {: a pattern without its =
+    if (/^pattern(\s+[A-Za-z][A-Za-z0-9]*)?\s*(=.*)?$/.test(text)) {
       if (!TYPED_RE.test(text)) {
         err(ln, patternHint(text))
         i = /\{/.test(text) ? readBlock(i, text, "", true).end : i
@@ -2775,19 +2505,11 @@ export function parseCell(src, inherited = initialState()) {
       // play plays what's after it: a block in braces, or one line. play groove and
       // play { groove } are the same thing.
       let rest = (play[1] || "").trim()
-      if (/^for(\s|$)/.test(rest)) {
-        const n = /^for\s+(\S+)\s+bars?$/.exec(rest)
-        err(
-          ln,
-          `A length goes in front of what it measures, without for: play ${n ? n[1] : 3} bars { ... }`,
-        )
-        continue
-      }
       let bars = 0
       let ok = true
       const len = lengthPrefix(rest)
-      if (len.has && (!len.rest || len.rest.startsWith("{") || TRACK_RE.test(len.rest))) {
-        // play 3 bars { ... }, play 3 bars kick: loop x---
+      if (len.has) {
+        // play 3 bars { ... }, play 3 bars groove: how long the output is
         ok = checkBars(len.bars, ln, err)
         bars = len.bars
         rest = len.rest
@@ -2803,7 +2525,7 @@ export function parseCell(src, inherited = initialState()) {
       }
       let arg = [{ ln, text: rest }]
       let label = text
-      const lengthAfter = (tail) => /^(?:for\s+)?\S+\s+bars?$|^for(\s|$)/.test(tail)
+      const lengthAfter = (tail) => /^\S+\s+bars$/.test(tail)
       if (rest.startsWith("{")) {
         const block = readBlock(i, rest.slice(1).trim(), "play")
         if (block.end > i) label = text.replace(/\{.*$/, "{ … }")
@@ -2840,7 +2562,7 @@ export function parseCell(src, inherited = initialState()) {
         if (!arg.length) ok = false
       }
       noteCapo(arg)
-      const out = ok ? blockClip(arg, state, err, playCtx(ln), [], bars) : null
+      const out = ok ? blockClip(arg, state, err, outputCtx(ln), [], bars) : null
       if (out && out.durSec > MAX_SECONDS) {
         err(ln, "This plays for over 10 minutes. Use a shorter length")
       } else if (out) {
@@ -2881,7 +2603,7 @@ export function parseCell(src, inherited = initialState()) {
         if (!line) continue // its braces were a mistake, already reported
         noteCapo(read.body)
         for (const b of Object.values(line.blocks || {})) noteCapo(b.lines)
-        const after = /^\{#\d+\}\s+(?:for\s+)?(\S+)\s+bars?$/.exec(line.text)
+        const after = /^\{#\d+\}\s+(\S+)\s+bars$/.exec(line.text)
         if (after) {
           err(
             ln,

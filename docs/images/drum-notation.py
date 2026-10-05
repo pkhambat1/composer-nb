@@ -83,6 +83,8 @@ def note(cx, top, name, shape="dot", mark=None):
         out += parens(cx, y)
     if mark == "rim":
         out += f'<path class="pen" stroke-width="1.8" d="M{cx - 10} {y + 7} L{cx + 10} {y - 7}"/>'
+    if mark == "cross":
+        out += f'<circle class="pen" stroke-width="1.6" cx="{cx}" cy="{y}" r="9"/>'
     if mark == "accent":
         out += accent(cx, y - 50)
     if mark == "double":
@@ -97,6 +99,7 @@ def drum_key():
         ("snare", "snare", "dot", None),
         ("snare.ghost", "snare", "dot", "ghost"),
         ("snare.rim", "snare", "dot", "rim"),
+        ("snare.cross", "snare", "x", "cross"),
         ("hat", "hat", "x", None),
         ("hat.open", "hat", "x", "open"),
         ("hat.pedal", "pedal", "x", None),
@@ -111,7 +114,7 @@ def drum_key():
     body += '<text class="s dim" x="28" y="68">The name under each note is the name of its line in code.</text>'
     body += staff(28, 940, top)
     for i, (name, pos, shape, mark) in enumerate(notes):
-        cx = 100 + i * 67
+        cx = 100 + i * 62
         body += note(cx, top, pos, shape, mark) + label(cx, 236 + (i % 2) * 24, name)
     return svg(w, h, "Drum key: the staff position and notehead of each drum, with its name in code", body)
 

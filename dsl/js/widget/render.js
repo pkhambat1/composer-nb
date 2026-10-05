@@ -78,7 +78,7 @@ function renderDrumGrid(blocks) {
         row.append(h("div", "cnb-lane", label))
         for (let col = 0; col < per; col++) {
           const e = cells.get(bar * per + col)
-          let cls = "cnb-cell" + (shaded(col) ? " cnb-alt" : "")
+          let cls = "cnb-cell" + (shaded(col) ? " cnb-alt" : "") + (e?.note ? " cnb-note" : "")
           if (e?.hit)
             cls += " cnb-hit" + (e.accent ? " cnb-acc" : "") + (e.ghost ? " cnb-ghost" : "")
           else if (e?.held) cls += " cnb-held"

@@ -7,7 +7,7 @@ import { LANES, PITCHED, TPQ } from "./language.js"
 // rows from the top: pitched instruments (a row for each layer of an instrument's block),
 // then the drums. A row's `cells` maps a cell's number, counted from the block's start, to
 // what's in it: a hit ({ hit, accent, ghost, double }, and the note as `text` on a pitched
-// row), or { held } while a note is still sounding.
+// row, with `note`), or { held, note } while a note is still sounding.
 export function gridRows(block) {
   const per = Math.round((block.barTicks / TPQ) * block.res)
   const cellTicks = TPQ / block.res
@@ -21,8 +21,9 @@ export function gridRows(block) {
         if (e.voice !== voice) continue
         const at = Math.round(e.tick / cellTicks)
         const end = Math.round((e.tick + e.ticks) / cellTicks)
-        for (let c = at + 1; c < end; c++) if (!cells.has(c)) cells.set(c, { held: true })
-        cells.set(at, { hit: true, accent: e.accent, ghost: e.ghost, text: e.label })
+        for (let c = at + 1; c < end; c++)
+          if (!cells.has(c)) cells.set(c, { held: true, note: true })
+        cells.set(at, { hit: true, note: true, accent: e.accent, ghost: e.ghost, text: e.label })
       }
       // An instrument's name goes on its first row only.
       rows.push({ key: `${inst} ${voice}`, label: i ? "" : inst, cells })

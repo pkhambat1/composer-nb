@@ -14,6 +14,7 @@
   --cnb-border: var(--jp-border-color2, var(--theme-foreground-faintest, rgba(0, 0, 0, 0.12)));
   --cnb-wave: var(--jp-ui-font-color3, var(--theme-foreground-fainter, rgba(0, 0, 0, 0.38)));
   --cnb-error: var(--jp-error-color1, var(--theme-red, #b00020));
+  --cnb-note: #e8710a;
   --cnb-mono: var(
     --jp-code-font-family,
     var(--monospace, ui-monospace, "SF Mono", Menlo, monospace)
@@ -233,6 +234,16 @@
 }
 .cnb-ghost {
   opacity: 0.45;
+}
+/* Notes are orange, so a pitched line stands out from the drums */
+.cnb-note.cnb-hit {
+  background: color-mix(in srgb, var(--cnb-note) 62%, var(--cnb-paper));
+}
+.cnb-note.cnb-acc {
+  background: var(--cnb-note);
+}
+.cnb-note.cnb-held::before {
+  background: color-mix(in srgb, var(--cnb-note) 62%, var(--cnb-paper));
 }
 /* A note still sounding from the step before: a line running on out of it, across the gap
    between cells, so it doesn't read as another hit */

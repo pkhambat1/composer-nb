@@ -37,6 +37,7 @@ play {
 | `snare`       | Snare drum.                                                          |
 | `snare.ghost` | Snare ghost notes. Every hit plays at ghost velocity.                |
 | `snare.rim`   | Snare rimshot.                                                       |
+| `snare.cross` | Cross-stick: the stick laid across the snare, clicking on the rim.   |
 | `hat`         | Closed hi-hat.                                                       |
 | `hat.open`    | Open hi-hat.                                                         |
 | `hat.pedal`   | Hi-hat closed with the foot.                                         |
@@ -245,17 +246,14 @@ A pattern can hold a guitar, bass or piano part beside its drum lines. See [A ri
 | Message                                                                                                  | Cause                                         |
 | -------------------------------------------------------------------------------------------------------- | --------------------------------------------- |
 | `An instrument's line goes inside braces: in a pattern, or play { kick: x--- }`                          | Instrument line at top level.                 |
-| `"cymbal" isn't an instrument. Instruments: guitar, guitar.electric, piano, piano.electric, organ, pad, bass, crash, ride, ride.bell, hat, hat.open, hat.pedal, tom.high, tom.low, tom.floor, snare, snare.ghost, snare.rim, kick` | Unknown instrument name. |
+| `"cymbal" isn't an instrument. Instruments: guitar, guitar.electric, piano, piano.electric, organ, pad, bass, crash, ride, ride.bell, hat, hat.open, hat.pedal, tom.high, tom.low, tom.floor, snare, snare.ghost, snare.rim, snare.cross, kick` | Unknown instrument name. |
 | `tom is three drums now: tom.high, tom.low or tom.floor`                                                 | A `tom:` line.                                |
-| `floor is tom.floor now: tom.floor: x--`                                                                 | A `floor:` line.                              |
 | `kick already has a line in this play. To layer it, put its lines in a block: kick: { ... }`             | Second line for one instrument in a block.    |
 | `"z" isn't a step. Use x (hit), ^ (accent), ~ (ghost), d (double) or - (nothing)`                        | Invalid step character.                       |
 | `"F---" is notes, and kick is a drum. Notes go on a pitched instrument's line: guitar: F---`             | Notes on a drum line.                         |
 | `"Am" is a chord, and kick is a drum. Chords go on a pitched instrument's line: piano: chords Am`        | A chord on a drum line.                       |
 | `"~": the snare's ghost notes go on a line of their own: snare.ghost: --x-`                              | `~` on the `snare` line.                      |
 | `"^": snare.ghost hits are ghost notes, so they can't be accented`                                       | Accent on `snare.ghost`.                      |
-| `"X-x-": accents are ^ now, so write ^-x-`                                                               | A capital for an accent.                      |
-| `"x-g-": ghost notes are ~ now, so write x-~-`                                                           | `g` for a ghost note.                         |
 | `x4: a beat on its own is already a plain hit, so write 4`                                               | `x` in front of a beat.                       |
 | `This \| isn't at the end of a bar: it's after 12 steps, and a 4 over 4 bar is 16 steps`                 | Misplaced bar line.                           |
 | `4& is past the end of a 7 over 8 bar, which ends on 4e`                                                 | Beat outside the bar.                         |
