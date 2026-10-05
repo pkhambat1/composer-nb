@@ -80,6 +80,38 @@ blues = "|".join(["A7", "D7", "A7", "A7", "D7", "D7", "A7", "A7", "E7", "D7", "A
 Song("tempo 120\nsound epiano\nplay chords: " + blues)
 ```
 
+## From JavaScript
+
+The same player is on npm as one ES module. `music` takes the source and gives back the player as a DOM node, so it shows up in an [Observable](https://observablehq.com) notebook cell, or anywhere else you put it on a page.
+
+In an Observable notebook:
+
+```js
+import { music } from "npm:composer-nb"
+
+const intro = display(
+  music(`tempo 75
+capo 2
+sound guitar
+chords riff = Am E7|G D
+play chords: riff`),
+)
+```
+
+```js
+music(`play chords: F C|Dm E7 riff`, { after: intro, name: "verse" })
+```
+
+`after` and `name` work as they do in Python, and `after` takes what an earlier `music` call returned. The source is a string, so other cells can write it. With a tempo slider called `bpm`, this cell plays at the new tempo each time the slider moves:
+
+```js
+music(`tempo ${bpm}
+sound epiano
+play chords: Am F|C G`)
+```
+
+Anywhere else, `npm install composer-nb`, or import `https://cdn.jsdelivr.net/npm/composer-nb/+esm`.
+
 ## The language
 
 Every line starts by saying what it is:
@@ -91,7 +123,7 @@ Every line starts by saying what it is:
 | Line                | What it is                                                             |
 | ------------------- | ---------------------------------------------------------------------- |
 | `tempo 90`          | A setting: a reserved word and its value                               |
-| `steps pair = X-x-` | A name, with its type in front: `steps`, `chords` or `pattern`         |
+| `steps pair = ^-x-` | A name, with its type in front: `steps`, `chords` or `pattern`         |
 | `kick: x--x---`     | Inside braces, an instrument and what it plays                         |
 | `bar 2 { ... }`     | Inside braces, what plays in one bar of the pattern or play it's in    |
 | `play { ... }`      | Plays what's after it, a pattern or one line. Nothing else makes sound |
@@ -104,7 +136,7 @@ A name's type goes in front of it, and `=` gives it its value:
 
 | Type      | What it holds                                                                 | Where it goes                         |
 | --------- | ----------------------------------------------------------------------------- | ------------------------------------- |
-| `steps`   | A drum's hits: `steps pair = X-x-`                                            | On a drum's line: `hat: pair pair`    |
+| `steps`   | A drum's hits: `steps pair = ^-x-`                                            | On a drum's line: `hat: pair pair`    |
 | `chords`  | Bars of chords: `chords verse = Am F\|C G`                                    | On the chords line: `chords: verse`   |
 | `pattern` | Lines in braces that play together, over and over: `pattern groove = { ... }` | On a line of its own, or after `play` |
 
@@ -142,7 +174,7 @@ play chords: C - - G|Am - F G|%|F - _ -
 ```
 pattern beat = {
   kick: x---x---x-x-----
-  snare: ----X-------X---
+  snare: ----^-------^---
   snare.ghost: --------------x-
   hat: x-
 }
@@ -166,11 +198,11 @@ pattern ghosts = {
 
 A block of steps is steps, so it can be named too: `steps ghosts = { ... }`. Where patterns played together hit the same drum at once, the lower line wins too.
 
-An open hi-hat rings until the next hi-hat hit closes it (a stick on `hat`, or the foot on `hat.pedal`), and replaces a closed hit at the same moment, so `hat: X-x-` can keep going under `hat.open: ------X-`.
+An open hi-hat rings until the next hi-hat hit closes it (a stick on `hat`, or the foot on `hat.pedal`), and replaces a closed hit at the same moment, so `hat: ^-x-` can keep going under `hat.open: ------^-`.
 
-Steps are a picture of time, one character each, a 16th note unless they're inside `every`: `x` hit, `X` accent, `g` ghost (on the snare, use `snare.ghost`), `d` double, `-` nothing. Spaces mean nothing, so group them by beat, and `|` marks the end of a bar (it's checked): `kick: x--- ---- x--- ---- | x--- --x- x--- ----`.
+Steps are a picture of time, one character each, a 16th note unless they're inside `every`: `x` hit, `^` accent, `~` ghost (on the snare, use `snare.ghost`), `d` double, `-` nothing. Spaces mean nothing, so group them by beat, and `|` marks the end of a bar (it's checked): `kick: x--- ---- x--- ---- | x--- --x- x--- ----`.
 
-Beats are for plain hits: the beats a drum hits on in each bar, counted `1 e & a 2 e & a`. Beats and steps don't mix on a line, and how a hit is played is always drawn in steps.
+Beats are the beats a drum hits on in each bar, counted `1 e & a 2 e & a`. A beat on its own is a plain hit, and a step in front says another way to hit it: `snare: 2e ^4` accents the 4, `~3a` is a ghost note and `d3` a double. Beats and steps don't mix on a line.
 
 ### One bar only
 
@@ -184,10 +216,10 @@ pattern groove = {
   kick: x--x---
   snare: 2e 4
   snare.ghost: --x----
-  hat: X-x-
+  hat: ^-x-
   bar 2 {
     snare.ghost: 2 beats rest, dd, 1 beats rest
-    hat.open: 2 beats rest, --X-, 2 steps rest
+    hat.open: 2 beats rest, --^-, 2 steps rest
     hat.pedal: 4
   }
 }
@@ -223,7 +255,7 @@ A length can also repeat steps, up to the next comma: `2 beats x-` is `x-x-x-x-`
 
 ```
 pattern feet = every 3 steps {
-  kick: X-XX-X--
+  kick: ^-^^-^--
   hat.pedal: -x--x-xx
 }
 ```

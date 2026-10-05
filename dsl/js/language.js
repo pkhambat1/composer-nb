@@ -2,7 +2,7 @@
    saying what it is:
      tempo 90                 a setting: a reserved word and its value (time 7 over 8,
                               sound guitar). Settings aren't names, so no =.
-     steps pair = X-x-        a name, with its type in front. There are three types:
+     steps pair = ^-x-        a name, with its type in front. There are three types:
      chords verse = Am E7|G D   steps (a drum's hits), chords, and pattern (lines in
      pattern groove = { }       braces that play together). A name only ever holds its
                               type, and only goes where that type goes.
@@ -50,7 +50,7 @@ export const LANES = DRUMS.flatMap((d) => [d, ...(VARIATIONS[d] || []).map((v) =
 export const PARTS = ["chords", ...LANES]
 export const INSTRUMENTS = ["piano", "epiano", "organ", "pad", "bass", "guitar"]
 export const SETTINGS = ["time", "tempo", "sound", "key", "capo", "octave", "kit"]
-// The types a name can have. Its type goes in front of it: steps pair = X-x-
+// The types a name can have. Its type goes in front of it: steps pair = ^-x-
 export const TYPES = ["steps", "chords", "pattern"]
 // loop, for, def and section are old words, kept so they're explained rather than taken as
 // names.
@@ -70,8 +70,8 @@ export const KEYWORDS = [
   "def",
   "section",
 ]
-// Old words for how a beat is hit, kept so they're explained: a step after the beat says it
-// now (2 X).
+// Old words for how a beat is hit, kept so they're explained: a step in front of the beat
+// says it now (^2).
 export const MODIFIERS = ["accent", "ghost", "double"]
 export const KITS = ["rock", "synth"]
 const SETTING_EXAMPLE = {
@@ -87,11 +87,12 @@ const SETTING_EXAMPLE = {
 const MAX_SECONDS = 600
 const MAX_BARS = 64
 const SUB = { "": 0, e: 0.25, "&": 0.5, a: 0.75 }
-// Steps say how a drum is hit, never which sound (that's the line's name): x hit, g ghost,
-// d double, - nothing. A capital adds an accent.
+// Steps say how a drum is hit, never which sound (that's the line's name): x hit,
+// ^ accent, ~ ghost, d double, - nothing.
 const STEPS = {
   x: {},
-  g: { ghost: true },
+  "^": { accent: true },
+  "~": { ghost: true },
   d: { double: true },
 }
 // Old ways of asking for a variation, and the line that does it now.
@@ -200,7 +201,7 @@ function splitBars(tokens) {
   return bars.filter((b) => b.length)
 }
 
-const isStep = (c) => c === "-" || !!STEPS[c.toLowerCase()]
+const isStep = (c) => c === "-" || !!STEPS[c]
 // Steps are typed without spaces (x--x---), but spaces between them are fine too.
 const isStepRun = (t) => t.length > 0 && [...t].every(isStep)
 function editDistance(a, b) {
@@ -250,6 +251,7 @@ function nameProblem(name, value) {
   }
   if (TAKEN.has(n) || /^x\d+$/.test(name))
     return `${name} already means something, so pick another name`
+  if (/^d\d+[ea]?$/.test(name)) return `${name} is a double on a beat, so pick another name`
   return null
 }
 
@@ -485,7 +487,7 @@ function applySetting(name, value, ln, state, err) {
 
 const CHORD_MARKS = ["|", "-", "_", "%"]
 
-// steps name = X-x-, chords name = Am E7|G D: steps or chords to hand to an instrument.
+// steps name = ^-x-, chords name = Am E7|G D: steps or chords to hand to an instrument.
 // What's written has to be the type that's declared.
 function defineWord(type, name, value, ln, state, err, blocks = null) {
   const problem = nameProblem(name, value)
@@ -537,7 +539,9 @@ function defineWord(type, name, value, ln, state, err, blocks = null) {
       type === "steps" ? isStepRun(t) || t === "|" : CHORD_MARKS.includes(t) || buildChord(t, key)
     ) {
       tokens.push(t)
-    } else if (/^[a-z][a-z0-9]+$/.test(t) && !isRoman(t) && !/^[-xgd]+$/.test(t)) {
+    } else if (type === "steps" && oldSteps(t)) {
+      return err(ln, `"${t}": ${oldSteps(t)}`)
+    } else if (/^[a-z][a-z0-9]+$/.test(t) && !isRoman(t) && !/^[-xd]+$/.test(t)) {
       return err(ln, `"${t}" isn't defined above. Name it first: ${type} ${t} = ...`)
     } else if (type === "steps") {
       return err(
@@ -623,8 +627,8 @@ function shapeOf(value, st, blocks = null) {
   const chords = tokens.every(
     (t) => CHORD_MARKS.includes(t) || st.words[t]?.type === "chords" || buildChord(t, key),
   )
-  // D and G are both a step and a chord. On their own they're almost always chords.
-  if (steps && chords) return tokens.some((t) => /^[A-G]/.test(t)) ? "chords" : "steps"
+  // Only rests and bar lines are both (- - | -), and they're steps.
+  if (steps && chords) return "steps"
   return steps ? "steps" : chords ? "chords" : "pattern"
 }
 
@@ -1071,11 +1075,31 @@ function pushHit(out, part, tick, mods, doubleGap, kit) {
   if (mods.double) out.push({ ...ev, tick: tick + doubleGap, hidden: true, gap: doubleGap })
 }
 
-const BEAT_RE = /^(\d+)(e|&|a)?$/
-// Whether a line lists beats (2e 4) rather than steps (x-x-). The two never mix.
-const listsBeats = (tokens) => tokens.some((t) => /^\d/.test(t))
+// A beat, with how it's hit in front when that isn't a plain hit: 4, 2e, ^4, ~3a, d3&
+const BEAT_RE = /^([\^~dx])?(\d+)(e|&|a)?$/
+// Whether a line lists beats (2e ^4) rather than steps (x-x-). The two never mix.
+const listsBeats = (tokens) => tokens.some((t) => /^[\^~dx]?\d/.test(t))
 
-// A bar of steps the way it's best written, a beat to a group: ---- ---- --X- --
+// X, D and g were how a step was accented or ghosted. For steps written that way, says
+// what's written now; otherwise null.
+function oldSteps(tok) {
+  if (!/^[-xXgGdD^~]+$/.test(tok) || !/[XgGD]/.test(tok)) return null
+  const why = []
+  if (/X/.test(tok)) why.push("accents are ^ now")
+  if (/[gG]/.test(tok)) why.push("ghost notes are ~ now")
+  if (/D/.test(tok)) why.push("a double can't be accented any more")
+  return `${why.join(", and ")}, so write ${todaySteps(tok)}`
+}
+const todaySteps = (tok) => tok.replace(/X/g, "^").replace(/[gG]/g, "~").replace(/D/g, "d")
+// The same for a drum's line, which may not take today's spelling either (~ on the snare).
+function oldStepsOn(part, tok) {
+  const now = oldSteps(tok)
+  if (!now || !part) return now
+  const steps = [...todaySteps(tok)].map((c) => STEPS[c]).filter(Boolean)
+  return steps.map((m) => ghostLineProblem(part, m.ghost, m.accent)).find(Boolean) || now
+}
+
+// A bar of steps the way it's best written, a beat to a group: ---- ---- --^- --
 function drawBar(cells, st) {
   const perBeat = TPQ / st.stepTicks
   if (!Number.isInteger(perBeat) || perBeat < 2) return cells.join("")
@@ -1084,12 +1108,13 @@ function drawBar(cells, st) {
   return groups.join(" ")
 }
 
-// Beats used to take bar lines, empty bars and steps after a beat (-|3& X). What such a
-// line says, written today's way, or null when that isn't simple to say.
+// Beats used to take bar lines, empty bars, and a word or steps after a beat (2 accent,
+// -|3& X). What such a line says, written today's way, or null when that isn't simple to
+// say. One step after a beat goes in front of it now (^3&); more are drawn as the bar.
 function beatsToday(part, tokens, st, barTicks) {
   const stepTicks = st.stepTicks
   if (barTicks % stepTicks) return null
-  const letter = { accent: "X", ghost: "g", double: "d" }
+  const letter = { accent: "^", ghost: "~", double: "d" }
   const bars = [] // each bar: its steps, how to write it, and whether anything hits in it
   for (const bar of splitBars(tokens)) {
     if (bar.length === 1 && bar[0] === "%") {
@@ -1098,25 +1123,30 @@ function beatsToday(part, tokens, st, barTicks) {
       continue
     }
     const cells = Array(barTicks / stepTicks).fill("-")
+    const beats = [] // the bar as beats, while a step in front of each can say it
     let plain = true
+    let asBeats = true
     let at = null
     for (const tok of bar.length === 1 && bar[0] === "-" ? [] : bar) {
       const m = BEAT_RE.exec(tok)
-      if (m) {
-        const tick = Math.round((Number(m[1]) - 1 + SUB[m[2] || ""]) * TPQ)
-        if (Number(m[1]) < 1 || tick >= barTicks || tick % stepTicks) return null
+      if (m && !m[1]) {
+        const tick = Math.round((Number(m[2]) - 1 + SUB[m[3] || ""]) * TPQ)
+        if (Number(m[2]) < 1 || tick >= barTicks || tick % stepTicks) return null
         at = tick / stepTicks
         cells[at] = "x"
-      } else if (at != null && (letter[tok] || isStepRun(tok))) {
-        const run = letter[tok] || tok
+        beats.push(tok)
+      } else if (at != null && (letter[tok] || isStepRun(todaySteps(tok)))) {
+        const run = letter[tok] || todaySteps(tok)
         for (let k = 0; k < run.length && at + k < cells.length; k++) cells[at + k] = run[k]
+        if (run.length > 1 || run === "-") asBeats = false
+        else if (run !== "x") beats[beats.length - 1] = run + beats[beats.length - 1]
         at = null
         plain = false
       } else return null
     }
     bars.push({
       cells,
-      text: plain ? bar.join(" ") : drawBar(cells, st),
+      text: plain ? bar.join(" ") : asBeats ? beats.join(" ") : drawBar(cells, st),
       empty: cells.every((c) => c === "-"),
     })
   }
@@ -1131,9 +1161,10 @@ function beatsToday(part, tokens, st, barTicks) {
   return line + bars.map((b) => drawBar(b.cells, st)).join(" | ")
 }
 
-// Beats: crash: 1, snare: 2e 4 — the beats a drum hits on in every bar, counted 1 e & a.
-// They're plain hits in one bar, with nothing else on the line: how a hit is played is
-// drawn in steps, and what happens in one bar only goes in that bar (bar 2 { ... }).
+// Beats: crash: 1, snare: 2e ^4 — the beats a drum hits on in every bar, counted 1 e & a.
+// A beat on its own is a plain hit, and a step in front says another way to hit it: ^4
+// (accent), ~3a (ghost), d3 (double). Nothing else goes on the line, and what happens in
+// one bar only goes in that bar (bar 2 { ... }).
 // Returns the bar's hits ({ tick, mods, tok }) as a list of one bar, or null.
 function readBeats(part, tokens, st, barTicks, err) {
   const qpb = barQuarters(st)
@@ -1156,7 +1187,7 @@ function readBeats(part, tokens, st, barTicks, err) {
   const old = (t) =>
     t === "|" ||
     t === "%" ||
-    isStepRun(t) ||
+    isStepRun(todaySteps(t)) ||
     MODIFIERS.includes(t) ||
     st.words[t]?.type === "steps" ||
     !!part.blocks?.[t]
@@ -1164,10 +1195,10 @@ function readBeats(part, tokens, st, barTicks, err) {
     const now = beatsToday(part, tokens, st, barTicks)
     const drum = part.drum ? part.name : "snare"
     fail(
-      "Beats are plain hits in one bar, with nothing else on the line. " +
+      "Beats are one bar's hits, with nothing else on the line. " +
         (now
           ? `Write this as ${now}`
-          : `To say how a hit is played, draw the bar in steps (--X-). For one bar only, name it: bar 2 ${drum}: 2 4`),
+          : `To say how a beat is hit, put its step in front: ^4 (accent), ~4 (ghost), d4 (double). For one bar only, name it: bar 2 ${drum}: 2 4`),
     )
     return null
   }
@@ -1175,12 +1206,20 @@ function readBeats(part, tokens, st, barTicks, err) {
     const m = BEAT_RE.exec(tok)
     const word = st.words[tok]
     if (m) {
-      const q = Number(m[1]) - 1 + SUB[m[2] || ""]
-      if (Number(m[1]) < 1 || q > qpb - 1e-9) {
-        fail(`${tok} is past the end of a ${timeLabel(st)} bar, which ends on ${lastCount(st)}`)
+      const [, step = "x", count, sub = ""] = m
+      const beat = count + sub
+      const q = Number(count) - 1 + SUB[sub]
+      const mods = STEPS[step]
+      const problem = ghostLineProblem(part, mods.ghost, mods.accent)
+      if (m[1] === "x") {
+        fail(`${tok}: a beat on its own is already a plain hit, so write ${beat}`)
+      } else if (problem) {
+        fail(`"${tok}": ${problem}`)
+      } else if (Number(count) < 1 || q > qpb - 1e-9) {
+        fail(`${beat} is past the end of a ${timeLabel(st)} bar, which ends on ${lastCount(st)}`)
       } else if (hits.some((h) => h.tick === Math.round(q * TPQ))) {
-        fail(`${tok} is on this line twice`)
-      } else hits.push({ tick: Math.round(q * TPQ), mods: {}, tok })
+        fail(`${beat} is on this line twice`)
+      } else hits.push({ tick: Math.round(q * TPQ), mods, tok })
     } else if (VARIATION_LINE[tok]) {
       fail(`"${tok}" is a line of its own now, e.g. ${VARIATION_LINE[tok]}: 1`)
     } else if (word) {
@@ -1188,7 +1227,7 @@ function readBeats(part, tokens, st, barTicks, err) {
     } else if (st.sections[tok]) {
       fail(`${tok} is a pattern, so it goes on a line of its own, not on an instrument's line`)
     } else {
-      fail(`"${tok}" isn't a beat. Beats look like 1, 2&, 3e or 4a`)
+      fail(`"${tok}" isn't a beat. Beats look like 1, 2&, 3e or 4a, or ^4 with a step in front`)
     }
   }
   if (!ok) return null
@@ -1216,10 +1255,9 @@ function beatPattern(part, tokens, st, barTicks, err) {
   }
 }
 
-// The step that hits a drum this way: x, X, g or d (D for an accented double).
+// The step that hits a drum this way: x, ^, ~ or d.
 function stepLetter(mods) {
-  const c = mods.double ? "d" : mods.ghost ? "g" : "x"
-  return mods.accent ? c.toUpperCase() : c
+  return mods.double ? "d" : mods.ghost ? "~" : mods.accent ? "^" : "x"
 }
 
 // Beats written as steps, so they can be named as steps or layered with them: each bar on
@@ -1250,19 +1288,15 @@ function beatsAsSteps(part, tokens, st, err) {
   return run.join("")
 }
 
-const STEP_HELP = "Use x (hit), X (accent), g (ghost), d (double) or - (nothing)"
+const STEP_HELP = "Use x (hit), ^ (accent), ~ (ghost), d (double) or - (nothing)"
 
 // One step character → hit modifiers; null for -, undefined when it isn't valid here.
 function stepMods(c, part, err, where) {
   if (c === "-") return null
-  const mods = { ...STEPS[c.toLowerCase()], accent: c !== c.toLowerCase() }
+  const mods = STEPS[c]
   const problem = ghostLineProblem(part, mods.ghost, mods.accent)
   if (problem) {
     err(part.ln, `"${c}"${where}: ${problem}`)
-    return undefined
-  }
-  if (mods.accent && mods.ghost) {
-    err(part.ln, `"${c}"${where}: a ghost note can't be accented`)
     return undefined
   }
   return mods
@@ -1428,13 +1462,15 @@ function stepPattern(part, tokens, st, err) {
   const addRun = (tok, viaWord) => {
     const where = viaWord ? ` (in ${viaWord})` : ""
     if (!isStepRun(tok)) {
-      const old = /^[-.xXgdDoOpPbB]+$/.test(tok) && /[oOpPbB]/.exec(tok)
+      const old = /^[-.xXgdD^~oOpPbB]+$/.test(tok) && /[oOpPbB]/.exec(tok)
       if (old) {
         err(
           part.ln,
           `"${tok}"${where}: ${old[0]} is a line of its own now, e.g. ${VARIATION_LINE[old[0].toLowerCase()]}: x--`,
         )
-      } else if (/^[-.xXgdD]+$/.test(tok)) {
+      } else if (oldSteps(tok)) {
+        err(part.ln, `"${tok}"${where}: ${oldStepsOn(part, tok)}`)
+      } else if (/^[-.x^~d]+$/.test(tok)) {
         err(part.ln, `"${tok}"${where}: use - for a rest, e.g. x--x---`)
       } else if (/^[a-z][a-z0-9]+$/.test(tok)) {
         err(
@@ -1577,6 +1613,8 @@ function stepLayer(line, st, err, part) {
       return fail(`${tok} is a pattern, so it can't be a layer of steps`)
     } else if (tok === "loop") {
       return fail("loop isn't needed: a block's layers repeat until they line up again")
+    } else if (oldSteps(tok)) {
+      return fail(`"${tok}": ${oldStepsOn(part, tok)}`)
     } else if (/^[a-z][a-z0-9]+$/.test(tok)) {
       return fail(`"${tok}" isn't defined above. Name it first: steps ${tok} = x-x-`)
     } else return fail(`"${tok}" isn't a step. ${STEP_HELP}`)
@@ -2393,7 +2431,7 @@ export function parseCell(src, inherited = initialState()) {
       continue
     }
 
-    // steps pair = X-x-, chords verse = Am F, pattern groove = 3 bars { ... }: a name.
+    // steps pair = ^-x-, chords verse = Am F, pattern groove = 3 bars { ... }: a name.
     // Read here because a pattern's braces can run over several lines.
     let decl = readDecl(text)
     // pattern groove { without its =: said once, and still named, so nothing else breaks

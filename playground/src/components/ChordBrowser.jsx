@@ -1,7 +1,7 @@
 // components/ChordBrowser.jsx — Chord library browser panel
 import React from "react"
 import { Chord, Note } from "tonal"
-import * as ChordLookup from "@composer-nb/dsl/chord-lookup"
+import * as ChordLookup from "composer-nb/chord-lookup"
 import ChordDiagram from "./ChordDiagram.jsx"
 
 function chordStubFromLabel(label) {

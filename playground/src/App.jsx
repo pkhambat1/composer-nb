@@ -4,7 +4,7 @@
 */
 import React from "react"
 import * as Tone from "tone"
-import * as MusicEngine from "@composer-nb/dsl"
+import * as MusicEngine from "composer-nb/engine"
 import { APP_CONSTANTS } from "./shared/constants.js"
 import { EMBED, embedCell, embedTheme, listenForTheme, reportHeight } from "./shared/embed.js"
 import { useCellManager } from "./hooks/useCellManager.js"

@@ -11,7 +11,9 @@ import { KEYWORDS, LANES, MODIFIERS, PARTS, SETTINGS, TYPES, UNITS } from "./lan
 import { isRoman } from "./chords.js"
 
 const ROMAN_RE = /^([#b])?(VII|VI|IV|V|III|II|I|vii|vi|iv|v|iii|ii|i)([°oø]?)(.*)$/
-const STEPS_RE = /^[-xXgdD]+$/
+const STEPS_RE = /^[-x^~d]+$/
+// A beat, with how it's hit in front when that isn't a plain hit: 4, 2e, ^4, ~3a, d3&
+const BEAT_RE = /^[\^~d]?\d+(e|&|a)?$/
 const NAME_RE = /^[A-Za-z][A-Za-z0-9]*$/
 const TRACK_RE = /^[A-Za-z][A-Za-z0-9]*(?:\.[A-Za-z0-9]+)?\s*:/
 
@@ -55,12 +57,10 @@ function chordToken(token) {
   return parts.concat(tail)
 }
 
-// x--X-g-: each step coloured on its own.
+// x--^-~-: each step coloured on its own.
 function stepRun(t) {
   return [...t].map((ch) =>
-    ch === "-"
-      ? part("tk-rest", ch)
-      : part(ch === ch.toUpperCase() ? "tk-step tk-step-acc" : "tk-step", ch),
+    ch === "-" ? part("tk-rest", ch) : part(ch === "^" ? "tk-step tk-step-acc" : "tk-step", ch),
   )
 }
 
@@ -73,8 +73,8 @@ function valueToken(t, kind) {
   if (t === "-" || t === "_") return [part("tk-rest", t)]
   if (kind !== "chord") {
     if (STEPS_RE.test(t)) return stepRun(t)
-    if (/^\d+(e|&|a)?$/.test(t)) return [part("tk-beat", t)]
-    // accent, ghost and double are old words: how a hit is played is drawn in steps
+    if (BEAT_RE.test(t)) return [part("tk-beat", t)]
+    // accent, ghost and double are old words: a step in front of the beat says it now
     if (MODIFIERS.includes(t)) return [part("tk-error", t)]
   }
   if (/^[a-z][a-z0-9]+$/.test(t) && !isRoman(t)) return [part("tk-word", t)]
@@ -100,7 +100,7 @@ function values(text, kind) {
       if (UNITS.includes(p)) return [part("tk-directive-key", p)]
       if (/^[\d(]/.test(p) && UNITS.includes(words[k + 1])) return [part("tk-directive-val", p)]
       // after a number only a unit or another beat can follow: 2 beatz, 2 pair, 2 x-
-      if (k > 0 && /^[\d(]/.test(words[k - 1]) && !/^[\d(,|{}]/.test(p)) {
+      if (k > 0 && /^[\d(]/.test(words[k - 1]) && !/^[\d(,|{}]/.test(p) && !BEAT_RE.test(p)) {
         return [part("tk-error", p)]
       }
       if (p === "rest") return [part("tk-rest", p)]
@@ -213,7 +213,7 @@ function line(code) {
     // } outro: what follows a block is more to play in a row
     out.push(part("tk-punct", "}"), ...names(body.slice(1)))
   } else if (typed) {
-    // steps pair = X-x-, chords verse = Am F, pattern groove = 3 bars { ... }: the type,
+    // steps pair = ^-x-, chords verse = Am F, pattern groove = 3 bars { ... }: the type,
     // the name, and a value of that type
     const [, gap, name, before, , afterEq, value] = typed
     const taken = SETTINGS.includes(name) || PARTS.includes(name) || KEYWORDS.includes(name)

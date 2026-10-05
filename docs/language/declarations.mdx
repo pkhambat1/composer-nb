@@ -31,7 +31,7 @@ steps <name> = { <layer> ... }
 The value is anything a drum line accepts after its colon: a run of steps, parts with lengths, a list of beats, other `steps` names, or a block of layers.
 
 ```composer-nb
-steps pair = X-x-
+steps pair = ^-x-
 steps burst = 2 beats rest, dd, 1.5 beats rest
 steps backbeat = 2 4
 steps ghosts = {
@@ -101,8 +101,8 @@ A name must be declared above the line that uses it. Declaring a name again repl
 
 | Message                                                                                   | Cause                                              |
 | ----------------------------------------------------------------------------------------- | -------------------------------------------------- |
-| `Say what pair is. Put its type in front: steps pair = X-x-`                              | No type. The name is still bound, with the inferred type. |
-| `steps pair needs = before what it holds: steps pair = X-x-`                              | No `=`.                                            |
+| `Say what pair is. Put its type in front: steps pair = ^-x-`                              | No type. The name is still bound, with the inferred type. |
+| `steps pair needs = before what it holds: steps pair = ^-x-`                              | No `=`.                                            |
 | `steps pair = needs something after the =`                                                | No value.                                          |
 | `"Am" is a chord, and pair is steps. For chords, write chords pair = Am F`                | Value does not match the declared type.            |
 | `That's a pattern, not steps. Write pattern pair = ...`                                   | A block or sequence declared as `steps` or `chords`. |

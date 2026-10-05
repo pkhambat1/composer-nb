@@ -1,7 +1,7 @@
 // components/MusicOutput.jsx — Music cell output: waveform, piano roll, chord chips, errors
 import React from "react"
 import WaveSurfer from "wavesurfer.js"
-import * as MusicEngine from "@composer-nb/dsl"
+import * as MusicEngine from "composer-nb/engine"
 import ChordDiagram from "./ChordDiagram.jsx"
 import DrumGrid from "./DrumGrid.jsx"
 

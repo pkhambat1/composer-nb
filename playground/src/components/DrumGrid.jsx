@@ -1,6 +1,6 @@
 // components/DrumGrid.jsx — Drum hits bar by bar, counted 1 e & a, with a playhead
 import React from "react"
-import { LANES, TPQ } from "@composer-nb/dsl/language"
+import { LANES, TPQ } from "composer-nb/language"
 
 const SAY = { 1: [""], 2: ["", "&"], 3: ["", "&", "a"], 4: ["", "e", "&", "a"] }
 const COUNTING = { 1: "1 2 3", 2: "1 & 2 &", 3: "1 & a", 4: "1 e & a" }
