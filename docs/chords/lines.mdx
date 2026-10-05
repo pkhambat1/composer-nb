@@ -1,6 +1,6 @@
 ---
 title: "Chord lines"
-description: "The chords instrument line: bars, slots, chord symbols and Roman numerals."
+description: "The chords line: bars, slots, chord symbols, Roman numerals, and the settings that change how chords sound."
 ---
 
 import { Cell } from "/snippets/cell.jsx"
@@ -11,7 +11,7 @@ import { Cell } from "/snippets/cell.jsx"
 chords: <bar> [| <bar>] ...
 ```
 
-A `chords` line is an instrument line. It is valid inside a block or directly after `play`. It plays on the current [`sound`](/language/settings#sound).
+A `chords` line is an instrument line. It is valid inside a block or directly after `play`. It plays on the current [`sound`](/chords/sound#sound).
 
 <Cell>
 
@@ -59,7 +59,7 @@ Examples: `C`, `Am`, `F#m`, `Bb7`, `Cmaj7`, `Dm9`, `G7sus4`, `Em7b5`, `Cadd9`, `
 [b|#]<numeral>[°|o|ø][<quality>]
 ```
 
-A Roman numeral names a chord by its scale degree in the current [`key`](/language/settings#key). Degrees are taken from the major scale in a major key and from the natural minor scale in a minor key.
+A Roman numeral names a chord by its scale degree in the current [`key`](/chords/sound#key). Degrees are taken from the major scale in a major key and from the natural minor scale in a minor key.
 
 | Element          | Meaning                                              |
 | ---------------- | ---------------------------------------------------- |
@@ -81,12 +81,16 @@ play chords: I vi|IV V7|bVII IV|ii7 vii°
 
 In C this plays `C Am`, `F G7`, `Bb F`, `Dm7 Bdim`.
 
-## Voicing
+## Settings for chords
 
-| Sound          | Voicing                                                                                                    |
-| -------------- | ---------------------------------------------------------------------------------------------------------- |
-| All but guitar | Chord tones stacked upward from the root in the current [`octave`](/language/settings#octave), within two octaves. The bass note sounds one octave below. |
-| `guitar`       | The fretboard shape for the chord where one is known, shifted up by [`capo`](/language/settings#capo). Otherwise as above. |
+| Setting                         | Effect                                                            |
+| ------------------------------- | ----------------------------------------------------------------- |
+| [`sound`](/chords/sound#sound)   | The instrument the chords play on: `piano`, `guitar` and others. |
+| [`key`](/chords/sound#key)       | The key that Roman numerals are read in.                         |
+| [`capo`](/chords/sound#capo)     | Raises guitar chords by a number of frets.                       |
+| [`octave`](/chords/sound#octave) | The octave of each chord's root.                                 |
+
+See [Sound, key and capo](/chords/sound), which also describes how each sound [voices](/chords/sound#voicing) a chord.
 
 ## Repetition
 
@@ -109,4 +113,3 @@ A block holds one `chords` line. Chords cannot be layered in a block of their ow
 | `% stands for a whole bar, so it goes between bar lines on its own: Am F\|%`                    | `%` next to other tokens in a bar.            |
 | `chords already has a line in this play. Chords play one at a time, so put them all on one line` | Second `chords` line in a block.             |
 | `Chords play one at a time, so they can't be layered in a block. Put them on one line: chords: Am F\|C G` | A block after `chords:` or `chords <name> =`. |
-| `capo only works on guitar. Add sound guitar`                                                   | `capo` set in a cell that plays no guitar.    |

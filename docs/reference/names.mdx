@@ -1,6 +1,6 @@
 ---
-title: "Declarations"
-description: "Typed names for steps, chords and patterns."
+title: "Names and types"
+description: "Declarations: naming steps, chords and patterns, and where each type of name is accepted."
 ---
 
 import { Cell } from "/snippets/cell.jsx"
@@ -17,9 +17,9 @@ A declaration binds a name to a value. The type is required and is written in fr
 
 | Type      | Value                                    | Where the name is accepted                                        |
 | --------- | ---------------------------------------- | ----------------------------------------------------------------- |
-| `steps`   | Steps for one drum                       | On a [drum line](/language/drums), and in other `steps` values.   |
-| `chords`  | One or more bars of chords               | On a [`chords` line](/language/chords), and in other `chords` values. |
-| `pattern` | A block, a sequence of patterns, or a single statement | On a [sequence line](/language/patterns#sequence-lines), and after `play`. |
+| `steps`   | Steps for one drum                       | On a [drum line](/drums/lines), and in other `steps` values.   |
+| `chords`  | One or more bars of chords               | On a [`chords` line](/chords/lines), and in other `chords` values. |
+| `pattern` | A block, a sequence of patterns, or a single statement | On a [sequence line](/song/patterns#sequence-lines), and after `play`. |
 
 A name holds only its declared type and is accepted only where that type is accepted. Both directions are checked: the value must match the declared type, and each use must match the position.
 
@@ -81,7 +81,7 @@ pattern <name> = <sequence>
 pattern <name> = [<length>] <statement>
 ```
 
-Declaring a pattern does not play it. The lines and names in the body are checked at the declaration, so those errors are reported even if the pattern is never played. Duration errors are reported when the pattern is played. See [Patterns](/language/patterns).
+Declaring a pattern does not play it. The lines and names in the body are checked at the declaration, so those errors are reported even if the pattern is never played. Duration errors are reported when the pattern is played. See [Patterns](/song/patterns).
 
 <Cell>
 
@@ -103,7 +103,7 @@ play song
 | Rule                                 | Applies to         |
 | ------------------------------------ | ------------------ |
 | A letter followed by letters and digits. No underscores. | All types |
-| Not a [reserved word](/language/program-structure#reserved-words). | All types |
+| Not a [reserved word](/reference/program-structure#reserved-words). | All types |
 | Not `x` followed by digits, such as `x2`. | All types      |
 | Lowercase only.                      | `steps`, `chords`  |
 | At least two characters.             | `steps`, `chords`  |

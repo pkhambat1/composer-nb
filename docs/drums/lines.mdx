@@ -1,6 +1,6 @@
 ---
 title: "Drum lines"
-description: "Drum instrument lines: instruments, steps, beats, parts with lengths, and layers."
+description: "One line per drum: the drum names, steps, beats, rests with lengths, and layers."
 ---
 
 import { Cell } from "/snippets/cell.jsx"
@@ -14,7 +14,7 @@ import { Cell } from "/snippets/cell.jsx"
 <drum>: { <layer> ... }
 ```
 
-A drum line is an instrument line. It is valid inside a block or directly after `play`. It plays on the current [`kit`](/language/settings#kit).
+A drum line names a drum and says when it is hit. To write one from a chart, see [From sheet music](/drums/notation). A drum line is valid inside a block or directly after `play`. It plays on the current [`kit`](/drums/lines#kit).
 
 <Cell>
 
@@ -46,11 +46,24 @@ play {
 | `tom`         | Rack tom.                                                            |
 | `floor`       | Floor tom.                                                           |
 
-Each name is a separate line. A block holds one line for each name.
+Each name is a separate line. A block holds one line for each name. For where each drum sits on a staff, see [Which drum](/drums/notation#which-drum).
+
+## Kit
+
+```text
+kit <name>
+```
+
+The `kit` [setting](/reference/settings) chooses the drum sounds. The default is `rock`.
+
+| Value   | Source                                                                                      |
+| ------- | ------------------------------------------------------------------------------------------- |
+| `rock`  | Recorded drum kit. Samples load from the network. A sample that fails to load is replaced by the synthesized sound for that drum. |
+| `synth` | Synthesized drum kit. No network access.                                                    |
 
 ## Steps
 
-A run of steps is a sequence of characters. Each character lasts one step: a sixteenth note, or the duration set by an enclosing [`every`](/language/every).
+A run of steps is a sequence of characters. Each character lasts one step: a sixteenth note, or [another note value](/drums/note-values) set by an enclosing `every`.
 
 | Character | Hit                                                        | Velocity |
 | --------- | ---------------------------------------------------------- | -------- |
@@ -75,7 +88,7 @@ play kick: x--- ---- x--- ---- | x--- --x- x--- ----
 | `snare`       | `~` is not accepted. Ghost notes go on `snare.ghost`.                     |
 | `snare.ghost` | `^` and `~` are not accepted. Every hit is already a ghost note.          |
 
-A double stroke cannot be accented.
+A double stroke cannot be accented. For the mark each character stands for on a chart, see [How it is hit](/drums/notation#how-it-is-hit).
 
 ## Beats
 
@@ -104,6 +117,8 @@ A beat on its own is a normal hit. A step character in front of a beat gives the
 | `~3a` | Ghost note on the `a` of 3. |
 | `d3`  | Double stroke on beat 3.    |
 
+<Cell>
+
 ```composer-nb
 play {
   snare: 2e ^4
@@ -111,6 +126,8 @@ play {
   tom: d3&
 }
 ```
+
+</Cell>
 
 | Constraint                                                                         |
 | ---------------------------------------------------------------------------------- |
@@ -122,7 +139,7 @@ play {
 
 ## Parts and lengths
 
-Commas divide a line of steps into parts. A part is either steps as written, or a [length](/language/numbers-and-lengths#lengths) followed by what fills it.
+Commas divide a line of steps into parts. A part is either steps as written, or a [length](/reference/numbers-and-lengths#lengths) followed by what fills it.
 
 | Part                 | Meaning                                                                      |
 | -------------------- | ---------------------------------------------------------------------------- |
@@ -176,7 +193,7 @@ The block evaluates to a single run of steps. In the example, the result is `--x
 
 ## Named steps
 
-A [`steps`](/language/declarations#steps) name is accepted wherever a run of steps is.
+A [`steps`](/reference/names#steps) name is accepted wherever a run of steps is.
 
 <Cell>
 
@@ -218,7 +235,7 @@ play 1 bars hats
 | In a pattern | The line repeats until the pattern ends.  |
 | In a play    | The line plays once.                      |
 
-Lines of different lengths in one pattern repeat independently. See [Duration](/language/patterns#duration).
+Lines of different lengths in one pattern repeat independently. See [Duration](/song/patterns#duration).
 
 ## Errors
 
@@ -240,3 +257,4 @@ Lines of different lengths in one pattern repeat independently. See [Duration](/
 | `rest takes a length in front: 2 beats rest. One step of rest is -`                                      | `rest` without a length.                      |
 | `Lengths are always plural, whatever the number: 1 bars`                                                 | Singular unit.                                |
 | `x-- is 3 steps long, which doesn't fit 2 beats a whole number of times`                                 | Repeated steps do not fill the length evenly. |
+| `kit is one of: rock, synth`                                                   | Unknown kit.                                      |
