@@ -10,15 +10,25 @@ from typing import Dict, List, Optional, Tuple
 
 from .song import Song
 
-DRUMS = ["crash", "ride", "hat", "tom", "floor", "snare", "kick"]
-VARIATIONS = {"ride": ["bell"], "hat": ["open", "pedal"], "snare": ["ghost", "rim"]}
+DRUMS = ["crash", "ride", "hat", "tom", "snare", "kick"]
+VARIATIONS = {
+    "ride": ["bell"],
+    "hat": ["open", "pedal"],
+    "tom": ["high", "low", "floor"],
+    "snare": ["ghost", "rim"],
+}
+SPLIT = ["tom"]  # drums that are only their variations: tom is three drums
 INSTRUMENTS = ["piano", "epiano", "organ", "pad", "bass", "guitar"]
 SETTINGS = ["time", "tempo", "sound", "key", "capo", "octave", "kit"]
 TYPES = ["steps", "chords", "pattern"]
 KITS = ["rock", "synth"]
 UNITS = ["steps", "beats", "bars"]  # what a length on a drum's line is measured in
 
-LANES = [lane for d in DRUMS for lane in [d, *(f"{d}.{v}" for v in VARIATIONS.get(d, []))]]
+LANES = [
+    lane
+    for d in DRUMS
+    for lane in [*([] if d in SPLIT else [d]), *(f"{d}.{v}" for v in VARIATIONS.get(d, []))]
+]
 PARTS = ["chords", *LANES]
 SETTING_VALUES = {"sound": INSTRUMENTS, "kit": KITS}
 

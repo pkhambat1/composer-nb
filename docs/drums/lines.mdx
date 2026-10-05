@@ -43,10 +43,11 @@ play {
 | `ride`        | Ride cymbal.                                                         |
 | `ride.bell`   | Ride cymbal bell.                                                    |
 | `crash`       | Crash cymbal.                                                        |
-| `tom`         | Rack tom.                                                            |
-| `floor`       | Floor tom.                                                           |
+| `tom.high`    | High rack tom.                                                       |
+| `tom.low`     | Low rack tom.                                                        |
+| `tom.floor`   | Floor tom.                                                           |
 
-Each name is a separate line. A block holds one line for each name. For where each drum sits on a staff, see [Which drum](/drums/notation#which-drum).
+Each name is a separate line. A block holds one line for each name. `tom` has no line of its own: the toms are `tom.high`, `tom.low` and `tom.floor`. For where each drum sits on a staff, see [Which drum](/drums/notation#which-drum).
 
 ## Kit
 
@@ -123,7 +124,7 @@ A beat on its own is a normal hit. A step character in front of a beat gives the
 play {
   snare: 2e ^4
   hat: ^1 ~2 3 ~4
-  tom: d3&
+  tom.high: d3&
 }
 ```
 
@@ -242,7 +243,9 @@ Lines of different lengths in one pattern repeat independently. See [Duration](/
 | Message                                                                                                  | Cause                                         |
 | -------------------------------------------------------------------------------------------------------- | --------------------------------------------- |
 | `An instrument's line goes inside braces: in a pattern, or play { kick: x--- }`                          | Instrument line at top level.                 |
-| `"cymbal" isn't an instrument. Instruments: chords, crash, ride, ride.bell, hat, hat.open, hat.pedal, tom, floor, snare, snare.ghost, snare.rim, kick` | Unknown instrument name. |
+| `"cymbal" isn't an instrument. Instruments: chords, crash, ride, ride.bell, hat, hat.open, hat.pedal, tom.high, tom.low, tom.floor, snare, snare.ghost, snare.rim, kick` | Unknown instrument name. |
+| `tom is three drums now: tom.high, tom.low or tom.floor`                                                 | A `tom:` line.                                |
+| `floor is tom.floor now: tom.floor: x--`                                                                 | A `floor:` line.                              |
 | `kick already has a line in this play. To layer it, put its lines in a block: kick: { ... }`             | Second line for one instrument in a block.    |
 | `"z" isn't a step. Use x (hit), ^ (accent), ~ (ghost), d (double) or - (nothing)`                        | Invalid step character.                       |
 | `"~": the snare's ghost notes go on a line of their own: snare.ghost: --x-`                              | `~` on the `snare` line.                      |

@@ -65,9 +65,10 @@ The parser recognizes these earlier forms and reports the current form in the er
 | `step 1/8`                             | `every 2 steps { ... }`                                         |
 | `1 bar`, `2 beat`                      | `1 bars`, `2 beats`                                             |
 | `hat: x-o-`, `ride: b---`              | Separate lines: `hat.open`, `hat.pedal`, `ride.bell`            |
-| `snare: 2 accent`, `tom: 2 ghost`      | A step in front of the beat: `^2`, `~2`, `d2`                   |
+| `snare: 2 accent`, `kick: 2 ghost`     | A step in front of the beat: `^2`, `~2`, `d2`                   |
 | `hat: X-x-`, `hat: x-g-`               | `^` for an accent, `~` for a ghost note: `^-x-`, `x-~-`         |
-| `tom: D`                               | `d`. A double stroke cannot be accented.                        |
+| `kick: D`                              | `d`. A double stroke cannot be accented.                        |
+| `tom:`, `floor:`                       | Three toms: `tom.high:`, `tom.low:`, `tom.floor:`               |
 | `drums: k--s`, `bd:`, `sd:`, `hh:`     | One line per drum: `kick:`, `snare:`, `hat:`                    |
 | `inst`, `instrument`, `bpm`, `oct`     | `sound`, `tempo`, `octave`                                      |
 | `.` as a rest or hold                  | `-`                                                             |

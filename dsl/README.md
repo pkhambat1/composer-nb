@@ -169,7 +169,7 @@ play chords: C - - G|Am - F G|%|F - _ -
 
 ### Drums
 
-`kick`, `snare`, `hat`, `ride`, `crash`, `tom` and `floor` are the drums, one to a line. Some have other sounds with lines of their own: `ride.bell`, `hat.open`, `hat.pedal`, `snare.rim` (a rimshot) and `snare.ghost` (the snare's ghost notes, so they can sit under its main line). A drum plays either steps or beats:
+`kick`, `snare`, `hat`, `ride` and `crash` are drums, one to a line, and so are the three toms: `tom.high`, `tom.low` and `tom.floor`. Some drums have other sounds with lines of their own: `ride.bell`, `hat.open`, `hat.pedal`, `snare.rim` (a rimshot) and `snare.ghost` (the snare's ghost notes, so they can sit under its main line). A drum plays either steps or beats:
 
 ```
 pattern beat = {
@@ -301,7 +301,7 @@ Whatever repeats has to fit what it's in a whole number of times. Lines of diffe
 ```
 pattern poly = 15 bars {
   kick: x---
-  floor: x--
+  tom.floor: x--
   snare: x----
 }
 ```

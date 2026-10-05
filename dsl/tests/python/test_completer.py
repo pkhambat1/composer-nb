@@ -18,10 +18,12 @@ def texts(cell, songs=None):
 
 
 @pytest.mark.parametrize(
-    "name", ["DRUMS", "VARIATIONS", "INSTRUMENTS", "SETTINGS", "TYPES", "KITS", "UNITS"]
+    "name", ["DRUMS", "VARIATIONS", "SPLIT", "INSTRUMENTS", "SETTINGS", "TYPES", "KITS", "UNITS"]
 )
 def test_words_match_the_language(name):
-    literal = re.search(rf"^export const {name} = (.+)$", LANGUAGE_JS.read_text(), re.M).group(1)
+    # One line, or an object over several lines up to its closing brace
+    found = re.search(rf"^export const {name} = (\{{[^}}]*\}}|.+)$", LANGUAGE_JS.read_text(), re.M)
+    literal = re.sub(r",(\s*[}\]])", r"\1", found.group(1))  # no trailing commas in JSON
     assert getattr(completer, name) == json.loads(re.sub(r"(\w+):", r'"\1":', literal))
 
 
@@ -30,7 +32,14 @@ def test_a_drum_and_a_dot_offers_its_other_sounds():
     assert texts("%%music\nplay {\n  hat.") == ["open: ", "pedal: "]
     assert texts("%%music\nplay {\n  hat.p") == ["pedal: "]
     assert texts("%%music\nplay {\n  snare.") == ["ghost: ", "rim: "]
+    assert texts("%%music\nplay {\n  tom.") == ["high: ", "low: ", "floor: "]
     assert texts("%%music\nplay {\n  kick.") == []
+
+
+def test_tom_is_only_its_three_drums():
+    cell = "%%music\nplay {\n  "
+    assert texts(cell + "to") == ["tom.high: ", "tom.low: ", "tom.floor: "]
+    assert texts(cell + "fl") == []
 
 
 def test_top_of_a_cell_offers_settings_types_and_play():

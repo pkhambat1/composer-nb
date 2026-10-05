@@ -41,12 +41,22 @@
 import { applyCapo, buildChord, isRoman, parseKey } from "./chords.js"
 
 export const TPQ = 96 // ticks per quarter note: fine enough for 1/32 notes and triplets
-export const DRUMS = ["crash", "ride", "hat", "tom", "floor", "snare", "kick"]
+export const DRUMS = ["crash", "ride", "hat", "tom", "snare", "kick"]
 // A drum's other sounds are lines of their own, written drum.variation (ride.bell).
 // snare.ghost plays the snare's ghost notes, so they can go under its main line.
-export const VARIATIONS = { ride: ["bell"], hat: ["open", "pedal"], snare: ["ghost", "rim"] }
+export const VARIATIONS = {
+  ride: ["bell"],
+  hat: ["open", "pedal"],
+  tom: ["high", "low", "floor"],
+  snare: ["ghost", "rim"],
+}
+// Drums that are only their variations, with no line of their own: tom is three drums.
+export const SPLIT = ["tom"]
 // Every drum line name, in the order the drum grid draws them.
-export const LANES = DRUMS.flatMap((d) => [d, ...(VARIATIONS[d] || []).map((v) => `${d}.${v}`)])
+export const LANES = DRUMS.flatMap((d) => [
+  ...(SPLIT.includes(d) ? [] : [d]),
+  ...(VARIATIONS[d] || []).map((v) => `${d}.${v}`),
+])
 export const PARTS = ["chords", ...LANES]
 export const INSTRUMENTS = ["piano", "epiano", "organ", "pad", "bass", "guitar"]
 export const SETTINGS = ["time", "tempo", "sound", "key", "capo", "octave", "kit"]
@@ -127,9 +137,12 @@ const OLD_KIT = {
   "hat open": "hat.open",
   "hat pedal": "hat.pedal",
   "pedal hat": "hat.pedal",
-  "floor tom": "floor",
-  "high tom": "tom",
-  "low tom": "tom",
+  "high tom": "tom.high",
+  "tom high": "tom.high",
+  "low tom": "tom.low",
+  "tom low": "tom.low",
+  "floor tom": "tom.floor",
+  "tom floor": "tom.floor",
 }
 // A block written inside a line: {#1} on the line, and the block in the line's `blocks`.
 const BLOCK_KEY = /^\{#\d+\}$/
@@ -228,12 +241,19 @@ function unknownInstrument(name) {
   if (INSTRUMENTS.includes(name)) {
     return `Chords go on a chords: line, and sound ${name} picks what plays them`
   }
-  // The floor tom is a drum of its own, not a sound of tom
-  if (name === "tom.floor" || name === "floor.tom") return `"${name}" is floor: floor: x--`
+  // The toms were tom and floor
+  if (name === "tom") return "tom is three drums now: tom.high, tom.low or tom.floor"
+  if (name === "floor" || name === "floor.tom") return `${name} is tom.floor now: tom.floor: x--`
   if (name.includes(".")) {
     const close = LANES.find((l) => l.includes(".") && editDistance(name, l) <= 2)
     if (close) return `"${name}" isn't a drum. Did you mean ${close}?`
-    return `"${name}" isn't a drum. Drums with a second sound: ${LANES.filter((l) => l.includes(".")).join(", ")}`
+    const drum = name.split(".")[0]
+    if (SPLIT.includes(drum)) {
+      const lanes = LANES.filter((l) => l.startsWith(drum + "."))
+      return `"${name}" isn't a drum. The ${drum}s are ${lanes.slice(0, -1).join(", ")} and ${lanes.at(-1)}`
+    }
+    const second = LANES.filter((l) => l.includes(".") && !SPLIT.includes(l.split(".")[0]))
+    return `"${name}" isn't a drum. Drums with a second sound: ${second.join(", ")}`
   }
   const best = closest(name, PARTS)
   if (best[1] <= 2) return `"${name}" isn't an instrument. Did you mean ${best[0]}?`
@@ -466,7 +486,7 @@ function applySetting(name, value, ln, state, err) {
       err(
         ln,
         DRUMS.includes(value)
-          ? `Drums get a line of their own, e.g. ${value}: 1 3`
+          ? `Drums get a line of their own, e.g. ${LANES.find((l) => l.split(".")[0] === value)}: 1 3`
           : `sound is one of: ${INSTRUMENTS.join(", ")}`,
       )
       return false

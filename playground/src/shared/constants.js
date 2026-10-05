@@ -155,7 +155,7 @@ tempo 120
 pattern groove = {
   kick: x---
   snare: x----
-  floor: x--
+  tom.floor: x--
 }
 
 play groove`,
