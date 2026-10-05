@@ -10,7 +10,8 @@ A pattern is a named piece of a song: a drum groove, a chord progression with it
 | To write                                   | Use                                                  |
 | ------------------------------------------ | ---------------------------------------------------- |
 | A drum groove that loops                   | A pattern of [drum lines](/drums/lines).             |
-| Chords over a drum groove                  | A pattern holding a [`chords` line](/chords/lines) and the drum lines, or the groove's name. See [Chords and drums together](#chords-and-drums-together). |
+| A guitar riff or a bass line over a drum groove | A pattern holding a [note line](/pitched/notes) and the drum lines. See [A riff and drums together](#a-riff-and-drums-together). |
+| Chords over a drum groove                  | A pattern holding a [chord line](/pitched/chords) and the drum lines, or the groove's name. See [Chords and drums together](#chords-and-drums-together). |
 | A fill, or any bar that differs            | [`bar`](#bar) inside the pattern.                    |
 | The order of the song                      | A [sequence line](#sequence-lines): `intro verse chorus`. |
 
@@ -94,17 +95,62 @@ The ride.bell line is 3 steps long, which doesn't fit 4 bars a whole number of t
 
 The message reports the shortest duration at which everything fits. Fit is checked when the pattern is played, so a pattern that is declared and never played does not report it.
 
-## Chords and drums together
+## A riff and drums together
 
-A `chords` line and drum lines go in the same pattern. They start together, and each repeats on its own. The chords play on the current [`sound`](/chords/sound#sound), so `sound guitar` makes the part a guitar.
+A guitar, bass or piano part goes in the same pattern as the drums, on a line of its own. A [note line](/pitched/notes) is drawn on the same steps as a [drum line](/drums/lines), with a note where the drum has its `x`, so the two read against each other step for step.
 
 <Cell>
 
 ```composer-nb
-sound guitar
+time 7 over 8
+tempo 100
+octave 2
 
+pattern groove = {
+  kick: x--x---
+  snare: ----x--
+  ride.bell: x--
+  guitar.electric: E---F# E-E--
+}
+
+play {
+  crash: 1
+  groove
+}
+```
+
+</Cell>
+
+`octave 2` puts every note written without a number in octave 2, so the riff starts on `E2`, a guitar's low E string. The same riff with the octave on each note is `E2---F#2 E2-E2--`.
+
+Every line starts at the beginning of the pattern and repeats at its own length. Lines of different lengths drift against each other and come back together later.
+
+| Line              | Lasts    | Plays in `groove` |
+| ----------------- | -------- | ----------------- |
+| `kick`, `snare`   | 7 steps  | 30 times          |
+| `ride.bell`       | 3 steps  | 70 times          |
+| `guitar.electric` | 10 steps | 21 times          |
+
+`groove` has no length, so it lasts until all of its lines end together: 210 steps, the least common multiple of 7, 3 and 10. A `7 over 8` bar is 14 steps, so that is 15 bars. The play has no length either, so it lasts as long as `groove`, and its own `crash` line plays once. See [Duration](#duration).
+
+| To                                               | Write                                                                              |
+| ------------------------------------------------ | ---------------------------------------------------------------------------------- |
+| Start the riff again with every bar              | The riff a bar long, with `-` to the end of the bar: `E---F# E-E------`.            |
+| Stop the last note before the riff comes round   | `_` where it stops: `E---F# E-E_-`.                                                 |
+| Play short notes instead of ringing ones         | `_` after each note: `E_--F# E_E_-`.                                                |
+| Play the riff an octave higher                   | `octave 3` above the pattern, which is also what it is with no `octave` line.      |
+| Play for a set time                              | A length that every line fits: `play 15 bars { ... }`, or `30 bars`. See the [fit rule](#fit-rule). |
+| Hear the drums or the riff alone                 | `//` in front of the other lines.                                                  |
+
+## Chords and drums together
+
+A [chord line](/pitched/chords) and drum lines go in the same pattern. They start together, and each repeats on its own. The chords play on the [instrument](/pitched/instruments#instruments) whose line they are on, so a `guitar` line makes the part a guitar.
+
+<Cell>
+
+```composer-nb
 pattern verse = {
-  chords: Am F|C G
+  guitar: chords Am F|C G
   kick: x---x---
   snare: ----x---
   hat: x-
@@ -124,7 +170,6 @@ A groove with a name of its own goes under the chords by name. The same groove c
 ```composer-nb
 time 7 over 8
 tempo 100
-sound guitar
 
 pattern groove = {
   kick: x--x---
@@ -133,7 +178,7 @@ pattern groove = {
 }
 
 pattern verse = {
-  chords: Dm|Bb|C
+  guitar: chords Dm|Bb|C
   groove
 }
 
@@ -144,12 +189,10 @@ play verse
 
 | Part of `verse` | Lasts                          | Plays in `verse` |
 | --------------- | ------------------------------ | ---------------- |
-| `chords` line   | 3 bars, which is 42 steps      | Once             |
+| The chord line  | 3 bars, which is 42 steps      | Once             |
 | `groove`        | 21 steps, one and a half bars  | Twice            |
 
-`verse` ends where its parts end together, after three bars. The rules are the ones for any lines: [Duration](#duration) when the pattern has no length, and the [fit rule](#fit-rule) when it has one. A `chords` line always lasts a whole number of bars. A drum line lasts as many steps as it has, or one bar when it is written as beats.
-
-The `chords` line is the only line with pitch. A guitar part is written as chords; there is no line for single notes.
+`verse` ends where its parts end together, after three bars. The rules are the ones for any lines: [Duration](#duration) when the pattern has no length, and the [fit rule](#fit-rule) when it has one. A chord line always lasts a whole number of bars. A drum line or a note line lasts as many steps as it has, and a drum line written as beats lasts one bar.
 
 ## bar
 
@@ -268,7 +311,7 @@ pattern beat = {
 }
 
 pattern verse = 4 bars {
-  chords: Am F|C G
+  piano: chords Am F|C G
   beat
 }
 

@@ -9,7 +9,8 @@
     { "include": "#declaration" },
     { "include": "#setting" },
     { "include": "#keyword" },
-    { "include": "#sound" },
+    { "include": "#value" },
+    { "include": "#notes" },
     { "include": "#beat" },
     { "include": "#number" },
     { "include": "#numeral" },
@@ -28,28 +29,32 @@
     },
     "instrument": {
       "name": "entity.name.function.composer-nb",
-      "match": "\\b(chords|kick|snare(\\.(ghost|rim))?|hat(\\.(open|pedal))?|ride(\\.bell)?|crash|tom\\.(high|low|floor))(?=\\s*:)"
+      "match": "\\b(guitar(\\.electric)?|piano(\\.electric)?|organ|pad|bass|kick|snare(\\.(ghost|rim))?|hat(\\.(open|pedal))?|ride(\\.bell)?|crash|tom\\.(high|low|floor))(?=\\s*:)"
     },
     "declaration": {
-      "match": "\\b(steps|chords|pattern)\\s+([A-Za-z][A-Za-z0-9]*)(?=\\s*=)",
+      "match": "\\b(steps|notes|chords|pattern)\\s+([A-Za-z][A-Za-z0-9]*)(?=\\s*=)",
       "captures": {
         "1": { "name": "storage.type.composer-nb" },
         "2": { "name": "variable.other.composer-nb" }
       }
     },
     "setting": {
-      "match": "^\\s*(time|tempo|sound|key|capo|octave|kit)\\b",
+      "match": "^\\s*(time|tempo|key|capo|octave|kit)\\b",
       "captures": {
         "1": { "name": "keyword.other.setting.composer-nb" }
       }
     },
     "keyword": {
       "name": "keyword.control.composer-nb",
-      "match": "\\b(play|bar|bars|beats|steps|to|every|rest|over)\\b"
+      "match": "\\b(play|bar|bars|beats|steps|chords|to|every|rest|over)\\b"
     },
-    "sound": {
+    "value": {
       "name": "constant.language.composer-nb",
-      "match": "\\b(piano|epiano|organ|pad|bass|guitar|rock|synth)\\b"
+      "match": "\\b(rock|synth)\\b"
+    },
+    "notes": {
+      "name": "constant.character.step.composer-nb",
+      "match": "(?<![A-Za-z0-9#^~_-])(?=[-_^~A-G#b0-8]*[A-G])(?=[-_^~A-G#b0-8]*[-_])[-_^~A-G#b0-8]+(?![A-Za-z0-9#])"
     },
     "beat": {
       "name": "constant.numeric.beat.composer-nb",

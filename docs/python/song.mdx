@@ -56,8 +56,8 @@ Returns a new [`MusicWidget`](/python/music-widget) for the song, with `sources`
 `Song` implements `_repr_mimebundle_`. A notebook front end renders it as the widget. Plain-text renderers receive `repr(song)`.
 
 ```python
-repr(Song("play chords: C", name="intro"))        # "Song('intro')"
-repr(Song("play chords: F", after=intro))         # "Song(after=intro)"
+repr(Song("play piano: chords C", name="intro"))  # "Song('intro')"
+repr(Song("play piano: chords F", after=intro))   # "Song(after=intro)"
 ```
 
 ## Exceptions
@@ -77,12 +77,12 @@ Errors in the source do not raise. They are shown in the rendered output.
 ```python
 from composer_nb import Song
 
-intro = Song("tempo 75\nsound guitar\nplay chords: Am E7|G D", name="intro")
-verse = Song("play chords: F C|Dm E7", after=intro, name="verse")
+intro = Song("tempo 75\nplay guitar: chords Am E7|G D", name="intro")
+verse = Song("play guitar: chords F C|Dm E7", after=intro, name="verse")
 verse
 ```
 
-`verse` plays at tempo 75 on guitar. The link is to the `intro` object, so it is independent of cell order.
+`verse` plays at tempo 75. The link is to the `intro` object, so it is independent of cell order.
 
 ### Generated source
 
@@ -90,5 +90,5 @@ verse
 from composer_nb import Song
 
 bars = ["A7", "D7", "A7", "A7", "D7", "D7", "A7", "A7", "E7", "D7", "A7", "E7"]
-Song("sound epiano\nplay chords: " + "|".join(bars))
+Song("play piano.electric: chords " + "|".join(bars))
 ```

@@ -1,21 +1,15 @@
-// components/DrumGrid.jsx — Drum hits bar by bar, counted 1 e & a, with a playhead
+// components/DrumGrid.jsx — Drum hits and notes bar by bar, counted 1 e & a, with a playhead
 import React from "react"
-import { LANES, TPQ } from "composer-nb/language"
+import { TPQ } from "composer-nb/language"
+import { gridRows } from "composer-nb/grid"
 
 const SAY = { 1: [""], 2: ["", "&"], 3: ["", "&", "a"], 4: ["", "e", "&", "a"] }
 const COUNTING = { 1: "1 2 3", 2: "1 & 2 &", 3: "1 & a", 4: "1 e & a" }
 
 function DrumBlock({ block, index }) {
-  const per = Math.round((block.barTicks / TPQ) * block.res)
-  const cellTicks = TPQ / block.res
-  const lanes = LANES.filter((d) => block.drumEvents.some((e) => e.lane === d))
-
-  const hits = new Map()
-  for (const e of block.drumEvents) {
-    if (e.hidden) continue
-    const k = e.lane + "@" + Math.round(e.tick / cellTicks)
-    if (!hits.has(k) || e.vel > hits.get(k).vel) hits.set(k, e)
-  }
+  const { per, rows } = gridRows(block)
+  // Wide enough for the longest line name, e.g. guitar.electric
+  const labels = Math.max(...rows.map((r) => r.label.length), 5) + 1
 
   // Shade alternate groups for added-up meters like (3+4)/4, otherwise alternate beats.
   const groupEnds = []
@@ -38,22 +32,24 @@ function DrumBlock({ block, index }) {
         <div
           key={bar}
           className="dg-bar"
-          style={{ gridTemplateColumns: `68px repeat(${per}, minmax(0, 1fr))` }}
+          style={{ gridTemplateColumns: `${labels}ch repeat(${per}, minmax(0, 1fr))` }}
         >
-          {lanes.map((lane) => (
-            <React.Fragment key={lane}>
-              <div className="dg-lane">{lane}</div>
+          {rows.map((row) => (
+            <React.Fragment key={row.key}>
+              <div className="dg-lane">{row.label}</div>
               {Array.from({ length: per }, (_, col) => {
-                const e = hits.get(lane + "@" + (bar * per + col))
+                const e = row.cells.get(bar * per + col)
                 let cls = "dg-cell" + (shaded(col) ? " dg-alt" : "")
-                if (e) {
+                if (e?.hit) {
                   cls += " dg-hit"
                   if (e.accent) cls += " dg-acc"
                   if (e.ghost) cls += " dg-ghost"
                   if (e.double) cls += " dg-dbl"
-                }
+                } else if (e?.held) cls += " dg-held"
                 return (
-                  <div key={col} className={cls} data-k={`${index}-${bar}-${col}`} />
+                  <div key={col} className={cls} data-k={`${index}-${bar}-${col}`}>
+                    {e?.text}
+                  </div>
                 )
               })}
             </React.Fragment>
@@ -112,7 +108,9 @@ function DrumGrid({ blocks, getTime, playing }) {
 
   return (
     <div className="drum-grid" ref={rootRef}>
-      {blocks.map((b, i) => (b.drumEvents.length ? <DrumBlock key={i} block={b} index={i} /> : null))}
+      {blocks.map((b, i) =>
+        b.drumEvents.length || b.noteEvents.length ? <DrumBlock key={i} block={b} index={i} /> : null,
+      )}
     </div>
   )
 }

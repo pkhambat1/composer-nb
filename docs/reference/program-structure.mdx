@@ -14,8 +14,8 @@ Every statement starts with a word that identifies its kind.
 | Statement       | Form                                                                  | Allowed in                                  | Reference                                    |
 | --------------- | --------------------------------------------------------------------- | ------------------------------------------- | -------------------------------------------- |
 | Setting         | `tempo 90`                                                            | Top level, blocks                           | [Settings](/reference/settings)               |
-| Declaration     | `steps fill = x-x-`, `chords verse = Am F`, `pattern groove = { ... }` | Top level, blocks                           | [Names and types](/reference/names)       |
-| Instrument line | `kick: x--x---`, `chords: Am F`                                       | Blocks                                      | [Drum lines](/drums/lines), [Chord lines](/chords/lines) |
+| Declaration     | `steps fill = x-x-`, `notes riff = F---G---`, `chords verse = Am F`, `pattern groove = { ... }` | Top level, blocks | [Names and types](/reference/names)       |
+| Instrument line | `kick: x--x---`, `guitar: F---G---`, `piano: chords Am F`             | Blocks                                      | [Drum lines](/drums/lines), [Note lines](/pitched/notes), [Chord lines](/pitched/chords) |
 | Sequence line   | `intro verse verse`                                                   | Blocks, after `play`, as a pattern's value  | [Patterns](/song/patterns#sequence-lines) |
 | `bar`           | `bar 2 { ... }`                                                       | Blocks                                      | [Patterns](/song/patterns#bar)               |
 | `every`         | `every 3 steps { ... }`                                               | Blocks, after `play`, as a pattern's value  | [Note values](/drums/note-values)            |
@@ -29,7 +29,7 @@ Only `play` produces output. An instrument line, sequence line, `bar` or `every`
 | ---------- | -------------------------------------------------------------------------------------------- |
 | Comment    | `//` to the end of the line.                                                                 |
 | Line       | One statement per line. A block's braces can span lines.                                     |
-| Whitespace | Blank lines and indentation are ignored. Spaces inside a run of steps are ignored.           |
+| Whitespace | Blank lines and indentation are ignored. Spaces inside a run of steps or notes are ignored.  |
 | Identifier | A letter followed by letters and digits: `[A-Za-z][A-Za-z0-9]*`.                             |
 | Number     | An integer or decimal literal, or an arithmetic expression. See [Numbers and lengths](/reference/numbers-and-lengths). |
 
@@ -45,12 +45,16 @@ Each symbol has one meaning in each context where it is accepted.
 | `( )`       | Numbers          | Groups an arithmetic expression.                              |
 | `( )`       | Sequence line    | Groups patterns so that a length applies to the group.        |
 | `+ - * /`   | Numbers          | Arithmetic.                                                   |
-| `.`         | Instrument name  | Joins a drum and one of its variations: `hat.open`.           |
-| `\|`        | Chords, steps    | Bar line.                                                     |
+| `.`         | Instrument name  | Joins an instrument and one of its other sounds: `hat.open`, `guitar.electric`. |
+| `\|`        | Chords, steps, notes | Bar line.                                                 |
 | `,`         | Drum line        | Separates the parts of the line.                              |
 | `-`         | Drum line        | One step with no hit.                                         |
+| `-`         | Note line        | One step with nothing new. A sounding note carries on.        |
 | `-`         | Chord line       | Holds the previous chord for one slot.                        |
+| `_`         | Note line        | Stops the note. One step of silence.                          |
 | `_`         | Chord line       | Silence for one slot.                                         |
+| `^` `~`     | Drum line, note line | An accent, and a ghost or soft note.                      |
+| `#` `b`     | Note, chord symbol | Sharp and flat: `F#`, `Bb`.                                 |
 | `%`         | Chord line       | Repeats the previous bar.                                     |
 | `/`         | Chord symbol     | Sets the bass note: `C/E`.                                    |
 
@@ -65,6 +69,7 @@ A block is one or more statements in braces. The statements in a block start at 
 | On a sequence line                        | A pattern without a name, played where it is written.             |
 | After `bar <n>` or `every <length>`       | A pattern without a name, limited to those bars or that step duration. |
 | After a drum's colon, or `steps <name> =` | Layers of steps for one drum. See [Layers](/drums/lines#layers). |
+| After a pitched instrument's colon        | Layers for one instrument: lines of notes and charts that play together. See [Layers](/pitched/notes#layers). |
 
 After `play`, `bar` and `every`, a single statement can stand in place of a block: `play groove` is equivalent to `play { groove }`.
 
@@ -108,11 +113,11 @@ A reserved word cannot be declared as a name.
 
 | Category              | Words                                                                                                                                      |
 | --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
-| Settings              | `time` `tempo` `sound` `key` `capo` `octave` `kit`                                                                                         |
-| Types                 | `steps` `chords` `pattern`                                                                                                                 |
+| Settings              | `time` `tempo` `key` `capo` `octave` `kit`                                                                                                 |
+| Types                 | `steps` `notes` `chords` `pattern`                                                                                                         |
 | Keywords              | `play` `bar` `bars` `beats` `to` `every` `rest` `over`                                                                                     |
-| Instruments           | `chords` `kick` `snare` `snare.ghost` `snare.rim` `hat` `hat.open` `hat.pedal` `ride` `ride.bell` `crash` `tom.high` `tom.low` `tom.floor` |
-| Sounds                | `piano` `epiano` `organ` `pad` `bass` `guitar`                                                                                             |
-| Reserved, not in use  | `tom` `step` `loop` `for` `def` `section` `accent` `ghost` `double`                                                                        |
+| Drums                 | `kick` `snare` `snare.ghost` `snare.rim` `hat` `hat.open` `hat.pedal` `ride` `ride.bell` `crash` `tom.high` `tom.low` `tom.floor`          |
+| Pitched instruments   | `piano` `piano.electric` `organ` `pad` `bass` `guitar` `guitar.electric`                                                                   |
+| Reserved, not in use  | `tom` `sound` `epiano` `step` `loop` `for` `def` `section` `accent` `ghost` `double`                                                       |
 
-Names of type `steps` and `chords` have additional rules. See [Names](/reference/names#names).
+Names of type `steps`, `notes` and `chords` have additional rules. See [Names](/reference/names#names).

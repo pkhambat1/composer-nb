@@ -1,16 +1,19 @@
 /* The music-cell language. A cell is a script, read top to bottom. Every line starts by
    saying what it is:
      tempo 90                 a setting: a reserved word and its value (time 7 over 8,
-                              sound guitar). Settings aren't names, so no =.
-     steps pair = ^-x-        a name, with its type in front. There are three types:
-     chords verse = Am E7|G D   steps (a drum's hits), chords, and pattern (lines in
-     pattern groove = { }       braces that play together). A name only ever holds its
-                              type, and only goes where that type goes.
+                              key Am). Settings aren't names, so no =.
+     steps pair = ^-x-        a name, with its type in front. There are four types:
+     notes riff = E---F# E-E--  steps (a drum's hits), notes, chords, and pattern (lines
+     chords verse = Am E7|G D   in braces that play together). A name only ever holds
+     pattern groove = { }       its type, and only goes where that type goes.
      kick: x--x---            inside braces, an instrument and what it plays. The colon
-                              only ever means this. A drum takes steps (or beats: 1 2& 3),
-                              chords: takes chords. Lines play together, so two drums on
+     guitar: E---F# E-E--     only ever means this. A drum takes steps (or beats: 1 2& 3).
+     piano: chords Am F|C G   A pitched instrument takes notes, drawn on the same steps
+                              with the note where a drum has its x (two notes never
+                              touch: F# E), or a chart of chords with chords in front.
+                              Lines play together, so two drums on
                               one step is two lines. Each instrument has one line in a
-                              block; to layer a drum, its line takes a block of steps.
+                              block; to layer it, its line takes a block of its own.
      play { }                 plays what's after it, a pattern or one line, and gives one
                               output with a player and a drum grid. Nothing plays unless
                               it's inside a play.
@@ -33,12 +36,13 @@
    arithmetic, and a time is two numbers (7 over 8), not a fraction.
    { } is a block: what's in it evaluates to one value, played together. Usually that's a
    pattern; after a drum's colon it's that drum's steps, one layer a line, which repeat
-   until they line up again. In a block, where two lines hit the same drum at the same
+   until they line up again, and after a pitched instrument's colon it's what that
+   instrument plays at once. In a block, where two lines hit the same drum at the same
    moment, the lower line wins, and a rest never does.
    What's set or named inside braces stays inside. // starts a comment. Blank lines and
    indentation mean nothing. Settings and names carry on into later cells.
    Pure (no audio), so the notebook can also use it to pass state from cell to cell. */
-import { applyCapo, buildChord, isRoman, parseKey } from "./chords.js"
+import { applyCapo, buildChord, isRoman, midiToName, parseKey } from "./chords.js"
 
 export const TPQ = 96 // ticks per quarter note: fine enough for 1/32 notes and triplets
 export const DRUMS = ["crash", "ride", "hat", "tom", "snare", "kick"]
@@ -57,11 +61,21 @@ export const LANES = DRUMS.flatMap((d) => [
   ...(SPLIT.includes(d) ? [] : [d]),
   ...(VARIATIONS[d] || []).map((v) => `${d}.${v}`),
 ])
-export const PARTS = ["chords", ...LANES]
-export const INSTRUMENTS = ["piano", "epiano", "organ", "pad", "bass", "guitar"]
-export const SETTINGS = ["time", "tempo", "sound", "key", "capo", "octave", "kit"]
+// Instruments that play notes and chords, each on a line of its own like a drum. A second
+// sound is written the way a drum's is: guitar.electric.
+export const PITCHED = [
+  "guitar",
+  "guitar.electric",
+  "piano",
+  "piano.electric",
+  "organ",
+  "pad",
+  "bass",
+]
+export const PARTS = [...PITCHED, ...LANES]
+export const SETTINGS = ["time", "tempo", "key", "capo", "octave", "kit"]
 // The types a name can have. Its type goes in front of it: steps pair = ^-x-
-export const TYPES = ["steps", "chords", "pattern"]
+export const TYPES = ["steps", "notes", "chords", "pattern"]
 // loop, for, def and section are old words, kept so they're explained rather than taken as
 // names.
 export const KEYWORDS = [
@@ -87,7 +101,6 @@ export const KITS = ["rock", "synth"]
 const SETTING_EXAMPLE = {
   time: "7 over 8",
   tempo: "90",
-  sound: "guitar",
   key: "Am",
   capo: "2",
   octave: "3",
@@ -115,10 +128,19 @@ const VARIATION_LINE = {
   pedal: "hat.pedal",
 }
 const ROMAN = ["i", "ii", "iii", "iv", "v", "vi", "vii"]
-const TAKEN = new Set([...SETTINGS, ...DRUMS, ...PARTS, ...INSTRUMENTS, ...KEYWORDS, ...MODIFIERS])
+// sound and epiano are old words, kept so they're explained rather than taken as names.
+const TAKEN = new Set([
+  ...SETTINGS,
+  ...DRUMS,
+  ...PARTS,
+  ...KEYWORDS,
+  ...MODIFIERS,
+  "sound",
+  "epiano",
+])
 const RENAMED = {
-  inst: "Use sound guitar",
-  instrument: "Use sound guitar",
+  inst: "The instrument is the line's name: guitar: chords Am F|C G",
+  instrument: "The instrument is the line's name: guitar: chords Am F|C G",
   beats: "Use time 4 over 4",
   bpm: "Use tempo 120",
   oct: "Use octave 3",
@@ -147,12 +169,14 @@ const OLD_KIT = {
 // A block written inside a line: {#1} on the line, and the block in the line's `blocks`.
 const BLOCK_KEY = /^\{#\d+\}$/
 const CHORDS_BLOCK =
-  "Chords play one at a time, so they can't be layered in a block. Put them on one line: chords: Am F|C G"
+  "Chords play one at a time, so they can't be layered in a block. Put them on one line: piano: chords Am F|C G"
+const NOTES_BLOCK =
+  "A name holds one line of notes. Notes that play together go in a block on the instrument's line: piano: { ... }"
 
 const LINE_SHAPES =
   "Each line is a setting (tempo 90), a name with its type (chords verse = Am F, " +
   "pattern groove = { ... }), play, or inside braces an instrument and what it plays " +
-  "(kick: x--x---) or patterns to play (intro verse)"
+  "(kick: x--x---, guitar: F---G---) or patterns to play (intro verse)"
 
 export function initialState() {
   return {
@@ -160,12 +184,11 @@ export function initialState() {
     unit: 4,
     tempo: 120,
     stepTicks: TPQ / 4, // a step is a 16th note, unless every says otherwise
-    sound: "piano",
     key: "C",
     capo: 0,
     octave: 3,
     kit: "rock",
-    words: {}, // names for steps and chords: { type, tokens }
+    words: {}, // names for steps, notes and chords: { type, tokens }
     sections: {}, // names for patterns
   }
 }
@@ -193,7 +216,6 @@ export function lastCount(s) {
 const DESCRIBE = {
   time: (s) => "time " + timeLabel(s),
   tempo: (s) => "tempo " + s.tempo,
-  sound: (s) => "sound " + s.sound,
   key: (s) => "key " + s.key,
   capo: (s) => "capo " + s.capo,
   octave: (s) => "octave " + s.octave,
@@ -235,19 +257,34 @@ function editDistance(a, b) {
 const closest = (name, names) =>
   names.map((n) => [n, editDistance(name, n)]).sort((a, b) => a[1] - b[1])[0]
 
+// sound was the setting that picked what played the chords: line. Each instrument has a
+// line of its own now. Remembers the sound that was asked for, so the chords: line after
+// it can say where its chords go.
+function soundGone(value, st) {
+  const drum = LANES.find((l) => l === value || l.split(".")[0] === value)
+  if (drum) return `Drums get a line of their own, e.g. ${drum}: 1 3`
+  const asked = value === "epiano" ? "piano.electric" : value
+  st.oldSound = PITCHED.includes(asked) ? asked : "piano"
+  return `sound is gone. The instrument is the line's name now: ${st.oldSound}: chords Am F|C G`
+}
+
 // For `name: value` where name isn't an instrument.
 function unknownInstrument(name) {
   if (RENAMED[name]) return RENAMED[name]
-  if (INSTRUMENTS.includes(name)) {
-    return `Chords go on a chords: line, and sound ${name} picks what plays them`
-  }
+  if (name === "epiano") return "epiano is piano.electric now"
   // The toms were tom and floor
   if (name === "tom") return "tom is three drums now: tom.high, tom.low or tom.floor"
   if (name === "floor" || name === "floor.tom") return `${name} is tom.floor now: tom.floor: x--`
   if (name.includes(".")) {
+    const drum = name.split(".")[0]
+    if (PITCHED.includes(drum)) {
+      const sounds = PITCHED.filter((p) => p.startsWith(drum + "."))
+      return sounds.length
+        ? `"${name}" isn't an instrument. ${drum}'s other sound is ${sounds.join(", ")}`
+        : `"${name}" isn't an instrument. ${drum} has one sound: ${drum}: F---G---`
+    }
     const close = LANES.find((l) => l.includes(".") && editDistance(name, l) <= 2)
     if (close) return `"${name}" isn't a drum. Did you mean ${close}?`
-    const drum = name.split(".")[0]
     if (SPLIT.includes(drum)) {
       const lanes = LANES.filter((l) => l.startsWith(drum + "."))
       return `"${name}" isn't a drum. The ${drum}s are ${lanes.slice(0, -1).join(", ")} and ${lanes.at(-1)}`
@@ -264,10 +301,16 @@ function unknownInstrument(name) {
 function nameProblem(name, value) {
   const n = name.toLowerCase()
   if (PARTS.includes(n)) {
-    return `${n} is an instrument, so it takes a colon: ${n}: ${value.startsWith("{") ? "x--x---" : value}`
-  }
-  if (INSTRUMENTS.includes(n)) {
-    return `${n} is a sound. Use sound ${n}, and put the chords on a chords: line`
+    const pitched = PITCHED.includes(n)
+    // guitar = Am F: a chart, which has chords in front of it on the instrument's line
+    const chart =
+      pitched && tokenize(value).some((t) => !noteSteps(t) && buildChord(t, parseKey("C")))
+    const plays = value.startsWith("{")
+      ? pitched
+        ? "F---G---"
+        : "x--x---"
+      : (chart ? "chords " : "") + value
+    return `${n} is an instrument, so it takes a colon: ${n}: ${plays}`
   }
   if (TAKEN.has(n) || /^x\d+$/.test(name))
     return `${name} already means something, so pick another name`
@@ -481,19 +524,6 @@ function applySetting(name, value, ln, state, err) {
     state.octave = n
     return true
   }
-  if (name === "sound") {
-    if (!INSTRUMENTS.includes(value)) {
-      err(
-        ln,
-        DRUMS.includes(value)
-          ? `Drums get a line of their own, e.g. ${LANES.find((l) => l.split(".")[0] === value)}: 1 3`
-          : `sound is one of: ${INSTRUMENTS.join(", ")}`,
-      )
-      return false
-    }
-    state.sound = value
-    return true
-  }
   if (name === "kit") {
     if (!KITS.includes(value)) {
       err(ln, `kit is one of: ${KITS.join(", ")}`)
@@ -515,16 +545,40 @@ function defineWord(type, name, value, ln, state, err, blocks = null) {
   if (name !== name.toLowerCase()) {
     return err(
       ln,
-      `Names for steps and chords are lowercase: ${type} ${name.toLowerCase()} = ${value}`,
+      `Names for steps, notes and chords are lowercase: ${type} ${name.toLowerCase()} = ${value}`,
     )
   }
   if (name.length < 2) {
     return err(
       ln,
-      "Names for steps and chords need at least two letters, because single letters are steps",
+      "Names for steps, notes and chords need at least two letters, because single letters are steps",
     )
   }
   if (ROMAN.includes(name)) return err(ln, `${name} is a chord, so pick another name`)
+  if (type === "notes") {
+    // notes riff = E---F# E-E--: one line of notes, drawn on the steps
+    if (noteLengths(value)) return err(ln, NO_NOTE_LENGTHS)
+    const tokens = []
+    for (const t of tokenize(value)) {
+      const w = state.words[t]
+      if (blocks?.[t]) return err(ln, NOTES_BLOCK)
+      else if (w && w.type !== "notes") {
+        return err(ln, `${t} is ${w.type}, so it can't go in notes`)
+      } else if (w) tokens.push(...w.tokens)
+      else if (noteSteps(t) && spacedNotes(t)) return err(ln, notesTouch(t, spacedNotes(t)))
+      else if (t === "|" || noteSteps(t)) tokens.push(t)
+      else if (isStepRun(t)) {
+        return err(
+          ln,
+          `"${t}" is steps, and ${name} is notes. For steps, write steps ${name} = ${value}`,
+        )
+      } else return err(ln, notNotes(t, state, "guitar", `chords ${name} = ${value}`))
+    }
+    if (!tokens.length) return err(ln, `notes ${name} = needs something after the =`)
+    delete state.sections[name]
+    state.words[name] = { type, tokens, line: ln }
+    return
+  }
   // Steps can be written with lengths (2 beats rest, dd), which come back as steps
   const written = type === "steps" ? stepParts(value, blocks, state, err, ln) : tokenize(value)
   if (!written) return
@@ -563,6 +617,11 @@ function defineWord(type, name, value, ln, state, err, blocks = null) {
       return err(ln, `"${t}": ${oldSteps(t)}`)
     } else if (/^[a-z][a-z0-9]+$/.test(t) && !isRoman(t) && !/^[-xd]+$/.test(t)) {
       return err(ln, `"${t}" isn't defined above. Name it first: ${type} ${t} = ...`)
+    } else if (drawsNotes(t)) {
+      return err(
+        ln,
+        `"${t}" is notes, and ${name} is ${type}. For notes, write notes ${name} = ${spaceNotes(value)}`,
+      )
     } else if (type === "steps") {
       return err(
         ln,
@@ -589,7 +648,7 @@ function defineWord(type, name, value, ln, state, err, blocks = null) {
 // ---------------------------------------------------------------------------
 
 const DEF_RE = /^([A-Za-z][A-Za-z0-9]*)\s*=\s*(.*)$/
-const TYPED_RE = /^(steps|chords|pattern)\s+([A-Za-z][A-Za-z0-9]*)\s*=\s*(.*)$/
+const TYPED_RE = /^(steps|notes|chords|pattern)\s+([A-Za-z][A-Za-z0-9]*)\s*=\s*(.*)$/
 const TRACK_RE = /^([A-Za-z][A-Za-z0-9]*(?:\.[A-Za-z0-9]+)?)\s*:\s*(.*)$/
 // bar 2 ..., bar 3 to 4 ...: a place in front of what plays there
 const PLACE_RE = /^bar(\s+\S|$)/
@@ -625,7 +684,7 @@ function holdsSteps(block, st) {
 }
 
 // What a value is, from how it's written: a pattern (braces, a length, an instrument's
-// line, or other patterns' names), steps or chords. Braces holding steps are steps.
+// line, or other patterns' names), steps, notes or chords. Braces holding steps are steps.
 function shapeOf(value, st, blocks = null) {
   // A length in front of rest or steps is steps: 2 beats rest, dd
   const drawn = (text) => tokenize(text).every((t) => stepsToken(t, st, blocks))
@@ -649,7 +708,10 @@ function shapeOf(value, st, blocks = null) {
   )
   // Only rests and bar lines are both (- - | -), and they're steps.
   if (steps && chords) return "steps"
-  return steps ? "steps" : chords ? "chords" : "pattern"
+  if (steps || chords) return steps ? "steps" : "chords"
+  // Letters on their own (F G) read as a chart above; with - or _ among them, as notes.
+  const notes = tokens.every((t) => t === "|" || noteSteps(t) || st.words[t]?.type === "notes")
+  return notes ? "notes" : "pattern"
 }
 
 // Names a pattern (pattern name = { ... }) in `st`, the state of the block it's written
@@ -672,6 +734,10 @@ function defineBlock(l, st, err) {
 // mistakes that leave nothing to define.
 function classifyDecl({ type, name, value }, { ln, blocks }, err, st) {
   const lower = name.toLowerCase()
+  if (!type && lower === "sound") {
+    err(ln, soundGone(value, st))
+    return null
+  }
   if (!type && TYPES.includes(lower)) {
     err(
       ln,
@@ -685,7 +751,8 @@ function classifyDecl({ type, name, value }, { ln, blocks }, err, st) {
   }
   const shape = shapeOf(value, st, blocks)
   // How the value reads in a message, with its blocks as { ... }
-  const shown = value.replace(/\{#\d+\}/g, "{ ... }").replace(/\s+/g, " ")
+  let shown = value.replace(/\{#\d+\}/g, "{ ... }").replace(/\s+/g, " ")
+  if (shape === "notes") shown = spaceNotes(shown)
   if (!type) {
     if (!patternText(value)) {
       if (SETTINGS.includes(lower)) {
@@ -717,15 +784,15 @@ function classifyDecl({ type, name, value }, { ln, blocks }, err, st) {
     err(ln, `Say what ${name} is. Put its type in front: ${shape} ${name} = ${shown}`)
     type = shape
   } else if (type === "pattern" && shape !== "pattern") {
-    const line = shape === "steps" ? "kick" : "chords"
+    const line = { steps: "kick: ", notes: "guitar: ", chords: "piano: chords " }[shape]
     err(
       ln,
       `${shown} is ${shape}, not a pattern. Write ${shape} ${name} = ${shown}, ` +
-        `or give them an instrument: pattern ${name} = ${line}: ${shown}`,
+        `or give them an instrument: pattern ${name} = ${line}${shown}`,
     )
     return null
   } else if (
-    type === "chords" &&
+    (type === "chords" || type === "notes") &&
     !lengthPrefix(value).has &&
     tokenize(value).some((t) => blocks?.[t]) &&
     tokenize(value).every(
@@ -733,7 +800,7 @@ function classifyDecl({ type, name, value }, { ln, blocks }, err, st) {
     )
   ) {
     // chords verse = { ... } holding chords, not instruments' lines
-    err(ln, CHORDS_BLOCK)
+    err(ln, type === "chords" ? CHORDS_BLOCK : NOTES_BLOCK)
     return null
   } else if (type !== shape && patternText(value)) {
     // Anything else that isn't the declared type is said more exactly by defineWord.
@@ -852,6 +919,12 @@ function classify({ ln, text, blocks }, err, st) {
     return null
   }
 
+  const sound = /^sound(?:\s*[:=]\s*|\s+|$)(.*)$/.exec(text)
+  if (sound) {
+    err(ln, soundGone(sound[1].trim(), st))
+    return null
+  }
+
   if (singularLength(text, ln, err)) return null
   if (PLACE_RE.test(text)) return readPlace(text, { ln, blocks }, err)
   if (EVERY_RE.test(text)) return readPace(text, { ln, blocks }, err)
@@ -875,7 +948,7 @@ function classify({ ln, text, blocks }, err, st) {
     const tokens = tokenize(text)
     const first = tokens[0] || ""
     const after = tokens.slice(1).join(" ")
-    const noEquals = /^(steps|chords|pattern)\s+([A-Za-z][A-Za-z0-9]*)\s+([^=].*)$/.exec(text)
+    const noEquals = /^(steps|notes|chords|pattern)\s+([A-Za-z][A-Za-z0-9]*)\s+([^=].*)$/.exec(text)
     if (text.startsWith("|")) err(ln, "Put these bars at the end of the line above")
     else if (noEquals && !(noEquals[1] === "chords" && buildChord(noEquals[2], parseKey(st.key)))) {
       const [, type, name, value] = noEquals
@@ -887,6 +960,10 @@ function classify({ ln, text, blocks }, err, st) {
       err(ln, patternHint(text))
     } else if (PARTS.includes(first.toLowerCase()) && after) {
       err(ln, `Put a colon after ${first}: ${first}: ${after}`)
+    } else if (first === "chords" && after) {
+      err(ln, `Chords go on an instrument's line: ${st.oldSound || "piano"}: ${text}`)
+    } else if (first === "notes" && after) {
+      err(ln, `Notes go on an instrument's line: guitar: ${spaceNotes(after)}`)
     } else if (SETTINGS.includes(first.toLowerCase())) {
       // tempo 90: a reserved word and its value
       const name = first.toLowerCase()
@@ -902,7 +979,9 @@ function classify({ ln, text, blocks }, err, st) {
       !sections[first.replace(/^\(+/, "").split("*")[0]] &&
       buildChord(first, parseKey("C"))
     ) {
-      err(ln, `Chords go on a chords: line, e.g. chords: ${text}`)
+      err(ln, `Chords go on an instrument's line, e.g. ${st.oldSound || "piano"}: chords ${text}`)
+    } else if (!tokens.some((t) => sections[t]) && tokens.some(drawsNotes)) {
+      err(ln, `Notes go on an instrument's line, e.g. guitar: ${spaceNotes(text)}`)
     } else if (/^[A-Za-z(*\d{]/.test(first)) {
       // intro verse verse: patterns to play, one after another
       const trailing = /^(?:(.*\S)\s+)?for\s+(\S+)\s+bars?$/.exec(text)
@@ -932,11 +1011,20 @@ function classify({ ln, text, blocks }, err, st) {
     err(ln, `${name} is a setting, not an instrument, so it takes no colon: ${name} ${value}`)
     return null
   }
+  if (name === "chords") {
+    const inst = st.oldSound || "piano"
+    err(
+      ln,
+      `chords: is gone. Chords go on their instrument's line: ${inst}: chords ${value || "Am F|C G"}`,
+    )
+    return null
+  }
   if (PARTS.includes(name)) {
     if (!value) {
       err(ln, `${name}: needs something after the colon`)
       return null
     }
+    if (PITCHED.includes(name)) return { kind: "part", ln, name, value, pitched: true, blocks }
     const [drum, art = "hit"] = name.split(".")
     return { kind: "part", ln, name, value, drum, art, blocks }
   }
@@ -948,6 +1036,9 @@ function classify({ ln, text, blocks }, err, st) {
 // Parts: what one line plays. In a pattern it repeats until the pattern ends; in a play it
 // plays once.
 // ---------------------------------------------------------------------------
+
+// A capo moves a guitar's chord shapes up the neck, whichever guitar it is.
+const isGuitar = (name) => name.split(".")[0] === "guitar"
 
 function chordSlot(tok, part, st, key, err) {
   if (tok === "-") return { hold: true }
@@ -971,10 +1062,15 @@ function chordSlot(tok, part, st, key, err) {
   }
   const chord = buildChord(tok, key, st.octave)
   if (!chord) {
-    err(part.ln, `"${tok}" isn't a chord I know`)
+    err(
+      part.ln,
+      drawsNotes(tok)
+        ? `"${tok}" is notes, and this line says chords. A line of notes has no word in front: ${part.name}: ${spaceNotes(tok)}`
+        : `"${tok}" isn't a chord I know`,
+    )
     return null
   }
-  if (st.sound === "guitar") applyCapo(chord, st.capo)
+  if (isGuitar(part.name)) applyCapo(chord, st.capo)
   return { chord }
 }
 
@@ -985,7 +1081,12 @@ function chordPattern(part, tokens, st, barTicks, err) {
   for (const t of tokens) {
     const w = st.words[t]
     if (w && w.type !== "chords") {
-      err(part.ln, `${t} is ${w.type}, so it goes on a drum's line, not on chords:`)
+      err(
+        part.ln,
+        w.type === "steps"
+          ? `${t} is steps, so it goes on a drum's line, not among chords`
+          : `${t} is notes, and the rest of this line is chords. A line plays one or the other`,
+      )
       ok = false
     } else if (w) expanded.push("|", ...w.tokens, "|")
     else expanded.push(t)
@@ -1016,16 +1117,16 @@ function chordPattern(part, tokens, st, barTicks, err) {
   }
   if (!ok) return null
   if (!bars.length) {
-    err(part.ln, "chords: has nothing to play")
+    err(part.ln, `chords needs the chords after it: ${part.name}: chords Am F|C G`)
     return null
   }
   if (bars[0][0].hold) {
     err(part.ln, "This line starts with - but there's no chord to hold yet")
     return null
   }
-  const capo = st.sound === "guitar" ? st.capo : 0
+  const capo = isGuitar(part.name) ? st.capo : 0
   return {
-    kind: "chord",
+    kind: "pitched",
     ticks: bars.length * barTicks,
     expand(total, loop) {
       const out = []
@@ -1047,7 +1148,7 @@ function chordPattern(part, tokens, st, barTicks, err) {
             ticks: slot,
             chord: s.chord,
             label: s.chord.label,
-            instrument: st.sound,
+            instrument: part.name,
             capo,
             repeat: b >= bars.length,
             line: part.ln,
@@ -1499,6 +1600,16 @@ function stepPattern(part, tokens, st, err) {
             ? `${tok} is a pattern, so it goes on a line of its own, not on an instrument's line`
             : `"${tok}" isn't defined above. Name it first: steps ${tok} = x-x-`,
         )
+      } else if (noteSteps(tok)?.some((s) => s && !s.cut)) {
+        err(
+          part.ln,
+          `"${tok}"${where} is notes, and ${part.name} is a drum. Notes go on a pitched instrument's line: guitar: ${spaceNotes(tok)}`,
+        )
+      } else if (buildChord(tok, parseKey(st.key))) {
+        err(
+          part.ln,
+          `"${tok}"${where} is a chord, and ${part.name} is a drum. Chords go on a pitched instrument's line: piano: chords ${tok}`,
+        )
       } else {
         err(part.ln, `"${tok}"${where} isn't a step. ${STEP_HELP}`)
       }
@@ -1529,7 +1640,10 @@ function stepPattern(part, tokens, st, err) {
       continue
     }
     if (w.type !== "steps") {
-      err(part.ln, `${tok} is ${w.type}, so it goes on the chords: line, not on a drum's`)
+      err(
+        part.ln,
+        `${tok} is ${w.type}, so it goes on a line like piano: ${w.type === "chords" ? "chords " : ""}${tok}, not on a drum's`,
+      )
       ok = false
       continue
     }
@@ -1642,6 +1756,281 @@ function stepLayer(line, st, err, part) {
   return run
 }
 
+// ---------------------------------------------------------------------------
+// Notes: what a pitched instrument's line draws on the steps.
+// ---------------------------------------------------------------------------
+
+const NOTE_BASE = { C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, B: 11 }
+const NOTE_AT = /([\^~])?([A-G])([#b])?(\d)?/y
+const NOTE_HELP =
+  "Notes are A to G, with # or b after them and an octave when it's needed: F, F#, Bb, E2"
+const NO_NOTE_LENGTHS =
+  "Notes are drawn step by step, without lengths: - lets a note ring on, and _ is a step of silence"
+
+// A run of notes (E---F#) → its steps: one for each note, - or _, however many
+// characters a note takes. A step is null for -, { cut } for _, or the note, with whether
+// ^ or ~ is in front of it. null when it isn't a run of notes.
+function noteSteps(run) {
+  const steps = []
+  for (let i = 0; i < run.length; ) {
+    if (run[i] === "-" || run[i] === "_") {
+      steps.push(run[i] === "_" ? { cut: true } : null)
+      i++
+      continue
+    }
+    NOTE_AT.lastIndex = i
+    const m = NOTE_AT.exec(run)
+    if (!m || m[4] === "9") return null
+    steps.push({
+      name: m[2] + (m[3] || ""),
+      octave: m[4] ? Number(m[4]) : null,
+      label: m[2] + (m[3] || "") + (m[4] || ""),
+      accent: m[1] === "^",
+      ghost: m[1] === "~",
+    })
+    i = NOTE_AT.lastIndex
+  }
+  return steps.length ? steps : null
+}
+
+// `run` with a space between each two notes that touch (F#E → F# E), or null when it isn't
+// notes or no two notes touch. Notes don't touch, because a note takes one to four
+// characters, and where one ends and the next begins can't be seen (F#E, E2G2, ^F^G).
+function spacedNotes(run) {
+  let out = ""
+  let touched = false
+  let afterNote = false
+  for (let i = 0; i < run.length; ) {
+    if (run[i] === "-" || run[i] === "_") {
+      out += run[i++]
+      afterNote = false
+      continue
+    }
+    NOTE_AT.lastIndex = i
+    const m = NOTE_AT.exec(run)
+    if (!m) return null
+    if (afterNote) touched = true
+    out += (afterNote ? " " : "") + m[0]
+    afterNote = true
+    i = NOTE_AT.lastIndex
+  }
+  return touched ? out : null
+}
+
+// `text` with the notes in it spaced apart, for showing in a message as the line to write.
+const spaceNotes = (text) => text.replace(/[^\s|,{}]+/g, (w) => spacedNotes(w) || w)
+
+const notesTouch = (run, spaced) =>
+  `"${run}": notes don't touch, so put a space between them: ${spaced}`
+
+// Whether a token can only be notes drawn on steps: more than one step, with a note among
+// them (F---G, E2 G2). One letter on its own could be a chord's name, so it isn't told here.
+function drawsNotes(tok) {
+  const steps = noteSteps(tok)
+  return !!steps && steps.length > 1 && steps.some((s) => s && !s.cut)
+}
+
+// Whether a line of notes has a length in it (2 beats rest, F-G-), which only drums take.
+const noteLengths = (text) => text.split(",").some((p) => lengthAt(p.trim()))
+
+// Why `tok` isn't notes, on `inst`'s line. `chart` is the line to write if these are chords.
+function notNotes(tok, st, inst, chart) {
+  if (/^[-_^~A-G#b\d]+$/.test(tok) && /[A-G][#b]?9/.test(tok)) {
+    return `"${tok}": octaves run from 0 to 8`
+  }
+  if (/^[-_x^~d]+$/.test(tok)) {
+    return /[xd]/.test(tok)
+      ? `"${tok}" is a drum's steps. On ${inst} a step is a note: ${inst}: F---G---`
+      : `"${tok}": ^ and ~ go in front of a note: ^F, ~G`
+  }
+  if (/^[-_^~a-g#\d]+$/.test(tok) && (tok.length === 1 || /[-_]/.test(tok))) {
+    return `"${tok}": notes are capital letters, A to G: ${inst}: F---G---`
+  }
+  if (st.sections[tok]) {
+    return `${tok} is a pattern, so it goes on a line of its own, not on an instrument's line`
+  }
+  if (/^[a-z][a-z0-9]+$/.test(tok) && !isRoman(tok)) {
+    return `"${tok}" isn't defined above. Name it first: notes ${tok} = F---G---`
+  }
+  if (buildChord(tok, parseKey(st.key))) {
+    return `"${tok}" is a chord, and these are notes. For chords, write ${chart}`
+  }
+  if (/[A-G][#b]?(m|M|maj|min|sus|dim|aug|add|\+|°|ø)/.test(tok)) {
+    return (
+      `"${tok}": chord names don't go on the steps. Chords are written in a chart, ` +
+      `where _ leaves a slot silent: ${inst}: chords _ Am _ Am`
+    )
+  }
+  return `"${tok}" isn't a note. ${NOTE_HELP}`
+}
+
+// One line of notes: runs of notes and names of notes, in a row. Returns its steps, or
+// null after saying what's wrong.
+function noteVoice(line, part, st, err) {
+  if (noteLengths(line.text)) {
+    err(line.ln, NO_NOTE_LENGTHS)
+    return null
+  }
+  const steps = []
+  let ok = true
+  const fail = (msg) => {
+    err(line.ln, msg)
+    ok = false
+  }
+  // guitar: C G|F G reads as four notes, a step each, where a chart was probably meant
+  const key = parseKey(st.key)
+  const chart = tokenize(line.text).every(
+    (t) => CHORD_MARKS.includes(t) || st.words[t]?.type === "chords" || buildChord(t, key),
+  )
+  const barLine = () => {
+    const problem = ok && barLineProblem(steps.length, st)
+    if (!problem) return
+    fail(
+      chart
+        ? `${problem}. For chords, put chords in front: ${part.name}: chords ${line.text}`
+        : problem,
+    )
+  }
+  const add = (tok, viaWord) => {
+    const run = noteSteps(tok)
+    const spaced = run && spacedNotes(tok)
+    if (spaced) fail(notesTouch(tok, spaced))
+    else if (run) steps.push(...run)
+    else if (viaWord) fail(`"${tok}" (in ${viaWord}) isn't a note. ${NOTE_HELP}`)
+    else fail(notNotes(tok, st, part.name, `${part.name}: chords ${line.text}`))
+  }
+  for (const tok of tokenize(line.text)) {
+    const w = st.words[tok]
+    if (tok === "|") barLine()
+    else if (line.blocks?.[tok]) {
+      fail(
+        `A block is everything ${part.name} plays, so nothing goes beside it: ${part.name}: { ... }`,
+      )
+    } else if (!w) add(tok)
+    else if (w.type === "steps") {
+      fail(`${tok} is steps, so it goes on a drum's line, not on ${part.name}'s`)
+    } else if (w.type === "chords") {
+      fail(
+        chart
+          ? `${tok} is chords, so chords goes in front of it: ${part.name}: chords ${line.text}`
+          : `${tok} is chords, and the rest of this line is notes. A line plays one or the other`,
+      )
+    } else for (const t of w.tokens) t === "|" ? barLine() : add(t, tok)
+  }
+  return ok ? steps : null
+}
+
+// What one line of notes plays. A note sounds until the next note or _ on its line: -
+// means nothing new happens, as it does on a drum's line.
+function notePattern(part, steps, st) {
+  const stepTicks = st.stepTicks
+  const octave = st.octave
+  const sharp = { "#": 1, b: -1 }
+  return {
+    kind: "pitched",
+    ticks: steps.length * stepTicks,
+    expand(total, loop) {
+      const end = loop ? total : Math.min(total, steps.length * stepTicks)
+      const out = []
+      let cur = null
+      for (let k = 0; k * stepTicks < end; k++) {
+        const s = steps[k % steps.length]
+        if (!s) continue
+        if (cur) cur.ticks = k * stepTicks - cur.tick
+        cur = null
+        if (s.cut) continue
+        const midi =
+          12 * ((s.octave ?? octave) + 1) + NOTE_BASE[s.name[0]] + (sharp[s.name[1]] || 0)
+        cur = {
+          tick: k * stepTicks,
+          ticks: 0,
+          note: { midi, name: midiToName(midi) },
+          label: s.label,
+          instrument: part.name,
+          voice: 0,
+          vel: s.accent ? 1 : s.ghost ? 0.3 : 0.7,
+          accent: s.accent,
+          ghost: s.ghost,
+          repeat: k >= steps.length,
+          line: part.ln,
+        }
+        out.push(cur)
+      }
+      if (cur) cur.ticks = end - cur.tick
+      return out
+    },
+  }
+}
+
+// One line of what a pitched instrument plays: notes, or a chart of chords with chords in
+// front of it. The word in front is what says a line is a chart, whatever the chart holds.
+function pitchedLayer(line, part, st, barTicks, err) {
+  const here = { ...part, ln: line.ln, blocks: line.blocks }
+  const tokens = tokenize(line.text)
+  if (tokens[0] === "notes") {
+    const rest = line.text.replace(/^\s*notes\s*/, "")
+    err(
+      line.ln,
+      `A line's notes need no word in front: ${part.name}: ${spaceNotes(rest) || "F---G---"}`,
+    )
+    return null
+  }
+  if (tokens[0] === "chords") {
+    const chart = tokens.slice(1)
+    if (chart.some((t) => BLOCK_KEY.test(t))) {
+      err(line.ln, CHORDS_BLOCK)
+      return null
+    }
+    return chordPattern(here, chart, st, barTicks, err)
+  }
+  const steps = noteVoice(line, part, st, err)
+  return steps && notePattern(here, steps, st)
+}
+
+// A pitched instrument's line: guitar: E---F# E-E--, or piano: chords Am F|C G. A block
+// holds its layers, one a line, which play together: more notes at once, or chords under a
+// tune. Each layer repeats until they all line up again.
+function pitchedPattern(part, st, barTicks, err) {
+  const tokens = tokenize(part.value)
+  const block = tokens.length === 1 && part.blocks?.[tokens[0]]
+  if (!block) {
+    return pitchedLayer(
+      { ln: part.ln, text: part.value, blocks: part.blocks },
+      part,
+      st,
+      barTicks,
+      err,
+    )
+  }
+  const layers = block.lines.map((line) => {
+    if (TRACK_RE.test(line.text)) {
+      err(
+        line.ln,
+        `A block after ${part.name}: holds what ${part.name} plays, one layer a line. ${line.text} is an instrument's line, which goes in a pattern`,
+      )
+      return null
+    }
+    return pitchedLayer(line, part, st, barTicks, err)
+  })
+  if (layers.includes(null)) return null
+  const ticks = layers.reduce((a, l) => lcm(a, l.ticks), 1)
+  if (ticks > MAX_BARS * barTicks) {
+    err(block.ln, `This block's layers only line up again after more than ${MAX_BARS} bars`)
+    return null
+  }
+  return {
+    kind: "pitched",
+    ticks,
+    expand(total, loop) {
+      const end = loop ? total : Math.min(total, ticks)
+      // Each layer is a voice of its own, so its notes don't cut another layer's short.
+      return layers.flatMap((l, voice) =>
+        l.expand(end, true).map((e) => (e.note ? { ...e, voice } : e)),
+      )
+    },
+  }
+}
+
 // One instrument's line. `repeats` says whether it's in a pattern, where lines repeat,
 // for saying what to write instead of loop.
 function readPart(part, st, barTicks, err, repeats) {
@@ -1657,12 +2046,8 @@ function readPart(part, st, barTicks, err, repeats) {
     )
     return null
   }
-  if (part.name === "chords" && tokens.some((t) => BLOCK_KEY.test(t))) {
-    err(part.ln, CHORDS_BLOCK)
-    return null
-  }
-  if (part.name === "chords") {
-    const pattern = chordPattern(part, tokens, st, barTicks, err)
+  if (part.pitched) {
+    const pattern = pitchedPattern(part, st, barTicks, err)
     return pattern && { ...pattern, part }
   }
   // A drum's line: its parts, with any lengths written out as the steps they stand for
@@ -1841,10 +2226,23 @@ function layer(parts, once, repeated, st, bars, err, ctx) {
   // In the order they're written, so what plays at the same moment keeps that order.
   const all = [...own, ...clips].sort((a, b) => a.ln - b.ln)
   const inside = (e) => e.secStart < durSec - 1e-9
-  const events = all.flatMap((c) => c.events).filter(inside)
+  const moment = (e) => Math.round(e.secStart * 1e6)
+  // Where two lines give an instrument a note at the same moment, the lower line's is the
+  // one played, as with a drum. Layers in an instrument's block are voices of their own.
+  const sounded = new Map() // instrument, voice and moment → the line that won, and its note
+  const lost = new Set()
+  all.forEach((c, from) => {
+    for (const e of c.events) {
+      if (!e.note || !inside(e)) continue
+      const at = `${e.instrument} ${e.voice} ${moment(e)}`
+      const had = sounded.get(at)
+      if (had && had.from !== from) lost.add(had.e)
+      sounded.set(at, { from, e })
+    }
+  })
+  const events = all.flatMap((c) => c.events).filter((e) => inside(e) && !lost.has(e))
   // A hi-hat can't be open and closed at once, so an open hit replaces a closed one at the
   // same moment. The next hi-hat hit closes it.
-  const moment = (e) => Math.round(e.secStart * 1e6)
   const opened = new Set(
     all.flatMap((c) => c.drumEvents.filter((e) => e.lane === "hat.open").map(moment)),
   )
@@ -1901,12 +2299,9 @@ function readLines(lines, st, err, named) {
 // What something that repeats is called when it doesn't fit.
 const loopName = (it) => it.name || (it.items ? "This group" : "This pattern")
 
-// Each instrument has one line in a block. A drum's layers go in a block on that line;
-// chords play one at a time.
+// Each instrument has one line in a block. Its layers go in a block on that line.
 const secondLine = (name, where) =>
-  name === "chords"
-    ? `chords already has a line ${where}. Chords play one at a time, so put them all on one line`
-    : `${name} already has a line ${where}. To layer it, put its lines in a block: ${name}: { ... }`
+  `${name} already has a line ${where}. To layer it, put its lines in a block: ${name}: { ... }`
 
 // Lines in braces are one block: they play together, and what's defined inside stays
 // inside. `bars` is the length written in front of the block, if any. In a pattern every
@@ -1978,7 +2373,7 @@ function undefinedName(name, st) {
   if (word) {
     return word.type === "steps"
       ? `${name} is steps, so it goes on a drum's line: hat: ${name}`
-      : `${name} is chords, so it goes on the chords line: chords: ${name}`
+      : `${name} is ${word.type}, so it goes on an instrument's line: piano: ${word.type === "chords" ? "chords " : ""}${name}`
   }
   const names = Object.keys(st.sections)
   return names.length
@@ -2157,19 +2552,23 @@ function sequenceClip(items, state, err, ln, stack = []) {
   return { ...out, durSec: t }
 }
 
-// Grid cells per quarter note: the coarsest that still shows every drum hit.
-function gridResolution(drumEvents, barTicks) {
+// Grid cells per quarter note: the coarsest that still shows every hit, and where every
+// note stops.
+function gridResolution(drumEvents, noteEvents, barTicks) {
+  const ticks = [
+    ...drumEvents.filter((e) => !e.hidden).map((e) => e.tick),
+    ...noteEvents.flatMap((e) => [e.tick, e.tick + e.ticks]),
+  ]
   for (const res of [1, 2, 4, 3, 6, 8, 12]) {
     const cell = TPQ / res
-    if (barTicks % cell === 0 && drumEvents.every((e) => e.hidden || e.tick % cell === 0))
-      return res
+    if (barTicks % cell === 0 && ticks.every((t) => t % cell === 0)) return res
   }
   return 24
 }
 
-// Joins neighbouring spans in the same meter, then gives each its drum hits as ticks
-// from its start — the shape the drum grid draws.
-function gridBlocks(spans, drumEvents) {
+// Joins neighbouring spans in the same meter, then gives each its drum hits and notes as
+// ticks from its start — the shape the grid draws.
+function gridBlocks(spans, drumEvents, noteEvents) {
   const merged = []
   for (const s of [...spans].sort((a, b) => a.startSec - b.startSec)) {
     const last = merged[merged.length - 1]
@@ -2186,6 +2585,13 @@ function gridBlocks(spans, drumEvents) {
     const inside = drumEvents
       .filter((e) => e.secStart >= s.startSec - 1e-9 && e.secStart < s.startSec + s.durSec - 1e-9)
       .map((e) => ({ ...e, tick: Math.round((e.secStart - s.startSec) / s.secPerTick) }))
+    const notes = noteEvents
+      .filter((e) => e.secStart >= s.startSec - 1e-9 && e.secStart < s.startSec + s.durSec - 1e-9)
+      .map((e) => ({
+        ...e,
+        tick: Math.round((e.secStart - s.startSec) / s.secPerTick),
+        ticks: Math.round(e.secDur / s.secPerTick),
+      }))
     const barSec = s.barTicks * s.secPerTick
     return {
       ...s,
@@ -2193,7 +2599,8 @@ function gridBlocks(spans, drumEvents) {
       plays: [s.startSec],
       times: 1,
       drumEvents: inside,
-      res: gridResolution(inside, s.barTicks),
+      noteEvents: notes,
+      res: gridResolution(inside, notes, s.barTicks),
     }
   })
 }
@@ -2444,8 +2851,13 @@ export function parseCell(src, inherited = initialState()) {
           totalSec: out.durSec,
           events: out.events,
           chords: out.events.filter((e) => e.chord),
+          notes: out.events.filter((e) => e.note),
           drumEvents: out.drumEvents,
-          blocks: gridBlocks(out.spans, out.drumEvents),
+          blocks: gridBlocks(
+            out.spans,
+            out.drumEvents,
+            out.events.filter((e) => e.note),
+          ),
         })
       }
       continue
@@ -2534,11 +2946,11 @@ export function parseCell(src, inherited = initialState()) {
     } else err(ln, `Nothing plays this line. Write play ${text}`)
   }
 
-  // A capo only moves guitar chords, so a capo in a cell where nothing plays guitar is a
-  // mistake (usually a missing sound guitar). One inherited from a cell above is fine.
-  const guitar = outputs.some((o) => o.chords.some((e) => e.instrument === "guitar"))
+  // A capo only moves a guitar's chords, so a capo in a cell where no guitar plays chords
+  // is a mistake. One inherited from a cell above is fine.
+  const guitar = outputs.some((o) => o.chords.some((e) => isGuitar(e.instrument)))
   if (capoLine != null && outputs.length && !guitar) {
-    err(capoLine, "capo only works on guitar. Add sound guitar")
+    err(capoLine, "capo only moves a guitar's chords. Give a guitar some: guitar: chords Am F|C G")
   }
 
   const start = initialState()
@@ -2567,6 +2979,7 @@ export function parseCell(src, inherited = initialState()) {
     blocks,
     events,
     chords: events.filter((e) => e.chord),
+    notes: events.filter((e) => e.note),
     drumEvents,
     totalSec: t,
     errors,

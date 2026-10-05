@@ -1,11 +1,11 @@
 # composer-nb
 
-**Sketch music like you write code.** Chords and drums in a small language you can read at a glance. Run a cell and hear it, with a drum grid, chord shapes for guitar, and a WAV to keep. It runs in your browser, and right inside Jupyter.
+**Sketch music like you write code.** Drums, riffs and chords in a small language you can read at a glance. Run a cell and hear it, with a grid of what plays, chord shapes for guitar, and a WAV to keep. It runs in your browser, and right inside Jupyter.
 
 **[Open the playground →](https://composer-nb.vercel.app)** · **[Docs](https://pkhambat.mintlify.site)** · `pip install composer-nb`
 
 <p align="center">
-  <img src="docs/images/playground.png" width="820" alt="The composer-nb playground running a cell: guitar chords with a drum pattern, a waveform player, a drum grid and chord diagrams">
+  <img src="docs/images/playground.png" width="820" alt="The composer-nb playground running a cell: guitar chords and a bass line over a drum pattern, with a waveform player, a grid of the steps and chord diagrams">
 </p>
 
 ## How a cell reads
@@ -41,6 +41,29 @@ play 6 bars {
 </p>
 
 A play is a timeline: its own lines play once, so the crash hits once while the groove repeats under it. Anything that repeats has to fit what it's in, and if it doesn't, the error says where it lines up.
+
+## Notes go on the same steps
+
+A guitar, piano or bass gets a line like a drum's, with a note where the drum has its `x`. `-` lets the note ring, `_` stops it, and a space goes between two notes that would otherwise touch (`F# E`). This riff is ten steps against the drums' seven and three, so it drifts too, and with no lengths written the pattern lasts until all four lines meet. `octave 2` puts it on the guitar's low E string:
+
+```
+time 7 over 8
+octave 2
+
+pattern groove = {
+  kick: x--x---
+  snare: ----x--
+  ride.bell: x--
+  guitar.electric: E---F# E-E--
+}
+
+play {
+  crash: 1
+  groove
+}
+```
+
+Chords are written by the bar, on their instrument's line with `chords` in front: `piano: chords Am F|C G`.
 
 ## Name the bar where something happens
 
@@ -82,7 +105,7 @@ pip install composer-nb
 %load_ext composer_nb
 ```
 
-Then start a cell with `%%music`. Each `play` gives a player, a waveform, a drum grid and the chords it heard, and Tab completes as you type. Named cells carry their settings and names into later ones. See the [docs](https://pkhambat.mintlify.site) for the full language and Python reference.
+Then start a cell with `%%music`. Each `play` gives a player, a waveform, a grid of the drums and notes, and the chords it heard, and Tab completes as you type. Named cells carry their settings and names into later ones. See the [docs](https://pkhambat.mintlify.site) for the full language and Python reference.
 
 ## What's here
 

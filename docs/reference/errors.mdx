@@ -23,8 +23,9 @@ Parsing a cell returns a list of errors. Each error has two fields.
 Each page lists the errors for its statements:
 [Drum lines](/drums/lines#errors),
 [Note values](/drums/note-values#errors) for `every`,
-[Chord lines](/chords/lines#errors),
-[Sound, key and capo](/chords/sound#errors),
+[Note lines](/pitched/notes#errors),
+[Chord lines](/pitched/chords#errors),
+[Instruments, key and capo](/pitched/instruments#errors),
 [Time and tempo](/song/time-and-tempo#errors),
 [Patterns](/song/patterns#errors) for `pattern` and `bar`,
 [`play`](/song/play#errors),
@@ -38,6 +39,7 @@ Each page lists the errors for its statements:
 | `tempo`                     | 20 to 400                               |
 | `capo`                      | 0 to 12                                 |
 | `octave`                    | 1 to 6                                  |
+| Octave on a note            | 0 to 8                                  |
 | `time` unit                 | 1, 2, 4, 8 or 16                        |
 | Bar duration                | 8 whole notes                           |
 | Length                      | Greater than 0, up to 64 bars           |
@@ -70,5 +72,8 @@ The parser recognizes these earlier forms and reports the current form in the er
 | `kick: D`                              | `d`. A double stroke cannot be accented.                        |
 | `tom:`, `floor:`                       | Three toms: `tom.high:`, `tom.low:`, `tom.floor:`               |
 | `drums: k--s`, `bd:`, `sd:`, `hh:`     | One line per drum: `kick:`, `snare:`, `hat:`                    |
-| `inst: guitar`, `bpm: 90`, `oct: 3`    | `sound guitar`, `tempo 90`, `octave 3`                          |
+| `bpm: 90`, `oct: 3`                    | `tempo 90`, `octave 3`                                          |
+| `sound guitar`, `inst: guitar`         | The instrument is the line's name: `guitar: chords Am F`        |
+| `chords: Am F`                         | `chords` after an instrument's colon: `piano: chords Am F`      |
+| `epiano`                               | `piano.electric`                                                |
 | `.` as a rest or hold                  | `-`                                                             |

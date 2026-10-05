@@ -2,7 +2,7 @@
   "$schema": "https://mintlify.com/docs.json",
   "theme": "mint",
   "name": "composer-nb",
-  "description": "Reference for the composer-nb language for drums and chords, its Python package and the playground.",
+  "description": "Reference for the composer-nb language for drums, notes and chords, its Python package and the playground.",
   "colors": {
     "primary": "#1a73e8",
     "light": "#8ab4f8",
@@ -35,10 +35,11 @@
         ]
       },
       {
-        "group": "Chords",
+        "group": "Notes and chords",
         "pages": [
-          "chords/lines",
-          "chords/sound"
+          "pitched/notes",
+          "pitched/chords",
+          "pitched/instruments"
         ]
       },
       {
@@ -109,7 +110,15 @@
     },
     {
       "source": "/language/chords",
-      "destination": "/chords/lines"
+      "destination": "/pitched/chords"
+    },
+    {
+      "source": "/chords/lines",
+      "destination": "/pitched/chords"
+    },
+    {
+      "source": "/chords/sound",
+      "destination": "/pitched/instruments"
     },
     {
       "source": "/language/patterns",

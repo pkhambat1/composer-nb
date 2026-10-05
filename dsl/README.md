@@ -1,9 +1,9 @@
 # composer-nb
 
-A small language for chords and drums, played right inside Jupyter notebooks. Run a cell and hear it, with a drum grid, chord shapes for guitar, and a WAV to keep. **[Try it in your browser](https://composer-nb.vercel.app)**, with nothing to install. The full reference is in the **[docs](https://pkhambat.mintlify.site)**.
+A small language for drums, notes and chords, played right inside Jupyter notebooks. Run a cell and hear it, with a grid of what plays, chord shapes for guitar, and a WAV to keep. **[Try it in your browser](https://composer-nb.vercel.app)**, with nothing to install. The full reference is in the **[docs](https://pkhambat.mintlify.site)**.
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/pkhambat1/composer-nb/main/docs/images/playground.png" width="820" alt="A composer-nb cell: guitar chords with a drum pattern, a waveform player, a drum grid and chord diagrams">
+  <img src="https://raw.githubusercontent.com/pkhambat1/composer-nb/main/docs/images/playground.png" width="820" alt="A composer-nb cell: guitar chords and a bass line over a drum pattern, with a waveform player, a grid of the steps and chord diagrams">
 </p>
 
 ```
@@ -23,7 +23,7 @@ play 6 bars {
 }
 ```
 
-Each `play` renders to audio in the notebook, with a play button, a waveform, a drum grid, the chords it heard and any mistakes it found.
+Each `play` renders to audio in the notebook, with a play button, a waveform, a grid of the drums and notes, the chords it heard and any mistakes it found.
 
 ## Install
 
@@ -47,17 +47,16 @@ Give a cell a name, and later cells can start from the settings and names it end
 %%music intro
 tempo 75
 capo 2
-sound guitar
 chords riff = Am E7|G D
-play chords: riff
+play guitar: chords riff
 ```
 
 ```
 %%music verse after intro
-play chords: F C|Dm E7 riff
+play guitar: chords F C|Dm E7 riff
 ```
 
-`verse` plays on guitar with a capo at fret 2, at 75 bpm, and can use `riff`, wherever it sits in the notebook and whenever you run it. If `intro` hasn't been run yet, you get an error saying so. A cell can still change anything it inherits: `tempo 90` in `verse` speeds up just `verse`.
+`verse` plays with a capo at fret 2, at 75 bpm, and can use `riff`, wherever it sits in the notebook and whenever you run it. If `intro` hasn't been run yet, you get an error saying so. A cell can still change anything it inherits: `tempo 90` in `verse` speeds up just `verse`.
 
 A cell with no name plays on its own and isn't saved.
 
@@ -68,8 +67,8 @@ A cell with no name plays on its own and isn't saved.
 ```python
 from composer_nb import Song
 
-intro = Song("tempo 75\nsound guitar\nplay chords: Am E7|G D", name="intro")
-verse = Song("play chords: F C|Dm E7", after=intro, name="verse")
+intro = Song("tempo 75\nplay guitar: chords Am E7|G D", name="intro")
+verse = Song("play guitar: chords F C|Dm E7", after=intro, name="verse")
 verse  # shows the player
 ```
 
@@ -77,7 +76,7 @@ Songs are ordinary Python values, so you can generate them with loops and functi
 
 ```python
 blues = "|".join(["A7", "D7", "A7", "A7", "D7", "D7", "A7", "A7", "E7", "D7", "A7", "E7"])
-Song("tempo 120\nsound epiano\nplay chords: " + blues)
+Song("tempo 120\nplay piano.electric: chords " + blues)
 ```
 
 ## From JavaScript
@@ -92,22 +91,20 @@ import { music } from "npm:composer-nb"
 const intro = display(
   music(`tempo 75
 capo 2
-sound guitar
 chords riff = Am E7|G D
-play chords: riff`),
+play guitar: chords riff`),
 )
 ```
 
 ```js
-music(`play chords: F C|Dm E7 riff`, { after: intro, name: "verse" })
+music(`play guitar: chords F C|Dm E7 riff`, { after: intro, name: "verse" })
 ```
 
 `after` and `name` work as they do in Python, and `after` takes what an earlier `music` call returned. The source is a string, so other cells can write it. With a tempo slider called `bpm`, this cell plays at the new tempo each time the slider moves:
 
 ```js
 music(`tempo ${bpm}
-sound epiano
-play chords: Am F|C G`)
+play piano.electric: chords Am F|C G`)
 ```
 
 Anywhere else, `npm install composer-nb`, or import `https://cdn.jsdelivr.net/npm/composer-nb/+esm`.
@@ -120,13 +117,13 @@ Every line starts by saying what it is:
   <img src="https://raw.githubusercontent.com/pkhambat1/composer-nb/main/docs/images/how-a-cell-reads.svg" width="820" alt="A cell with each kind of line labelled: a setting, a named pattern, drum lines, play, chords, and a pattern played by name">
 </p>
 
-| Line                | What it is                                                             |
-| ------------------- | ---------------------------------------------------------------------- |
-| `tempo 90`          | A setting: a reserved word and its value                               |
-| `steps pair = ^-x-` | A name, with its type in front: `steps`, `chords` or `pattern`         |
-| `kick: x--x---`     | Inside braces, an instrument and what it plays                         |
-| `bar 2 { ... }`     | Inside braces, what plays in one bar of the pattern or play it's in    |
-| `play { ... }`      | Plays what's after it, a pattern or one line. Nothing else makes sound |
+| Line                | What it is                                                              |
+| ------------------- | ----------------------------------------------------------------------- |
+| `tempo 90`          | A setting: a reserved word and its value                                |
+| `steps pair = ^-x-` | A name, with its type in front: `steps`, `notes`, `chords` or `pattern` |
+| `kick: x--x---`     | Inside braces, an instrument and what it plays                          |
+| `bar 2 { ... }`     | Inside braces, what plays in one bar of the pattern or play it's in     |
+| `play { ... }`      | Plays what's after it, a pattern or one line. Nothing else makes sound  |
 
 `//` starts a comment. Blank lines and indentation mean nothing. Settings and names carry on into the cells below.
 
@@ -134,11 +131,12 @@ Every line starts by saying what it is:
 
 A name's type goes in front of it, and `=` gives it its value:
 
-| Type      | What it holds                                                                 | Where it goes                         |
-| --------- | ----------------------------------------------------------------------------- | ------------------------------------- |
-| `steps`   | A drum's hits: `steps pair = ^-x-`                                            | On a drum's line: `hat: pair pair`    |
-| `chords`  | Bars of chords: `chords verse = Am F\|C G`                                    | On the chords line: `chords: verse`   |
-| `pattern` | Lines in braces that play together, over and over: `pattern groove = { ... }` | On a line of its own, or after `play` |
+| Type      | What it holds                                                                 | Where it goes                                                 |
+| --------- | ----------------------------------------------------------------------------- | ------------------------------------------------------------- |
+| `steps`   | A drum's hits: `steps pair = ^-x-`                                            | On a drum's line: `hat: pair pair`                            |
+| `notes`   | A line of notes: `notes riff = E---F# E-E--`                                  | On a pitched instrument's line: `guitar: riff`                |
+| `chords`  | Bars of chords: `chords verse = Am F\|C G`                                    | After `chords` on an instrument's line: `piano: chords verse` |
+| `pattern` | Lines in braces that play together, over and over: `pattern groove = { ... }` | On a line of its own, or after `play`                         |
 
 A name only holds its type, and only goes where that type goes. Chords on a drum's line, or steps where a pattern belongs, is an error that names both types. A name without a type is an error too, and the message shows the line to write.
 
@@ -148,21 +146,45 @@ A name only holds its type, and only goes where that type goes. Chords on a drum
 | -------- | ---------- | ---------------------------------------------------------------------------- |
 | `time`   | `4 over 4` | Notes in a bar, over which note: `7 over 8`, or felt in groups: `3+4 over 4` |
 | `tempo`  | `120`      | Quarter notes per minute                                                     |
-| `sound`  | `piano`    | What chords play on: `piano`, `epiano`, `organ`, `pad`, `bass`, `guitar`     |
 | `key`    | `C`        | Key for Roman numeral chords: `C`, `Am`, `Bb`, `F#m`                         |
-| `capo`   | `0`        | Capo fret, 0 to 12. Only with `sound guitar`                                 |
-| `octave` | `3`        | Octave chords are voiced in, 1 to 6                                          |
+| `capo`   | `0`        | Capo fret, 0 to 12. Moves a guitar's chords                                  |
+| `octave` | `3`        | Octave for chords, and for notes written without one, 1 to 6                 |
 | `kit`    | `rock`     | Drum sound: `rock` or `synth`                                                |
 
 Every number is arithmetic (`tempo 60*2`, `(1+2) bars groove`), so `*` and `/` only ever multiply and divide. That's why a time is `7 over 8` rather than `7/8`.
 
-### Chords
+### Notes and chords
 
-Chords go on a `chords:` line and play on the `sound` setting:
+`piano`, `piano.electric`, `organ`, `pad`, `bass`, `guitar` and `guitar.electric` play notes and chords, each on a line of its own like a drum. The instrument is the line's name, so there is no setting for it.
+
+Notes are drawn on the steps, a note where a drum has its `x`:
 
 ```
-sound guitar
-play chords: C - - G|Am - F G|%|F - _ -
+time 7 over 8
+octave 2
+
+pattern groove = {
+  kick: x--x---
+  snare: ----x--
+  guitar.electric: E---F# E-E--
+}
+
+play groove
+```
+
+A note is a capital letter, `A` to `G`, with `#` or `b` after it and an octave when it needs one: `F`, `F#`, `Bb`, `E2`. Without a number it's in the `octave` setting, so `octave 2` above puts the riff on the guitar's low E string. One note is one step, however many characters it takes, and two notes never touch: a space goes between them (`F# E`). `-` means nothing new happens, so the note rings on, and `_` stops it. `^` in front accents a note and `~` softens it. A line plays one note at a time. For more, its line takes a block of lines, which play together:
+
+```
+play piano: {
+  C5-D5-E5-G5-E5-D5-C5---
+  C3---------------
+}
+```
+
+Chords are written by the bar, with `chords` in front:
+
+```
+play guitar: chords C - - G|Am - F G|%|F - _ -
 ```
 
 `|` is a bar line, and the chords in a bar split it evenly. `-` holds the chord before for another slot, `_` is silence and `%` repeats the bar before. Chords can be names (`Cmaj7`, `F#m`, `Bb7`, `C/E`) or Roman numerals that follow `key` (`I vi IV V7`).

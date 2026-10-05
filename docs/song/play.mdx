@@ -20,7 +20,7 @@ play [<length>] <instrument line>
 | `sequence`        | Patterns in a row. See [Sequence lines](/song/patterns#sequence-lines).                   |
 | `length`          | Optional. A number of `bars`. Sets the duration of the play.                                  |
 | `statements`      | Instrument lines, sequence lines, [`bar`](/song/patterns#bar), [`every`](/drums/note-values), settings and declarations. |
-| `instrument line` | One [drum line](/drums/lines) or [chord line](/chords/lines).                           |
+| `instrument line` | One [drum line](/drums/lines), [note line](/pitched/notes) or [chord line](/pitched/chords). |
 
 `play groove` is equivalent to `play { groove }`.
 
@@ -33,7 +33,7 @@ pattern groove = {
 }
 
 play groove
-play 2 bars chords: Am F
+play 2 bars piano: chords Am F
 play 4 bars {
   crash: 1
   groove
@@ -77,9 +77,9 @@ A play cannot last longer than 10 minutes at the current tempo.
 | Field    | Content                                                                             |
 | -------- | ----------------------------------------------------------------------------------- |
 | Label    | The `play` line. A multi-line block is shown as `{ … }`.                             |
-| Summary  | Time, tempo and bar count, for example `time 7 over 8 · tempo 120 · 6 bars`, followed by the chord sound and capo if chords are played. |
+| Summary  | Time, tempo and bar count, for example `time 7 over 8 · tempo 120 · 6 bars`, followed by the pitched instruments that play, and the capo on a guitar's chords. |
 | Audio    | The rendered play, with a waveform and a WAV download.                              |
-| Grid     | The drum hits, bar by bar.                                                          |
+| Grid     | The drum hits and the notes, bar by bar. A note's name is in the cell where it starts, and a line runs on through the cells it rings in. |
 | Chords   | Each chord in the order first played.                                               |
 
 Outputs appear in the order of the `play` statements.

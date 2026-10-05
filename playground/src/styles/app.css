@@ -1579,6 +1579,22 @@ body {
 .dg-ghost {
   opacity: 0.45;
 }
+/* A note still sounding from the step before: a line running on out of it, across the gap
+   between cells, so it doesn't read as another hit */
+.dg-held {
+  position: relative;
+  overflow: visible;
+}
+.dg-held::before {
+  content: "";
+  position: absolute;
+  left: -2px;
+  right: 0;
+  top: 50%;
+  height: 4px;
+  margin-top: -2px;
+  background: color-mix(in srgb, var(--accent) 62%, var(--paper));
+}
 .dg-dbl {
   background: linear-gradient(
     90deg,

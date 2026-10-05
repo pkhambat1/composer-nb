@@ -110,7 +110,7 @@ export default function App() {
         if (parsed.events.length === 0 && parsed.drumEvents.length === 0) {
           const message =
             "Nothing plays in this cell. Its settings and names carry on to the cells below. " +
-            "To hear something, add a play, such as play chords: C Am|F G."
+            "To hear something, add a play, such as play piano: chords C Am|F G."
           setRunCounter(runCounter + 1)
           updateCell(id, { status: "idle", runCount: runCounter + 1, output: { kind: "info", message } })
           return
