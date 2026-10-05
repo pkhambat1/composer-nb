@@ -15,18 +15,21 @@ const FILES = {
   ride: "Ride",
   "ride bell": "Bell",
   crash: "Crash",
-  tom: "Tom1",
-  floor: "TomFloor",
+  "tom high": "Tom1",
+  "tom low": "Tom2",
+  "tom floor": "TomFloor",
 }
-// [level, pan]: hats and crash to the left, ride and floor tom to the right (drummer's view).
+// [level, pan]: hats and crash to the left, ride and floor tom to the right, the toms
+// stepping from left to right as they get lower (drummer's view).
 const MIX = {
   kick: [1, 0],
   snare: [0.8, 0.05],
   hat: [0.42, -0.3],
   ride: [0.45, 0.35],
   crash: [0.5, -0.25],
-  tom: [0.75, -0.15],
-  floor: [0.8, 0.3],
+  "tom high": [0.75, -0.15],
+  "tom low": [0.75, 0.1],
+  "tom floor": [0.8, 0.3],
 }
 const loading = new Map()
 
@@ -36,6 +39,8 @@ const layer = (vel) => (vel < 0.45 ? "Soft" : vel < 0.85 ? "Med" : "Hard")
 // 15 dB softer: far enough apart to hear.
 const loudness = (vel) => (vel / 0.7) ** 2
 const sampleName = (ev) => (FILES[ev.inst + " " + ev.art] || FILES[ev.inst]) + "-" + layer(ev.vel)
+// Where a hit sits in the mix: its own sound's place if it has one (each tom), else its drum's.
+const mixKey = (ev) => (MIX[ev.inst + " " + ev.art] ? ev.inst + " " + ev.art : ev.inst)
 
 // Fetched by hand: ToneAudioBuffer.fromUrl encodes the "@" in the CDN path, which the CDN
 // rejects.
@@ -123,8 +128,9 @@ function makeSynthKit(output) {
   // Plays one hit; returns a function that chokes it (used for the open hi-hat).
   return function play(ev, time, vel) {
     if (ev.inst === "kick") kick.triggerAttackRelease("C1", 0.3, time, vel)
-    else if (ev.inst === "tom") toms.triggerAttackRelease("G2", 0.3, time, vel)
-    else if (ev.inst === "floor") toms.triggerAttackRelease("C2", 0.4, time, vel)
+    else if (ev.inst === "tom" && ev.art === "high") toms.triggerAttackRelease("G2", 0.3, time, vel)
+    else if (ev.inst === "tom" && ev.art === "low") toms.triggerAttackRelease("E2", 0.35, time, vel)
+    else if (ev.inst === "tom") toms.triggerAttackRelease("C2", 0.4, time, vel)
     else if (ev.inst === "snare" && ev.art === "rim") {
       snare.triggerAttackRelease(0.15, time, vel)
       rim.triggerAttackRelease("A5", 0.08, time, vel)
@@ -150,7 +156,7 @@ export async function schedule(kit, events, output) {
   bus.connect(new Tone.Gain(0.12).connect(room))
 
   const channels = {}
-  const channel = (inst) => (channels[inst] ||= new Tone.Panner(MIX[inst][1]).connect(bus))
+  const channel = (key) => (channels[key] ||= new Tone.Panner(MIX[key][1]).connect(bus))
   let synth = null
   let openHat = null
   for (const ev of events) {
@@ -165,7 +171,8 @@ export async function schedule(kit, events, output) {
     const buffer = ev.kit !== "synth" ? kit.buffers[sampleName(ev)] : null
     let choke = null
     if (buffer) {
-      const gain = new Tone.Gain(MIX[ev.inst][0] * loudness(vel)).connect(channel(ev.inst))
+      const key = mixKey(ev)
+      const gain = new Tone.Gain(MIX[key][0] * loudness(vel)).connect(channel(key))
       const src = new Tone.ToneBufferSource({ url: buffer, fadeOut: 0.03 }).connect(gain)
       src.start(time)
       choke = (t) => src.stop(t)

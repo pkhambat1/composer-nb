@@ -28,7 +28,7 @@
     },
     "instrument": {
       "name": "entity.name.function.composer-nb",
-      "match": "\\b(chords|kick|snare(\\.(ghost|rim))?|hat(\\.(open|pedal))?|ride(\\.bell)?|crash|tom|floor)(?=\\s*:)"
+      "match": "\\b(chords|kick|snare(\\.(ghost|rim))?|hat(\\.(open|pedal))?|ride(\\.bell)?|crash|tom\\.(high|low|floor))(?=\\s*:)"
     },
     "declaration": {
       "match": "\\b(steps|chords|pattern)\\s+([A-Za-z][A-Za-z0-9]*)(?=\\s*=)",
