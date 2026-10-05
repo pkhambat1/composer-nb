@@ -20,15 +20,16 @@ Parsing a cell returns a list of errors. Each error has two fields.
 | Declarations  | The lines and names in a pattern body are checked where the pattern is declared, whether or not it is played. Duration errors (the fit rule, bar range, the 64-bar limit) are reported when it is played. |
 | Display       | The Jupyter widget shows errors below the outputs of the `play` statements that succeeded. The playground shows the errors only. |
 
-Each reference page lists the errors for its statements:
-[Settings](/language/settings#errors),
-[Declarations](/language/declarations#errors),
-[Chord lines](/language/chords#errors),
-[Drum lines](/language/drums#errors),
-[Patterns](/language/patterns#errors),
-[`play`](/language/play#errors),
-[`bar`](/language/bar#errors),
-[`every`](/language/every#errors).
+Each page lists the errors for its statements:
+[Drum lines](/drums/lines#errors),
+[Note values](/drums/note-values#errors) for `every`,
+[Chord lines](/chords/lines#errors),
+[Sound, key and capo](/chords/sound#errors),
+[Time and tempo](/song/time-and-tempo#errors),
+[Patterns](/song/patterns#errors) for `pattern` and `bar`,
+[`play`](/song/play#errors),
+[Settings](/reference/settings#errors),
+[Names and types](/reference/names#errors).
 
 ## Limits
 

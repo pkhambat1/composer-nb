@@ -1,9 +1,27 @@
 ---
-title: "every"
-description: "Sets the duration of one step for the statements that follow it."
+title: "Note values"
+description: "Eighth notes, triplets, thirty-seconds and polyrhythms on drum lines: every sets how long one step lasts."
 ---
 
-`every` sets how long one step lasts for a statement or block. Outside `every`, a step is a sixteenth note.
+import { Cell } from "/snippets/cell.jsx"
+
+One character on a drum line is one step, and a step is a sixteenth note. To write a drum line in another note value, such as triplets, put `every` in front of it. `every` sets how long one step lasts for that line or block.
+
+<Cell>
+
+```composer-nb
+play {
+  kick: 1 3
+  snare: 2 4
+  every 1/3 beats hat: ^xx
+}
+```
+
+</Cell>
+
+The hi-hat plays eighth-note triplets, three to a beat, against a kick and snare counted in the usual way.
+
+`every` changes drum steps only. It does not change [beats](/drums/lines#beats) or [chord lines](/chords/lines).
 
 ## Syntax
 
@@ -14,20 +32,21 @@ every <length> { <statements> }
 
 | Parameter | Type                                              | Description                         |
 | --------- | ------------------------------------------------- | ----------------------------------- |
-| `length`  | A [length](/language/numbers-and-lengths#lengths) in `steps`, `beats` or `bars` | The duration of one step.           |
+| `length`  | A [length](/reference/numbers-and-lengths#lengths) in `steps`, `beats` or `bars` | The duration of one step.           |
 
 `every` is valid inside a block, after `play`, and as the value of a `pattern` declaration. It goes in front of a line, not inside one.
 
 ## Step duration
 
-| Statement           | One step lasts                    |
-| ------------------- | --------------------------------- |
-| `every 2 steps`     | An eighth note.                   |
-| `every 3 steps`     | A dotted eighth note.             |
-| `every 4 steps`     | A quarter note.                   |
-| `every 1/2 steps`   | A thirty-second note.             |
-| `every 1/3 beats`   | An eighth-note triplet.           |
-| `every 1/6 beats`   | A sixteenth-note triplet.         |
+| Note value on the page    | Statement           | Characters per beat |
+| ------------------------- | ------------------- | ------------------- |
+| Quarter notes             | `every 4 steps`     | 1                   |
+| Dotted eighth notes       | `every 3 steps`     | 4 in 3 beats        |
+| Eighth notes              | `every 2 steps`     | 2                   |
+| Eighth-note triplets      | `every 1/3 beats`   | 3                   |
+| Sixteenth notes           | None. The default.  | 4                   |
+| Sixteenth-note triplets   | `every 1/6 beats`   | 6                   |
+| Thirty-second notes       | `every 1/2 steps`   | 8                   |
 
 `steps` in the length refers to the step duration of the enclosing block, so nested `every` statements multiply: `every 2 steps` inside `every 2 steps` gives quarter notes.
 
@@ -41,13 +60,17 @@ every <length> { <statements> }
 | Aspect        | Behavior                                                                                             |
 | ------------- | ---------------------------------------------------------------------------------------------------- |
 | Scope         | The step duration applies inside the `every` statement only. Lines outside it keep their own.         |
-| Content       | The statements form a pattern without a name. Its lines repeat, and its duration follows the [pattern rules](/language/patterns#duration). |
+| Content       | The statements form a pattern without a name. Its lines repeat, and its duration follows the [pattern rules](/song/patterns#duration). |
 | Repetition    | The pattern repeats until the containing pattern or play ends, and must fit it a whole number of times. |
 | Steps         | Each step character, and each `steps` unit in a length, lasts the new duration.                       |
 | Beats         | Beat positions are unchanged. A beat is always a quarter note.                                        |
 | Chords        | Chord lines are unchanged. Chord slots divide the bar.                                                |
 
-## Example
+## Polyrhythm
+
+Lines under different `every` statements keep their own step durations, so one block can hold two pulses.
+
+<Cell>
 
 ```composer-nb
 time 3 over 4
@@ -62,6 +85,8 @@ play {
   feet
 }
 ```
+
+</Cell>
 
 Inside `feet`, each step lasts three sixteenth notes. The eight steps of the kick and pedal lines last 24 sixteenths, which is two bars of `3 over 4`. The snare line keeps sixteenth-note steps.
 

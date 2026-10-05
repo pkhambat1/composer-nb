@@ -1,7 +1,9 @@
 ---
 title: "play"
-description: "The statement that produces output."
+description: "The statement that makes sound: what it plays, for how long, and what it outputs."
 ---
+
+import { Cell } from "/snippets/cell.jsx"
 
 `play` evaluates what follows it and produces one output. It is the only statement that produces sound, and it is valid at top level only.
 
@@ -15,12 +17,14 @@ play [<length>] <instrument line>
 
 | Part              | Description                                                                                   |
 | ----------------- | --------------------------------------------------------------------------------------------- |
-| `sequence`        | Patterns in a row. See [Sequence lines](/language/patterns#sequence-lines).                   |
+| `sequence`        | Patterns in a row. See [Sequence lines](/song/patterns#sequence-lines).                   |
 | `length`          | Optional. A number of `bars`. Sets the duration of the play.                                  |
-| `statements`      | Instrument lines, sequence lines, [`bar`](/language/bar), [`every`](/language/every), settings and declarations. |
-| `instrument line` | One [drum line](/language/drums) or [chord line](/language/chords).                           |
+| `statements`      | Instrument lines, sequence lines, [`bar`](/song/patterns#bar), [`every`](/drums/note-values), settings and declarations. |
+| `instrument line` | One [drum line](/drums/lines) or [chord line](/chords/lines).                           |
 
 `play groove` is equivalent to `play { groove }`.
+
+<Cell>
 
 ```composer-nb
 pattern groove = {
@@ -35,6 +39,8 @@ play 4 bars {
   groove
 }
 ```
+
+</Cell>
 
 This cell produces three outputs.
 
@@ -51,7 +57,7 @@ A play is a timeline. Its statements start together at the beginning of the play
 | `every <length> ...`                  | Repeats until the play ends, at that step duration.   |
 | Setting or declaration                | Local to the play.                                    |
 
-This differs from a [pattern body](/language/patterns#body), where every statement repeats.
+This differs from a [pattern body](/song/patterns#body), where every statement repeats.
 
 ## Duration
 
@@ -62,7 +68,7 @@ This differs from a [pattern body](/language/patterns#body), where every stateme
 
 A play can be longer than its content. The remainder is silent: `play 2 bars { crash: 1 }` is one crash followed by silence to the end of bar 2.
 
-Statements that repeat must fit the play's duration a whole number of times. See [Fit rule](/language/patterns#fit-rule).
+Statements that repeat must fit the play's duration a whole number of times. See [Fit rule](/song/patterns#fit-rule).
 
 A play cannot last longer than 10 minutes at the current tempo.
 

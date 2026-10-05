@@ -3,6 +3,8 @@ title: "Numbers and lengths"
 description: "Arithmetic expressions, time units and the length prefix."
 ---
 
+import { Cell } from "/snippets/cell.jsx"
+
 ## Numbers
 
 A number is an integer or decimal literal: `90`, `1.5`. Any position that accepts a number accepts an arithmetic expression.
@@ -13,11 +15,15 @@ A number is an integer or decimal literal: `90`, `1.5`. Any position that accept
 | `*` `/`     | Multiplication, division. Binds tighter than `+` and `-`. |
 | `( )`       | Grouping.                                   |
 
+<Cell>
+
 ```composer-nb
 tempo 60*2
 pattern beat = { kick: x--- }
 play (1+2) bars beat
 ```
+
+</Cell>
 
 `*` and `/` are defined between numbers only. Two consequences:
 
@@ -32,9 +38,9 @@ The `/` in a chord symbol such as `C/E` is part of the symbol, because its opera
 
 | Unit    | Duration                                                                                              |
 | ------- | ----------------------------------------------------------------------------------------------------- |
-| `steps` | One step. A sixteenth note by default. Changed inside [`every`](/language/every).                     |
+| `steps` | One step. A sixteenth note by default. Changed inside [`every`](/drums/note-values).                     |
 | `beats` | One quarter note, in every time signature.                                                            |
-| `bars`  | One bar of the current [`time`](/language/settings#time): `count × 4 / unit` beats.                    |
+| `bars`  | One bar of the current [`time`](/song/time-and-tempo#time): `count × 4 / unit` beats.                    |
 
 `tempo` counts beats per minute. Positions within a beat are counted `1 e & a`, in sixteenth notes.
 
@@ -54,7 +60,7 @@ A length is a number followed by a unit. It is written in front of what it measu
 <number> <unit>
 ```
 
-The unit is always plural, including after `1`: `1 bars`, `1 beats`. `bar` without the `s` is the [`bar`](/language/bar) keyword, which selects a bar by number. A singular unit after a number is an error.
+The unit is always plural, including after `1`: `1 bars`, `1 beats`. `bar` without the `s` is the [`bar`](/song/patterns#bar) keyword, which selects a bar by number. A singular unit after a number is an error.
 
 | Position                                                   | Units                    | Effect                                                    |
 | ---------------------------------------------------------- | ------------------------ | --------------------------------------------------------- |
@@ -73,7 +79,9 @@ The unit is always plural, including after `1`: `1 bars`, `1 beats`. `bar` witho
 | Maximum         | 64 bars.                                                                                                |
 | Fractions       | Accepted: `1.5 bars`, `0.5 beats`.                                                                      |
 | On a drum line  | The length must equal a whole number of steps.                                                          |
-| Repetition      | Whatever a length repeats must fit it a whole number of times. See [Fit rule](/language/patterns#fit-rule). |
+| Repetition      | Whatever a length repeats must fit it a whole number of times. See [Fit rule](/song/patterns#fit-rule). |
+
+<Cell>
 
 ```composer-nb
 pattern fill = 2 bars { hat: x- }
@@ -85,3 +93,5 @@ play 4 bars {
   snare: 2 beats rest, x---, 1.5 bars rest
 }
 ```
+
+</Cell>

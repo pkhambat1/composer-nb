@@ -1,0 +1,138 @@
+---
+title: "From sheet music"
+description: "How a note on a drum staff is written in code: which line it goes on, where on the line, and which character."
+---
+
+import { Cell } from "/snippets/cell.jsx"
+
+A note on a drum staff says three things. Each one has a place in code.
+
+| On the page                          | In code                                  | Section                         |
+| ------------------------------------ | ---------------------------------------- | ------------------------------- |
+| The note's height and notehead       | The name of the line: `kick:`, `hat.open:` | [Which drum](#which-drum)     |
+| The note's place in the bar          | The character's place on the line        | [When](#when)                   |
+| Marks on the note: `>`, parentheses  | The character: `x`, `^`, `~`, `d`        | [How it is hit](#how-it-is-hit) |
+
+<img src="/images/sheet-to-code.svg" alt="One bar of a rock beat on a drum staff: hi-hat eighth notes, snare on 2 and 4 with accents, kick on 1, 3 and the and of 3. Below it, the hat, snare and kick lines in code, with each character under the note it plays." />
+
+<Cell>
+
+```composer-nb
+play {
+  hat: x-x- x-x- x-x- x-x-
+  snare: ---- ^--- ---- ^---
+  kick: x--- ---- x-x- ----
+}
+```
+
+</Cell>
+
+## Which drum
+
+Each drum has a line of its own. Notes stacked on one stem go on separate lines, at the same place on each.
+
+<img src="/images/drum-key.svg" alt="A drum staff with one note for each drum, labelled with its name in code: kick, snare, snare.ghost, snare.rim, hat, hat.open, hat.pedal, ride, ride.bell, crash, tom and floor." />
+
+| On the staff                                    | Drum                        | Line          |
+| ----------------------------------------------- | --------------------------- | ------------- |
+| Round note in the bottom space                  | Bass drum                   | `kick`        |
+| Round note in the third space                   | Snare drum                  | `snare`       |
+| The same, in parentheses                        | Snare ghost note            | `snare.ghost` |
+| The same, with a slash through it               | Snare rimshot               | `snare.rim`   |
+| × above the top line                            | Closed hi-hat               | `hat`         |
+| The same, with `o` over it                      | Open hi-hat                 | `hat.open`    |
+| × below the bottom line                         | Hi-hat closed with the foot | `hat.pedal`   |
+| × on the top line                               | Ride cymbal                 | `ride`        |
+| Diamond on the top line                         | Ride cymbal bell            | `ride.bell`   |
+| × on a ledger line above the staff              | Crash cymbal                | `crash`       |
+| Round note in the top space                     | Rack tom                    | `tom`         |
+| Round note in the second space                  | Floor tom                   | `floor`       |
+
+Publishers place some drums differently, the rimshot and the ride bell most often. The key printed with a chart takes precedence over this table.
+
+See [Instruments](/drums/lines#instruments).
+
+## When
+
+A line is a row of characters. Each character is one sixteenth note, so a bar of `4 over 4` is 16 characters. A hit is `x` and a sixteenth with no hit is `-`.
+
+A drum does not sustain, so a note's value only says how far away the next note is. A rest and the tail of a long note are both written `-`.
+
+| On the page                         | On the line                                                        |
+| ----------------------------------- | ------------------------------------------------------------------ |
+| Sixteenth note                      | `x`                                                                |
+| Eighth note                         | `x-`                                                               |
+| Dotted eighth note                  | `x--`                                                              |
+| Quarter note                        | `x---`                                                             |
+| Half note                           | `x-------`                                                         |
+| Rest                                | `-` for each sixteenth it lasts                                    |
+| Two thirty-second notes             | `d`                                                                |
+| Bar line                            | `\|`. Optional, and checked against the [`time`](/song/time-and-tempo#time). |
+| Triplets, or any other note value   | [`every`](/drums/note-values) in front of the line                 |
+
+Spaces are ignored, so a bar can be grouped by beat as it is beamed on the page: `x-x- x-x- x-x- x-x-`.
+
+### By count
+
+A line can give the counts of its hits in place of the row of characters. Counts are written as they are spoken: `1 e & a 2 e & a`.
+
+| On the page                              | On the line        |
+| ---------------------------------------- | ------------------ |
+| Snare on 2 and 4                         | `snare: 2 4`       |
+| Kick on 1, 3 and the "and" of 3          | `kick: 1 3 3&`     |
+| Open hi-hat on the "a" of 4              | `hat.open: 4a`     |
+
+<Cell>
+
+```composer-nb
+play {
+  hat: x-x- x-x- x-x- x-x-
+  snare: ^2 ^4
+  kick: 1 3 3&
+}
+```
+
+</Cell>
+
+This is the bar in the figure. See [Beats](/drums/lines#beats).
+
+## How it is hit
+
+<img src="/images/hit-key.svg" alt="Five notes on a staff with the character for each: a plain note is x, a note with an accent mark is ^, a note in parentheses is ~, a note with a slash through its stem is d, and a rest is -." />
+
+| On the page                              | Character | By count |
+| ---------------------------------------- | --------- | -------- |
+| No mark                                  | `x`       | `2`      |
+| Accent, `>` over the note                | `^`       | `^2`     |
+| Ghost note, the notehead in parentheses  | `~`       | `~2`     |
+| Slash through the stem                   | `d`       | `d2`     |
+
+An accent plays louder than a normal hit, and a ghost note much quieter. `d` plays two hits in the time of one sixteenth note.
+
+Ghost notes on the snare are the exception: they go on the `snare.ghost` line as `x`, not on the `snare` line as `~`. A snare part with ghost notes is two lines.
+
+<Cell>
+
+```composer-nb
+play {
+  snare: ---- ^--- ---- ^---
+  snare.ghost: ---x ---- -x-x ----
+}
+```
+
+</Cell>
+
+See [Steps](/drums/lines#steps).
+
+## The rest of the chart
+
+| On the page                                   | In code                                                                      |
+| --------------------------------------------- | ---------------------------------------------------------------------------- |
+| Time signature, `7/8`                         | [`time 7 over 8`](/song/time-and-tempo#time)                                  |
+| Tempo mark, ♩ = 90                            | [`tempo 90`](/song/time-and-tempo#tempo)                                      |
+| Triplet bracket                               | [`every 1/3 beats`](/drums/note-values)                                      |
+| Repeat signs around a groove                  | A [pattern](/song/patterns), played for a length: `play 8 bars groove`       |
+| A bar that differs, such as a fill in bar 4   | [`bar 4 { ... }`](/song/patterns#bar)                                        |
+| Sections: intro, verse, chorus                | Patterns played in order: [`play intro verse chorus`](/song/patterns#sequence-lines) |
+
+These marks have no equivalent: flams, drags, buzz rolls, dynamics (`p`, `f`, crescendo), stickings and cross-stick.
