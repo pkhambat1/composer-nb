@@ -10,7 +10,7 @@ A pattern is a named piece of a song: a drum groove, a chord progression with it
 | To write                                   | Use                                                  |
 | ------------------------------------------ | ---------------------------------------------------- |
 | A drum groove that loops                   | A pattern of [drum lines](/drums/lines).             |
-| A section with chords over a groove        | A pattern holding a [`chords` line](/chords/lines) and the groove's name. See [Patterns inside patterns](#patterns-inside-patterns). |
+| Chords over a drum groove                  | A pattern holding a [`chords` line](/chords/lines) and the drum lines, or the groove's name. See [Chords and drums together](#chords-and-drums-together). |
 | A fill, or any bar that differs            | [`bar`](#bar) inside the pattern.                    |
 | The order of the song                      | A [sequence line](#sequence-lines): `intro verse chorus`. |
 
@@ -93,6 +93,63 @@ The ride.bell line is 3 steps long, which doesn't fit 4 bars a whole number of t
 ```
 
 The message reports the shortest duration at which everything fits. Fit is checked when the pattern is played, so a pattern that is declared and never played does not report it.
+
+## Chords and drums together
+
+A `chords` line and drum lines go in the same pattern. They start together, and each repeats on its own. The chords play on the current [`sound`](/chords/sound#sound), so `sound guitar` makes the part a guitar.
+
+<Cell>
+
+```composer-nb
+sound guitar
+
+pattern verse = {
+  chords: Am F|C G
+  kick: x---x---
+  snare: ----x---
+  hat: x-
+}
+
+play 4 bars verse
+```
+
+</Cell>
+
+The chords last two bars and each drum line divides two bars, so `verse` lasts two bars and the play repeats it twice.
+
+A groove with a name of its own goes under the chords by name. The same groove can then sit under each section's chords.
+
+<Cell>
+
+```composer-nb
+time 7 over 8
+tempo 100
+sound guitar
+
+pattern groove = {
+  kick: x--x---
+  snare: ----x--
+  ride.bell: x--
+}
+
+pattern verse = {
+  chords: Dm|Bb|C
+  groove
+}
+
+play verse
+```
+
+</Cell>
+
+| Part of `verse` | Lasts                          | Plays in `verse` |
+| --------------- | ------------------------------ | ---------------- |
+| `chords` line   | 3 bars, which is 42 steps      | Once             |
+| `groove`        | 21 steps, one and a half bars  | Twice            |
+
+`verse` ends where its parts end together, after three bars. The rules are the ones for any lines: [Duration](#duration) when the pattern has no length, and the [fit rule](#fit-rule) when it has one. A `chords` line always lasts a whole number of bars. A drum line lasts as many steps as it has, or one bar when it is written as beats.
+
+The `chords` line is the only line with pitch. A guitar part is written as chords; there is no line for single notes.
 
 ## bar
 
