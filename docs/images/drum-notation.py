@@ -20,7 +20,7 @@ style = style.replace(
 
 GAP = 12  # between staff lines
 # Half-gaps below the top line: where each drum's notehead sits.
-POS = {"crash": -2, "hat": -1, "ride": 0, "tom": 1, "snare": 3, "floor": 5, "kick": 7, "pedal": 9}
+POS = {"crash": -2, "hat": -1, "ride": 0, "tom.high": 1, "tom.low": 2, "snare": 3, "tom.floor": 5, "kick": 7, "pedal": 9}
 
 
 def svg(w, h, title, body):
@@ -103,14 +103,15 @@ def drum_key():
         ("ride", "ride", "x", None),
         ("ride.bell", "ride", "diamond", None),
         ("crash", "crash", "x", None),
-        ("tom", "tom", "dot", None),
-        ("floor", "floor", "dot", None),
+        ("tom.high", "tom.high", "dot", None),
+        ("tom.low", "tom.low", "dot", None),
+        ("tom.floor", "tom.floor", "dot", None),
     ]
     body = '<text class="h" x="28" y="44">Where each drum sits on the staff</text>'
     body += '<text class="s dim" x="28" y="68">The name under each note is the name of its line in code.</text>'
     body += staff(28, 940, top)
     for i, (name, pos, shape, mark) in enumerate(notes):
-        cx = 104 + i * 72
+        cx = 100 + i * 67
         body += note(cx, top, pos, shape, mark) + label(cx, 236 + (i % 2) * 24, name)
     return svg(w, h, "Drum key: the staff position and notehead of each drum, with its name in code", body)
 
@@ -125,7 +126,7 @@ def hit_key():
         ("-", "nothing (a rest)", "rest"),
     ]
     body = '<text class="h" x="28" y="44">What each step character is on the page</text>'
-    body += '<text class="s dim" x="28" y="68">Shown on a tom line. Every character lasts one sixteenth note.</text>'
+    body += '<text class="s dim" x="28" y="68">Shown on the tom.high line. Every character lasts one sixteenth note.</text>'
     body += staff(28, 940, top)
     for i, (ch, words, mark) in enumerate(hits):
         cx = 150 + i * 170
@@ -137,7 +138,7 @@ def hit_key():
                 body += f'<circle class="ink" cx="{cx - 5}" cy="{y + dy}" r="2.6"/>'
                 body += f'<path class="pen" stroke-width="1.6" d="M{cx - 5} {y + dy + 2} Q{cx} {y + dy + 3} {cx + 4 - (dy == 0) * 2.8} {y + dy - 2}"/>'
         else:
-            body += note(cx, top, "tom", "dot", mark)
+            body += note(cx, top, "tom.high", "dot", mark)
         body += label(cx, 240, ch, "step").replace("font-size:13px", "font-size:20px;font-weight:700")
         body += f'<text class="s dim" x="{cx}" y="260" text-anchor="middle" style="font-size:13px">{words}</text>'
     return svg(w, h, "The step characters x, ^, ~, d and - as an ordinary note, an accent, a ghost note, a double stroke and a rest", body)
