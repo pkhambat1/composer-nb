@@ -61,7 +61,7 @@ every <length> { <statements> }
 | ------------- | ---------------------------------------------------------------------------------------------------- |
 | Scope         | The step duration applies inside the `every` statement only. Lines outside it keep their own.         |
 | Content       | The statements form a pattern without a name. Its lines repeat, and its duration follows the [pattern rules](/song/patterns#duration). |
-| Repetition    | The pattern repeats until the containing pattern or play ends, and must fit it a whole number of times. |
+| Repetition    | The pattern repeats until the containing pattern or play ends. It must fit a whole number of times, unless a play's own length cuts it. |
 | Steps         | Each step character, and each `steps` unit in a length, lasts the new duration.                       |
 | Notes         | Each step of a [note line](/pitched/notes) lasts the new duration.                                    |
 | Beats         | Beat positions are unchanged. A beat is always a quarter note.                                        |

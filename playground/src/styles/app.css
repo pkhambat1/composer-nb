@@ -36,6 +36,7 @@
   --tk-quality: #8a4cd4;
   --tk-ext: #d97706;
   --tk-rhythm: #1f8a5b;
+  --tk-note: #e8710a;
   --tk-rest: #888;
   --tk-slash: #999;
   --tk-bass: #444;
@@ -95,6 +96,7 @@
   --tk-quality: #d39bff;
   --tk-ext: #ffcb6b;
   --tk-rhythm: #80e7b3;
+  --tk-note: #ffab40;
   --tk-rest: #7c828c;
   --tk-slash: #6b7280;
   --tk-bass: #aab1bf;
@@ -136,6 +138,7 @@
   --tk-quality: #ff8533;
   --tk-ext: #ffd566;
   --tk-rhythm: #6ee06e;
+  --tk-note: #ff8533;
   --tk-rest: #8a6420;
   --tk-slash: #6e4900;
   --tk-bass: #b87800;
@@ -1507,6 +1510,10 @@ body {
 .tk-step-acc {
   font-weight: 600;
 }
+/* A note on a pitched instrument's line, told apart from a drum's steps */
+.tk-note {
+  color: var(--tk-note);
+}
 /* A blank line between two blocks: they play one after the other. Drawn without taking
    up space so the highlight layer stays aligned with the textarea. */
 .tk-blank::before {
@@ -1578,6 +1585,16 @@ body {
 }
 .dg-ghost {
   opacity: 0.45;
+}
+/* Notes are orange, so a pitched line stands out from the drums */
+.dg-note.dg-hit {
+  background: color-mix(in srgb, var(--tk-note) 62%, var(--paper));
+}
+.dg-note.dg-acc {
+  background: var(--tk-note);
+}
+.dg-note.dg-held::before {
+  background: color-mix(in srgb, var(--tk-note) 62%, var(--paper));
 }
 /* A note still sounding from the step before: a line running on out of it, across the gap
    between cells, so it doesn't read as another hit */

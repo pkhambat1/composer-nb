@@ -33,7 +33,7 @@ def test_a_drum_and_a_dot_offers_its_other_sounds():
     assert texts("%%music\nplay {\n  ride.") == ["bell: "]
     assert texts("%%music\nplay {\n  hat.") == ["open: ", "pedal: "]
     assert texts("%%music\nplay {\n  hat.p") == ["pedal: "]
-    assert texts("%%music\nplay {\n  snare.") == ["ghost: ", "rim: "]
+    assert texts("%%music\nplay {\n  snare.") == ["ghost: ", "rim: ", "cross: "]
     assert texts("%%music\nplay {\n  tom.") == ["high: ", "low: ", "floor: "]
     assert texts("%%music\nplay {\n  kick.") == []
 
@@ -218,6 +218,7 @@ def kernel_completions(shell, cell):
 def test_ipython_completes_music_cells(shell):
     assert kernel_completions(shell, "%%music\nplay {\n  ride.") == [("", "bell: ")]
     assert sorted(kernel_completions(shell, "%%music\nplay {\n  sn")) == [
+        ("sn", "snare.cross: "),
         ("sn", "snare.ghost: "),
         ("sn", "snare.rim: "),
         ("sn", "snare: "),

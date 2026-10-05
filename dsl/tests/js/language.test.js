@@ -65,27 +65,13 @@ describe("lines", () => {
     expect(hits(messy.outputs[0], "kick")).toHaveLength(2)
   })
 
-  it("points -- comments at //", () => {
-    expect(firstError("-- what happens now\nplay kick: x")).toMatch(/Comments start with \/\//)
-    expect(firstError("play kick: x -- four on the floor")).toMatch(/Comments start with \/\//)
-  })
-
   it("keeps -- inside steps", () => {
     expect(parseSource("play snare: ----x--").errors).toEqual([])
-  })
-
-  it("points the old @ syntax at the new one", () => {
-    expect(firstError("@key Am")).toMatch(/old syntax.*e\.g\. key Am/)
   })
 
   it("suggests a close name", () => {
     expect(firstError("tempp 120")).toMatch(/isn't a setting. Did you mean tempo/)
     expect(firstError("play kik: x-x-")).toMatch(/isn't an instrument. Did you mean kick/)
-  })
-
-  it("explains the renamed kit pieces", () => {
-    expect(firstError("play ride bell: x--")).toMatch(/is now ride\.bell/)
-    expect(firstError("play open hat: x")).toMatch(/is now hat\.open/)
   })
 
   it("puts chords on an instrument's line, with chords in front", () => {
@@ -134,7 +120,6 @@ describe("what each symbol is for", () => {
       "C",
       "G",
     ])
-    expect(firstError("bpm = 120")).toMatch(/Use tempo 120/)
     expect(firstError("speed = 120")).toMatch(/"speed" isn't a setting. Settings: time, tempo/)
   })
 
@@ -177,7 +162,7 @@ describe("what each symbol is for", () => {
     ])
   })
 
-  it("points older ways of naming a pattern at pattern name =", () => {
+  it("asks for the = when a pattern has none", () => {
     // The pattern still gets its name, so the one mistake gives one message.
     expect(allErrors("pattern groove {\n  kick: x\n}\nplay groove")).toEqual([
       "A pattern gets its name with =: pattern groove = { ... }",
@@ -185,10 +170,6 @@ describe("what each symbol is for", () => {
     expect(allErrors("pattern g 3 bars {\n  kick: x-\n}")).toEqual([
       "A pattern gets its name with =: pattern g = 3 bars { ... }",
     ])
-    expect(allErrors("section groove {\n  kick: x\n}")).toEqual([
-      "A pattern gets its name with =: pattern groove = { ... }",
-    ])
-    expect(firstError("def groove {\n  kick: x\n}")).toMatch(/pattern groove = \{ \.\.\. \}/)
   })
 })
 
@@ -224,9 +205,7 @@ describe("types", () => {
 
   it("read G and D as chords, since no step is a capital letter", () => {
     expect(labels("chords verse = G D\nplay piano: chords verse")).toEqual(["G", "D"])
-    expect(firstError("steps hard = D\nplay snare: hard")).toMatch(
-      /"D": a double can't be accented any more, so write d/,
-    )
+    expect(firstError("steps hard = D")).toMatch(/"D" is a chord, and hard is steps/)
     expect(allErrors("verse = G D")).toEqual([
       "Say what verse is. Put its type in front: chords verse = G D",
     ])
@@ -346,13 +325,6 @@ describe("types", () => {
     expect(firstError("steps four = pair pair")).toMatch(
       /"pair" isn't defined above. Name it first: steps pair = \.\.\./,
     )
-  })
-
-  it("don't include loop, which the language doesn't have", () => {
-    expect(firstError("steps seven = loop x--x---")).toMatch(
-      /loop isn't part of steps, and isn't needed: everything in a pattern repeats until it ends/,
-    )
-    expect(firstError("chords verse = loop Am F")).toMatch(/loop isn't part of chords/)
   })
 
   it("need = between the name and what it holds", () => {
@@ -545,7 +517,6 @@ describe("playing in order", () => {
     )
     expect(firstError(AB + "play (a b) * 2")).toMatch(/4 bars \( \.\.\. \)/)
     expect(firstError(AB + "play { piano: chords F } * 2")).toMatch(/4 bars \{ \.\.\. \}/)
-    expect(firstError(AB + "play a x2")).toMatch(/To repeat, put a length in front: 4 bars groove/)
     expect(labels(AB + "play 2*2 bars (a b)")).toEqual(["C", "G", "C", "G"])
   })
 })
@@ -654,7 +625,6 @@ describe("patterns", () => {
 
 describe("names", () => {
   it("can't reuse a word the language uses", () => {
-    expect(firstError("pattern loop = { kick: x }")).toMatch(/loop already means something/)
     expect(firstError("pattern x2 = { kick: x }")).toMatch(/x2 already means something/)
     expect(firstError("pattern kick = { kick: x }")).toMatch(/kick is an instrument/)
     expect(firstError("pattern tempo = { kick: x }")).toMatch(/tempo already means something/)
@@ -746,17 +716,9 @@ describe("lengths", () => {
     )
   })
 
-  it("don't use for, which would read as a repeat", () => {
-    expect(firstError("play for 2 bars")).toMatch(/without for: play 2 bars \{ \.\.\. \}/)
-    expect(firstError("pattern g = { kick: x }\nplay g for 3 bars")).toMatch(
-      /without for: 3 bars g/,
-    )
-    expect(firstError("pattern g = {\n  kick: x\n} for 3 bars")).toMatch(/pattern g = 3 bars \{/)
-    expect(firstError("play {\n  kick: x\n} for 2 bars")).toMatch(/play 2 bars \{ \.\.\. \}/)
-    expect(firstError("play kick: x--- for 2 bars")).toMatch(
-      /A length goes in front of what's played/,
-    )
-    expect(firstError("for = { kick: x }")).toMatch(/for already means something/)
+  it("go in front of what they measure, not after its braces", () => {
+    expect(firstError("pattern g = {\n  kick: x\n} 3 bars")).toMatch(/pattern g = 3 bars \{/)
+    expect(firstError("play {\n  kick: x\n} 2 bars")).toMatch(/play 2 bars \{ \.\.\. \}/)
   })
 
   it("explain lengths that don't work", () => {
@@ -806,18 +768,15 @@ describe("what repeats has to fit", () => {
   })
 
   it("holds for a pattern, block or group repeated for a length", () => {
-    expect(allErrors(GROOVE + "play 4 bars groove")).toEqual([
+    expect(allErrors(GROOVE + "play {\n  4 bars groove\n}")).toEqual([
       "groove is 3 bars long, which doesn't fit 4 bars a whole number of times. It lines up every 3 bars",
     ])
-    expect(firstError(GROOVE + "play 4 bars {\n  crash: 1\n  groove\n}")).toMatch(
-      /groove is 3 bars long, which doesn't fit 4 bars/,
-    )
-    expect(firstError("play 2 bars {\n  { kick: x-x-x- }\n}")).toMatch(
+    expect(firstError("play {\n  2 bars { kick: x-x-x- }\n}")).toMatch(
       /This pattern is 6 steps long, which doesn't fit 2 bars/,
     )
     expect(
       firstError(
-        "pattern a = { piano: chords C }\npattern b = { piano: chords G }\nplay 3 bars (a b)",
+        "pattern a = { piano: chords C }\npattern b = { piano: chords G }\nplay {\n  3 bars (a b)\n}",
       ),
     ).toMatch(/This group is 2 bars long, which doesn't fit 3 bars/)
     expect(
@@ -827,10 +786,31 @@ describe("what repeats has to fit", () => {
       /The guitar line is 3 steps long, which doesn't fit 2 bars a whole number of times/,
     )
     // A pattern at its own tempo is measured against the tempo of what it's in.
-    const own = (tempo) => `pattern own = {\n  tempo ${tempo}\n  kick: x---\n}\nplay 1 bars own`
+    const own = (tempo) =>
+      `pattern own = {\n  tempo ${tempo}\n  kick: x---\n}\nplay {\n  1 bars own\n}`
     expect(hits(parseSource(own(240)).outputs[0], "kick")).toHaveLength(8)
     expect(firstError(own(100))).toMatch(
       /own sets its own tempo, and doesn't fit 1 bar a whole number of times/,
+    )
+  })
+
+  it("doesn't hold for a play's own length, which cuts what's playing there", () => {
+    const o = parseSource(GROOVE + "play 4 bars groove").outputs[0]
+    expect(o.durSec).toBe(4 * 1.75)
+    expect(sound(GROOVE + "play 4 bars groove")).toBe(sound(GROOVE + "play 4 bars {\n  groove\n}"))
+    // Cut partway through its second time: nothing starts after the end
+    expect(
+      hits(o, "kick")
+        .map((e) => e.secStart)
+        .at(-1),
+    ).toBeLessThan(o.durSec)
+    expect(hits(o, "kick")).toHaveLength(16)
+    // A note still sounding at the end stops there
+    const riff = parseSource(`pattern r = { guitar: C${"-".repeat(31)} }\nplay 1 bars r`).outputs[0]
+    expect(riff.notes.map((e) => e.secDur)).toEqual([2])
+    // Bars it names still have to be there
+    expect(firstError("play 2 bars {\n  bar 3 crash: 1\n}")).toMatch(
+      /This play is 2 bars long, so it has no bar 3/,
     )
   })
 })
@@ -942,21 +922,6 @@ describe("patterns repeat, and a play's own lines play once", () => {
     expect(hits(o, "crash")).toHaveLength(1)
     expect(hits(o, "kick")).toHaveLength(16)
   })
-
-  it("has no loop, and says what to write instead", () => {
-    expect(firstError("pattern g = { kick: loop x- }")).toMatch(
-      /loop isn't needed: everything in a pattern repeats until the pattern ends/,
-    )
-    expect(firstError("play 2 bars kick: loop x---")).toMatch(
-      /a play's own lines play once. To repeat a line, put it in a pattern/,
-    )
-    expect(firstError(AB + "play 4 bars loop a")).toMatch(
-      /a length in front repeats it for that long: 6 bars groove/,
-    )
-    expect(firstError(AB + "play loop a")).toMatch(/a pattern on a line of its own repeats/)
-    expect(firstError("play loop kick: x---")).toMatch(/loop isn't needed/)
-    expect(firstError("play kick: x--- loop x-")).toMatch(/loop isn't needed/)
-  })
 })
 
 describe("settings", () => {
@@ -969,24 +934,6 @@ describe("settings", () => {
     const p = parseSource("play piano: chords i V", above)
     expect(p.chords.map((e) => e.label)).toEqual(["Am", "E"])
     expect(p.fromAbove).toEqual(["tempo 90", "key Am"])
-  })
-
-  it("don't include sound: the instrument is the line's name", () => {
-    expect(firstError("sound guitar")).toBe(
-      "sound is gone. The instrument is the line's name now: guitar: chords Am F|C G",
-    )
-    // the piano: chords line after it is shown on the instrument that was asked for
-    expect(allErrors("sound guitar\nplay chords: Am E7|G D")).toEqual([
-      "sound is gone. The instrument is the line's name now: guitar: chords Am F|C G",
-      "chords: is gone. Chords go on their instrument's line: guitar: chords Am E7|G D",
-    ])
-    expect(firstError("play chords: C")).toBe(
-      "chords: is gone. Chords go on their instrument's line: piano: chords C",
-    )
-    expect(firstError("sound epiano")).toMatch(/piano\.electric: chords Am F\|C G/)
-    expect(firstError("sound = organ")).toMatch(/organ: chords Am F\|C G/)
-    expect(firstError("sound kick")).toMatch(/Drums get a line of their own, e\.g\. kick: 1 3/)
-    expect(firstError("pattern sound = { kick: x }")).toMatch(/sound already means something/)
   })
 })
 
@@ -1024,16 +971,6 @@ describe("every", () => {
     expect(o.durSec).toBe(1.125)
     expect(hits(o, "kick").map((e) => e.secStart)).toEqual([0.75])
     expect(durations("play every 2 steps {\n  bar 2 kick: 1\n}")).toEqual([4])
-  })
-
-  it("replaces the step setting, and says what to write instead", () => {
-    expect(firstError("step 1/8\nplay hat: xx")).toMatch(
-      /step is gone. Say how long a step lasts in front of what it applies to: every 2 steps \{ \.\.\. \}/,
-    )
-    expect(firstError("step 1/12")).toMatch(/every 1\/3 beats \{ \.\.\. \}/)
-    expect(firstError("step 3/16")).toMatch(/every 3 steps \{ \.\.\. \}/)
-    expect(firstError("step 1/16")).toMatch(/this line isn't needed: a step is a 16th note/)
-    expect(firstError("play {\n  step 1/8\n  kick: x\n}")).toMatch(/step is gone/)
   })
 
   it("explains its mistakes", () => {
@@ -1288,25 +1225,12 @@ describe("drums", () => {
     expect(firstError("steps d3 = x-")).toMatch(/d3 is a double on a beat, so pick another name/)
   })
 
-  it("keep a list of beats to one bar's hits, and show how to write the rest", () => {
-    const seven = "time 7 over 8\n"
-    expect(firstError(seven + "play hat.open: -|3& X")).toMatch(
-      /Beats are one bar's hits, with nothing else on the line. Write this as bar 2 hat.open: \^3&/,
-    )
-    expect(firstError(seven + "play hat.pedal: -|4")).toMatch(/Write this as bar 2 hat.pedal: 4/)
-    expect(firstError("play crash: 1|-|-")).toMatch(/Write this as bar 1 crash: 1/)
-    expect(firstError("play tom.high: 2 accent 4 ghost")).toMatch(/Write this as tom.high: \^2 ~4/)
-    expect(firstError("play kick: 1 3|1 2& 3")).toMatch(
-      /Write this as kick: x--- ---- x--- ---- \| x--- --x- x--- ----/,
-    )
-    // A layer in a block of steps has no bar to name, so it's drawn in full.
-    expect(firstError(seven + "play snare.ghost: {\n  --x----\n  -|3 dd\n}")).toMatch(
-      /Write this as ---- ---- ---- -- \| ---- ---- dd-- --/,
-    )
-    expect(firstError("steps burst = dd\nplay snare.ghost: 3 burst")).toMatch(
-      /To say how a beat is hit, put its step in front: \^4 \(accent\), ~4 \(ghost\), d4 \(double\). For one bar only, name it: bar 2 snare.ghost: 2 4/,
-    )
-    expect(firstError("play snare: 2 2")).toMatch(/2 is on this line twice/)
+  it("keep a list of beats to one bar's hits", () => {
+    const only = /Beats are one bar's hits, with nothing else on the line/
+    expect(firstError("time 7 over 8\nplay hat.open: -|3& x")).toMatch(only)
+    expect(firstError("play crash: 1|-|-")).toMatch(only)
+    expect(firstError("play kick: 1 3|1 2& 3")).toMatch(only)
+    expect(firstError("play tom.high: 2 accent")).toMatch(/"accent" isn't a beat/)
   })
 
   it("are steps too, so they can be a layer or a name", () => {
@@ -1366,27 +1290,13 @@ describe("drums", () => {
       /the snare's ghost notes go on a line of their own: snare\.ghost: --x-/,
     )
     expect(firstError("play snare: ~2 4")).toMatch(/snare\.ghost: --x-/)
-    expect(firstError("play snare: --g-")).toMatch(/snare\.ghost: --x-/)
-    expect(firstError("play snare: 2 4 ghost")).toMatch(/snare\.ghost: --x-/)
     expect(firstError("play snare.ghost: ^-")).toMatch(
       /snare\.ghost hits are ghost notes, so they can't be accented/,
     )
-    expect(firstError("play snare.ghost: 2 accent")).toMatch(/can't be accented/)
     expect(firstError("play snare.ghost: ^2")).toMatch(/can't be accented/)
     expect(firstError("play snare.ghost: ~-")).toMatch(
       /every hit on snare\.ghost is a ghost note already, so write x/,
     )
-  })
-
-  it("point old rests and letters at the new ones", () => {
-    expect(firstError("play kick: x..x")).toMatch(/use - for a rest/)
-    expect(firstError("play hat: X-x-")).toMatch(/"X-x-": accents are \^ now, so write \^-x-/)
-    expect(firstError("play hat: x-g-")).toMatch(/ghost notes are ~ now, so write x-~-/)
-    expect(firstError("steps pair = X-x-")).toMatch(/accents are \^ now, so write \^-x-/)
-    expect(firstError("play ride: b--")).toMatch(/ride\.bell: x--/)
-    expect(firstError("play hat: x-x-x-xo")).toMatch(/hat\.open: x--/)
-    expect(firstError("play hat: 4 open")).toMatch(/hat\.open: 1/)
-    expect(firstError("play snare.flam: 1")).toMatch(/Drums with a second sound/)
   })
 
   it("play three toms, each a line of its own", () => {
@@ -1428,30 +1338,18 @@ describe("drums", () => {
     expect(lanes).toEqual(["hat.pedal", "tom.high", "tom.low", "tom.floor", "snare"])
   })
 
-  it("say that tom and floor are tom.high, tom.low and tom.floor now", () => {
+  it("say which toms there are", () => {
     expect(firstError("play tom: x--")).toBe(
-      "tom is three drums now: tom.high, tom.low or tom.floor",
+      '"tom" isn\'t a drum. The toms are tom.high, tom.low and tom.floor',
     )
-    expect(firstError("play floor: x--")).toBe("floor is tom.floor now: tom.floor: x--")
-    expect(firstError("play floor.tom: x--")).toBe("floor.tom is tom.floor now: tom.floor: x--")
     expect(firstError("play snare.flam: 1")).toBe(
-      '"snare.flam" isn\'t a drum. Drums with a second sound: ride.bell, hat.open, hat.pedal, snare.ghost, snare.rim',
+      '"snare.flam" isn\'t a drum. Drums with a second sound: ride.bell, hat.open, hat.pedal, snare.ghost, snare.rim, snare.cross',
     )
     expect(firstError("play tom.mid: x--")).toMatch(
       /"tom.mid" isn't a drum. The toms are tom.high, tom.low and tom.floor/,
     )
     expect(firstError("play tom.hi: x--")).toMatch(/Did you mean tom.high\?/)
-    expect(firstError("play floor tom: x--")).toMatch(/"floor tom" is now tom.floor/)
-    expect(firstError("play high tom: x--")).toMatch(/"high tom" is now tom.high/)
-    expect(firstError("sound tom")).toMatch(/Drums get a line of their own, e.g. tom.high: 1 3/)
     expect(firstError("pattern tom = { kick: x }")).toMatch(/tom already means something/)
-  })
-
-  it("has no accented double or accented ghost", () => {
-    expect(firstError("play tom.high: D")).toMatch(
-      /a double can't be accented any more, so write d/,
-    )
-    expect(firstError("play hat: G")).toMatch(/ghost notes are ~ now, so write ~/)
   })
 })
 
@@ -1534,13 +1432,6 @@ describe("one instrument per line", () => {
     expect(
       firstError("play kick: {\n  x------\n  x--------\n  x----------\n  x------------\n}"),
     ).toMatch(/This block's layers only line up again after more than 64 bars/)
-  })
-
-  it("has no kit line that names drums by letter", () => {
-    expect(firstError("play drums: loop k--ks--")).toMatch(
-      /Each drum gets its own line: kick: x--x---, snare: ----x--/,
-    )
-    expect(firstError("play kick: k--k")).toMatch(/isn't a step. Use x \(hit\)/)
   })
 })
 
@@ -1778,7 +1669,6 @@ describe("pitched instruments", () => {
   it("name a second sound after a dot, the way a drum does", () => {
     expect(parseSource("play guitar.electric: E2---").notes[0].instrument).toBe("guitar.electric")
     expect(parseSource("play piano.electric: chords C").chords[0].instrument).toBe("piano.electric")
-    expect(firstError("play epiano: chords C")).toBe("epiano is piano.electric now")
     expect(firstError("play guitar.acoustic: C---")).toMatch(
       /"guitar.acoustic" isn't an instrument. guitar's other sound is guitar.electric/,
     )
@@ -1786,10 +1676,9 @@ describe("pitched instruments", () => {
       /"organ.loud" isn't an instrument. organ has one sound: organ: F---G---/,
     )
     expect(firstError("play banjo: C---")).toMatch(/"banjo" isn't an instrument. Instruments: /)
-    expect(firstError("pattern epiano = { kick: x }")).toMatch(/epiano already means something/)
   })
 
-  it("are coloured like a drum's line, with chords marking a chart", () => {
+  it("are coloured as notes, with chords marking a chart", () => {
     const line = (text) =>
       highlightMusic(`play {\n  ${text}\n}`)[1]
         .filter((p) => p.s.trim())
@@ -1797,9 +1686,9 @@ describe("pitched instruments", () => {
     expect(line("guitar.electric: F#-^E2_")).toEqual([
       ["tk-inst", "guitar.electric"],
       ["tk-punct", ":"],
-      ["tk-step", "F#"],
+      ["tk-note", "F#"],
       ["tk-rest", "-"],
-      ["tk-step tk-step-acc", "^E2"],
+      ["tk-note tk-step-acc", "^E2"],
       ["tk-rest", "_"],
     ])
     expect(line("piano: chords Am|verse").map(([c]) => c)).toEqual([
@@ -1813,13 +1702,11 @@ describe("pitched instruments", () => {
     ])
     // A note straight after another is marked where the space goes.
     expect(line("guitar: F#E-").slice(2)).toEqual([
-      ["tk-step", "F#"],
+      ["tk-note", "F#"],
       ["tk-error", "E"],
       ["tk-rest", "-"],
     ])
-    // What's gone is marked where it's written.
-    expect(line("chords: Am F")[0]).toEqual(["tk-error", "chords"])
-    expect(highlightMusic("sound guitar")[0][0]).toEqual({ c: "tk-error", s: "sound" })
+    // A name that isn't an instrument is marked where it's written.
     expect(line("epiano: chords C")[0]).toEqual(["tk-error", "epiano"])
   })
 
@@ -1847,9 +1734,9 @@ describe("the grid", () => {
     expect(per).toBe(16)
     expect(rows.map((r) => r.label)).toEqual(["guitar", "kick"])
     expect(cells(rows[0])).toEqual([
-      [0, { hit: true, accent: false, ghost: false, text: "F" }],
-      [1, { held: true }],
-      [3, { hit: true, accent: true, ghost: false, text: "G" }],
+      [0, { hit: true, note: true, accent: false, ghost: false, text: "F" }],
+      [1, { held: true, note: true }],
+      [3, { hit: true, note: true, accent: true, ghost: false, text: "G" }],
     ])
     expect([...rows[1].cells.keys()]).toEqual([0])
   })

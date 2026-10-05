@@ -51,7 +51,7 @@ pattern groove = {
   }
 }
 
-play 6 bars {
+play {
   crash: 1
   groove
 }`,
@@ -62,24 +62,25 @@ play 6 bars {
 
 **Porcupine Tree** · *Nil Recurring* (2007) · drums by Gavin Harrison
 
-Lines of different lengths in one pattern. The kick and snare repeat every 7 steps, the ride bell every 3 and the guitar riff every 10, so they drift against each other and only all meet again on a bar line after 15 bars. The crash plays once, with the groove repeating under it. \`octave 2\` puts the riff on the guitar's low E string.
+Lines of different lengths in one pattern. The kick and snare repeat every 7 steps, the ride bell every 3 and the guitar riff every 10, so they drift against each other and only all meet again on a bar line after 15 bars. The crash plays once, and \`play 3 bars\` stops the groove after its first three bars. \`octave 2\` puts the riff right at the bottom of the guitar's range.
 
 [YouTube](https://www.youtube.com/watch?v=v0Iv4SYJW-k)`,
     },
     {
       type: "music",
       source: `time 7 over 8
-tempo 100
+tempo 110
 octave 2
+guitar.electric muted
 
 pattern groove = {
   kick: x--x---
-  snare: ----x--
+  snare.rim: ----x--
   ride.bell: x--
-  guitar.electric: E---F# E-E--
+  guitar.electric: D---E D-D--
 }
 
-play {
+play 3 bars {
   crash: 1
   groove
 }`,
@@ -112,7 +113,7 @@ pattern feet = every 3 steps {
   hat.pedal: -x--x-xx
 }
 
-play 4 bars {
+play {
   hands
   feet
 }`,
@@ -139,7 +140,7 @@ pattern groove = {
   kick: x-x-xx--x-xx
 }
 
-play 4 bars groove`,
+play 2 bars groove`,
     },
     {
       type: "text",

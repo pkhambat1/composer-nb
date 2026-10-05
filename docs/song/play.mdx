@@ -10,7 +10,7 @@ import { Cell } from "/snippets/cell.jsx"
 ## Syntax
 
 ```text
-play <sequence>
+play [<length>] <sequence>
 play [<length>] { <statements> }
 play [<length>] <instrument line>
 ```
@@ -18,7 +18,7 @@ play [<length>] <instrument line>
 | Part              | Description                                                                                   |
 | ----------------- | --------------------------------------------------------------------------------------------- |
 | `sequence`        | Patterns in a row. See [Sequence lines](/song/patterns#sequence-lines).                   |
-| `length`          | Optional. A number of `bars`. Sets the duration of the play.                                  |
+| `length`          | Optional. A number of `bars`. Sets the duration of the play, and cuts what plays there.       |
 | `statements`      | Instrument lines, sequence lines, [`bar`](/song/patterns#bar), [`every`](/drums/note-values), settings and declarations. |
 | `instrument line` | One [drum line](/drums/lines), [note line](/pitched/notes) or [chord line](/pitched/chords). |
 
@@ -68,7 +68,30 @@ This differs from a [pattern body](/song/patterns#body), where every statement r
 
 A play can be longer than its content. The remainder is silent: `play 2 bars { crash: 1 }` is one crash followed by silence to the end of bar 2.
 
-Statements that repeat must fit the play's duration a whole number of times. See [Fit rule](/song/patterns#fit-rule).
+A play with a length stops at the end of it. Whatever is repeating stops there, partway through if it has to, and a note still sounding stops at the end. This cuts a 15-bar groove to its first 4 bars:
+
+<Cell>
+
+```composer-nb
+time 7 over 8
+octave 2
+
+pattern groove = {
+  kick: x--x---
+  snare.rim: ----x--
+  ride.bell: x--
+  guitar.electric: D---E D-D--
+}
+
+play 4 bars {
+  crash: 1
+  groove
+}
+```
+
+</Cell>
+
+In a play without a length, statements that repeat must fit the play's duration a whole number of times. So must anything repeated by a length inside the play, such as `4 bars groove` on a line of its own. See [Fit rule](/song/patterns#fit-rule).
 
 A play cannot last longer than 10 minutes at the current tempo.
 

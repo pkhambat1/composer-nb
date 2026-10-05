@@ -15,7 +15,7 @@ VARIATIONS = {
     "ride": ["bell"],
     "hat": ["open", "pedal"],
     "tom": ["high", "low", "floor"],
-    "snare": ["ghost", "rim"],
+    "snare": ["ghost", "rim", "cross"],
 }
 SPLIT = ["tom"]  # drums that are only their variations: tom is three drums
 # Instruments that play notes and chords, each on a line of its own like a drum

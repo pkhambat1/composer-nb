@@ -1,6 +1,6 @@
 ---
 title: "Settings"
-description: "The six settings, what they share, and where each one is described."
+description: "The settings, what they share, and where each one is described."
 ---
 
 ## Syntax
@@ -9,7 +9,7 @@ description: "The six settings, what they share, and where each one is described
 <setting> <value>
 ```
 
-A setting is a reserved word followed by its value. It takes no `=` and no `:`. Writing `tempo = 90` or `tempo: 90` is an error.
+A setting is a reserved word followed by its value. It takes no `=` and no `:`. Writing `tempo = 90` or `tempo: 90` is an error. An instrument's sound is set the same way, with the instrument's name in front: `guitar.electric muted`.
 
 ## Summary
 
@@ -21,10 +21,11 @@ A setting is a reserved word followed by its value. It takes no `=` and no `:`. 
 | [`capo`](/pitched/instruments#capo)      | Whole number, 0 to 12     | `0`        | Chords on a guitar's line |
 | [`octave`](/pitched/instruments#octave)  | Whole number, 1 to 6      | `3`        | Chord voicing, and notes with no octave |
 | [`kit`](/drums/lines#kit)        | `rock` or `synth`                | `rock`     | Drum lines               |
+| [`guitar.electric`](/pitched/instruments#sound) | `clean` or `muted` | `clean` | Electric guitar lines |
 
 Each setting is described with what it applies to: [Time and tempo](/song/time-and-tempo), [Instruments, key and capo](/pitched/instruments) and [Kit](/drums/lines#kit).
 
-The instrument a line plays on is not a setting. It is the line's name: `guitar: chords Am F`. See [Instruments](/pitched/instruments#instruments).
+The instrument a line plays on is not a setting. It is the line's name: `guitar: chords Am F`. Its sound can be: see [Sound](/pitched/instruments#sound). See [Instruments](/pitched/instruments#instruments).
 
 ## Scope
 
@@ -41,4 +42,3 @@ These apply to every setting. The errors for one setting's value are listed on i
 | `tempo is a setting, not a name, so it takes no =: tempo 90`                   | `=` after a setting.                              |
 | `tempo is a setting, not an instrument, so it takes no colon: tempo 90`        | `:` after a setting.                              |
 | `tempo needs a value after it, e.g. tempo 90`                                  | No value.                                         |
-| `sound is gone. The instrument is the line's name now: guitar: chords Am F\|C G` | The earlier `sound` setting.                   |

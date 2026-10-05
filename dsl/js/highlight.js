@@ -5,9 +5,10 @@
      .tk-comment, .tk-directive-key (keywords and settings), .tk-directive-val,
      .tk-inst, .tk-word (your own names), .tk-punct, .tk-bar, .tk-root, .tk-quality,
      .tk-ext, .tk-rest, .tk-slash, .tk-bass, .tk-beat, .tk-step, .tk-step-acc,
+     .tk-note (a note on a pitched line),
      .tk-error
    Whitespace is kept exactly, so the layer lines up with the textarea under it. */
-import { KEYWORDS, LANES, MODIFIERS, PARTS, PITCHED, SETTINGS, TYPES, UNITS } from "./language.js"
+import { KEYWORDS, LANES, PARTS, PITCHED, SETTINGS, SOUNDS, TYPES, UNITS } from "./language.js"
 import { isRoman } from "./chords.js"
 
 const ROMAN_RE = /^([#b])?(VII|VI|IV|V|III|II|I|vii|vi|iv|v|iii|ii|i)([°oø]?)(.*)$/
@@ -78,7 +79,7 @@ function noteRun(t) {
     const touches = afterNote
     afterNote = true
     if (touches) return part("tk-error", n)
-    return part(n[0] === "^" ? "tk-step tk-step-acc" : "tk-step", n)
+    return part(n[0] === "^" ? "tk-note tk-step-acc" : "tk-note", n)
   })
 }
 
@@ -97,8 +98,6 @@ function valueToken(t, kind) {
   if (kind !== "chord") {
     if (STEPS_RE.test(t)) return stepRun(t)
     if (BEAT_RE.test(t)) return [part("tk-beat", t)]
-    // accent, ghost and double are old words: a step in front of the beat says it now
-    if (MODIFIERS.includes(t)) return [part("tk-error", t)]
   }
   if (/^[a-z][a-z0-9]+$/.test(t) && !isRoman(t)) return [part("tk-word", t)]
   if (kind === "drum") return [part("tk-error", t)]
@@ -151,11 +150,9 @@ function names(text) {
     if (/^\s+$/.test(p)) return part(null, p)
     const wasNumber = number
     number = /^[\d./+-]+$/.test(p) || (number && p === "*")
-    // * only does arithmetic: 2*3 bars. After a name it used to repeat; a length in front
-    // does that now, and loop is gone.
+    // * only does arithmetic: 2*3 bars
     if (p === "*") return part(wasNumber ? "tk-punct" : "tk-error", p)
     if ("(){}".includes(p)) return part("tk-punct", p)
-    if (p === "loop") return part("tk-error", p)
     if (p === "bars") return part("tk-directive-key", p)
     // a length is always plural: 1 bars
     if (p === "bar") return part("tk-error", p)
@@ -202,8 +199,7 @@ function playable(text) {
   if (track) {
     const name = track[1].toLowerCase()
     const known = PARTS.includes(name)
-    // chords: was a line of its own; its chords are on an instrument's line now
-    const kind = name === "chords" ? "chord" : PITCHED.includes(name) ? "pitched" : "drum"
+    const kind = PITCHED.includes(name) ? "pitched" : "drum"
     return [
       part(known ? "tk-inst" : "tk-error", track[1]),
       part(null, track[2]),
@@ -240,6 +236,8 @@ function line(code) {
   const word = /^[A-Za-z][A-Za-z0-9]*/.exec(body)?.[0] || ""
   const after = body.slice(word.length)
 
+  let soundSetting = /^([a-z.]+)(\s+)([a-z]+)(\s*)$/.exec(body)
+  if (soundSetting && !SOUNDS[soundSetting[1]]) soundSetting = null
   const typed = TYPES.includes(word) && /^(\s+)([A-Za-z][A-Za-z0-9]*)(\s*)(=)(\s*)(.*)$/.exec(after)
   if (body.startsWith("}")) {
     // } outro: what follows a block is more to play in a row
@@ -280,10 +278,12 @@ function line(code) {
     out.push(...len.parts)
     if (len.rest.startsWith("{")) out.push(...braces(len.rest))
     else if (len.rest) out.push(...playable(len.rest))
-  } else if ((word === "step" || word === "sound") && /^(\s|$)/.test(after)) {
-    // step 1/8 and sound guitar were settings. every 2 steps { ... } and the instrument's
-    // own line (guitar: ...) say them now.
-    out.push(part("tk-error", word), ...names(after))
+  } else if (soundSetting) {
+    // guitar.electric muted: an instrument and its sound, a setting like kit
+    const [, inst, gap, sound, end] = soundSetting
+    out.push(part("tk-directive-key", inst), part(null, gap))
+    out.push(part(SOUNDS[inst].includes(sound) ? "tk-directive-val" : "tk-error", sound))
+    out.push(part(null, end))
   } else if (SETTINGS.includes(word) && /^\s/.test(after)) {
     // tempo 90, time 7 over 8
     out.push(part("tk-directive-key", word))

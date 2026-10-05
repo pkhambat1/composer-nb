@@ -8,8 +8,8 @@ const SAMPLES =
 const FILES = {
   kick: "Kick",
   snare: "Snare",
-  "snare rim": "SnareRimshot",
   hat: "HatClosed",
+  "snare cross": "SideStick",
   "hat open": "HatOpen",
   "hat pedal": "HatPedal",
   ride: "Ride",
@@ -33,12 +33,24 @@ const MIX = {
 }
 const loading = new Map()
 
-const layer = (vel) => (vel < 0.45 ? "Soft" : vel < 0.85 ? "Med" : "Hard")
+const LAYERS = ["Soft", "Med", "Hard", "Hardest"]
+const layer = (vel) => (vel < 0.45 ? 0 : vel < 0.85 ? 1 : 2)
 // How loud a hit is next to a normal one (velocity 0.7). Squared, like MIDI's usual
 // velocity curve, so an accent (1) is about 6 dB louder and a ghost note (0.3) about
 // 15 dB softer: far enough apart to hear.
 const loudness = (vel) => (vel / 0.7) ** 2
-const sampleName = (ev) => (FILES[ev.inst + " " + ev.art] || FILES[ev.inst]) + "-" + layer(ev.vel)
+// The samples a hit plays, each with its level. A rimshot is the rim sample a layer harder,
+// with the snare under it for body: the kit's rimshot on its own is thin.
+function samplesOf(ev) {
+  const at = layer(ev.vel)
+  if (ev.inst === "snare" && ev.art === "rim") {
+    return [
+      ["SnareRimshot-" + LAYERS[at + 1], 1],
+      ["Snare-" + LAYERS[at + 1], 0.71],
+    ]
+  }
+  return [[(FILES[ev.inst + " " + ev.art] || FILES[ev.inst]) + "-" + LAYERS[at], 1]]
+}
 // Where a hit sits in the mix: its own sound's place if it has one (each tom), else its drum's.
 const mixKey = (ev) => (MIX[ev.inst + " " + ev.art] ? ev.inst + " " + ev.art : ev.inst)
 
@@ -65,7 +77,11 @@ function load(name) {
 // Fetches every sample the events need (in the online context, before rendering).
 // `missing` lists samples that couldn't load; those hits use the synthesized kit.
 export async function prepareKit(events) {
-  const names = [...new Set(events.filter((ev) => ev.kit !== "synth").map(sampleName))]
+  const names = [
+    ...new Set(
+      events.filter((ev) => ev.kit !== "synth").flatMap((ev) => samplesOf(ev).map(([n]) => n)),
+    ),
+  ]
   const buffers = {}
   await Promise.all(
     names.map(async (n) => {
@@ -131,6 +147,8 @@ function makeSynthKit(output) {
     else if (ev.inst === "tom" && ev.art === "high") toms.triggerAttackRelease("G2", 0.3, time, vel)
     else if (ev.inst === "tom" && ev.art === "low") toms.triggerAttackRelease("E2", 0.35, time, vel)
     else if (ev.inst === "tom") toms.triggerAttackRelease("C2", 0.4, time, vel)
+    else if (ev.inst === "snare" && ev.art === "cross")
+      rim.triggerAttackRelease("E6", 0.05, time, vel)
     else if (ev.inst === "snare" && ev.art === "rim") {
       snare.triggerAttackRelease(0.15, time, vel)
       rim.triggerAttackRelease("A5", 0.08, time, vel)
@@ -168,14 +186,17 @@ export async function schedule(kit, events, output) {
       openHat.choke(time)
       openHat = null
     }
-    const buffer = ev.kit !== "synth" ? kit.buffers[sampleName(ev)] : null
+    const samples = ev.kit !== "synth" ? samplesOf(ev) : []
     let choke = null
-    if (buffer) {
+    if (samples.length && samples.every(([n]) => kit.buffers[n])) {
       const key = mixKey(ev)
-      const gain = new Tone.Gain(MIX[key][0] * loudness(vel)).connect(channel(key))
-      const src = new Tone.ToneBufferSource({ url: buffer, fadeOut: 0.03 }).connect(gain)
-      src.start(time)
-      choke = (t) => src.stop(t)
+      const srcs = samples.map(([n, level]) => {
+        const gain = new Tone.Gain(MIX[key][0] * level * loudness(vel)).connect(channel(key))
+        const src = new Tone.ToneBufferSource({ url: kit.buffers[n], fadeOut: 0.03 }).connect(gain)
+        src.start(time)
+        return src
+      })
+      choke = (t) => srcs.forEach((src) => src.stop(t))
     } else {
       synth ||= makeSynthKit(bus)
       choke = synth(ev, time, 0.7 * loudness(vel))

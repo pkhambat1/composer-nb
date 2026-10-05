@@ -26,6 +26,9 @@ export function parseChain(sources) {
 
 // --- Synths --------------------------------------------------------------
 
+// Measured to match the clean electric guitar above 150 Hz.
+const MUTED_LEVEL = 6.5
+
 function makeSynth(T, kind) {
   if (kind === "piano") {
     const s = new T.Sampler({
@@ -88,10 +91,23 @@ function makeSynth(T, kind) {
         C5: "C5.mp3",
       },
       release: 2.4,
-      baseUrl:
-        "https://gleitz.github.io/midi-js-soundfonts/MusyngKite/acoustic_guitar_steel-mp3/",
+      baseUrl: "https://gleitz.github.io/midi-js-soundfonts/MusyngKite/acoustic_guitar_steel-mp3/",
     })
     s.volume.value = -2
+    return s
+  }
+  if (kind === "guitar.electric muted") {
+    const s = new T.Sampler({
+      urls: Object.fromEntries(
+        ["D2", "E2", "A2", "C3", "E3", "G3", "A3", "C4", "E4", "G4", "A4", "C5", "E5"].map((n) => [
+          n,
+          n + ".mp3",
+        ]),
+      ),
+      release: 0.3,
+      baseUrl: "https://gleitz.github.io/midi-js-soundfonts/FatBoy/electric_guitar_muted-mp3/",
+    })
+    s.volume.value = MUTED_LEVEL
     return s
   }
   if (kind === "guitar.electric") {
@@ -111,12 +127,11 @@ function makeSynth(T, kind) {
         E5: "E5.mp3",
       },
       release: 1.2,
-      baseUrl:
-        "https://gleitz.github.io/midi-js-soundfonts/MusyngKite/electric_guitar_clean-mp3/",
+      baseUrl: "https://gleitz.github.io/midi-js-soundfonts/MusyngKite/electric_guitar_clean-mp3/",
     })
-    // These samples are recorded quietly: this puts a riff or a chart about level with the
-    // piano playing the same thing.
-    s.volume.value = 12
+    // These samples are recorded quietly. This sits a riff under the snare and cymbals
+    // of a drum groove (compared above 150 Hz, where the kick doesn't hide them).
+    s.volume.value = 6
     return s
   }
   if (kind === "bass") {
@@ -157,6 +172,10 @@ function makeSynth(T, kind) {
 
 // A guitar's chords are played as shapes on its neck, whichever guitar it is.
 const isGuitar = (inst) => inst.split(".")[0] === "guitar"
+
+// What plays an event: its instrument, and its sound when it was set to another one
+// (guitar.electric muted).
+const voiceOf = (ev) => (ev.sound ? `${ev.instrument} ${ev.sound}` : ev.instrument)
 
 export async function renderToBuffer(parsed) {
   const chordEvents = parsed.events.filter((ev) => ev.chord)
@@ -199,7 +218,7 @@ export async function renderToBuffer(parsed) {
     async () => {
       const master = new Tone.Limiter(-1).toDestination()
       const synths = {}
-      for (const inst of new Set(parsed.events.map((ev) => ev.instrument))) {
+      for (const inst of new Set(parsed.events.map(voiceOf))) {
         const reverb = new Tone.Reverb({
           decay: 2.2,
           wet: isGuitar(inst) || inst === "piano" ? 0.14 : 0.18,
@@ -213,10 +232,10 @@ export async function renderToBuffer(parsed) {
 
       await Tone.loaded()
 
-      for (const ev of chordEvents) playChord(synths[ev.instrument], ev)
+      for (const ev of chordEvents) playChord(synths[voiceOf(ev)], ev)
       // A note sounds until the next one on its line, so its length is already worked out.
       for (const ev of noteEvents) {
-        synths[ev.instrument].triggerAttackRelease(
+        synths[voiceOf(ev)].triggerAttackRelease(
           ev.note.name,
           ev.secDur * 0.96,
           ev.secStart,
@@ -237,9 +256,12 @@ export async function renderToBuffer(parsed) {
 // well below the loudest moment, never before the music's own end, so a cell ending
 // on a rest keeps its length. A short fade-out keeps the cut from clicking.
 function trimSilence(buffer, musicSec) {
-  const channels = Array.from({ length: buffer.numberOfChannels }, (_, c) => buffer.getChannelData(c))
+  const channels = Array.from({ length: buffer.numberOfChannels }, (_, c) =>
+    buffer.getChannelData(c),
+  )
   let peak = 0
-  for (const ch of channels) for (let i = 0; i < ch.length; i++) peak = Math.max(peak, Math.abs(ch[i]))
+  for (const ch of channels)
+    for (let i = 0; i < ch.length; i++) peak = Math.max(peak, Math.abs(ch[i]))
   const threshold = peak * 0.01 // 40 dB below the peak: inaudible under the music
   let last = Math.ceil(musicSec * buffer.sampleRate)
   for (let i = buffer.length - 1; i > last; i--) {
@@ -379,8 +401,7 @@ export function drawWaveform(canvas, buffer, opts = {}) {
   const mid = h / 2
   let raw
   if (buffer && buffer.getChannelData) raw = buffer.getChannelData(0)
-  else if (buffer && buffer.get && buffer.get().getChannelData)
-    raw = buffer.get().getChannelData(0)
+  else if (buffer && buffer.get && buffer.get().getChannelData) raw = buffer.get().getChannelData(0)
   else return
 
   // `normalize` scales the loudest sample to full height, so quiet

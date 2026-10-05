@@ -191,7 +191,7 @@ play guitar: chords C - - G|Am - F G|%|F - _ -
 
 ### Drums
 
-`kick`, `snare`, `hat`, `ride` and `crash` are drums, one to a line, and so are the three toms: `tom.high`, `tom.low` and `tom.floor`. Some drums have other sounds with lines of their own: `ride.bell`, `hat.open`, `hat.pedal`, `snare.rim` (a rimshot) and `snare.ghost` (the snare's ghost notes, so they can sit under its main line). A drum plays either steps or beats:
+`kick`, `snare`, `hat`, `ride` and `crash` are drums, one to a line, and so are the three toms: `tom.high`, `tom.low` and `tom.floor`. Some drums have other sounds with lines of their own: `ride.bell`, `hat.open`, `hat.pedal`, `snare.rim` (a rimshot), `snare.cross` (a cross-stick) and `snare.ghost` (the snare's ghost notes, so they can sit under its main line). A drum plays either steps or beats:
 
 ```
 pattern beat = {
