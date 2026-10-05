@@ -104,12 +104,13 @@ A guitar, bass or piano part goes in the same pattern as the drums, on a line of
 ```composer-nb
 time 7 over 8
 tempo 100
+octave 2
 
 pattern groove = {
   kick: x--x---
   snare: ----x--
   ride.bell: x--
-  guitar.electric: F---GF-F--
+  guitar.electric: E---F#E-E--
 }
 
 play {
@@ -119,6 +120,8 @@ play {
 ```
 
 </Cell>
+
+`octave 2` puts every note written without a number in octave 2, so the riff starts on `E2`, a guitar's low E string. The same riff with the octave on each note is `E2---F#2E2-E2--`.
 
 Every line starts at the beginning of the pattern and repeats at its own length. Lines of different lengths drift against each other and come back together later.
 
@@ -132,9 +135,10 @@ Every line starts at the beginning of the pattern and repeats at its own length.
 
 | To                                               | Write                                                                              |
 | ------------------------------------------------ | ---------------------------------------------------------------------------------- |
-| Start the riff again with every bar              | The riff a bar long, with `-` to the end of the bar: `F---GF-F------`.             |
-| Stop the last note before the riff comes round   | `_` where it stops: `F---GF-F_-`.                                                  |
-| Play the riff an octave lower                    | `octave 2` above the pattern, or a number on each note: `F2---G2F2-F2--`.          |
+| Start the riff again with every bar              | The riff a bar long, with `-` to the end of the bar: `E---F#E-E------`.            |
+| Stop the last note before the riff comes round   | `_` where it stops: `E---F#E-E_-`.                                                 |
+| Play short notes instead of ringing ones         | `_` after each note: `E_--F#E_E_-`.                                                |
+| Play the riff an octave higher                   | `octave 3` above the pattern, which is also what it is with no `octave` line.      |
 | Play for a set time                              | A length that every line fits: `play 15 bars { ... }`, or `30 bars`. See the [fit rule](#fit-rule). |
 | Hear the drums or the riff alone                 | `//` in front of the other lines.                                                  |
 

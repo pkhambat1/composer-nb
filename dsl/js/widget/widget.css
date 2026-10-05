@@ -234,9 +234,21 @@
 .cnb-ghost {
   opacity: 0.45;
 }
-/* A note that's still sounding from the step before */
+/* A note still sounding from the step before: a line running on out of it, across the gap
+   between cells, so it doesn't read as another hit */
 .cnb-held {
-  background: color-mix(in srgb, var(--cnb-accent) 24%, var(--cnb-paper));
+  position: relative;
+  overflow: visible;
+}
+.cnb-held::before {
+  content: "";
+  position: absolute;
+  left: -2px;
+  right: 0;
+  top: 50%;
+  height: 4px;
+  margin-top: -2px;
+  background: color-mix(in srgb, var(--cnb-accent) 62%, var(--cnb-paper));
 }
 .cnb-cell.cnb-now {
   outline: 1.5px solid var(--cnb-text);

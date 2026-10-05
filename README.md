@@ -44,16 +44,17 @@ A play is a timeline: its own lines play once, so the crash hits once while the 
 
 ## Notes go on the same steps
 
-A guitar, piano or bass gets a line like a drum's, with a note where the drum has its `x`. `-` lets the note ring and `_` stops it. This riff is ten steps against the drums' seven and three, so it drifts too, and with no lengths written the pattern lasts until all four lines meet:
+A guitar, piano or bass gets a line like a drum's, with a note where the drum has its `x`. `-` lets the note ring and `_` stops it. This riff is ten steps against the drums' seven and three, so it drifts too, and with no lengths written the pattern lasts until all four lines meet. `octave 2` puts it on the guitar's low E string:
 
 ```
 time 7 over 8
+octave 2
 
 pattern groove = {
   kick: x--x---
   snare: ----x--
   ride.bell: x--
-  guitar.electric: F---GF-F--
+  guitar.electric: E---F#E-E--
 }
 
 play {

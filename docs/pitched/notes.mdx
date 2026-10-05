@@ -18,12 +18,13 @@ A note line names a [pitched instrument](/pitched/instruments#instruments) and d
 
 ```composer-nb
 time 7 over 8
+octave 2
 
 pattern groove = {
   kick: x--x---
   snare: ----x--
   hat: x-
-  guitar.electric: F---GF-F--
+  guitar.electric: E---F#E-E--
 }
 
 play groove
@@ -31,7 +32,7 @@ play groove
 
 </Cell>
 
-The guitar's ten steps repeat against the drums' seven. The pattern lasts until they end together, after five bars. See [A riff and drums together](/song/patterns#a-riff-and-drums-together).
+The guitar's ten steps repeat against the drums' seven. The pattern lasts until they end together, after five bars. `octave 2` puts the riff on the guitar's low E string. See [A riff and drums together](/song/patterns#a-riff-and-drums-together).
 
 ## Notes
 
@@ -178,7 +179,7 @@ A [`notes`](/reference/names#notes) name is accepted wherever a run of notes is.
 <Cell>
 
 ```composer-nb
-notes riff = F---GF-F--
+notes riff = E---F#E-E--
 play guitar.electric: riff riff
 ```
 

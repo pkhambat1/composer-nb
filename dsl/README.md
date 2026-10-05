@@ -134,7 +134,7 @@ A name's type goes in front of it, and `=` gives it its value:
 | Type      | What it holds                                                                 | Where it goes                                                 |
 | --------- | ----------------------------------------------------------------------------- | ------------------------------------------------------------- |
 | `steps`   | A drum's hits: `steps pair = ^-x-`                                            | On a drum's line: `hat: pair pair`                            |
-| `notes`   | A line of notes: `notes riff = F---GF-F--`                                    | On a pitched instrument's line: `guitar: riff`                |
+| `notes`   | A line of notes: `notes riff = E---F#E-E--`                                   | On a pitched instrument's line: `guitar: riff`                |
 | `chords`  | Bars of chords: `chords verse = Am F\|C G`                                    | After `chords` on an instrument's line: `piano: chords verse` |
 | `pattern` | Lines in braces that play together, over and over: `pattern groove = { ... }` | On a line of its own, or after `play`                         |
 
@@ -161,17 +161,18 @@ Notes are drawn on the steps, a note where a drum has its `x`:
 
 ```
 time 7 over 8
+octave 2
 
 pattern groove = {
   kick: x--x---
   snare: ----x--
-  guitar.electric: F---GF-F--
+  guitar.electric: E---F#E-E--
 }
 
 play groove
 ```
 
-A note is a capital letter, `A` to `G`, with `#` or `b` after it and an octave when it needs one: `F`, `F#`, `Bb`, `E2`. Without a number it's in the `octave` setting. One note is one step, however many characters it takes. `-` means nothing new happens, so the note rings on, and `_` stops it. `^` in front accents a note and `~` softens it. A line plays one note at a time. For more, its line takes a block of lines, which play together:
+A note is a capital letter, `A` to `G`, with `#` or `b` after it and an octave when it needs one: `F`, `F#`, `Bb`, `E2`. Without a number it's in the `octave` setting, so `octave 2` above puts the riff on the guitar's low E string. One note is one step, however many characters it takes. `-` means nothing new happens, so the note rings on, and `_` stops it. `^` in front accents a note and `~` softens it. A line plays one note at a time. For more, its line takes a block of lines, which play together:
 
 ```
 play piano: {
