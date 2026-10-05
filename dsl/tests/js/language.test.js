@@ -210,8 +210,8 @@ describe("types", () => {
     expect(allErrors("pair = ^-x-")).toEqual([
       "Say what pair is. Put its type in front: steps pair = ^-x-",
     ])
-    expect(allErrors("riff = F---GF-F--")).toEqual([
-      "Say what riff is. Put its type in front: notes riff = F---GF-F--",
+    expect(allErrors("riff = F---G F-F--")).toEqual([
+      "Say what riff is. Put its type in front: notes riff = F---G F-F--",
     ])
     // The name still gets defined, so there's one message, not one for each use.
     expect(allErrors("groove = {\n  kick: x\n}\nplay groove")).toEqual([
@@ -1603,17 +1603,17 @@ describe("notes", () => {
   }
 
   it("are drawn on the steps, a note where a drum has its x", () => {
-    expect(heard("play guitar: F---GF-F--")).toEqual([
+    expect(heard("play guitar: F---G F-F--")).toEqual([
       ["F3", 0, 4],
       ["G3", 4, 1],
       ["F3", 5, 2],
       ["F3", 7, 3],
     ])
-    expect(durations("play guitar: F---GF-F--")).toEqual([1.25])
+    expect(durations("play guitar: F---G F-F--")).toEqual([1.25])
   })
 
   it("take one step each, however many characters a note is", () => {
-    expect(heard("play bass: E1-F#1Bb1-")).toEqual([
+    expect(heard("play bass: E1-F#1 Bb1-")).toEqual([
       ["E1", 0, 2],
       ["F#1", 2, 1],
       ["A#1", 3, 2],
@@ -1634,6 +1634,22 @@ describe("notes", () => {
     expect(heard("play piano: --C-")).toEqual([["C3", 2, 2]])
   })
 
+  it("don't touch: a space goes between two notes, and takes no step", () => {
+    expect(firstError("play guitar: E---F#E-E--")).toBe(
+      '"E---F#E-E--": notes don\'t touch, so put a space between them: E---F# E-E--',
+    )
+    expect(firstError("play piano: CEG")).toMatch(/put a space between them: C E G$/)
+    expect(firstError("play piano: ^F^G")).toMatch(/put a space between them: \^F \^G$/)
+    expect(firstError("notes riff = E2G2")).toMatch(/put a space between them: E2 G2$/)
+    expect(sound("play guitar: E---F# E-E--")).toBe(sound("play guitar: E--- F# E- E--"))
+    // -, _ and a bar line keep notes apart already
+    expect(parseSource("play piano: C-E-G-_F#_E").errors).toEqual([])
+    expect(parseSource("play piano: C--------------- | E---------------").errors).toEqual([])
+    // Where a message shows notes as the line to write, they're spaced apart.
+    expect(firstError("play kick: F#E-")).toMatch(/guitar: F# E-$/)
+    expect(firstError("riff = F#E-")).toMatch(/Put its type in front: notes riff = F# E-$/)
+  })
+
   it("take ^ and ~ in front, for an accent and a soft note", () => {
     const o = parseSource("play piano: ^C-~E-G-").outputs[0]
     expect(o.notes.map((e) => [e.label, e.vel, e.accent, e.ghost])).toEqual([
@@ -1645,7 +1661,7 @@ describe("notes", () => {
 
   it("repeat at their own length in a pattern, against the drums", () => {
     const groove =
-      "time 7 over 8\npattern groove = {\n  kick: x--x---\n  guitar.electric: F---GF-F--\n}\n"
+      "time 7 over 8\npattern groove = {\n  kick: x--x---\n  guitar.electric: F---G F-F--\n}\n"
     // Lines of 7 and 10 steps meet after 70: five bars of 14.
     const o = parseSource(groove + "play groove").outputs[0]
     expect(o.durSec).toBe(8.75)
@@ -1670,8 +1686,8 @@ describe("notes", () => {
   })
 
   it("go by name, in a row with more notes", () => {
-    expect(sound("notes riff = F---GF-F--\nplay guitar: riff riff")).toBe(
-      sound("play guitar: F---GF-F--F---GF-F--"),
+    expect(sound("notes riff = F---G F-F--\nplay guitar: riff riff")).toBe(
+      sound("play guitar: F---G F-F-- F---G F-F--"),
     )
     expect(sound("notes riff = F---\nplay guitar: riff G---")).toBe(sound("play guitar: F---G---"))
   })
@@ -1681,7 +1697,7 @@ describe("notes", () => {
       ["C3", 0, 4],
       ["E3", 4, 4],
     ])
-    expect(durations("play every 1/3 beats piano: CEG")).toEqual([0.5])
+    expect(durations("play every 1/3 beats piano: C E G")).toEqual([0.5])
   })
 
   it("play together from a block of lines, each ringing on its own", () => {
@@ -1795,6 +1811,12 @@ describe("pitched instruments", () => {
       "tk-bar",
       "tk-word",
     ])
+    // A note straight after another is marked where the space goes.
+    expect(line("guitar: F#E-").slice(2)).toEqual([
+      ["tk-step", "F#"],
+      ["tk-error", "E"],
+      ["tk-rest", "-"],
+    ])
     // What's gone is marked where it's written.
     expect(line("chords: Am F")[0]).toEqual(["tk-error", "chords"])
     expect(highlightMusic("sound guitar")[0][0]).toEqual({ c: "tk-error", s: "sound" })
@@ -1803,7 +1825,7 @@ describe("pitched instruments", () => {
 
   it("keep every character of the source when colouring it", () => {
     const src =
-      "notes riff = F---GF-F--\nplay {\n  guitar.electric: riff | ^E2 ~Bb_\n  piano: {\n    chords Am F|C G\n    C4-E4-\n  }\n}"
+      "notes riff = F---G F-F--\nplay {\n  guitar.electric: riff | ^E2 ~Bb_\n  piano: {\n    chords Am F|C G\n    C4-E4-\n  }\n}"
     expect(
       highlightMusic(src)
         .map((parts) => parts.map((p) => p.s).join(""))
@@ -1833,7 +1855,7 @@ describe("the grid", () => {
   })
 
   it("gives each line of an instrument's block a row, named once", () => {
-    const { rows } = grid("play piano: {\n  C4E4--\n  G4---\n}")
+    const { rows } = grid("play piano: {\n  C4 E4--\n  G4---\n}")
     expect(rows.map((r) => r.label)).toEqual(["piano", ""])
     expect(cells(rows[1]).map(([at, cell]) => [at, cell.text || "held"])).toEqual([
       [0, "G4"],

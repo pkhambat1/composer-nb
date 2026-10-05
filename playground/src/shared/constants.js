@@ -76,7 +76,7 @@ pattern groove = {
   kick: x--x---
   snare: ----x--
   ride.bell: x--
-  guitar.electric: E---F#E-E--
+  guitar.electric: E---F# E-E--
 }
 
 play {

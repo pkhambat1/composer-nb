@@ -24,7 +24,7 @@ pattern groove = {
   kick: x--x---
   snare: ----x--
   hat: x-
-  guitar.electric: E---F#E-E--
+  guitar.electric: E---F# E-E--
 }
 
 play groove
@@ -48,6 +48,8 @@ The guitar's ten steps repeat against the drums' seven. The pattern lasts until 
 | `^`, `~` | Optional, in front of the letter. An accented note, or a soft one.                                                             |
 
 A note is one step, however many characters it takes. `F#--E2-` is five steps.
+
+Two notes never touch: a `-`, a `_`, a space or a `|` goes between them. A space takes no step, as on a drum line, so `E---F# E-E--` is ten steps. Written `E---F#E-E--`, where `F#` ends and `E` begins can't be seen, so it's an error.
 
 ## Steps
 
@@ -179,7 +181,7 @@ A [`notes`](/reference/names#notes) name is accepted wherever a run of notes is.
 <Cell>
 
 ```composer-nb
-notes riff = E---F#E-E--
+notes riff = E---F# E-E--
 play guitar.electric: riff riff
 ```
 
@@ -214,6 +216,7 @@ Lines of different lengths in one pattern repeat independently, drums and pitche
 | Lengths: `2 beats rest, F---`        | Steps: `--------F---`.                                      |
 | Beats: `1 3`                         | Steps.                                                      |
 | Lowercase letters: `f---`            | Capitals: `F---`.                                           |
+| Two notes touching: `F#E`            | A space between them: `F# E`. See [Notes](#notes).          |
 
 ## Errors
 
@@ -224,6 +227,7 @@ Lines of different lengths in one pattern repeat independently, drums and pitche
 | `"f---": notes are capital letters, A to G: guitar: F---G---`                                                               | Lowercase note.                               |
 | `"C9--": octaves run from 0 to 8`                                                                                           | Octave out of range.                          |
 | `"^---": ^ and ~ go in front of a note: ^F, ~G`                                                                             | `^` or `~` with no note after it.             |
+| `"E---F#E-E--": notes don't touch, so put a space between them: E---F# E-E--`                                               | Two notes with nothing between them.          |
 | `"x---" is a drum's steps. On guitar a step is a note: guitar: F---G---`                                                    | Drum steps on a pitched instrument's line.    |
 | `"Am" is a chord, and these are notes. For chords, write guitar: chords Am F`                                               | A chart without `chords` in front.            |
 | `"Am---": chord names don't go on the steps. Chords are written in a chart, where _ leaves a slot silent: guitar: chords _ Am _ Am` | A chord name in a run of steps.       |

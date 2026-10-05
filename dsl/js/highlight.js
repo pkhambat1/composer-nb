@@ -7,23 +7,14 @@
      .tk-ext, .tk-rest, .tk-slash, .tk-bass, .tk-beat, .tk-step, .tk-step-acc,
      .tk-error
    Whitespace is kept exactly, so the layer lines up with the textarea under it. */
-import {
-  KEYWORDS,
-  LANES,
-  MODIFIERS,
-  PARTS,
-  PITCHED,
-  SETTINGS,
-  TYPES,
-  UNITS,
-} from "./language.js"
+import { KEYWORDS, LANES, MODIFIERS, PARTS, PITCHED, SETTINGS, TYPES, UNITS } from "./language.js"
 import { isRoman } from "./chords.js"
 
 const ROMAN_RE = /^([#b])?(VII|VI|IV|V|III|II|I|vii|vi|iv|v|iii|ii|i)([°oø]?)(.*)$/
 const STEPS_RE = /^[-x^~d]+$/
 // A beat, with how it's hit in front when that isn't a plain hit: 4, 2e, ^4, ~3a, d3&
 const BEAT_RE = /^[\^~d]?\d+(e|&|a)?$/
-// Notes drawn on steps: F---GF-F--, with # or b, an octave, and ^ or ~ in front
+// Notes drawn on steps: E---F# E-E--, with # or b, an octave, and ^ or ~ in front
 const NOTES_RE = /^(?:-|_|[\^~]?[A-G][#b]?[0-8]?)+$/
 const NAME_RE = /^[A-Za-z][A-Za-z0-9]*$/
 const TRACK_RE = /^[A-Za-z][A-Za-z0-9]*(?:\.[A-Za-z0-9]+)?\s*:/
@@ -75,15 +66,20 @@ function stepRun(t) {
   )
 }
 
-// F---G~F-^E2: each note coloured as the step it is, with its mark and octave.
+// F---G~F-^E2: each note coloured as the step it is, with its mark and octave. A note
+// straight after another one is a mistake: notes don't touch.
 function noteRun(t) {
-  return t
-    .match(/-|_|[\^~]?[A-G][#b]?[0-8]?/g)
-    .map((n) =>
-      n === "-" || n === "_"
-        ? part("tk-rest", n)
-        : part(n[0] === "^" ? "tk-step tk-step-acc" : "tk-step", n),
-    )
+  let afterNote = false
+  return t.match(/-|_|[\^~]?[A-G][#b]?[0-8]?/g).map((n) => {
+    if (n === "-" || n === "_") {
+      afterNote = false
+      return part("tk-rest", n)
+    }
+    const touches = afterNote
+    afterNote = true
+    if (touches) return part("tk-error", n)
+    return part(n[0] === "^" ? "tk-step tk-step-acc" : "tk-step", n)
+  })
 }
 
 // One token of what an instrument plays (or of what a steps, notes or chords name holds).
@@ -296,7 +292,11 @@ function line(code) {
         /^\s+$/.test(p)
           ? part(null, p)
           : part(
-              p === "over" ? "tk-directive-key" : p === "=" || p === ":" ? "tk-error" : "tk-directive-val",
+              p === "over"
+                ? "tk-directive-key"
+                : p === "=" || p === ":"
+                  ? "tk-error"
+                  : "tk-directive-val",
               p,
             ),
       )

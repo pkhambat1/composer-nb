@@ -42,7 +42,7 @@ pattern groove = {
   kick: x--x---
   snare: ----x--
   ride.bell: x--
-  guitar.electric: E---F#E-E--
+  guitar.electric: E---F# E-E--
 }
 
 play {
@@ -59,7 +59,7 @@ play {
 | `octave 2`                  | [`octave`](/pitched/instruments#octave) | Puts notes written without a number in octave 2, where a guitar's low E string is. |
 | `pattern groove = {`        | [Pattern](/song/patterns)              | Binds `groove` to a pattern. Nothing sounds yet.                   |
 | `kick: x--x---`             | [Drum line](/drums/lines)                 | Seven steps on the kick. Repeats until the pattern ends.           |
-| `guitar.electric: E---F#E-E--` | [Note line](/pitched/notes)            | Ten steps on an electric guitar: E for four steps, F# for one, E for two and E for three. Repeats like the drums. |
+| `guitar.electric: E---F# E-E--` | [Note line](/pitched/notes)            | Ten steps on an electric guitar: E for four steps, F# for one, E for two and E for three. Repeats like the drums. |
 | `play {`                    | [`play`](/song/play)                     | Produces one output. With no length it lasts until the groove's lines end together, after 15 bars. |
 | `crash: 1`                  | [Drum line](/drums/lines)                 | One crash on beat 1. Lines written directly in a `play` play once. |
 | `groove`                    | [Sequence line](/song/patterns#sequence-lines) | Plays `groove`, repeated until the play ends.                |

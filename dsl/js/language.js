@@ -3,14 +3,15 @@
      tempo 90                 a setting: a reserved word and its value (time 7 over 8,
                               key Am). Settings aren't names, so no =.
      steps pair = ^-x-        a name, with its type in front. There are four types:
-     notes riff = F---GF-F--    steps (a drum's hits), notes, chords, and pattern (lines
+     notes riff = E---F# E-E--  steps (a drum's hits), notes, chords, and pattern (lines
      chords verse = Am E7|G D   in braces that play together). A name only ever holds
      pattern groove = { }       its type, and only goes where that type goes.
      kick: x--x---            inside braces, an instrument and what it plays. The colon
-     guitar: F---GF-F--       only ever means this. A drum takes steps (or beats: 1 2& 3).
+     guitar: E---F# E-E--     only ever means this. A drum takes steps (or beats: 1 2& 3).
      piano: chords Am F|C G   A pitched instrument takes notes, drawn on the same steps
-                              with the note where a drum has its x, or a chart of chords
-                              with chords in front. Lines play together, so two drums on
+                              with the note where a drum has its x (two notes never
+                              touch: F# E), or a chart of chords with chords in front.
+                              Lines play together, so two drums on
                               one step is two lines. Each instrument has one line in a
                               block; to layer it, its line takes a block of its own.
      play { }                 plays what's after it, a pattern or one line, and gives one
@@ -555,7 +556,7 @@ function defineWord(type, name, value, ln, state, err, blocks = null) {
   }
   if (ROMAN.includes(name)) return err(ln, `${name} is a chord, so pick another name`)
   if (type === "notes") {
-    // notes riff = F---GF-F--: one line of notes, drawn on the steps
+    // notes riff = E---F# E-E--: one line of notes, drawn on the steps
     if (noteLengths(value)) return err(ln, NO_NOTE_LENGTHS)
     const tokens = []
     for (const t of tokenize(value)) {
@@ -564,6 +565,7 @@ function defineWord(type, name, value, ln, state, err, blocks = null) {
       else if (w && w.type !== "notes") {
         return err(ln, `${t} is ${w.type}, so it can't go in notes`)
       } else if (w) tokens.push(...w.tokens)
+      else if (noteSteps(t) && spacedNotes(t)) return err(ln, notesTouch(t, spacedNotes(t)))
       else if (t === "|" || noteSteps(t)) tokens.push(t)
       else if (isStepRun(t)) {
         return err(
@@ -618,7 +620,7 @@ function defineWord(type, name, value, ln, state, err, blocks = null) {
     } else if (drawsNotes(t)) {
       return err(
         ln,
-        `"${t}" is notes, and ${name} is ${type}. For notes, write notes ${name} = ${value}`,
+        `"${t}" is notes, and ${name} is ${type}. For notes, write notes ${name} = ${spaceNotes(value)}`,
       )
     } else if (type === "steps") {
       return err(
@@ -749,7 +751,8 @@ function classifyDecl({ type, name, value }, { ln, blocks }, err, st) {
   }
   const shape = shapeOf(value, st, blocks)
   // How the value reads in a message, with its blocks as { ... }
-  const shown = value.replace(/\{#\d+\}/g, "{ ... }").replace(/\s+/g, " ")
+  let shown = value.replace(/\{#\d+\}/g, "{ ... }").replace(/\s+/g, " ")
+  if (shape === "notes") shown = spaceNotes(shown)
   if (!type) {
     if (!patternText(value)) {
       if (SETTINGS.includes(lower)) {
@@ -960,7 +963,7 @@ function classify({ ln, text, blocks }, err, st) {
     } else if (first === "chords" && after) {
       err(ln, `Chords go on an instrument's line: ${st.oldSound || "piano"}: ${text}`)
     } else if (first === "notes" && after) {
-      err(ln, `Notes go on an instrument's line: guitar: ${after}`)
+      err(ln, `Notes go on an instrument's line: guitar: ${spaceNotes(after)}`)
     } else if (SETTINGS.includes(first.toLowerCase())) {
       // tempo 90: a reserved word and its value
       const name = first.toLowerCase()
@@ -978,7 +981,7 @@ function classify({ ln, text, blocks }, err, st) {
     ) {
       err(ln, `Chords go on an instrument's line, e.g. ${st.oldSound || "piano"}: chords ${text}`)
     } else if (!tokens.some((t) => sections[t]) && tokens.some(drawsNotes)) {
-      err(ln, `Notes go on an instrument's line, e.g. guitar: ${text}`)
+      err(ln, `Notes go on an instrument's line, e.g. guitar: ${spaceNotes(text)}`)
     } else if (/^[A-Za-z(*\d{]/.test(first)) {
       // intro verse verse: patterns to play, one after another
       const trailing = /^(?:(.*\S)\s+)?for\s+(\S+)\s+bars?$/.exec(text)
@@ -1062,7 +1065,7 @@ function chordSlot(tok, part, st, key, err) {
     err(
       part.ln,
       drawsNotes(tok)
-        ? `"${tok}" is notes, and this line says chords. A line of notes has no word in front: ${part.name}: ${tok}`
+        ? `"${tok}" is notes, and this line says chords. A line of notes has no word in front: ${part.name}: ${spaceNotes(tok)}`
         : `"${tok}" isn't a chord I know`,
     )
     return null
@@ -1600,7 +1603,7 @@ function stepPattern(part, tokens, st, err) {
       } else if (noteSteps(tok)?.some((s) => s && !s.cut)) {
         err(
           part.ln,
-          `"${tok}"${where} is notes, and ${part.name} is a drum. Notes go on a pitched instrument's line: guitar: ${tok}`,
+          `"${tok}"${where} is notes, and ${part.name} is a drum. Notes go on a pitched instrument's line: guitar: ${spaceNotes(tok)}`,
         )
       } else if (buildChord(tok, parseKey(st.key))) {
         err(
@@ -1764,7 +1767,7 @@ const NOTE_HELP =
 const NO_NOTE_LENGTHS =
   "Notes are drawn step by step, without lengths: - lets a note ring on, and _ is a step of silence"
 
-// A run of notes (F---GF-F--) → its steps: one for each note, - or _, however many
+// A run of notes (E---F#) → its steps: one for each note, - or _, however many
 // characters a note takes. A step is null for -, { cut } for _, or the note, with whether
 // ^ or ~ is in front of it. null when it isn't a run of notes.
 function noteSteps(run) {
@@ -1790,8 +1793,38 @@ function noteSteps(run) {
   return steps.length ? steps : null
 }
 
+// `run` with a space between each two notes that touch (F#E → F# E), or null when it isn't
+// notes or no two notes touch. Notes don't touch, because a note takes one to four
+// characters, and where one ends and the next begins can't be seen (F#E, E2G2, ^F^G).
+function spacedNotes(run) {
+  let out = ""
+  let touched = false
+  let afterNote = false
+  for (let i = 0; i < run.length; ) {
+    if (run[i] === "-" || run[i] === "_") {
+      out += run[i++]
+      afterNote = false
+      continue
+    }
+    NOTE_AT.lastIndex = i
+    const m = NOTE_AT.exec(run)
+    if (!m) return null
+    if (afterNote) touched = true
+    out += (afterNote ? " " : "") + m[0]
+    afterNote = true
+    i = NOTE_AT.lastIndex
+  }
+  return touched ? out : null
+}
+
+// `text` with the notes in it spaced apart, for showing in a message as the line to write.
+const spaceNotes = (text) => text.replace(/[^\s|,{}]+/g, (w) => spacedNotes(w) || w)
+
+const notesTouch = (run, spaced) =>
+  `"${run}": notes don't touch, so put a space between them: ${spaced}`
+
 // Whether a token can only be notes drawn on steps: more than one step, with a note among
-// them (F---G, E2G2). One letter on its own could be a chord's name, so it isn't told here.
+// them (F---G, E2 G2). One letter on its own could be a chord's name, so it isn't told here.
 function drawsNotes(tok) {
   const steps = noteSteps(tok)
   return !!steps && steps.length > 1 && steps.some((s) => s && !s.cut)
@@ -1860,7 +1893,9 @@ function noteVoice(line, part, st, err) {
   }
   const add = (tok, viaWord) => {
     const run = noteSteps(tok)
-    if (run) steps.push(...run)
+    const spaced = run && spacedNotes(tok)
+    if (spaced) fail(notesTouch(tok, spaced))
+    else if (run) steps.push(...run)
     else if (viaWord) fail(`"${tok}" (in ${viaWord}) isn't a note. ${NOTE_HELP}`)
     else fail(notNotes(tok, st, part.name, `${part.name}: chords ${line.text}`))
   }
@@ -1934,7 +1969,10 @@ function pitchedLayer(line, part, st, barTicks, err) {
   const tokens = tokenize(line.text)
   if (tokens[0] === "notes") {
     const rest = line.text.replace(/^\s*notes\s*/, "")
-    err(line.ln, `A line's notes need no word in front: ${part.name}: ${rest || "F---G---"}`)
+    err(
+      line.ln,
+      `A line's notes need no word in front: ${part.name}: ${spaceNotes(rest) || "F---G---"}`,
+    )
     return null
   }
   if (tokens[0] === "chords") {
@@ -1949,7 +1987,7 @@ function pitchedLayer(line, part, st, barTicks, err) {
   return steps && notePattern(here, steps, st)
 }
 
-// A pitched instrument's line: guitar: F---GF-F--, or piano: chords Am F|C G. A block
+// A pitched instrument's line: guitar: E---F# E-E--, or piano: chords Am F|C G. A block
 // holds its layers, one a line, which play together: more notes at once, or chords under a
 // tune. Each layer repeats until they all line up again.
 function pitchedPattern(part, st, barTicks, err) {
