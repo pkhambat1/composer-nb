@@ -1,0 +1,34 @@
+---
+title: "Settings"
+description: "Global values: time, tempo, kit, key, capo, octave and an instrument's sound."
+---
+
+A setting is a name followed by its value, with no `=` or `:`. It applies from its line to the end of the cell, or of the block it is in.
+
+| Setting | Value | Default | Sets |
+| --- | --- | --- | --- |
+| `time` | `<count> over <unit>` | `4 over 4` | The time signature. |
+| `tempo` | 20 to 400 | `120` | Quarter notes per minute. |
+| `kit` | `rock` or `synth` | `rock` | The drum kit. |
+| `key` | `C`, `Am`, `Bb`, `F#m` and so on | `C` | The key [Roman numerals](/language/chords#roman-numerals) are read in. |
+| `capo` | 0 to 12 | `0` | The fret a guitar's chords are played from. |
+| `octave` | 1 to 6 | `3` | The octave of a note without a number, and of a chord's root. |
+| `guitar.electric` | `clean` or `muted` | `clean` | The electric guitar's sound. |
+
+## time
+
+The unit is the note value counted: 1, 2, 4, 8 or 16. The count can be a sum, as in `time 3+4 over 8`, which groups the grid without changing the bar. `over` is required because `/` is division: `7/8` is the number 0.875.
+
+## kit
+
+`rock` is a recorded kit, loaded from the network on first use. `synth` is synthesized and works offline.
+
+## capo and octave
+
+`capo` raises a guitar's chords by that many frets. Their names and diagrams keep the shape you finger. It does not move notes, since a note's name is its pitch.
+
+`octave` counts from C: `C4` is middle C, and the note below it is `B3`.
+
+## Instrument sound
+
+An instrument's name followed by a value, with no colon, sets its sound from that line on. `guitar.electric muted` is palm-muted. With a colon, the same name starts a line. Only `guitar.electric` has more than one sound.

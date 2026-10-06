@@ -1,0 +1,104 @@
+---
+title: "Patterns"
+description: "The pattern type: lines that play together and repeat, how long a pattern lasts, sequences and bar."
+---
+
+import { Cell } from "/snippets/cell.jsx"
+
+A `pattern` value is a block of lines that start together and repeat. Declaring one plays nothing. [`play`](/language/play) renders it.
+
+<Cell>
+
+```composer-nb
+time 5 over 4
+tempo 120
+
+pattern groove = {
+  kick: x---
+  snare: x----
+  tom.floor: x--
+}
+
+play groove
+```
+
+</Cell>
+
+## Duration
+
+Each line repeats at its own length, and the pattern lasts until they end together: the least common multiple of their lengths. Above, the floor tom repeats every 3 steps, the kick every 4 and the snare every 5, so they meet after 60 steps: three bars of `5 over 4`.
+
+A length in front sets the duration instead: `pattern groove = 4 bars { ... }`. Everything inside must then fit it a whole number of times, and the error names the shortest length that would. A pattern whose lines don't meet within 64 bars needs a length.
+
+## Sequences
+
+Patterns or blocks in a row play one after another. See [Blocks](/language/overview#blocks) for how a block's layout decides this. A length in front repeats an item, and parentheses put several items under one length.
+
+<Cell>
+
+```composer-nb
+pattern intro = { crash: 1 }
+pattern verse = { kick: x---x--- }
+pattern chorus = {
+  kick: x-x-
+  snare: ----x---
+}
+
+play intro 4 bars (verse chorus) intro
+```
+
+</Cell>
+
+A pattern can hold another by name, on a line of its own, and its value can be a sequence.
+
+<Cell>
+
+```composer-nb
+pattern beat = {
+  kick: x---
+  hat: x-
+}
+
+pattern verse = {
+  piano: chords Am F|C G
+  beat
+}
+
+pattern song = verse verse
+
+play song
+```
+
+</Cell>
+
+## bar
+
+`bar <n> { ... }` adds lines to bar `n` of the pattern or play it is in, every time through. `bar 3 to 4 { ... }` covers a range. It adds to what plays and silences nothing. Where it hits the same kit piece or instrument at the same moment as a line above, it wins.
+
+<Cell>
+
+```composer-nb
+time 7 over 8
+tempo 90
+
+pattern groove = {
+  kick: x--x---
+  snare: 2e 4
+  snare.ghost: --x----
+  hat: ^-x-
+  bar 2 {
+    snare.ghost: d3 d3e
+    hat.open: ^3&
+    hat.pedal: 4
+  }
+}
+
+play {
+  crash: 1
+  groove
+}
+```
+
+</Cell>
+
+This is *The Sound of Muzak* by Porcupine Tree. The lines of `groove` meet after two bars, so the pattern is two bars long and the fill closes every pass.

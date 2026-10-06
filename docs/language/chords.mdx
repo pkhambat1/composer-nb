@@ -1,0 +1,53 @@
+---
+title: "Chords"
+description: "The chords type: a chart of bars on an instrument's line."
+---
+
+import { Cell } from "/snippets/cell.jsx"
+
+An instrument's line holds a `chords` value when the word `chords` comes first. Without it, the line is read as notes.
+
+<Cell>
+
+```composer-nb
+play guitar: chords C - - G|Am - F G|%|F - _ -
+```
+
+</Cell>
+
+## Charts
+
+`|` separates bars. Inside a bar, the tokens split the bar into equal slots.
+
+| Token | In its slot |
+| --- | --- |
+| A chord symbol | Starts the chord. |
+| A Roman numeral | Starts the chord on that degree of the [`key`](/language/settings). |
+| `-` | Holds the chord. |
+| `_` | Silence. |
+| `%` | Repeats the bar before. It stands alone in its bar. |
+
+Each slot must be a whole number of sixteenth notes, so a `4 over 4` bar takes 1, 2, 4, 8 or 16 slots. Rhythm comes from the slots: `_ Am _ Am` plays on the off-beats.
+
+## Chord symbols
+
+A symbol is a root, a quality and an optional bass note: `C`, `Am`, `F#m`, `Bb7`, `Cmaj7`, `G7sus4`, `Em7b5`, `Cadd9`, `C/E`. No quality means major.
+
+## Roman numerals
+
+Uppercase is a major chord and lowercase a minor one, on that degree of the current key. Degrees come from the major scale in a major key and the natural minor in a minor key. A `b` or `#` in front moves the root a semitone. After the numeral, `°` or `o` makes it diminished, `ø` half-diminished, and any quality can follow: `V7`, `ii7`.
+
+<Cell>
+
+```composer-nb
+key C
+play piano: chords I vi|IV V7|bVII IV|ii7 vii°
+```
+
+</Cell>
+
+In C, this plays `C Am`, `F G7`, `Bb F`, `Dm7 Bdim`.
+
+## Voicing
+
+Guitars play the fretboard shape for each chord where one is known, moved up by the [`capo`](/language/settings#capo-and-octave). Other instruments stack the chord's notes upward from the root in the current `octave`, with the bass note an octave below.

@@ -1,7 +1,7 @@
 /* The docs site (docs/*.mdx) can't drift from the language or from itself. The examples have
    to parse: a ```composer-nb block must come back with no errors, unless it's titled
-   Invalid, in which case it must come back with at least one. Every drum the language has
-   must be on the pages that say what it is. And the site has to hold together: every page
+   Invalid, in which case it must come back with at least one. Every kit piece and instrument
+   the language has must be in its page's table. And the site has to hold together: every page
    in the sidebar, every link landing on a heading that exists. */
 import { describe, it, expect } from "vitest"
 import { existsSync, readdirSync, readFileSync } from "node:fs"
@@ -81,26 +81,15 @@ describe("docs examples", () => {
   }
 })
 
-// A drum that exists in the language and not in these places is a drum nobody can find:
-// the table of drum names, the table from staff position to name, and the staff figure.
-describe("docs drums", () => {
-  const places = {
-    "drums/lines.mdx": (name) => "| `" + name + "`",
-    "drums/notation.mdx": (name) => "| `" + name + "`",
-    "images/drum-key.svg": (name) => ">" + name + "<",
-  }
-  for (const [file, mention] of Object.entries(places)) {
-    it(`${file} has every drum`, () => {
-      const text = read(file)
-      expect(LANES.filter((name) => !text.includes(mention(name)))).toEqual([])
-    })
-  }
-})
-
-// The same for the instruments that play notes and chords, and their table.
-describe("docs pitched instruments", () => {
-  it("pitched/instruments.mdx has every pitched instrument", () => {
-    const text = read("pitched/instruments.mdx")
+// A kit piece or instrument that exists in the language and not in its table is one nobody can
+// find.
+describe("docs names", () => {
+  it("language/steps.mdx has every kit piece", () => {
+    const text = read("language/steps.mdx")
+    expect(LANES.filter((name) => !text.includes("| `" + name + "`"))).toEqual([])
+  })
+  it("language/notes.mdx has every instrument", () => {
+    const text = read("language/notes.mdx")
     expect(PITCHED.filter((name) => !text.includes("| `" + name + "`"))).toEqual([])
   })
 })
@@ -122,6 +111,8 @@ describe("docs site", () => {
       [...read(page).matchAll(/^#{2,4} (.+)$/gm)].map((m) => anchor(m[1])),
     ]),
   )
+  // The index page is served at the root of the site.
+  headings["/"] = headings["/index"]
 
   it("lists every page in the sidebar", () => {
     const listed = site.navigation.groups.flatMap((group) => group.pages)

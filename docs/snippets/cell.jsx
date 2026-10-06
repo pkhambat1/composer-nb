@@ -1,9 +1,9 @@
 {/* A docs example as a cell you can edit and play. The children are the example's code
     block, which is what the page shows until the playground frame is up; it is also where
     the cell's source comes from, so the source is written once. The frame is the
-    playground's embed view: see playground/src/shared/embed.js and the Embedding section
-    of playground/notebook.mdx. Mintlify brings only the exported component into a page,
-    so everything the component needs is inside it. */}
+    playground's embed view (playground/src/shared/embed.js), which reports its height and
+    takes the page's theme through postMessage. Mintlify brings only the exported component
+    into a page, so everything the component needs is inside it. */}
 
 export const Cell = ({ children }) => {
   const wrap = useRef(null)

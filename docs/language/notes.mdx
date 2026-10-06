@@ -1,0 +1,59 @@
+---
+title: "Notes"
+description: "The notes type: what an instrument plays, one note at a time."
+---
+
+import { Cell } from "/snippets/cell.jsx"
+
+An instrument's line holds a `notes` value. It is drawn on steps like a kit piece's line, with a note where a kit piece has its `x`.
+
+<Cell>
+
+```composer-nb
+play piano: E4---E4---F4---G4--- | G4---F4---E4---D4---
+```
+
+</Cell>
+
+## Instruments
+
+| Name | Instrument |
+| --- | --- |
+| `piano` | Grand piano, sampled |
+| `piano.electric` | Electric piano |
+| `organ` | Organ |
+| `pad` | Synth pad |
+| `bass` | Bass |
+| `guitar` | Steel-string guitar, sampled |
+| `guitar.electric` | Electric guitar, sampled. Clean or [muted](/language/settings#instrument-sound). |
+
+## Writing notes
+
+A note is a capital `A` to `G`, then an optional `#` or `b`, then an optional octave from 0 to 8. A note without a number is in the current [`octave`](/language/settings#capo-and-octave). Pitches are as they sound, so a guitar's low E is `E2`.
+
+| Step | Plays |
+| --- | --- |
+| A note | Starts the note. It sounds until the next note or `_`. |
+| `^` or `~` before a note | The note accented, or soft. |
+| `-` | Nothing new. A sounding note carries on. |
+| `_` | Stops the note. |
+| `\|` | Optional bar line, checked against the `time`. |
+
+A note is one step however many characters it has, so `F---` and `F#---` are both quarter notes. Two notes never touch: a `-`, `_`, space or `|` goes between them. A space takes no step, so `E---F# E-E--` is ten steps.
+
+In a pattern, the last note rings over the repeat until the first note or `_`. Start a line with `_` to begin it with silence.
+
+## Layers
+
+A line plays one note at a time. For notes that sound together, give the instrument a block of layers, one per line. Each layer is its own voice and repeats until they all end together. A layer can be a chart with `chords` in front, to put chords under a tune.
+
+<Cell>
+
+```composer-nb
+play piano: {
+  chords Am F|C G
+  E5-------C5-------|E5---D5---C5---B4---
+}
+```
+
+</Cell>

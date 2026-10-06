@@ -2,7 +2,7 @@
   "$schema": "https://mintlify.com/docs.json",
   "theme": "mint",
   "name": "composer-nb",
-  "description": "Reference for the composer-nb language for drums, notes and chords, its Python package and the playground.",
+  "description": "Reference for composer-nb, a typed, declarative language for composing music.",
   "colors": {
     "primary": "#1a73e8",
     "light": "#8ab4f8",
@@ -16,7 +16,9 @@
         "dark": "github-dark"
       },
       "languages": {
-        "custom": ["/languages/composer-nb.json"]
+        "custom": [
+          "/languages/composer-nb.json"
+        ]
       }
     }
   },
@@ -24,56 +26,21 @@
     "groups": [
       {
         "group": "Get started",
-        "pages": ["index", "quickstart"]
-      },
-      {
-        "group": "Drums",
         "pages": [
-          "drums/notation",
-          "drums/lines",
-          "drums/note-values"
+          "index",
+          "jupyter"
         ]
       },
       {
-        "group": "Notes and chords",
+        "group": "Language",
         "pages": [
-          "pitched/notes",
-          "pitched/chords",
-          "pitched/instruments"
-        ]
-      },
-      {
-        "group": "Song structure",
-        "pages": [
-          "song/time-and-tempo",
-          "song/patterns",
-          "song/play"
-        ]
-      },
-      {
-        "group": "Language reference",
-        "pages": [
-          "reference/program-structure",
-          "reference/settings",
-          "reference/names",
-          "reference/numbers-and-lengths",
-          "reference/errors"
-        ]
-      },
-      {
-        "group": "Python",
-        "pages": [
-          "python/installation",
-          "python/music-magic",
-          "python/song",
-          "python/music-widget"
-        ]
-      },
-      {
-        "group": "Playground",
-        "pages": [
-          "playground/notebook",
-          "playground/keyboard-shortcuts"
+          "language/overview",
+          "language/settings",
+          "language/steps",
+          "language/notes",
+          "language/chords",
+          "language/patterns",
+          "language/play"
         ]
       }
     ]
@@ -101,56 +68,124 @@
   },
   "redirects": [
     {
+      "source": "/quickstart",
+      "destination": "/"
+    },
+    {
+      "source": "/drums/notation",
+      "destination": "/language/steps"
+    },
+    {
+      "source": "/drums/lines",
+      "destination": "/language/steps"
+    },
+    {
+      "source": "/drums/note-values",
+      "destination": "/language/steps#step-length"
+    },
+    {
+      "source": "/pitched/notes",
+      "destination": "/language/notes"
+    },
+    {
+      "source": "/pitched/chords",
+      "destination": "/language/chords"
+    },
+    {
+      "source": "/pitched/instruments",
+      "destination": "/language/notes#instruments"
+    },
+    {
+      "source": "/song/time-and-tempo",
+      "destination": "/language/settings"
+    },
+    {
+      "source": "/song/patterns",
+      "destination": "/language/patterns"
+    },
+    {
+      "source": "/song/play",
+      "destination": "/language/play"
+    },
+    {
+      "source": "/reference/program-structure",
+      "destination": "/language/overview"
+    },
+    {
+      "source": "/reference/settings",
+      "destination": "/language/settings"
+    },
+    {
+      "source": "/reference/names",
+      "destination": "/language/overview#types"
+    },
+    {
+      "source": "/reference/numbers-and-lengths",
+      "destination": "/language/overview#lengths"
+    },
+    {
+      "source": "/reference/errors",
+      "destination": "/language/overview"
+    },
+    {
+      "source": "/python/installation",
+      "destination": "/jupyter"
+    },
+    {
+      "source": "/python/music-magic",
+      "destination": "/jupyter"
+    },
+    {
+      "source": "/python/song",
+      "destination": "/jupyter#song"
+    },
+    {
+      "source": "/python/music-widget",
+      "destination": "/jupyter#song"
+    },
+    {
+      "source": "/playground/notebook",
+      "destination": "/#run-it"
+    },
+    {
+      "source": "/playground/keyboard-shortcuts",
+      "destination": "/#run-it"
+    },
+    {
       "source": "/language/drums",
-      "destination": "/drums/lines"
+      "destination": "/language/steps"
     },
     {
       "source": "/language/every",
-      "destination": "/drums/note-values"
-    },
-    {
-      "source": "/language/chords",
-      "destination": "/pitched/chords"
+      "destination": "/language/steps#step-length"
     },
     {
       "source": "/chords/lines",
-      "destination": "/pitched/chords"
+      "destination": "/language/chords"
     },
     {
       "source": "/chords/sound",
-      "destination": "/pitched/instruments"
-    },
-    {
-      "source": "/language/patterns",
-      "destination": "/song/patterns"
-    },
-    {
-      "source": "/language/play",
-      "destination": "/song/play"
+      "destination": "/language/notes#instruments"
     },
     {
       "source": "/language/bar",
-      "destination": "/song/patterns#bar"
+      "destination": "/language/patterns#bar"
     },
     {
       "source": "/language/program-structure",
-      "destination": "/reference/program-structure"
-    },
-    {
-      "source": "/language/settings",
-      "destination": "/reference/settings"
+      "destination": "/language/overview"
     },
     {
       "source": "/language/declarations",
-      "destination": "/reference/names"
+      "destination": "/language/overview#types"
     },
     {
       "source": "/language/numbers-and-lengths",
-      "destination": "/reference/numbers-and-lengths"
+      "destination": "/language/overview#lengths"
     },
     {
       "source": "/language/errors",
-      "destination": "/reference/errors"
+      "destination": "/language/overview"
     }
   ]
 }

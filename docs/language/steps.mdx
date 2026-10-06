@@ -1,0 +1,146 @@
+---
+title: "Steps"
+description: "The steps type: what a kit piece plays."
+---
+
+import { Cell } from "/snippets/cell.jsx"
+
+A kit piece's line holds a `steps` value: one character per step, and a step is a sixteenth note. A bar of `4 over 4` is 16 steps.
+
+<img src="/images/sheet-to-code.svg" alt="One bar of a rock beat on a drum staff: hi-hat eighth notes, snare on 2 and 4 with accents, kick on 1, 3 and the and of 3. Below it, the hat, snare and kick lines in code, with each character under the note it plays." />
+
+<Cell>
+
+```composer-nb
+play {
+  hat: x-x- x-x- x-x- x-x-
+  snare: ---- ^--- ---- ^---
+  kick: x--- ---- x-x- ----
+}
+```
+
+</Cell>
+
+## Kit pieces
+
+The drum kit is one instrument, chosen by [`kit`](/language/settings#kit). Each piece of it has a line of its own.
+
+| Name | Kit piece |
+| --- | --- |
+| `kick` | Bass drum |
+| `snare` | Snare drum |
+| `snare.ghost` | Snare ghost notes |
+| `snare.rim` | Rimshot |
+| `snare.cross` | Cross-stick |
+| `hat` | Closed hi-hat |
+| `hat.open` | Open hi-hat. Rings until the next `hat` or `hat.pedal`. |
+| `hat.pedal` | Hi-hat played with the foot |
+| `ride` | Ride cymbal |
+| `ride.bell` | Ride bell |
+| `crash` | Crash cymbal |
+| `tom.high` | High tom |
+| `tom.low` | Low tom |
+| `tom.floor` | Floor tom |
+
+## Characters
+
+| Character | Plays |
+| --- | --- |
+| `x` | A hit. |
+| `^` | An accent. |
+| `~` | A ghost note. The snare's ghost notes go on `snare.ghost`, as `x`. |
+| `d` | Two thirty-second notes. |
+| `-` | Nothing. |
+| `\|` | Optional bar line, checked against the `time`. |
+
+Spaces are ignored, so steps can be grouped by beat. A `steps` value is as long as its characters: `x--x---` is seven steps.
+
+## Beats
+
+A line can list beats instead, counted `1 e & a`. A character in front gives the hit: `^4`, `~3a`, `d3`. A list of beats is one bar long, and it can't share a line with steps.
+
+<Cell>
+
+```composer-nb
+play {
+  hat: x-x- x-x- x-x- x-x-
+  snare: ^2 ^4
+  kick: 1 3 3&
+}
+```
+
+</Cell>
+
+## Rests and lengths
+
+Commas split a line into parts. A [length](/language/overview#lengths) in front of a part fills that much time: `2 beats rest` is silence, and `2 beats x-` repeats `x-` for two beats.
+
+<Cell>
+
+```composer-nb
+play {
+  snare: 2 beats rest, dd, 1.5 beats rest
+  hat: 2 beats x-, 2 beats rest
+}
+```
+
+</Cell>
+
+## Layers
+
+A block after a kit piece's colon holds layers, one per line, and evaluates to one `steps` value. Each layer repeats until they all end together. Where two layers hit the same step the lower one wins, and a `-` never overrides a hit.
+
+<Cell>
+
+```composer-nb
+play snare.ghost: {
+  --x-
+  ------------ddd-
+}
+```
+
+</Cell>
+
+This evaluates to `--x---x---x-ddd-`.
+
+## Step length
+
+`every <length>` in front of a line or block sets how long one step lasts inside it.
+
+<Cell>
+
+```composer-nb
+time 3 over 4
+tempo 100
+
+steps pa = ^---
+steps radiddle = -xxx
+
+pattern hands = {
+  snare: pa
+  snare.ghost: radiddle
+}
+
+pattern feet = every 3 steps {
+  kick: ^-^^-^--
+  hat.pedal: -x--x-xx
+}
+
+play {
+  hands
+  feet
+}
+```
+
+</Cell>
+
+This is Gavin Harrison's paradiddle challenge. `every 3 steps` makes each of the feet's steps three sixteenth notes long, so the feet play the paradiddle three times slower than the hands.
+
+| On the score | Write |
+| --- | --- |
+| Eighth notes | `every 2 steps` |
+| Eighth-note triplets | `every 1/3 beats` |
+| Sixteenth-note triplets | `every 1/6 beats` |
+| Thirty-second notes | `every 1/2 steps` |
+
+`every` changes the steps of kit pieces and instruments alike. Beats and chords keep their timing, and lines outside it keep their own step.
