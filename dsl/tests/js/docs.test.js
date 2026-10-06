@@ -8,6 +8,7 @@ import { existsSync, readdirSync, readFileSync } from "node:fs"
 import { join } from "node:path"
 import { fileURLToPath } from "node:url"
 import { initialState, LANES, parseCell, PITCHED } from "../../js/language.js"
+import { highlightMusic } from "../../js/highlight.js"
 
 const DOCS = fileURLToPath(new URL("../../../docs", import.meta.url))
 // Design notes sit beside the pages but aren't published (see docs/.mintignore).
@@ -66,6 +67,14 @@ describe("docs examples", () => {
         const errors = parsed.errors.map((e) => `line ${e.line}: ${e.msg}`)
         if (block.invalid) expect(errors, `${page}:${block.line}`).not.toEqual([])
         else expect(errors, `${page}:${block.line}`).toEqual([])
+        // A cell frames the playground, whose editor colours the source: a line that
+        // parses mustn't be painted as a mistake there.
+        if (!block.invalid) {
+          const painted = highlightMusic(body)
+            .map((parts, i) => [i + 1, parts.filter((p) => p.c === "tk-error").map((p) => p.s)])
+            .filter(([, marked]) => marked.length)
+          expect(painted, `${page}:${block.line} is coloured as a mistake`).toEqual([])
+        }
         if (name) cells[name] = parsed.state
       }
     })

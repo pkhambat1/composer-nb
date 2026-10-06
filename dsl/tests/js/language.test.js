@@ -729,6 +729,19 @@ describe("lengths", () => {
     expect(firstError("pattern g = { kick: x } 3 bars")).toMatch(/pattern g = 3 bars \{/)
     expect(firstError("pattern g = { kick: x } nope")).toMatch(/"nope" isn't defined/)
   })
+
+  it("colour what follows a length as it would be coloured without one", () => {
+    const marked = (src) =>
+      highlightMusic(src)
+        .flat()
+        .filter((p) => p.c === "tk-error")
+        .map((p) => p.s)
+    expect(marked("play 2 bars piano: chords Am F")).toEqual([])
+    expect(marked("play 2 bars kick: x---")).toEqual([])
+    expect(marked("play 2 bars every 3 steps kick: x-x-")).toEqual([])
+    expect(marked("pattern fill = 1 bars snare: xxxx")).toEqual([])
+    expect(marked("play 2 barsx groove")).toEqual(["barsx"])
+  })
 })
 
 describe("what repeats has to fit", () => {
