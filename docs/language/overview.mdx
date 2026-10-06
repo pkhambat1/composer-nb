@@ -1,0 +1,105 @@
+---
+title: "Overview"
+description: "Cells, statements, types, blocks, lengths and scope."
+---
+
+import { Cell } from "/snippets/cell.jsx"
+
+## Cells
+
+A cell is a program. The interpreter evaluates its statements top to bottom, one per line, and each `play` renders one output. Nothing else makes sound. `//` starts a comment.
+
+| Statement | Example | Allowed |
+| --- | --- | --- |
+| Setting | `tempo 90` | Anywhere. See [Settings](/language/settings). |
+| Declaration | `steps fill = x-x-` | Anywhere. See [Types](#types). |
+| Line | `kick: x--x---` | In a block, or after `play`. |
+| Sequence | `intro verse verse` | In a block, or after `play`. See [Sequences](/language/patterns#sequences). |
+| `bar`, `every` | `bar 4 { ... }` | In a block, or after `play`. See [bar](/language/patterns#bar) and [Step length](/language/steps#step-length). |
+| `play` | `play groove` | Top level only. See [play](/language/play). |
+
+## Types
+
+Every value has one of four types.
+
+| Type | A value is | Literal | Used |
+| --- | --- | --- | --- |
+| `steps` | Hits for one kit piece, one character per step. | `x--x---` | After a kit piece's colon. See [Steps](/language/steps). |
+| `notes` | Notes for one instrument, one at a time. | `E---F# E-E--` | After an instrument's colon. See [Notes](/language/notes). |
+| `chords` | Bars of chords. | `Am F\|C G` | After `chords` on an instrument's line. See [Chords](/language/chords). |
+| `pattern` | Lines that play together and repeat. | `{ kick: x--- }` | After `play`, or in a sequence. See [Patterns](/language/patterns). |
+
+A declaration binds a name to a value: `<type> <name> = <value>`. The type is required. A name is accepted only where its type is, and only below its declaration.
+
+<Cell>
+
+```composer-nb
+steps backbeat = 2 4
+notes walk = A1-------F1-------|C2-------G1-------
+chords verse = Am F|C G
+
+pattern groove = {
+  snare: backbeat
+  hat: x-
+  bass: walk
+  piano: chords verse
+}
+
+play groove
+```
+
+</Cell>
+
+Names start with a letter and hold letters and digits. Names of `steps`, `notes` and `chords` are lowercase, at least two characters long and not a Roman numeral, so a name never reads as a step, note or chord.
+
+## Blocks
+
+A block is statements in braces, and it evaluates to a value. Where the block is decides its type.
+
+| Block | Evaluates to |
+| --- | --- |
+| After `pattern <name> =`, `play`, `bar` or `every` | A `pattern`. |
+| After a kit piece's colon | One `steps` value, from [layers](/language/steps#layers). |
+| After an instrument's colon | [Layers](/language/notes#layers) of `notes` and `chords` that sound together. |
+
+The statements in a block start together, and a statement ends with its line. So the layout decides how blocks combine:
+
+| Blocks written | Play |
+| --- | --- |
+| On separate lines | Together, merged. |
+| In a row, on one line or joined by `} {` | One after another, as a [sequence](/language/patterns#sequences). |
+
+<Cell>
+
+```composer-nb
+play {
+  { kick: x--- } { snare: x--- }
+  { hat: x- }
+}
+```
+
+</Cell>
+
+The kick and then the snare play in sequence, and the hats play under both.
+
+A block holds one line per kit piece or instrument. To layer one, give its line a block.
+
+Where a line is decides whether it repeats. In a pattern, every line repeats until the pattern ends. Directly in a `play`, a line plays once. A `steps` value is not a loop: `x--x---` is seven steps, and the pattern around it does the repeating.
+
+## Lengths
+
+A length is a number and a unit, written in front of what it measures: `4 bars groove`, `2 beats rest`, `every 3 steps`. Units are always plural, even after 1: `1 bars`.
+
+| Unit | Lasts |
+| --- | --- |
+| `steps` | One step: a sixteenth note, unless [`every`](/language/steps#step-length) changes it. |
+| `beats` | A quarter note, in every time signature. |
+| `bars` | One bar of the current [`time`](/language/settings#time). |
+
+Any number can be arithmetic: `tempo 60*2`, `every 1/3 beats`.
+
+## Scope
+
+- A setting or declaration applies from its line to the end of the cell, or of the block it is in.
+- A pattern is evaluated where it is played, with the settings in effect there.
+- The settings and names at the end of a cell carry into other cells. In the playground, a cell starts from the cells above it. In Jupyter, it starts from the cell named by [`after`](/jupyter#cells-that-continue).

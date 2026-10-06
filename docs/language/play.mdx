@@ -1,0 +1,55 @@
+---
+title: "play"
+description: "The statement that renders a value to audio."
+---
+
+import { Cell } from "/snippets/cell.jsx"
+
+`play` evaluates what follows it and renders one output. It is the only statement that makes sound, and it goes at the top level of a cell.
+
+```text
+play [<length>] <pattern, sequence, block or line>
+```
+
+<Cell>
+
+```composer-nb
+pattern groove = {
+  kick: x---x---
+  snare: ----x---
+}
+
+play groove
+play 2 bars piano: chords Am F
+play 4 bars {
+  crash: 1
+  groove
+}
+```
+
+</Cell>
+
+This cell renders three outputs.
+
+## What repeats
+
+A play is a timeline, and its statements start together.
+
+| In a play | Plays |
+| --- | --- |
+| A line | Once. |
+| A single pattern | Repeated until the play ends. |
+| A sequence of two or more | In order, once. |
+| `every` | Repeated until the play ends. |
+| `bar <n>` | In bar `n`. |
+
+## Duration
+
+Without a length, a play lasts as long as its longest statement, and what repeats must fit that a whole number of times. With a length, it lasts exactly that long: whatever is repeating stops at the end, and silence fills any time left over. A play can't run past 10 minutes.
+
+## Output
+
+- A header with the time, tempo, number of bars and the instruments that play.
+- Audio with a waveform, and a WAV download.
+- A grid of every hit and note, bar by bar.
+- The chords played. The playground draws a diagram for each.

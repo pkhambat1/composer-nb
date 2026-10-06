@@ -1,0 +1,61 @@
+---
+title: "Jupyter"
+description: "Play composer-nb cells in Jupyter with %%music and the Song class."
+---
+
+## Install
+
+```bash
+pip install composer-nb
+```
+
+It needs Python 3.9 or later and JupyterLab, Jupyter Notebook 7, VS Code or Colab. Load the extension once per kernel:
+
+```python
+%load_ext composer_nb
+```
+
+## %%music
+
+A cell that starts with `%%music` is evaluated as composer-nb, and each `play` renders below it. Tab completes inside the cell.
+
+```text
+%%music [name] [after <name>]
+```
+
+| Argument | Does |
+| --- | --- |
+| `name` | Stores the cell as a `Song` under that Python name. |
+| `after <name>` | Starts the cell from the settings and names that cell ended with. |
+
+## Cells that continue
+
+```composer-nb
+%%music intro
+tempo 75
+capo 2
+chords riff = Am E7|G D
+play guitar: chords riff
+```
+
+```composer-nb
+%%music verse after intro
+play guitar: chords F C|Dm E7 riff
+```
+
+`verse` plays at tempo 75 with a capo at fret 2, and can use `riff`. The link is by name, so cell order doesn't matter.
+
+## Song
+
+```python
+Song(source, *, after=None, name=None)
+```
+
+`%%music` creates a `Song`. Build one in Python to generate source. `after` is the `Song` it continues from, and `name` labels the output and its WAV file. Errors in the source show in the output and aren't raised.
+
+```python
+from composer_nb import Song
+
+bars = ["A7", "D7", "A7", "A7", "D7", "D7", "A7", "A7", "E7", "D7", "A7", "E7"]
+Song("play piano.electric: chords " + "|".join(bars), name="blues")
+```

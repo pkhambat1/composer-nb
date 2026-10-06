@@ -163,9 +163,11 @@ function names(text) {
   })
 }
 
-// A length in front of something: "3 bars " → its parts, and what's left.
+// A length in front of something: "3 bars " → its parts, and what's left, which starts
+// at its first character so that an instrument's line or every after the length is read
+// as one.
 function length(text) {
-  const m = /^(\S+)(\s+)(bars?)(\s*)(?![A-Za-z0-9])/.exec(text)
+  const m = /^(\S+)(\s+)(bars?)(?![A-Za-z0-9])(\s*)/.exec(text)
   if (!m || !/^[\d(]/.test(m[1])) return { parts: [], rest: text }
   return {
     parts: [
