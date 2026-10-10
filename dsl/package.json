@@ -27,6 +27,7 @@
     "./chord-lookup": "./js/chord-lookup.js",
     "./editing": "./js/editing.js",
     "./grid": "./js/grid.js",
+    "./sheet": "./js/sheet.js",
     "./highlight": "./js/highlight.js"
   },
   "files": [

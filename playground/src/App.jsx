@@ -253,6 +253,8 @@ export default function App() {
           isActive={c.id === activeCellId}
           theme={theme}
           accent={accent}
+          drumView={settings.drumView || "bricks"}
+          onSetDrumView={(v) => setSetting("drumView", v)}
           focusedCellId={playback.focusedCellId}
           isPlaying={playback.isPlaying}
           onSelect={() => setSelectedId(c.id)}

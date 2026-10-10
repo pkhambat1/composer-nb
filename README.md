@@ -1,6 +1,6 @@
 # composer-nb
 
-**Sketch music like you write code.** Drums, riffs and chords in a small language you can read at a glance. Run a cell and hear it, with a grid of what plays, chord shapes for guitar, and a WAV to keep. It runs in your browser, and right inside Jupyter.
+**Sketch music like you write code.** Drums, riffs and chords in a small language you can read at a glance. Run a cell and hear it, with a grid of what plays or the drums as sheet music, chord shapes for guitar, and a WAV to keep. It runs in your browser, and right inside Jupyter.
 
 **[Open the playground →](https://composer-nb.vercel.app)** · **[Docs](https://pkhambat.mintlify.site)** · `pip install composer-nb`
 

@@ -1062,7 +1062,7 @@ describe("lengths on a drum's line", () => {
       /Silence for a length is rest: 2 beats rest/,
     )
     expect(firstError("play snare: rest, dd")).toMatch(
-      /rest takes a length in front: 2 beats rest. One step of rest is -/,
+      /rest fills to the end of the block it's in, so nothing goes after it/,
     )
     expect(firstError("play snare: 2 beats, dd")).toMatch(
       /2 beats of what\? Write 2 beats rest, or the steps to repeat: 2 beats x-/,
@@ -1074,6 +1074,77 @@ describe("lengths on a drum's line", () => {
       /Beats don't go on a line with lengths or commas/,
     )
     expect(firstError("pattern rest = { kick: x }")).toMatch(/rest already means something/)
+  })
+})
+
+describe("rest to the end of the block", () => {
+  // Circle of Manias: the hats are 4 steps, the figure 18, so the pattern is 36 steps.
+  const MANIAS = `time 9 over 8
+pattern manias = {
+  hat.open: x---
+  hat: --x-
+  kick: x--x-x---x--x-xx--
+  snare: -------x--------x-
+  snare.ghost: -xx, rest
+}`
+
+  it("plays the hits once each time through, and leaves the length to the other lines", () => {
+    expect(sound(`${MANIAS}\nplay 4 bars manias`)).toBe(
+      sound(MANIAS.replace("-xx, rest", "-xx, 33 steps rest") + "\nplay 4 bars manias"),
+    )
+    // in a play, lines play once anyway, so the rest only says the line has no length
+    expect(sound(play("kick: x---x---x---x---", "snare.ghost: -xx, rest"))).toBe(
+      sound(play("kick: x---x---x---x---", "snare.ghost: -xx")),
+    )
+    expect(sound(play("2 bars { kick: x--- }", "snare.ghost: -xx, rest"))).toBe(
+      sound(play("2 bars { kick: x--- }", "snare.ghost: -xx")),
+    )
+  })
+
+  it("fills a bar, and a layer of a block", () => {
+    expect(sound("play {\n  kick: x--- x--- x--- x--- | x--- x--- x--- x---\n  bar 2 { snare.ghost: -xx, rest }\n}")).toBe(
+      sound("play {\n  kick: x--- x--- x--- x--- | x--- x--- x--- x---\n  bar 2 { snare.ghost: -xx, 13 steps rest }\n}"),
+    )
+    expect(sound("play snare: {\n  x---x---\n  -xx, rest\n}")).toBe(sound("play snare: xxx-x---"))
+  })
+
+  it("has to fit", () => {
+    expect(firstError("pattern g = {\n  kick: x---\n  snare.ghost: -xxxx, rest\n}\nplay g")).toMatch(
+      /g is 4 steps long, and the snare.ghost line's hits run 5 steps before its rest/,
+    )
+    expect(firstError("play snare: {\n  x---\n  -xxxx, rest\n}")).toMatch(
+      /This layer's hits run 5 steps before its rest, and the block is only 4 steps long/,
+    )
+    // a play with a length of its own cuts things off instead
+    expect(durations("play 1 bars snare.ghost: -xx, 2 bars rest, rest")).toEqual([2])
+  })
+
+  it("needs something else to say how long the block is", () => {
+    expect(firstError("pattern g = {\n  snare.ghost: -xx, rest\n}\nplay g")).toMatch(
+      /Every line in g ends in rest, so nothing says how long it is. Say so: pattern g = 4 bars \{/,
+    )
+    expect(firstError("play snare.ghost: -xx, rest")).toMatch(
+      /Every line in this play ends in rest, so nothing says how long it is. Say so: play 4 bars \{ ... \}/,
+    )
+    expect(firstError("play snare: {\n  -xx, rest\n}")).toMatch(
+      /Every layer here ends in rest, so nothing says how long the block is/,
+    )
+    expect(durations("play 2 bars snare.ghost: -xx, rest")).toEqual([4])
+  })
+
+  it("goes last, on the drum's line", () => {
+    expect(firstError("play snare: -xx rest")).toMatch(
+      /rest is a part of its own, so a comma goes before it: -xx, rest/,
+    )
+    expect(firstError("play snare: rest")).toMatch(
+      /rest on its own plays nothing. Put the hits in front of it: -xx, rest/,
+    )
+    expect(firstError("steps pickup = -xx, rest")).toMatch(
+      /A name's steps have a length of their own. rest fills to the end of a block, so it goes on the drum's line: snare: pickup, rest/,
+    )
+    expect(sound("steps pickup = -xx\nplay {\n  kick: x---x---\n  snare.ghost: pickup, rest\n}")).toBe(
+      sound(play("kick: x---x---", "snare.ghost: -xx")),
+    )
   })
 })
 

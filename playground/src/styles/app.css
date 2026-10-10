@@ -1227,6 +1227,42 @@ body {
   letter-spacing: 0.03em;
   grid-column: 1 / -1;
 }
+.out-section-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+/* bricks | sheet: how the drums are drawn */
+.view-toggle {
+  display: inline-flex;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.view-btn {
+  appearance: none;
+  background: var(--paper);
+  border: 0;
+  color: var(--text-mute);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 1px 7px;
+  cursor: pointer;
+  user-select: none;
+}
+.view-btn + .view-btn {
+  border-left: 1px solid var(--border);
+}
+.view-btn:hover {
+  color: var(--accent);
+  background: var(--accent-soft);
+}
+.view-btn-on {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
 .chord-strip {
   display: contents;
 }
@@ -1545,6 +1581,28 @@ body {
   font-size: 11px;
   color: var(--text-dim);
   margin: 2px 0 4px;
+}
+/* The drums as sheet music: abcjs draws the staff in currentColor */
+.drum-sheet {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 2px 0 6px;
+  color: var(--text);
+}
+.ds-staff {
+  width: 100%;
+  overflow: hidden;
+}
+.ds-staff svg {
+  display: block;
+  max-width: 100%;
+}
+.ds-now,
+.ds-now * {
+  fill: var(--accent);
+  color: var(--accent);
 }
 .dg-bar {
   display: grid;

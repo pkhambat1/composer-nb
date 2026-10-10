@@ -80,6 +80,8 @@ function Cell({
   onSetPreview,
   theme,
   accent,
+  drumView,
+  onSetDrumView,
   focusedCellId,
   isPlaying,
   onTogglePlayback,
@@ -160,6 +162,8 @@ function Cell({
               armAudio={armAudio}
               theme={theme}
               accent={accent}
+              drumView={drumView}
+              onSetDrumView={onSetDrumView}
               runCount={cell.runCount}
             />
           </>
@@ -259,6 +263,7 @@ export default React.memo(Cell, (prev, next) =>
   prev.isActive === next.isActive &&
   prev.theme === next.theme &&
   prev.accent === next.accent &&
+  prev.drumView === next.drumView &&
   prev.focusedCellId === next.focusedCellId &&
   prev.isPlaying === next.isPlaying,
 )

@@ -30,7 +30,10 @@
    and a pattern given a length repeats for that long: pattern groove = 3 bars {,
    play 6 bars groove. Anything that repeats has to fit what it's in a whole number of
    times. On a drum's line a length measures rest or steps, in steps, beats or bars, and
-   commas separate the line's parts: 2 beats rest, dd, 1 beats rest. Lengths are always
+   commas separate the line's parts: 2 beats rest, dd, 1 beats rest. A bare rest as the
+   last part fills to the end of the block the line is in: -xx, rest plays those hits once
+   each time through, and the line has no length of its own, so the other lines decide
+   how long the block is. Lengths are always
    plural (1 bars), so bars only ever says how long and bar only ever says which.
    Every number is arithmetic: (1+2) bars groove, tempo 60*2. So * and / only ever do
    arithmetic, and a time is two numbers (7 over 8), not a fraction.
@@ -521,8 +524,18 @@ function defineWord(type, name, value, ln, state, err, blocks = null) {
     return
   }
   // Steps can be written with lengths (2 beats rest, dd), which come back as steps
-  const written = type === "steps" ? stepParts(value, blocks, state, err, ln) : tokenize(value)
-  if (!written) return
+  let written
+  if (type === "steps") {
+    const parts = stepParts(value, blocks, state, err, ln)
+    if (!parts) return
+    if (parts.toEnd) {
+      return err(
+        ln,
+        `A name's steps have a length of their own. rest fills to the end of a block, so it goes on the drum's line: snare: ${name}, rest`,
+      )
+    }
+    written = parts.tokens
+  } else written = tokenize(value)
   if (type === "steps" && listsBeats(written)) {
     // steps backbeat = 2 4: beats, as steps
     const run = beatsAsSteps({ name, art: "hit", ln, blocks }, written, state, err)
@@ -739,8 +752,8 @@ function classifyDecl({ type, name, value }, { ln, blocks }, err, st) {
 }
 
 // bar 2 { ... }, bar 2 hat.pedal: 4, bar 3 to 4 fill: what plays in those bars of the
-// block it's in, and nowhere else. Returns { kind: "placed", from, to, line }, where
-// `line` is what plays there, or null after saying what's wrong.
+// block it's in, and nowhere else. Returns { kind: "placed", from, to, lines }, where
+// `lines` is what plays there, or null after saying what's wrong.
 function readPlace(text, { ln, blocks }, err) {
   const nums = numbers(text)
   const first = nums.sumAt(3)
@@ -768,7 +781,10 @@ function readPlace(text, { ln, blocks }, err) {
     err(ln, `${shown} needs what plays there: ${shown} { ... }`)
     return null
   }
-  return { kind: "placed", ln, from, to: until, line: { ln, text: rest, blocks } }
+  // bar 2 { ... }: the braces are the bar's own lines, so they fill the bar directly
+  const braces = BLOCK_KEY.test(rest) && blocks?.[rest]
+  const lines = braces ? braces.lines : [{ ln, text: rest, blocks }]
+  return { kind: "placed", ln, from, to: until, lines }
 }
 
 // every 3 steps { ... }, every 1/3 beats hats: what plays at that pace, where one step
@@ -1238,7 +1254,8 @@ function figureRun(text, blocks, st, err, ln, part) {
 // they're drawn (x--x, with spaces for the eye) or a length in front of what fills it:
 // 2 beats rest is silence that long, and 2 beats x- repeats x- for that long. A length's
 // part comes back as the steps it stands for. A line of beats (2e 4) passes through.
-// Returns the tokens, or null after saying what's wrong.
+// A bare rest, last, fills to the end of the block the line is in (`toEnd`).
+// Returns { tokens, toEnd }, or null after saying what's wrong.
 function stepParts(value, blocks, st, err, ln, part = null) {
   const fail = (msg) => {
     err(ln, msg)
@@ -1251,8 +1268,9 @@ function stepParts(value, blocks, st, err, ln, part = null) {
   }
   const { barTicks } = meterOf(st)
   const out = []
+  let toEnd = false
   let drawn = null // the part before, when it was drawn steps
-  for (const text of parts) {
+  for (const [i, text] of parts.entries()) {
     if (!text)
       return fail("A comma goes between two parts of a line, so something goes on each side")
     const len = lengthAt(text)
@@ -1274,7 +1292,20 @@ function stepParts(value, blocks, st, err, ln, part = null) {
       }
       if (unit === 0) return fail(`${tokens[0]} needs a number in front: 2 ${tokens[0]} rest`)
       if (tokens.includes("rest")) {
-        return fail("rest takes a length in front: 2 beats rest. One step of rest is -")
+        // rest on its own: silence to the end of the block
+        if (tokens.length > 1) {
+          return fail(
+            `rest is a part of its own, so a comma goes before it: ${tokens.filter((t) => t !== "rest").join(" ")}, rest`,
+          )
+        }
+        if (i < parts.length - 1) {
+          return fail("rest fills to the end of the block it's in, so nothing goes after it")
+        }
+        if (parts.length === 1) {
+          return fail("rest on its own plays nothing. Put the hits in front of it: -xx, rest")
+        }
+        toEnd = true
+        continue
       }
       if (parts.length > 1 && tokens.some((t) => BEAT_RE.test(t))) {
         return fail(
@@ -1326,7 +1357,7 @@ function stepParts(value, blocks, st, err, ln, part = null) {
     }
     out.push(fig.repeat(n / fig.length))
   }
-  return out
+  return { tokens: out, toEnd }
 }
 
 // Why a | in steps is in the wrong place, after `n` steps, or null if a bar ends there.
@@ -1340,8 +1371,9 @@ function barLineProblem(n, st) {
 }
 
 // Steps: kick: x--x--- — one character per step, each one step long. Spaces are for the
-// eye, and so is |, which has to fall where a bar ends.
-function stepPattern(part, tokens, st, err) {
+// eye, and so is |, which has to fall where a bar ends. An `open` line ended in rest: its
+// hits play once from the start, and it has no length to give the block it's in.
+function stepPattern(part, tokens, st, err, open = false) {
   const steps = []
   let ok = true
   const barLine = () => {
@@ -1418,9 +1450,10 @@ function stepPattern(part, tokens, st, err) {
   return {
     kind: "drum",
     ticks: steps.length * stepTicks,
+    open,
     expand(total, loop) {
       const out = []
-      for (let k = 0; k * stepTicks < total && (loop || k < steps.length); k++) {
+      for (let k = 0; k * stepTicks < total && ((loop && !open) || k < steps.length); k++) {
         const s = steps[k % steps.length]
         if (s) pushHit(out, part, k * stepTicks, s, stepTicks / 2, st.kit)
       }
@@ -1432,28 +1465,55 @@ function stepPattern(part, tokens, st, err) {
 // A drum's block of steps, one layer a line: snare.ghost: { --x- / ------------ddd- }.
 // The layers play together, each repeating until they all line up again, and where two
 // hit the same step the lower line wins. A rest never does, so a layer only changes the
-// steps it hits. Returns the steps as one run (--x---x---x-ddd-), or null after saying
-// what's wrong. With `part`, each layer is checked as that drum's steps, on its own line.
+// steps it hits. A layer ended in rest plays once and doesn't count toward the length.
+// Returns the steps as one run (--x---x---x-ddd-), or null after saying what's wrong.
+// With `part`, each layer is checked as that drum's steps, on its own line.
 function stepBlock(block, st, err, part = null) {
   const layers = []
   for (const line of block.lines) layers.push(stepLayer(line, st, err, part))
   if (layers.includes(null)) return null
-  const length = layers.reduce((a, r) => lcm(a, r.length), 1)
+  const fixed = layers.filter((l) => !l.toEnd)
+  if (!fixed.length) {
+    err(
+      block.ln,
+      "Every layer here ends in rest, so nothing says how long the block is. One layer needs a length of its own",
+    )
+    return null
+  }
+  const length = fixed.reduce((a, l) => lcm(a, l.run.length), 1)
   if (length * st.stepTicks > MAX_BARS * meterOf(st).barTicks) {
     err(block.ln, `This block's layers only line up again after more than ${MAX_BARS} bars`)
     return null
   }
+  for (const l of layers) {
+    if (l.toEnd && l.run.length > length) {
+      err(
+        l.ln,
+        `This layer's hits run ${count(l.run.length, "step")} before its rest, and the block is only ${count(length, "step")} long`,
+      )
+      return null
+    }
+  }
   let run = ""
   for (let k = 0; k < length; k++) {
     let step = "-"
-    for (const r of layers) if (r[k % r.length] !== "-") step = r[k % r.length]
+    for (const l of layers) {
+      const c = l.toEnd ? (l.run[k] ?? "-") : l.run[k % l.run.length]
+      if (c !== "-") step = c
+    }
     run += step
   }
   return run
 }
 
 // One layer in a block of steps: steps, names of steps or blocks of steps, in a row.
+// Returns { run, toEnd, ln }, or null.
 function stepLayer(line, st, err, part) {
+  const layer = stepLayerRun(line, st, err, part)
+  return layer && { ...layer, ln: line.ln }
+}
+
+function stepLayerRun(line, st, err, part) {
   const fail = (msg) => {
     err(line.ln, msg)
     return null
@@ -1465,8 +1525,9 @@ function stepLayer(line, st, err, part) {
   }
   if (singularLength(line.text, line.ln, err)) return null
   const here = part ? { ...part, ln: line.ln } : null
-  const tokens = stepParts(line.text, line.blocks, st, err, line.ln, here)
-  if (!tokens) return null
+  const parts = stepParts(line.text, line.blocks, st, err, line.ln, here)
+  if (!parts) return null
+  const { tokens, toEnd } = parts
   if (listsBeats(tokens)) {
     // A layer of beats: 2 4
     const where = {
@@ -1477,7 +1538,8 @@ function stepLayer(line, st, err, part) {
       blocks: line.blocks,
       layer: true,
     }
-    return beatsAsSteps(where, tokens, st, err)
+    const run = beatsAsSteps(where, tokens, st, err)
+    return run == null ? null : { run, toEnd: false }
   }
   const check = (run, where) => {
     if (!part) return true
@@ -1509,7 +1571,7 @@ function stepLayer(line, st, err, part) {
       return fail(`"${tok}" isn't defined above. Name it first: steps ${tok} = x-x-`)
     } else return fail(`"${tok}" isn't a step. ${STEP_HELP}`)
   }
-  return run
+  return { run, toEnd }
 }
 
 // ---------------------------------------------------------------------------
@@ -1796,11 +1858,11 @@ function readPart(part, st, barTicks, err) {
     return pattern && { ...pattern, part }
   }
   // A drum's line: its parts, with any lengths written out as the steps they stand for
-  const steps = stepParts(part.value, part.blocks, st, err, part.ln, part)
-  if (!steps) return null
-  const pattern = listsBeats(steps)
-    ? beatPattern(part, steps, st, barTicks, err)
-    : stepPattern(part, steps, st, err)
+  const parts = stepParts(part.value, part.blocks, st, err, part.ln, part)
+  if (!parts) return null
+  const pattern = listsBeats(parts.tokens)
+    ? beatPattern(part, parts.tokens, st, barTicks, err)
+    : stepPattern(part, parts.tokens, st, err, parts.toEnd)
   return pattern && { ...pattern, part }
 }
 
@@ -1831,7 +1893,13 @@ const blockCtx = (name, ln) => ({
   what: name,
   sized: `pattern ${name} = 4 bars {`,
 })
-const playCtx = (ln) => ({ ln, repeats: false, where: "in this play", what: "This play" })
+const playCtx = (ln) => ({
+  ln,
+  repeats: false,
+  where: "in this play",
+  what: "This play",
+  sized: "play 4 bars { ... }",
+})
 // A play's own length is how long its output is: what's in it is cut there, so it doesn't
 // have to fit.
 const outputCtx = (ln) => ({ ...playCtx(ln), cuts: true })
@@ -1904,21 +1972,34 @@ function tile(clip, durSec) {
 // In a pattern (ctx.repeats) the lines repeat too, and without `bars` it lasts until
 // everything in it lines up again. In a play the lines play once, and it lasts as long as
 // the longest thing in it. Whatever repeats has to fit, except in a play with a length of
-// its own (ctx.cuts), which stops there.
+// its own (ctx.cuts), which stops there. A line ended in rest (`open`) plays once, has no
+// say in the length, and has to fit in it.
 function layer(parts, once, repeated, st, bars, err, ctx) {
   const meter = meterOf(st)
   const { barTicks, secPerTick } = meter
   const read = parts.map((p) => readPart(p, st, barTicks, err)).filter(Boolean)
   if (read.length < parts.length) return null
   if (!read.length && !once.length && !repeated.length) return null
+  const fixed = read.filter((p) => !p.open)
   const loops = [
     ...(ctx.repeats
-      ? read.map((p) => ({ what: `The ${p.part.name} line`, ticks: p.ticks, ln: p.part.ln }))
+      ? fixed.map((p) => ({ what: `The ${p.part.name} line`, ticks: p.ticks, ln: p.part.ln }))
       : []),
     ...repeated.map((r) => ({ ...r, ticks: r.clip.durSec / secPerTick })),
   ]
   const placed = once.filter((c) => c.until).sort((a, b) => b.until - a.until)[0]
   const named = placed ? placed.until * barTicks : 0 // through the last bar that's named
+  const lengths = [
+    ...fixed.map((p) => p.ticks),
+    ...[...once, ...repeated.map((r) => r.clip)].map((c) => Math.round(c.durSec / secPerTick)),
+  ]
+  if (!bars && !lengths.length) {
+    err(
+      ctx.ln ?? read[0].part.ln,
+      `Every line ${ctx.where} ends in rest, so nothing says how long it is. Say so: ${ctx.sized}`,
+    )
+    return null
+  }
   let totalTicks
   if (bars) totalTicks = Math.round(bars * barTicks)
   else if (ctx.repeats) {
@@ -1934,12 +2015,7 @@ function layer(parts, once, repeated, st, bars, err, ctx) {
       )
       return null
     }
-  } else {
-    totalTicks = Math.max(
-      ...read.map((p) => p.ticks),
-      ...[...once, ...repeated.map((r) => r.clip)].map((c) => Math.round(c.durSec / secPerTick)),
-    )
-  }
+  } else totalTicks = Math.max(...lengths)
   if (named > totalTicks) {
     err(
       placed.ln,
@@ -1948,10 +2024,20 @@ function layer(parts, once, repeated, st, bars, err, ctx) {
     return null
   }
   if (!(ctx.cuts && bars) && !checkLoops(loops, totalTicks, st, barTicks, err)) return null
+  for (const p of read) {
+    if (p.open && p.ticks > totalTicks && !(ctx.cuts && bars)) {
+      err(
+        p.part.ln,
+        `${ctx.what} is ${sayTicks(totalTicks, st, barTicks)} long, and the ${p.part.name} ` +
+          `line's hits run ${sayTicks(p.ticks, st, barTicks)} before its rest`,
+      )
+      return null
+    }
+  }
   const durSec = totalTicks * secPerTick
   const own = read.map((p) => {
     const line = { ln: p.part.ln, events: [], drumEvents: [], spans: [] }
-    for (const e of p.expand(totalTicks, ctx.repeats)) {
+    for (const e of p.expand(totalTicks, ctx.repeats && !p.open)) {
       if (p.kind === "drum") {
         // A double's second stroke keeps how far it is from the first, to go with it.
         const gap = e.gap ? { gapSec: e.gap * secPerTick } : {}
@@ -2083,7 +2169,7 @@ function blockClip(lines, state, err, ctx, stack, bars = 0) {
   for (const l of read) {
     if (l.kind !== "placed") continue
     // What's in a bar repeats to fill it, and plays once each time through this block.
-    const clip = blockClip([l.line], st, err, placeCtx(l), stack, l.to - l.from + 1)
+    const clip = blockClip(l.lines, st, err, placeCtx(l), stack, l.to - l.from + 1)
     if (!clip) return null
     const { barTicks, secPerTick } = meterOf(st)
     const at = (l.from - 1) * barTicks * secPerTick
@@ -2147,7 +2233,7 @@ function checkSection(sec, state, err, owner = sec.anon ? null : sec.name) {
     if (l.kind === "sequence") names(l.items, l.ln)
     // What's in a bar is a pattern of its own
     else if (l.kind === "placed") {
-      checkSection({ anon: true, ln: l.ln, lines: [l.line], bars: 0 }, st, err, owner)
+      checkSection({ anon: true, ln: l.ln, lines: l.lines, bars: 0 }, st, err, owner)
     } else if (l.kind === "paced") {
       // ...and so is what plays at its own pace, where a step lasts that long
       const ticks = paceTicks(l, st, err)

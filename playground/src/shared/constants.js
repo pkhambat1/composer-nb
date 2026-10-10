@@ -13,6 +13,7 @@ export const APP_CONSTANTS = {
     accent: "#1a73e8",
     density: "cozy",
     monoFont: "IBM Plex Mono",
+    drumView: "bricks", // or sheet: the drums as sheet music
   },
 
   // Available accent colors
