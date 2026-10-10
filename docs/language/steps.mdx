@@ -86,6 +86,29 @@ play {
 
 </Cell>
 
+A bare `rest` as the last part fills to the end of the block the line is in. The line then has no length of its own, so the other lines decide how long the block is, and its hits play once each time through.
+
+<Cell>
+
+```composer-nb
+time 9 over 8
+tempo 100
+
+pattern manias = {
+  hat.open: x---
+  hat: --x-
+  kick: x--x-x---x--x-xx--
+  snare: -------x--------x-
+  snare.ghost: -xx, rest
+}
+
+play 4 bars manias
+```
+
+</Cell>
+
+This is *Circle of Manias* by Porcupine Tree. The hats are 4 steps long and the kick and snare 18, so the pattern is 36 steps, and the ghost notes come back at the top of each pass.
+
 ## Layers
 
 A block after a kit piece's colon holds layers, one per line, and evaluates to one `steps` value. Each layer repeats until they all end together. Where two layers hit the same step the lower one wins, and a `-` never overrides a hit.

@@ -4,6 +4,7 @@ import WaveSurfer from "wavesurfer.js"
 import * as MusicEngine from "composer-nb/engine"
 import ChordDiagram from "./ChordDiagram.jsx"
 import DrumGrid from "./DrumGrid.jsx"
+import DrumSheet from "./DrumSheet.jsx"
 
 function themeColors(theme, accent) {
   if (theme === "retro") {
@@ -44,11 +45,21 @@ function themeColors(theme, accent) {
 
 const noTime = () => 0
 
-// Everything below the playback row: settings summary, the grid of drums and notes, chord
-// diagrams, errors.
-function CellDetails({ parsed, accent, getTime = noTime, playing = false }) {
+// Everything below the playback row: settings summary, the drums and notes as a grid of
+// bricks or as sheet music, chord diagrams, errors.
+function CellDetails({
+  parsed,
+  accent,
+  drumView,
+  onSetDrumView,
+  getTime = noTime,
+  playing = false,
+}) {
   const chords = parsed.events.filter((e) => e.chord && !e.repeat)
   const drawn = (b) => b.drumEvents.length > 0 || b.noteEvents.length > 0
+  const sheet = drumView === "sheet" && parsed.blocks.some((b) => b.drumEvents.length > 0)
+  // Sheet music is for the drums: notes stay on the grid under it
+  const grid = !sheet || parsed.notes.length > 0
   const meta = parsed.blocks
     .filter((b) => !drawn(b))
     .map((b) => `time ${b.time} · tempo ${b.tempo} · ${b.bars} bar${b.bars === 1 ? "" : "s"}`)
@@ -65,8 +76,28 @@ function CellDetails({ parsed, accent, getTime = noTime, playing = false }) {
 
       {parsed.blocks.some(drawn) && (
         <div className="out-section">
-          <div className="out-section-label">{parsed.notes.length ? "Steps" : "Drums"}</div>
-          <DrumGrid blocks={parsed.blocks} getTime={getTime} playing={playing} />
+          <div className="out-section-label out-section-row">
+            <span>{parsed.notes.length ? "Steps" : "Drums"}</span>
+            {parsed.blocks.some((b) => b.drumEvents.length > 0) && (
+              <span className="view-toggle" role="group" aria-label="Drum view">
+                {["bricks", "sheet"].map((v) => (
+                  <button
+                    key={v}
+                    type="button"
+                    className={"view-btn" + (drumView === v ? " view-btn-on" : "")}
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      onSetDrumView(v)
+                    }}
+                  >
+                    {v}
+                  </button>
+                ))}
+              </span>
+            )}
+          </div>
+          {sheet && <DrumSheet blocks={parsed.blocks} getTime={getTime} playing={playing} />}
+          {grid && <DrumGrid blocks={parsed.blocks} getTime={getTime} playing={playing} />}
         </div>
       )}
 
@@ -122,6 +153,8 @@ export default function MusicOutput({
   armAudio,
   theme,
   accent,
+  drumView,
+  onSetDrumView,
   runCount,
 }) {
   const waveMountRef = React.useRef(null)
@@ -288,7 +321,12 @@ export default function MusicOutput({
             </div>
           </div>
 
-          <CellDetails parsed={parsed} accent={accent} />
+          <CellDetails
+            parsed={parsed}
+            accent={accent}
+            drumView={drumView}
+            onSetDrumView={onSetDrumView}
+          />
         </div>
       </div>
     )
@@ -403,6 +441,8 @@ export default function MusicOutput({
         <CellDetails
           parsed={parsed}
           accent={accent}
+          drumView={drumView}
+          onSetDrumView={onSetDrumView}
           getTime={getTime}
           playing={!!displayPlaying}
         />
