@@ -38,7 +38,7 @@ describe("drum sheet music", () => {
         "[V:F] F4 z4 F2F2 z4 |",
       ].join("\n"),
     )
-    expect(tablature).toEqual([{ instrument: "" }, { instrument: "" }])
+    expect(tablature).toEqual([{ instrument: "" }])
   })
 
   it("leaves out a voice with nothing in it", () => {
@@ -141,15 +141,15 @@ describe("drum sheet music", () => {
 })
 
 describe("pitched lines on the sheet", () => {
-  it("writes a guitar an octave up on a treble-8 staff, with a tab staff", () => {
+  it("writes a guitar an octave up on a treble staff, with a tab staff", () => {
     const { abc, tablature } = sheet("play guitar: C---E---G---C---")
-    expect(abc).toContain('%%score P1\nV:P1 clef=treble-8 name="guitar"\n[V:P1] C4 E4 G4 C4 |')
-    expect(tablature).toEqual([{ instrument: "guitar", label: "guitar" }])
+    expect(abc).toContain('%%score P1\nV:P1 clef=treble name="guitar"\n[V:P1] C4 E4 G4 C4 |')
+    expect(tablature).toEqual([{ instrument: "guitar" }])
   })
 
-  it("puts a drum staff first and each instrument on its own staff", () => {
+  it("puts each instrument on its own staff, and the drums at the bottom", () => {
     const { abc, tablature } = sheet("play {\n  kick: x---\n  bass: C---\n  piano: C---\n}")
-    expect(abc).toContain("%%score F P1 P2\n")
+    expect(abc).toContain("%%score P1 P2 F\n")
     expect(abc).toContain('V:P1 clef=bass name="bass"')
     expect(abc).toContain('V:P2 clef=bass name="piano"')
     expect(voices("play {\n  kick: x---\n  bass: C---\n  piano: C---\n}")).toEqual([
@@ -217,6 +217,30 @@ describe("the key signature", () => {
   it("spells a flat key's black keys with flats, but a minor key's leading tone sharp", () => {
     expect(voice("key Bb\nplay piano: Eb4--- Db4---")).toBe("[V:P1] E4 _D4 z4 z4 |")
     expect(voice("key Gm\nplay piano: F#4--- Eb4---")).toBe("[V:P1] ^F4 E4 z4 z4 |")
+  })
+})
+
+describe("the tab staff", () => {
+  it("goes with the guitar's staff, counted by staff: the drums are one, at the bottom", () => {
+    const { abc, tablature } = sheet("play {\n  kick: x---\n  hat: x-x-\n  guitar.electric: E2---\n}")
+    expect(abc).toContain("%%score P1 (H F)\n")
+    expect(tablature).toEqual([{ instrument: "guitar" }, { instrument: "" }])
+    expect(sheet("play {\n  bass: E2---\n  guitar: E2---\n}").tablature).toEqual([
+      { instrument: "" },
+      { instrument: "guitar" },
+    ])
+  })
+})
+
+describe("systems", () => {
+  it("break every four bars, each voice's bars on a line, the drums' key turned off once", () => {
+    const lines = voices("key D\nplay 6 bars {\n  kick: x---\n  piano: F#4---\n}")
+    expect(lines).toEqual([
+      "[V:F] [K:none] F4 z4 z4 z4 | z4 z4 z4 z4 | z4 z4 z4 z4 | z4 z4 z4 z4 |",
+      "[V:P1] F4 z4 z4 z4 | z4 z4 z4 z4 | z4 z4 z4 z4 | z4 z4 z4 z4 |",
+      "[V:F] z4 z4 z4 z4 | z4 z4 z4 z4 |",
+      "[V:P1] z4 z4 z4 z4 | z4 z4 z4 z4 |",
+    ])
   })
 })
 

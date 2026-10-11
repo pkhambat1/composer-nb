@@ -129,7 +129,6 @@ function renderSheet(blocks) {
       const [tune] = abcjs.renderAbc(staff, abc, {
         responsive: "resize",
         staffwidth: Math.max(staff.clientWidth, 320),
-        wrap: { minSpacing: 1.8, maxSpacing: 2.7, preferredMeasuresPerLine: 4 },
         paddingtop: 0,
         paddingbottom: 0,
         paddingleft: 0,

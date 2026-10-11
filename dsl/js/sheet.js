@@ -273,7 +273,9 @@ function midiOf(name) {
 // of them are below middle C.
 function clefFor(inst, midis) {
   const kind = inst.split(".")[0]
-  if (kind === "guitar") return { clef: "treble-8", shift: 12, tab: true }
+  // Guitar notation sounds an octave below the staff; abcjs's tab counts on that already,
+  // so the clef is a plain treble (treble-8 would have it drop another octave)
+  if (kind === "guitar") return { clef: "treble", shift: 12, tab: true }
   if (kind === "bass") return { clef: "bass", shift: 12 }
   const sorted = [...midis].sort((a, b) => a - b)
   const mid = sorted.length ? sorted[Math.floor(sorted.length / 2)] : 60
@@ -281,9 +283,11 @@ function clefFor(inst, midis) {
 }
 
 // `block` is one of a parsed output's `blocks`. Returns its ABC and, for abcjs, which
-// voices get a tab staff: { abc, tablature }. `abc` is "" when nothing plays. With
-// `counts`, the hands' notes are counted 1 e & a under the staff.
-export function sheetAbc(block, { counts = false } = {}) {
+// staves get a tab staff: { abc, tablature }. `abc` is "" when nothing plays. With
+// `counts`, the hands' notes are counted 1 e & a under the staff. The music breaks into
+// systems of `barsPerLine` bars, written into the ABC itself: abcjs's own wrapping loses
+// the tab staff.
+export function sheetAbc(block, { counts = false, barsPerLine = 4 } = {}) {
   const voices = []
   const add = (v) => (v.hits.size ? voices.push(v) : null)
   const put = (map, tick, hit) => map.set(tick, [...(map.get(tick) || []), hit])
@@ -331,7 +335,7 @@ export function sheetAbc(block, { counts = false } = {}) {
     const midis = [...v.hits.values()].flat().map((h) => h.midi)
     const { clef, shift, tab } = clefFor(v.inst, midis)
     for (const hs of v.hits.values()) for (const h of hs) h.midi += shift
-    add({ id: `P${++p}`, kind: "pitched", clef, name: v.inst, tab: !!tab, hits: v.hits })
+    add({ id: `P${++p}`, kind: "pitched", clef, name: staffName(v.inst), tab: !!tab, hits: v.hits })
   }
   if (!voices.length) return { abc: "", tablature: [] }
 
@@ -374,17 +378,27 @@ export function sheetAbc(block, { counts = false } = {}) {
           .join(" "),
       )
     }
-    // A percussion staff has no key signature, so a key with one is turned off there
-    const none = v.kind === "drum" && key.sharps ? "[K:none] " : ""
-    lines.push(`[V:${v.id}] ${none}${bars.join(" | ")} |`)
-    if (v.counts) lines.push(`w: ${said.join(" | ")} |`)
+    v.bars = bars
+    v.said = said
+  }
+  // A system at a time, each voice's bars of it on a line of its own
+  const perLine = Math.max(1, barsPerLine)
+  for (let from = 0; from < block.bars; from += perLine) {
+    for (const v of voices) {
+      // A percussion staff has no key signature, so a key with one is turned off there
+      const none = v.kind === "drum" && key.sharps && from === 0 ? "[K:none] " : ""
+      lines.push(`[V:${v.id}] ${none}${v.bars.slice(from, from + perLine).join(" | ")} |`)
+      if (v.counts) lines.push(`w: ${v.said.slice(from, from + perLine).join(" | ")} |`)
+    }
   }
 
   const count = block.groups.reduce((a, b) => a + b, 0)
+  // The instruments' staves, then the kit at the bottom, as a band chart has them. (abcjs
+  // also draws no tab staff below a percussion staff.)
   const drums = voices.filter((v) => v.kind === "drum").map((v) => v.id)
   const score = [
-    ...(drums.length > 1 ? [`(${drums.join(" ")})`] : drums),
     ...voices.filter((v) => v.kind !== "drum").map((v) => v.id),
+    ...(drums.length > 1 ? [`(${drums.join(" ")})`] : drums),
   ]
   const abc = [
     "X:1",
@@ -399,6 +413,14 @@ export function sheetAbc(block, { counts = false } = {}) {
     ),
     ...lines,
   ].join("\n")
-  const tablature = voices.map((v) => (v.tab ? { instrument: "guitar", label: v.name } : { instrument: "" }))
+  // abcjs takes the tab staves by staff: a staff a pitched voice, then the drums' one
+  const staves = [...voices.filter((v) => v.kind !== "drum"), ...(drums.length ? [{ kind: "drum" }] : [])]
+  const tablature = staves.map((v) => (v.tab ? { instrument: "guitar" } : { instrument: "" }))
   return { abc, tablature }
+}
+
+// A staff's name: the instrument's, with a second sound in front: el. guitar
+function staffName(inst) {
+  const [kind, sound] = inst.split(".")
+  return sound ? `${sound.slice(0, 2)}. ${kind}` : kind
 }

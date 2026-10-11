@@ -19,6 +19,15 @@ function abcjs() {
   if (!abcjsLoading) {
     if (typeof globalThis.document === "undefined") {
       const { window } = parseHTML("<!doctype html><html><head></head><body></body></html>")
+      // abcjs measures text by drawing it and asking for its box, which the shim can't do:
+      // an estimate from the font size keeps staff names, chord symbols and counts spaced
+      if (window.SVGElement && !window.SVGElement.prototype.getBBox) {
+        window.SVGElement.prototype.getBBox = function () {
+          const size = parseFloat(this.getAttribute("font-size")) || 16
+          const text = this.textContent || ""
+          return { x: 0, y: 0, width: text.length * size * 0.56, height: size * 1.15 }
+        }
+      }
       globalThis.window = window
       globalThis.document = window.document
     }
@@ -38,7 +47,6 @@ export async function sheetSvg(block, { counts = false, width = STAFF_WIDTH } = 
   try {
     lib.renderAbc(el, abc, {
       staffwidth: width - 2 * PAD,
-      wrap: { minSpacing: 1.8, maxSpacing: 2.7, preferredMeasuresPerLine: 4 },
       paddingtop: PAD,
       paddingbottom: PAD,
       paddingleft: PAD,
