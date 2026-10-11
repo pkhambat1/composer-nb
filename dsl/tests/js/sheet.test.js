@@ -221,6 +221,13 @@ describe("the key signature", () => {
 })
 
 describe("the tab staff", () => {
+  it("tunes down to reach a part's lowest note: drop D for D2, drop C below it", () => {
+    expect(sheet("octave 2\nplay guitar.electric: D---E D-D--").tablature).toEqual([
+      { instrument: "guitar", tuning: ["D,", "A,", "D", "G", "B", "e"], label: "drop D" },
+    ])
+    expect(sheet("play guitar: C2---").tablature[0].label).toBe("drop C")
+    expect(sheet("play guitar: E2---").tablature).toEqual([{ instrument: "guitar" }])
+  })
   it("goes with the guitar's staff, counted by staff: the drums are one, at the bottom", () => {
     const { abc, tablature } = sheet("play {\n  kick: x---\n  hat: x-x-\n  guitar.electric: E2---\n}")
     expect(abc).toContain("%%score P1 (H F)\n")

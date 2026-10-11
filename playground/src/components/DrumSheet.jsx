@@ -12,12 +12,15 @@ function SheetBlock({ block, index, counts, setTimings }) {
     if (!el || !abc) return
     const [tune] = abcjs.renderAbc(el, abc, {
       responsive: "resize",
-      staffwidth: Math.max(el.clientWidth, 320),
-      paddingtop: 0,
-      paddingbottom: 0,
-      paddingleft: 0,
-      paddingright: 0,
+      staffwidth: Math.max(el.clientWidth, 320) - 20,
+      // Room for what hangs below the last staff (the feet's stems and rests, tab numbers)
+      // and past the last bar line
+      paddingtop: 8,
+      paddingbottom: 36,
+      paddingleft: 4,
+      paddingright: 16,
       foregroundColor: "currentColor",
+      format: { tablabelfont: "Helvetica 11" },
       ...(tablature.some((t) => t.instrument) && { tablature }),
     })
     // When each note sounds, at the tempo in the ABC, so the playhead can find it

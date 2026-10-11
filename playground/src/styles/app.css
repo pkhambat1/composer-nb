@@ -1000,10 +1000,9 @@ body {
 .out-content {
   min-width: 0;
   padding: 0 4px;
-  display: grid;
-  grid-template-columns: repeat(auto-fit, 125px);
-  column-gap: 3px;
-  row-gap: 3px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
 }
 .cell-output-error {
   display: block;
@@ -1155,7 +1154,10 @@ body {
 }
 
 .out-section {
-  display: contents;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
 }
 .out-section-label {
   font-size: 11px;
@@ -1315,8 +1317,11 @@ body {
   border: 1px solid var(--border);
   border-radius: 3px;
 }
+/* The chord diagrams, as many to a row as fit */
 .chord-strip {
-  display: contents;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, 125px);
+  gap: 3px;
 }
 /* The notebooks on this device */
 .notebooks-panel {
@@ -1844,11 +1849,12 @@ body {
 }
 .ds-staff {
   width: 100%;
-  overflow: hidden;
 }
+/* Nothing of the staff is cut: what abcjs draws past its box still shows */
 .ds-staff svg {
   display: block;
   max-width: 100%;
+  overflow: visible;
 }
 .ds-now,
 .ds-now * {
@@ -1856,8 +1862,8 @@ body {
   color: var(--accent);
 }
 .sheet-print {
-  grid-column: 1 / -1;
-  display: contents;
+  display: block;
+  min-width: 0;
 }
 /* Printing a sheet: only that cell's staves, in black, at the top of the page */
 @media print {

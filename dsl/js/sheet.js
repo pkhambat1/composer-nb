@@ -334,8 +334,9 @@ export function sheetAbc(block, { counts = false, barsPerLine = 4 } = {}) {
   for (const [, v] of pitched) {
     const midis = [...v.hits.values()].flat().map((h) => h.midi)
     const { clef, shift, tab } = clefFor(v.inst, midis)
+    const tuning = tab ? tuningFor(midis) : null
     for (const hs of v.hits.values()) for (const h of hs) h.midi += shift
-    add({ id: `P${++p}`, kind: "pitched", clef, name: staffName(v.inst), tab: !!tab, hits: v.hits })
+    add({ id: `P${++p}`, kind: "pitched", clef, name: staffName(v.inst), tab: !!tab, tuning, hits: v.hits })
   }
   if (!voices.length) return { abc: "", tablature: [] }
 
@@ -415,8 +416,25 @@ export function sheetAbc(block, { counts = false, barsPerLine = 4 } = {}) {
   ].join("\n")
   // abcjs takes the tab staves by staff: a staff a pitched voice, then the drums' one
   const staves = [...voices.filter((v) => v.kind !== "drum"), ...(drums.length ? [{ kind: "drum" }] : [])]
-  const tablature = staves.map((v) => (v.tab ? { instrument: "guitar" } : { instrument: "" }))
+  const tablature = staves.map((v) =>
+    v.tab ? { instrument: "guitar", ...(v.tuning && { tuning: v.tuning.strings, label: v.tuning.label }) } : { instrument: "" },
+  )
   return { abc, tablature }
+}
+
+// The guitar's tuning, from the lowest note it plays: standard down to E2, then drop D,
+// then drop C, which is what a player would do with a part that goes there. The tab says
+// so under its staff. Standard tuning is abcjs's own, so it needs no saying.
+const TUNINGS = [
+  { low: 40, strings: null },
+  { low: 38, strings: ["D,", "A,", "D", "G", "B", "e"], label: "drop D" },
+  { low: 36, strings: ["C,", "G,", "C", "F", "A", "d"], label: "drop C" },
+]
+function tuningFor(midis) {
+  const lowest = Math.min(...midis)
+  if (!Number.isFinite(lowest)) return null
+  const t = TUNINGS.find((t) => lowest >= t.low) || TUNINGS[TUNINGS.length - 1]
+  return t.strings ? t : null
 }
 
 // A staff's name: the instrument's, with a second sound in front: el. guitar
