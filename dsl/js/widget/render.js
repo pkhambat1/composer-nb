@@ -9,7 +9,7 @@ import {
   bufferToWav,
 } from "../music-engine.js"
 import { TPQ } from "../language.js"
-import { gridRows } from "../grid.js"
+import { gridCounts, gridRows } from "../grid.js"
 import { sheetAbc } from "../sheet.js"
 import abcjs from "abcjs"
 
@@ -52,8 +52,6 @@ function describeSounds(output) {
 
 // --- Grid: each block's drums and notes drawn once, bar by bar, counted 1 e & a ---
 
-const SAY = { 1: [""], 2: ["", "&"], 3: ["", "&", "a"], 4: ["", "e", "&", "a"] }
-
 function renderDrumGrid(blocks) {
   const grid = h("div", "cnb-grid")
   blocks.forEach((block, bi) => {
@@ -61,16 +59,9 @@ function renderDrumGrid(blocks) {
     const { per, rows } = gridRows(block)
     // Wide enough for the longest line name, e.g. guitar.electric
     const labels = Math.max(...rows.map((r) => r.label.length), 5) + 1
-    // Shade alternate groups in added-up meters like (3+4)/4, otherwise alternate beats.
-    const groupEnds = []
-    let acc = 0
-    for (const g of block.groups) groupEnds.push((acc += (g * 4) / block.unit))
-    const shaded = (col) => {
-      const q = col / block.res
-      return block.groups.length > 1
-        ? groupEnds.findIndex((end) => q < end - 1e-9) % 2 === 1
-        : Math.floor(q) % 2 === 1
-    }
+    // How the cells are counted, and which groups of beats are shaded
+    const counts = gridCounts(block)
+    const shaded = (col) => counts[col].shaded
 
     if (blocks.length > 1) grid.append(h("div", "cnb-grid-head", describeBlock(block)))
     for (let bar = 0; bar < block.bars; bar++) {
@@ -90,16 +81,11 @@ function renderDrumGrid(blocks) {
         }
       }
       row.append(h("div", "cnb-lane cnb-bar-num", block.bars > 1 ? `bar ${bar + 1}` : ""))
-      for (let col = 0; col < per; col++) {
-        const sub = col % block.res
-        const count = h(
-          "div",
-          "cnb-count" + (sub ? "" : " cnb-count-beat"),
-          sub ? (SAY[block.res]?.[sub] ?? "·") : String(Math.floor(col / block.res) + 1),
-        )
+      counts.forEach((c, col) => {
+        const count = h("div", "cnb-count" + (c.beat ? " cnb-count-beat" : ""), c.label === "." ? "·" : c.label)
         count.dataset.k = `${bi}-${bar}-${col}`
         row.append(count)
-      }
+      })
       grid.append(row)
     }
   })
@@ -143,7 +129,6 @@ function renderSheet(blocks) {
       const [tune] = abcjs.renderAbc(staff, abc, {
         responsive: "resize",
         staffwidth: Math.max(staff.clientWidth, 320),
-        wrap: { minSpacing: 1.8, maxSpacing: 2.7, preferredMeasuresPerLine: 4 },
         paddingtop: 0,
         paddingbottom: 0,
         paddingleft: 0,

@@ -146,7 +146,7 @@ A name only holds its type, and only goes where that type goes. Chords on a drum
 | -------- | ---------- | ---------------------------------------------------------------------------- |
 | `time`   | `4 over 4` | Notes in a bar, over which note: `7 over 8`, or felt in groups: `3+4 over 4` |
 | `tempo`  | `120`      | Quarter notes per minute                                                     |
-| `key`    | `C`        | Key for Roman numeral chords: `C`, `Am`, `Bb`, `F#m`                         |
+| `key`    | `C`        | Key for Roman numeral chords and the sheet: `C`, `Am`, `F#m`, `D dorian`     |
 | `capo`   | `0`        | Capo fret, 0 to 12. Moves a guitar's chords                                  |
 | `octave` | `3`        | Octave for chords, and for notes written without one, 1 to 6                 |
 | `kit`    | `rock`     | Drum sound: `rock` or `synth`                                                |

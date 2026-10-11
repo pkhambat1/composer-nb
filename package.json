@@ -5,6 +5,7 @@
   "license": "MIT",
   "workspaces": [
     "dsl",
+    "mcp",
     "playground"
   ],
   "scripts": {
@@ -15,7 +16,8 @@
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "docs": "cd docs && npx mint dev"
+    "docs": "cd docs && npx mint dev",
+    "mcp": "node mcp/bin.js"
   },
   "devDependencies": {
     "@eslint/js": "^9.13.0",

@@ -28,7 +28,19 @@ const ChordBrowserPanel = React.memo(function ChordBrowserPanel({ style }) {
   const [loadError, setLoadError] = React.useState(null)
   const [filter, setFilter] = React.useState("")
   const [page, setPage] = React.useState(0)
+  const [copied, setCopied] = React.useState(null)
   const gridRef = React.useRef(null)
+
+  // A click copies the chord's name, to paste into a chart
+  const copy = async (label) => {
+    try {
+      await navigator.clipboard.writeText(label)
+      setCopied(label)
+      setTimeout(() => setCopied((c) => (c === label ? null : c)), 1200)
+    } catch {
+      // no clipboard: nothing to show
+    }
+  }
 
   React.useEffect(() => {
     let cancelled = false
@@ -77,9 +89,9 @@ const ChordBrowserPanel = React.memo(function ChordBrowserPanel({ style }) {
           <h1 className="panel-title">Chord library</h1>
           <p className="panel-subtitle">
             {catalog
-              ? filter.trim()
-                ? `${filtered.length} match${filtered.length === 1 ? "" : "es"} of ${catalog.length}`
-                : `${catalog.length} chords`
+              ? (filter.trim()
+                  ? `${filtered.length} match${filtered.length === 1 ? "" : "es"} of ${catalog.length}`
+                  : `${catalog.length} chords`) + " · click one to copy its name"
               : "Loading fingerings\u2026"}
           </p>
         </div>
@@ -100,11 +112,17 @@ const ChordBrowserPanel = React.memo(function ChordBrowserPanel({ style }) {
         {pageItems.map((item) => {
           const chord = { ...chordStubFromLabel(item.label), position: item.position }
           return (
-            <div key={item.label} className="chord-chip">
-              <span className="chord-label">{chord.label}</span>
+            <button
+              key={item.label}
+              type="button"
+              className={"chord-chip chord-chip-btn" + (copied === chord.label ? " chord-chip-copied" : "")}
+              onClick={() => copy(chord.label)}
+              title={`Copy ${chord.label}`}
+            >
+              <span className="chord-label">{copied === chord.label ? "Copied" : chord.label}</span>
               <ChordDiagram chord={chord} instrument="guitar" />
               <span className="chord-notes">{chord.noteNames.map((n) => n.replace(/\d+$/, "")).join(" ")}</span>
-            </div>
+            </button>
           )
         })}
       </div>

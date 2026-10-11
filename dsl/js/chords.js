@@ -23,8 +23,6 @@ export const NOTE_TO_PC = {
 }
 const SHARP_NAMES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"]
 const FLAT_NAMES = ["C", "Db", "D", "Eb", "E", "F", "Gb", "G", "Ab", "A", "Bb", "B"]
-// Keys written with flats, so their numeral chords are spelled with flats too.
-const FLAT_KEYS = new Set(["F", "Bb", "Eb", "Ab", "Db", "Gb", "Dm", "Gm", "Cm", "Fm", "Bbm", "Ebm"])
 
 export function midiToName(m) {
   const pc = ((m % 12) + 12) % 12
@@ -32,21 +30,65 @@ export function midiToName(m) {
   return SHARP_NAMES[pc] + oct
 }
 
-const MAJOR_SCALE = [0, 2, 4, 5, 7, 9, 11]
-const MINOR_SCALE = [0, 2, 3, 5, 7, 8, 10]
+// The scales a key can be in: semitones above the tonic. A major key is written C and a
+// minor one Am; the modes are written by name, D dorian, and ionian and aeolian are the
+// modal names of major and minor.
+export const MODE_SCALES = {
+  major: [0, 2, 4, 5, 7, 9, 11],
+  minor: [0, 2, 3, 5, 7, 8, 10],
+  ionian: [0, 2, 4, 5, 7, 9, 11],
+  dorian: [0, 2, 3, 5, 7, 9, 10],
+  phrygian: [0, 1, 3, 5, 7, 8, 10],
+  lydian: [0, 2, 4, 6, 7, 9, 11],
+  mixolydian: [0, 2, 4, 5, 7, 9, 10],
+  aeolian: [0, 2, 3, 5, 7, 8, 10],
+  locrian: [0, 1, 3, 5, 6, 8, 10],
+}
+// How far round the circle of fifths a mode's tonic sits from the major key with the same
+// notes: D dorian has C major's notes, two fifths down from D.
+const MODE_FIFTHS = { major: 0, ionian: 0, lydian: -1, mixolydian: 1, dorian: 2, minor: 3, aeolian: 3, phrygian: 4, locrian: 5 }
+const LETTER_FIFTHS = { F: -1, C: 0, G: 1, D: 2, A: 3, E: 4, B: 5 }
 const DEGREE = { i: 0, ii: 1, iii: 2, iv: 3, v: 4, vi: 5, vii: 6 }
 const ROMAN_RE = /^([#b]?)(VII|VI|IV|V|III|II|I|vii|vi|iv|v|iii|ii|i)([°oø]?)(.*)$/
 
-// "C", "Am", "F#m", "Bb" → { name, root, mode, tonicPc }, or null when it isn't a key.
+// "C", "Am", "F#m", "Bb", "D dorian" → the key: its root, mode and scale, the sharps in its
+// signature (negative for flats) and whether its black keys are spelt with flats. null when
+// it isn't a key.
 export function parseKey(str) {
-  const m = /^([A-G][#b]?)(m?)$/.exec(String(str || "").trim())
+  const m = /^([A-G])([#b]?)(?:(m)|\s+([a-z]+))?$/.exec(String(str || "").trim())
   if (!m) return null
+  const [, letter, acc, minor, word] = m
+  const mode = minor ? "minor" : word || "major"
+  if (!MODE_SCALES[mode] || word === "major" || word === "minor") return null
+  const root = letter + acc
+  let sharps = LETTER_FIFTHS[letter] + (acc === "#" ? 7 : acc === "b" ? -7 : 0) - MODE_FIFTHS[mode]
+  if (sharps > 7) sharps -= 12
+  if (sharps < -7) sharps += 12
   return {
-    name: m[1] + m[2],
-    root: m[1],
-    mode: m[2] ? "minor" : "major",
-    tonicPc: NOTE_TO_PC[m[1]],
+    name: root + (minor ? "m" : word ? " " + word : ""),
+    root,
+    mode,
+    tonicPc: NOTE_TO_PC[root],
+    scale: MODE_SCALES[mode],
+    sharps,
+    flats: sharps < 0,
   }
+}
+
+const SHARP_ORDER = ["F", "C", "G", "D", "A", "E", "B"]
+
+// The accidental a key's signature puts on each letter: F → ^ in G major, B → _ in F.
+export function keySignature(key) {
+  const marks = new Map()
+  if (key.sharps > 0) for (const l of SHARP_ORDER.slice(0, key.sharps)) marks.set(l, "^")
+  if (key.sharps < 0) for (const l of [...SHARP_ORDER].reverse().slice(0, -key.sharps)) marks.set(l, "_")
+  return marks
+}
+
+// The key as ABC writes it in its K: field: D, Am, D dor.
+export function abcKey(key) {
+  const short = { dorian: " dor", phrygian: " phr", lydian: " lyd", mixolydian: " mix", locrian: " loc", minor: "m", aeolian: "m" }
+  return key.root + (short[key.mode] || "")
 }
 
 // Strict check: a numeral plus chord-suffix characters only, so words like "intro" or
@@ -63,10 +105,9 @@ function romanToSymbol(main, key) {
   const m = ROMAN_RE.exec(main)
   if (!m) return null
   const [, acc, numeral, mark, rest] = m
-  const scale = key.mode === "minor" ? MINOR_SCALE : MAJOR_SCALE
   const shift = acc === "#" ? 1 : acc === "b" ? -1 : 0
-  const pc = (key.tonicPc + scale[DEGREE[numeral.toLowerCase()]] + shift + 12) % 12
-  const names = acc === "b" || (!acc && FLAT_KEYS.has(key.name)) ? FLAT_NAMES : SHARP_NAMES
+  const pc = (key.tonicPc + key.scale[DEGREE[numeral.toLowerCase()]] + shift + 12) % 12
+  const names = acc === "b" || (!acc && key.flats) ? FLAT_NAMES : SHARP_NAMES
   let quality
   if (mark === "ø") quality = "m7b5" + rest.replace(/^7/, "")
   else if (mark) quality = rest.startsWith("7") ? "dim7" + rest.slice(1) : "dim" + rest

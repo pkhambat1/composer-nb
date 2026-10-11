@@ -52,13 +52,6 @@
   --code-pad-y: 8px;
 }
 
-[data-density="compact"] {
-  --cell-pad-x: 8px;
-  --cell-pad-y: 2px;
-  --code-pad-x: 8px;
-  --code-pad-y: 5px;
-}
-
 [data-theme="dark"] {
   color-scheme: dark;
   --bg: #181a1f;
@@ -102,51 +95,6 @@
   --tk-bass: #aab1bf;
 }
 
-[data-theme="retro"] {
-  --bg: #0a0a08;
-  --paper: #110f08;
-  --border: #3a2e15;
-  --border-soft: #251d0d;
-  --text: #ffb000;
-  --text-dim: #b87800;
-  --text-mute: #6e4900;
-  --accent: #ffd566;
-  --accent-soft: #2a1f08;
-  --accent-prompt: #ffd566;
-  --out-prompt: #ff8050;
-  --code-bg: #1a140a;
-  --pill-bg: #1f1808;
-  --pill-fg: #ffd566;
-  --tb-bg: #110f08;
-  --tb-btn-hover: #1f1808;
-  --tb-btn-active: #2a1f08;
-  --kernel-idle: #6ee06e;
-  --kernel-busy: #ff8533;
-  --traceback: #ff5050;
-  --header-bg: #110f08;
-  --header-text: #ffb000;
-  --editing-bar: var(--accent);
-  --busy-bar: #ff8533;
-
-  --tk-comment: #8a6420;
-  --tk-directive-key: #ffd566;
-  --tk-directive-val: #ffb000;
-  --tk-bar: #6e4900;
-  --tk-root-maj: #ffd566;
-  --tk-root-min: #ff8050;
-  --tk-root-abs: #ffb000;
-  --tk-quality: #ff8533;
-  --tk-ext: #ffd566;
-  --tk-rhythm: #6ee06e;
-  --tk-note: #ff8533;
-  --tk-rest: #8a6420;
-  --tk-slash: #6e4900;
-  --tk-bass: #b87800;
-
-  --font-sans: "VT323", "IBM Plex Mono", monospace;
-  --font-mono: "VT323", "IBM Plex Mono", monospace;
-  --font-serif: "VT323", "IBM Plex Mono", monospace;
-}
 
 * {
   box-sizing: border-box;
@@ -170,11 +118,6 @@ body {
   font-feature-settings:
     "kern" 1,
     "liga" 1;
-}
-[data-theme="retro"] body {
-  font-size: 18px;
-  line-height: 1.3;
-  text-shadow: 0 0 1px rgba(255, 176, 0, 0.6);
 }
 
 .app-shell {
@@ -886,8 +829,12 @@ body {
   width: 100%;
   text-align: left;
 }
-.cell-menu-item:hover {
+.cell-menu-item:hover:not(:disabled) {
   background: var(--tb-btn-hover);
+}
+.cell-menu-item:disabled {
+  opacity: 0.4;
+  cursor: default;
 }
 .cell-menu-item-danger {
   color: var(--traceback);
@@ -934,10 +881,6 @@ body {
   overflow-wrap: normal;
   word-break: normal;
   tab-size: 2;
-}
-[data-theme="retro"] .code-hl,
-[data-theme="retro"] .code-area {
-  font-size: 17px;
 }
 .code-hl {
   position: absolute;
@@ -1022,6 +965,12 @@ body {
   box-shadow: 0 1px 0 var(--traceback);
   color: var(--traceback);
 }
+/* A line the last run reported: tinted across its text, with a mark in the margin */
+.hl-error-line {
+  background: var(--tk-error-bg);
+  border-radius: 2px;
+  box-shadow: -6px 0 0 0 var(--tk-error-bg);
+}
 
 
 .cell-output {
@@ -1051,8 +1000,6 @@ body {
 .out-content {
   min-width: 0;
   padding: 0 4px;
-  max-height: 480px;
-  overflow-y: auto;
   display: grid;
   grid-template-columns: repeat(auto-fit, 125px);
   column-gap: 3px;
@@ -1060,8 +1007,10 @@ body {
 }
 .cell-output-error {
   display: block;
+  margin-top: 6px;
   background: rgba(176, 0, 32, 0.06);
   border-left: 3px solid var(--traceback);
+  border-radius: 0 3px 3px 0;
   padding: 8px 12px;
   font-family: var(--font-mono);
   font-size: 12.5px;
@@ -1137,13 +1086,6 @@ body {
 .play-btn svg {
   fill: currentColor;
 }
-[data-theme="retro"] .play-btn {
-  border-color: var(--text);
-}
-[data-theme="retro"] .play-btn.playing {
-  background: var(--text);
-  color: var(--bg);
-}
 
 .waveform-wrap {
   flex: 1;
@@ -1210,9 +1152,6 @@ body {
 }
 .meta-pill-count {
   font-weight: 500;
-}
-[data-theme="retro"] .meta-pill {
-  font-size: 13px;
 }
 
 .out-section {
@@ -1527,6 +1466,20 @@ body {
   color: var(--text);
   font-size: 12px;
 }
+/* A chord in the library: a button that copies its name */
+.chord-chip-btn {
+  appearance: none;
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+}
+.chord-chip-btn:hover {
+  border-color: var(--accent);
+}
+.chord-chip-copied .chord-label {
+  color: var(--accent);
+  font-weight: 600;
+}
 .chord-notes {
   color: var(--text-mute);
   font-weight: 600;
@@ -1541,12 +1494,6 @@ body {
   color: var(--text-mute);
   font-size: 10px;
   line-height: 1;
-}
-[data-theme="retro"] .chord-label {
-  font-size: 13px;
-}
-[data-theme="retro"] .chord-notes {
-  font-size: 13px;
 }
 
 .chord-diagram {
@@ -1691,12 +1638,6 @@ body {
   color: var(--text-mute);
   font-style: italic;
 }
-[data-theme="retro"] .markdown h1,
-[data-theme="retro"] .markdown h2,
-[data-theme="retro"] .markdown h3,
-[data-theme="retro"] .markdown h4 {
-  font-family: var(--font-sans);
-}
 
 .status-bar {
   position: fixed;
@@ -1713,9 +1654,6 @@ body {
   align-items: center;
   gap: 8px;
   z-index: 20;
-}
-[data-theme="retro"] .status-bar {
-  font-size: 14px;
 }
 .sb-sep {
   color: var(--text-mute);
@@ -1776,7 +1714,17 @@ body {
     height: auto;
     overflow: visible;
   }
+  /* The sticky header stays short: no subtitle, less padding */
   .nb-title-bar {
+    padding: 6px 12px;
+  }
+  .nb-title-bar .panel-subtitle {
+    display: none;
+  }
+  .nb-title-bar .panel-title {
+    font-size: 17px;
+  }
+  .toolbar {
     padding: 8px 12px;
   }
   .nb-main {
@@ -1799,7 +1747,6 @@ body {
   }
   .out-content {
     padding: 0;
-    max-height: none;
   }
   .music-row {
     flex-wrap: wrap;
@@ -1825,29 +1772,6 @@ body {
   }
 }
 
-[data-theme="retro"] body::before {
-  content: "";
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  background: repeating-linear-gradient(
-    0deg,
-    rgba(0, 0, 0, 0) 0,
-    rgba(0, 0, 0, 0) 2px,
-    rgba(0, 0, 0, 0.15) 2px,
-    rgba(0, 0, 0, 0.15) 3px
-  );
-  z-index: 50;
-  mix-blend-mode: multiply;
-}
-[data-theme="retro"] body::after {
-  content: "";
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  background: radial-gradient(ellipse at center, transparent 50%, rgba(0, 0, 0, 0.5) 100%);
-  z-index: 51;
-}
 
 /* Music language tokens (see lib/highlight.js) */
 .tk-inst {

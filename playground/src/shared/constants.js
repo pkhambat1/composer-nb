@@ -1,4 +1,5 @@
 // Shared application constants
+import { grooveCells } from "composer-nb/grooves"
 
 export const APP_CONSTANTS = {
   // The docs site, built by Mintlify from the docs/ folder
@@ -7,24 +8,17 @@ export const APP_CONSTANTS = {
   // Double-key press timeout (ms) for delete confirmation
   DOUBLE_KEY_TIMEOUT: 400,
 
-  // Default theme settings
+  // How the playground looks until it's changed: light or dark, and how the hits are
+  // drawn. The accent is the one colour everything else is tinted with.
   THEME_DEFAULTS: {
     theme: "light",
     accent: "#1a73e8",
-    density: "cozy",
-    monoFont: "IBM Plex Mono",
     drumView: "bricks", // or sheet: the drums as sheet music
     sheetCounts: false, // count the hands' notes under the staff
   },
 
-  // Available accent colors
-  ACCENT_OPTIONS: ["#1a73e8", "#d97757", "#1f8a5b", "#a855f7"],
-
-  // Available monospace fonts
-  MONO_FONTS: ["IBM Plex Mono", "JetBrains Mono", "Fira Code", "Source Code Pro"],
-
-  // Starter cells (id, runCount, output, status are added at runtime). Each piece has a
-  // text cell that says what it is, then its music cell.
+  // The notebook the playground opens with: a welcome text cell, then the transcriptions
+  // from the grooves library (composer-nb/grooves), each a text cell and its music cell.
   STARTER_CELLS: [
     {
       type: "text",
@@ -34,294 +28,10 @@ Write what plays, hear it, and see it as bricks or as sheet music. A notebook is
 
 What you write is kept on this device as you go; **Notebooks** lists your notebooks, and **Grooves** has transcriptions to start from. Below are six of them. Change anything and play it again.`,
     },
-    {
-      type: "text",
-      source: `## The Sound of Muzak
-
-**Porcupine Tree** · *In Absentia* (2002) · drums by Gavin Harrison
-
-A groove in seven. The kick, snare and hi-hat repeat in every bar, and \`bar 2\` adds the lift at the end of every second bar: a burst of ghost notes, an open hi-hat, and the foot closing it.
-
-[YouTube](https://www.youtube.com/watch?v=4ulgVOBpNWA)`,
-    },
-    {
-      type: "music",
-      source: `time 7 over 8
-tempo 90
-
-pattern groove = {
-  kick: x--x---
-  snare: 2e 4
-  snare.ghost: --x----
-  hat: ^-x-
-  bar 2 {
-    snare.ghost: d3 d3e
-    hat.open: ^3&
-    hat.pedal: 4
-  }
-}
-
-play {
-  crash: 1
-  groove
-}`,
-    },
-    {
-      type: "text",
-      source: `## Circle of Manias
-
-**Porcupine Tree** · *The Incident* (2009) · drums by Gavin Harrison
-
-Nine eighths to the bar. The hi-hat alternates open and closed on every eighth, while the kick and snare play a figure of eighteen sixteenths, so the two only line up again every two bars. The ghost notes at the top of the figure end in \`...rest\`: they play once each time through, and the other lines decide how long the pattern is.
-
-[YouTube](https://www.youtube.com/results?search_query=Porcupine+Tree+Circle+of+Manias)`,
-    },
-    {
-      type: "music",
-      source: `time 9 over 8
-tempo 100
-
-pattern manias = {
-  hat.open: x---
-  hat: --x-
-  kick: x--x-x---x--x-xx--
-  snare: -------x--------x-
-  snare.ghost: -xx, ...rest
-}
-
-play 4 bars manias`,
-    },
-    {
-      type: "text",
-      source: `## What Happens Now?
-
-**Porcupine Tree** · *Nil Recurring* (2007) · drums by Gavin Harrison
-
-Lines of different lengths in one pattern. The kick and snare repeat every 7 steps, the ride bell every 3 and the guitar riff every 10, so they drift against each other and only all meet again on a bar line after 15 bars. The play opens with a two-step pickup, an accented rim hit, and the groove starts after it: two blocks on one line play one after the other. The crash plays once, in the groove's first bar, and \`play 3 bars\` stops it after three bars, pickup included. \`octave 2\` puts the riff right at the bottom of the guitar's range.
-
-[YouTube](https://www.youtube.com/watch?v=v0Iv4SYJW-k)`,
-    },
-    {
-      type: "music",
-      source: `time 7 over 8
-tempo 110
-octave 2
-guitar.electric muted
-
-pattern groove = {
-  kick: x--x---
-  snare.rim: ----x--
-  ride.bell: x--
-  guitar.electric: D---E D-D--
-}
-
-play 3 bars {
-  {
-    snare.rim: ^-
-  } {
-    bar 1 crash: 1
-    groove
-  }
-}`,
-    },
-    {
-      type: "text",
-      source: `## Gavin Harrison's paradiddle challenge
-
-An independence exercise from **Gavin Harrison**
-
-The hands play paradiddles on the snare, accenting each PA with ghost notes in between. The feet play the same paradiddle three times slower: \`every 3 steps\` makes each of their steps last three 16ths. The kick is the right foot, and the hi-hat pedal is the left.
-
-[YouTube](https://www.youtube.com/watch?v=XEWmzQ_fJmw)`,
-    },
-    {
-      type: "music",
-      source: `time 3 over 4
-tempo 100
-
-steps pa = ^---
-steps radiddle = -xxx
-
-pattern hands = {
-  snare: pa
-  snare.ghost: radiddle
-}
-
-pattern feet = every 3 steps {
-  kick: ^-^^-^--
-  hat.pedal: -x--x-xx
-}
-
-play {
-  hands
-  feet
-}`,
-    },
-    {
-      type: "text",
-      source: `## Vodka For My Goat
-
-**Polyrhythmics** · live studio session at KNKX
-
-Twelve steps to the bar. The ride bell and the kick each play their own 12-step pattern, the snare hits on the a of 1 and the e of 3, and ghost notes fill every other step.
-
-[YouTube](https://www.youtube.com/watch?v=YZPtPMCDEs4)`,
-    },
-    {
-      type: "music",
-      source: `time 3 over 4
-tempo 82.5
-
-pattern groove = {
-  ride.bell: x-x-x-xx-x-x
-  snare: ---x--
-  snare.ghost: -x
-  kick: x-x--xx-x--x
-}
-
-play 2 bars groove`,
-    },
-    {
-      type: "text",
-      source: `## 3 over 4 over 5
-
-A polyrhythm exercise
-
-Three lines of different lengths in one pattern. The floor tom hits every 3 steps, the kick every 4 and the snare every 5. They drift apart, and only land together again after 60 steps: three bars of 5 over 4, which is where the pattern ends.`,
-    },
-    {
-      type: "music",
-      source: `time 5 over 4
-tempo 120
-
-pattern groove = {
-  kick: x---
-  snare: x----
-  tom.floor: x--
-}
-
-play groove`,
-    },
+    ...grooveCells("Transcriptions"),
   ],
 
-  // Rudiments, in the Grooves tab and on pages of their own: each a text cell, then its
-  // music cell with the sticking.
-  RUDIMENTS: [
-    {
-      type: "text",
-      source: `## Single stroke roll
+  // The rudiments, with their stickings: in the Grooves tab and on pages of their own.
+  RUDIMENTS: grooveCells("Rudiments"),
 
-A rudiment
-
-Alternate hands, every stroke the same. Slow it down with the tempo stepper, loop it, and let Ramp bring it back up a step at a time.`,
-    },
-    {
-      type: "music",
-      source: `tempo 100
-
-pattern roll = {
-  snare: xxxx xxxx xxxx xxxx
-  sticking: RLRL RLRL RLRL RLRL
-}
-
-play 2 bars roll`,
-    },
-    {
-      type: "text",
-      source: `## Double stroke roll
-
-A rudiment
-
-Two strokes a hand. The second of each pair should be as full as the first: that's the whole exercise.`,
-    },
-    {
-      type: "music",
-      source: `tempo 90
-
-pattern roll = {
-  snare: xxxx xxxx xxxx xxxx
-  sticking: RRLL RRLL RRLL RRLL
-}
-
-play 2 bars roll`,
-    },
-    {
-      type: "text",
-      source: `## Single paradiddle
-
-A rudiment
-
-Right left right right, left right left left, with the accent on the first of each four. The hands swap lead every group, which is the point of it.`,
-    },
-    {
-      type: "music",
-      source: `tempo 100
-
-pattern paradiddle = {
-  snare: ^xxx ^xxx ^xxx ^xxx
-  sticking: RLRR LRLL RLRR LRLL
-}
-
-play 2 bars paradiddle`,
-    },
-    {
-      type: "text",
-      source: `## Double paradiddle
-
-A rudiment
-
-Six strokes a group, so it sits in 3 over 4: two singles, then the diddle. Accent the first of each six.`,
-    },
-    {
-      type: "music",
-      source: `time 3 over 4
-tempo 100
-
-pattern paradiddle = {
-  snare: ^xxxxx ^xxxxx
-  sticking: RLRLRR LRLRLL
-}
-
-play 2 bars paradiddle`,
-    },
-    {
-      type: "text",
-      source: `## Paradiddle-diddle
-
-A rudiment
-
-A paradiddle with a second diddle on the end, six strokes a group. The lead hand stays the same, so it loops without swapping.`,
-    },
-    {
-      type: "music",
-      source: `time 3 over 4
-tempo 100
-
-pattern pdd = {
-  snare: ^xxxxx ^xxxxx
-  sticking: RLRRLL RLRRLL
-}
-
-play 2 bars pdd`,
-    },
-    {
-      type: "text",
-      source: `## Five-stroke roll
-
-A rudiment
-
-Two doubles and a single: a \`d\` is a double stroke, two strokes of the same hand in one step, so the sticking names the hand of each double. The accent lands on the fifth stroke.`,
-    },
-    {
-      type: "music",
-      source: `tempo 80
-
-pattern five = {
-  snare: dd^- dd^-
-  sticking: RLR- LRL-
-}
-
-play 2 bars five`,
-    },
-  ],
 }

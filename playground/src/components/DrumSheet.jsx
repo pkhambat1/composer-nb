@@ -13,7 +13,6 @@ function SheetBlock({ block, index, counts, setTimings }) {
     const [tune] = abcjs.renderAbc(el, abc, {
       responsive: "resize",
       staffwidth: Math.max(el.clientWidth, 320),
-      wrap: { minSpacing: 1.8, maxSpacing: 2.7, preferredMeasuresPerLine: 4 },
       paddingtop: 0,
       paddingbottom: 0,
       paddingleft: 0,

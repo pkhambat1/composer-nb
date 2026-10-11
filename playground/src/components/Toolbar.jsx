@@ -18,7 +18,7 @@ function AddCellDropdown({ onAddCode, onAddText }) {
     <div className="tb-dropdown-wrap" ref={ref}>
       <button
         className="tb-btn"
-        title="Insert cell below"
+        title="Add a cell at the end"
         onClick={() => setOpen((v) => !v)}
       >
         <span style={{ fontWeight: 700, fontSize: 16, lineHeight: "14px" }}>+</span>
@@ -29,10 +29,10 @@ function AddCellDropdown({ onAddCode, onAddText }) {
       {open && (
         <div className="tb-dropdown">
           <button className="tb-dropdown-item" onClick={() => { onAddCode(); setOpen(false) }}>
-            Code
+            Music cell
           </button>
           <button className="tb-dropdown-item" onClick={() => { onAddText(); setOpen(false) }}>
-            Text
+            Text cell
           </button>
         </div>
       )}

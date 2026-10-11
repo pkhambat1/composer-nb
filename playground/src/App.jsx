@@ -63,6 +63,8 @@ export default function App() {
     insertCell,
     deleteCell,
     undoDelete,
+    moveCell,
+    duplicateCell,
   } = cm
 
   const notebooks = useNotebooks({
@@ -72,23 +74,17 @@ export default function App() {
     setSelectedId,
   })
 
+  // In a frame the page's theme rules; otherwise the choices are kept on this device
   const [settings, setSetting] = useTheme(
     EMBED ? { ...APP_CONSTANTS.THEME_DEFAULTS, theme: embedTheme() } : APP_CONSTANTS.THEME_DEFAULTS,
+    { remember: !EMBED },
   )
   const theme = settings.theme || "light"
-  const accent = settings.accent || "#1a73e8"
-  const density = settings.density || "cozy"
-  const monoFont = settings.monoFont || "IBM Plex Mono"
+  const accent = APP_CONSTANTS.THEME_DEFAULTS.accent
 
   React.useEffect(() => {
     document.documentElement.dataset.theme = theme
-    document.documentElement.dataset.density = density
-    document.documentElement.style.setProperty("--accent", accent)
-    document.documentElement.style.setProperty(
-      "--font-mono",
-      `'${monoFont}', ui-monospace, Menlo, monospace`,
-    )
-  }, [theme, accent, density, monoFont])
+  }, [theme])
 
   // In a frame: follow the page's theme, and tell the page how tall the cell is.
   const embedRef = React.useRef(null)
@@ -140,7 +136,10 @@ export default function App() {
         if (parsed.errors && parsed.errors.length > 0) {
           const lines = parsed.errors.map((e) => `Line ${e.line}: ${e.msg}`).join("\n")
           playback.stopCell(id)
-          updateCell(id, { status: "idle", output: { kind: "error", error: lines } })
+          updateCell(id, {
+            status: "idle",
+            output: { kind: "error", error: lines, lines: parsed.errors.map((e) => e.line), source: c.source },
+          })
           return
         }
         if (parsed.events.length === 0 && parsed.drumEvents.length === 0) {
@@ -374,6 +373,11 @@ export default function App() {
           onRun={() => playCellNow(c.id)}
           onInterrupt={() => interruptCell(c.id)}
           onDelete={() => deleteCell(c.id)}
+          onMoveUp={() => moveCell(c.id, -1)}
+          onMoveDown={() => moveCell(c.id, 1)}
+          onDuplicate={() => duplicateCell(c.id)}
+          first={i === 0}
+          last={i === cells.length - 1}
           onSetPreview={(v) => updateCell(c.id, { previewMode: v })}
           onTogglePlayback={togglePlayback}
           onPlaybackFinished={onPlaybackFinished}

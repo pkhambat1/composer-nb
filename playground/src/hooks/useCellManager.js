@@ -89,6 +89,31 @@ export function useCellManager(starterCells) {
     })
   }, [])
 
+  // Move a cell up or down one place
+  const moveCell = useCallback((id, by) => {
+    setCells((cs) => {
+      const idx = cs.findIndex((c) => c.id === id)
+      const to = idx + by
+      if (idx < 0 || to < 0 || to >= cs.length) return cs
+      const next = [...cs]
+      next.splice(to, 0, ...next.splice(idx, 1))
+      return next
+    })
+  }, [])
+
+  // A copy of a cell, right under it, with the same source and no output yet
+  const duplicateCell = useCallback((id) => {
+    setCells((cs) => {
+      const idx = cs.findIndex((c) => c.id === id)
+      if (idx < 0) return cs
+      const copy = { ...cs[idx], id: cellId(), runCount: null, output: null, status: "idle" }
+      const next = [...cs]
+      next.splice(idx + 1, 0, copy)
+      setSelectedId(copy.id)
+      return next
+    })
+  }, [])
+
   // Convert cell type (music <-> text)
   const convertCell = useCallback((id, type) => {
     setCells((cs) =>
@@ -109,6 +134,8 @@ export function useCellManager(starterCells) {
     insertCell,
     deleteCell,
     undoDelete,
+    moveCell,
+    duplicateCell,
     convertCell,
   }
 }

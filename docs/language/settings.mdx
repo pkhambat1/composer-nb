@@ -13,7 +13,7 @@ A setting is a name followed by its value, with no `=` or `:`. It applies from i
 | `tempo` | 20 to 400 | `120` | Quarter notes per minute. |
 | `swing` | 50 to 75 | `50` | Where the off-beat eighth falls, as a percentage of the beat. |
 | `kit` | `rock` or `synth` | `rock` | The drum kit. |
-| `key` | `C`, `Am`, `Bb`, `F#m` and so on | `C` | The key [Roman numerals](/language/chords#roman-numerals) are read in. |
+| `key` | `C`, `Am`, `Bb`, `F#m`, or a root and a mode: `D dorian` | `C` | The key: what [Roman numerals](/language/chords#roman-numerals) are read in, and the sheet's key signature. |
 | `capo` | 0 to 12 | `0` | The fret a guitar's chords are played from. |
 | `octave` | 1 to 6 | `3` | The octave of a note without a number, and of a chord's root. |
 | `guitar.electric` | `clean` or `muted` | `clean` | The electric guitar's sound. |
@@ -40,6 +40,31 @@ play {
 ```
 
 </Cell>
+
+## key
+
+A major key is its letter, a minor key its letter and `m`, and a mode its root and the mode's name: `D dorian`, `E phrygian`, `F lydian`, `G mixolydian`, `B locrian`, with `ionian` and `aeolian` as the modal names of major and minor. Roman numerals are degrees of the key's scale, and the sheet takes its key signature from the key: `D dorian` has none, `A mixolydian` two sharps.
+
+<Cell>
+
+```composer-nb
+key D dorian
+tempo 96
+
+pattern vamp = {
+  piano: chords i IV|i VII
+  bass: D2-------G2-------|D2-------C2-------
+  hat: x-
+  kick: 1 3
+  snare: 2 4
+}
+
+play vamp
+```
+
+</Cell>
+
+The major `IV` under a minor `i` is what makes dorian dorian: `i IV` is Dm G.
 
 ## kit
 

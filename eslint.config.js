@@ -12,7 +12,7 @@ const sharedStylistic = {
 
 /** @type {import('eslint').Linter.Config[]} */
 export default [
-  { ignores: ["**/node_modules", "**/dist", ".git", ".claude", "dsl/python"] },
+  { ignores: ["**/node_modules", "**/dist", ".git", ".claude", "dsl/python", "mcp/reference.js"] },
   {
     files: ["**/*.config.js"],
     languageOptions: {
@@ -24,6 +24,23 @@ export default [
     rules: {
       ...js.configs.recommended.rules,
       ...sharedStylistic,
+    },
+  },
+  {
+    files: ["mcp/**/*.js", "api/**/*.js", "playground/scripts/**/*.js"],
+    languageOptions: {
+      ecmaVersion: 2022,
+      sourceType: "module",
+      globals: globals.node,
+    },
+    plugins: { "@stylistic": stylistic },
+    rules: {
+      ...js.configs.recommended.rules,
+      ...sharedStylistic,
+      "no-unused-vars": [
+        "error",
+        { argsIgnorePattern: "^_", varsIgnorePattern: "^_", caughtErrorsIgnorePattern: "^_" },
+      ],
     },
   },
   {

@@ -577,7 +577,7 @@ export default function MusicOutput({
     return (
       <div className="cell-output cell-output-error">
         <div className="traceback">
-          <span className="tb-name">MusicError</span>
+          <span className="tb-name">{lines.length === 1 ? "1 mistake" : `${lines.length} mistakes`}</span>
           <div className="tb-msg-block">
             {lines.map((l, i) => (
               <div key={i} className="tb-msg-line">

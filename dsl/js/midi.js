@@ -2,6 +2,7 @@
    a tempo track, the drums on channel 10 with General MIDI drum notes, and a track per
    pitched instrument. Times come from the events' seconds, so what swings in the audio
    swings here too. Pure, like grid.js. */
+import { parseKey } from "./chords.js"
 import { TPQ } from "./language.js"
 
 // General MIDI drum notes for the kit pieces
@@ -94,6 +95,10 @@ export function midiFile(outputs) {
       meta.push({ tick, order: order++, bytes: [0xff, 0x51, 0x03, ...be32(usPerQuarter).slice(1)] })
       const count = s.groups.reduce((a, b) => a + b, 0)
       meta.push({ tick, order: order++, bytes: [0xff, 0x58, 0x04, count, Math.log2(s.unit), 24, 8] })
+      // The key signature: sharps (or flats, as a negative count) and whether it's minor
+      const key = parseKey(s.key) || parseKey("C")
+      const minor = key.mode === "minor" || key.mode === "aeolian" ? 1 : 0
+      meta.push({ tick, order: order++, bytes: [0xff, 0x59, 0x02, key.sharps & 0xff, minor] })
     }
     for (const e of output.drumEvents) {
       const note = DRUM_NOTES[e.lane]

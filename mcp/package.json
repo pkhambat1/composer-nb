@@ -1,0 +1,63 @@
+{
+  "name": "composer-nb-mcp",
+  "version": "0.1.0",
+  "description": "An MCP server for composer-nb: an assistant writes music as text, checks it, hears it, draws the sheet and sends a link.",
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "music",
+    "drums",
+    "notation",
+    "composer-nb"
+  ],
+  "homepage": "https://github.com/pkhambat1/composer-nb",
+  "bugs": "https://github.com/pkhambat1/composer-nb/issues",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pkhambat1/composer-nb.git",
+    "directory": "mcp"
+  },
+  "author": "Pezanne Khambatta",
+  "license": "MIT",
+  "type": "module",
+  "bin": {
+    "composer-nb-mcp": "./bin.js"
+  },
+  "main": "./server.js",
+  "exports": {
+    ".": "./server.js",
+    "./http": "./http.js",
+    "./cell": "./cell.js",
+    "./render": "./render.js"
+  },
+  "files": [
+    "bin.js",
+    "server.js",
+    "http.js",
+    "cell.js",
+    "render.js",
+    "instructions.js",
+    "reference.js",
+    "fonts"
+  ],
+  "scripts": {
+    "build": "node scripts/reference.js",
+    "prepack": "npm run build",
+    "test": "vitest run",
+    "start": "node bin.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.32.1",
+    "@resvg/resvg-wasm": "^2.6.2",
+    "abcjs": "^6.7.1",
+    "composer-nb": "^0.6.0",
+    "linkedom": "^0.18.13",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "vitest": "^2.1.9"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
