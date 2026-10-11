@@ -222,6 +222,10 @@ const closest = (name, names) =>
 
 // For `name: value` where name isn't an instrument.
 function unknownInstrument(name) {
+  // The closed hi-hat is the plain one, which is what most people reach for first
+  if (/^hat\.(close|closed|shut)$/.test(name)) {
+    return "The closed hi-hat is hat on its own; hat.open is the open one, and hat.pedal the foot"
+  }
   if (SPLIT.includes(name)) {
     const lanes = LANES.filter((l) => l.startsWith(name + "."))
     return `"${name}" isn't a drum. The ${name}s are ${lanes.slice(0, -1).join(", ")} and ${lanes.at(-1)}`

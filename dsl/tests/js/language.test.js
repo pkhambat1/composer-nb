@@ -1151,6 +1151,15 @@ pattern manias = {
   })
 })
 
+describe("the closed hi-hat", () => {
+  it("is hat on its own, which the error says when someone reaches for hat.close", () => {
+    expect(firstError("play hat.close: x-x-")).toMatch(
+      /The closed hi-hat is hat on its own; hat.open is the open one, and hat.pedal the foot/,
+    )
+    expect(firstError("play hat.closed: x-x-")).toMatch(/The closed hi-hat is hat on its own/)
+  })
+})
+
 describe("swing", () => {
   it("moves the off-beat late in the sound, and nowhere in the writing", () => {
     const p = parseSource("swing 67\nplay hat: x-x- x-x-")

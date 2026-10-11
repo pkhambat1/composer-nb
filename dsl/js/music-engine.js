@@ -5,6 +5,7 @@ import * as ChordLookup from "./chord-lookup.js"
 import * as Drums from "./drums.js"
 import { midiToName } from "./chords.js"
 import { initialState, parseCell } from "./language.js"
+import { midiFile } from "./midi.js"
 
 export { midiToName, parseKey, buildChord } from "./chords.js"
 export { initialState } from "./language.js"
@@ -497,11 +498,20 @@ export function bufferToWav(buffer) {
 }
 
 export function downloadWav(buffer, filename) {
-  const blob = bufferToWav(buffer)
+  downloadBlob(bufferToWav(buffer), filename || "composition.wav")
+}
+
+// The cell's plays as a MIDI file, for a DAW or a notation program.
+export function downloadMidi(outputs, filename) {
+  const bytes = midiFile(outputs)
+  downloadBlob(new Blob([bytes], { type: "audio/midi" }), filename || "composition.mid")
+}
+
+function downloadBlob(blob, filename) {
   const url = URL.createObjectURL(blob)
   const a = document.createElement("a")
   a.href = url
-  a.download = filename || "composition.wav"
+  a.download = filename
   document.body.appendChild(a)
   a.click()
   setTimeout(() => {

@@ -1361,6 +1361,51 @@ body {
 .chord-strip {
   display: contents;
 }
+/* The grooves library */
+.grooves-panel {
+  padding-bottom: 60px;
+}
+.grooves-list {
+  max-width: 1020px;
+  margin: 0 auto;
+  padding: 16px 18px;
+  display: grid;
+  gap: 14px;
+}
+.groove-card {
+  background: var(--paper);
+  border: 1px solid var(--border-soft);
+  border-radius: 4px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.groove-title {
+  font-weight: 600;
+  font-size: 15px;
+}
+.groove-byline {
+  font-size: 12px;
+  color: var(--text-dim);
+}
+.groove-code {
+  margin: 4px 0;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--text-dim);
+  background: var(--code-bg);
+  padding: 8px 10px;
+  border-radius: 3px;
+  overflow: auto;
+  max-height: 180px;
+}
+.groove-actions {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
 .chord-chip {
   display: flex;
   flex-direction: column;
@@ -1785,6 +1830,33 @@ body {
 .ds-now * {
   fill: var(--accent);
   color: var(--accent);
+}
+.sheet-print {
+  grid-column: 1 / -1;
+  display: contents;
+}
+/* Printing a sheet: only that cell's staves, in black, at the top of the page */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  .printing,
+  .printing * {
+    visibility: visible;
+  }
+  .printing {
+    display: block;
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    color: #000;
+  }
+  .printing .ds-now,
+  .printing .ds-now * {
+    fill: #000;
+    color: #000;
+  }
 }
 .dg-bar {
   display: grid;

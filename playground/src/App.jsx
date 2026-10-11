@@ -16,7 +16,8 @@ import {
   reportHeight,
   shareNotebookUrl,
 } from "./shared/embed.js"
-import { useCellManager } from "./hooks/useCellManager.js"
+import { cellId, useCellManager } from "./hooks/useCellManager.js"
+import GroovesPanel from "./components/GroovesPanel.jsx"
 import { usePlayback } from "./hooks/usePlayback.js"
 import { useKeyboard } from "./hooks/useKeyboard.js"
 import { useTheme } from "./components/theme-panel.jsx"
@@ -298,6 +299,23 @@ export default function App() {
     if (OPEN) runAllRef.current()
   }, [])
 
+  // A groove from the library: its two cells go at the end of the notebook, and it plays
+  const openGroove = React.useCallback(
+    (g) => {
+      const textId = cellId()
+      const musicId = cellId()
+      const mk = (id, type, source) => ({ id, type, source, runCount: null, output: null, status: "idle" })
+      cm.setCells((cs) => [...cs, mk(textId, "text", g.text.source), mk(musicId, "music", g.music.source)])
+      setSelectedId(musicId)
+      openTab("notebook")
+      setTimeout(() => {
+        queuedRunCell(musicId, true)
+        document.querySelector(`[data-cell-id="${musicId}"]`)?.scrollIntoView({ block: "start", behavior: "smooth" })
+      }, 60)
+    },
+    [cm, setSelectedId, openTab, queuedRunCell],
+  )
+
   const [shared, setShared] = React.useState(false)
   const shareNotebook = React.useCallback(async () => {
     await navigator.clipboard.writeText(shareNotebookUrl(cells))
@@ -420,6 +438,7 @@ export default function App() {
           <StatusBar editingId={editingId} kernelStatus={kernelStatus} />
 
         </div>
+        <GroovesPanel style={{ display: sideTab === "grooves" ? undefined : "none" }} onOpen={openGroove} />
         {chordsOpened && (
           <React.Suspense fallback={null}>
             <ChordBrowserPanel style={{ display: sideTab === "chords" ? undefined : "none" }} />

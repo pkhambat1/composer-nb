@@ -29,6 +29,7 @@
     "./editing": "./js/editing.js",
     "./grid": "./js/grid.js",
     "./sheet": "./js/sheet.js",
+    "./midi": "./js/midi.js",
     "./highlight": "./js/highlight.js"
   },
   "files": [

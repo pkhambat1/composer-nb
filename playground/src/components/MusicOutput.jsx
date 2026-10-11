@@ -119,6 +119,19 @@ function CellDetails({
   const chords = parsed.events.filter((e) => e.chord && !e.repeat)
   const drawn = (b) => b.drumEvents.length > 0 || b.noteEvents.length > 0 || b.chordEvents?.length > 0
   const sheet = drumView === "sheet"
+  // Print: only this cell's sheet goes to the printer (see @media print)
+  const sheetRef = React.useRef(null)
+  const printSheet = () => {
+    const el = sheetRef.current
+    if (!el) return
+    el.classList.add("printing")
+    const done = () => {
+      el.classList.remove("printing")
+      window.removeEventListener("afterprint", done)
+    }
+    window.addEventListener("afterprint", done)
+    window.print()
+  }
   const meta = parsed.blocks
     .filter((b) => !drawn(b))
     .map((b) => `time ${b.time} · tempo ${b.tempo} · ${b.bars} bar${b.bars === 1 ? "" : "s"}`)
@@ -166,10 +179,25 @@ function CellDetails({
                 counts
               </button>
             )}
+            {sheet && (
+              <button
+                type="button"
+                className="view-btn view-btn-lone"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  printSheet()
+                }}
+                title="Print the sheet, or save it as a PDF"
+              >
+                print
+              </button>
+            )}
           </div>
           {sheet ? (
             <React.Suspense fallback={<div className="dg-head">Drawing the staff…</div>}>
-              <DrumSheet blocks={parsed.blocks} counts={sheetCounts} getTime={getTime} playing={playing} />
+              <div className="sheet-print" ref={sheetRef}>
+                <DrumSheet blocks={parsed.blocks} counts={sheetCounts} getTime={getTime} playing={playing} />
+              </div>
             </React.Suspense>
           ) : (
             <DrumGrid blocks={parsed.blocks} getTime={getTime} playing={playing} />
@@ -482,6 +510,7 @@ export default function MusicOutput({
     const fname = `cell-${runCount || "out"}.wav`
     MusicEngine.downloadWav(output.buffer, fname)
   }
+  const onMidi = () => MusicEngine.downloadMidi(parsed.outputs, `cell-${runCount || "out"}.mid`)
   // The tempo shown is the first block's, at the rate the player is set to
   const written = parsed.blocks[0]?.tempo || 120
   const step = (by) => {
@@ -573,6 +602,19 @@ export default function MusicOutput({
                   />
                 </svg>
                 <span>WAV</span>
+              </button>
+              <button className="icon-btn" onClick={onMidi} title="Download as MIDI, for a DAW or a notation program">
+                <svg width="12" height="12" viewBox="0 0 12 12">
+                  <path
+                    d="M6 1v7m-3-3l3 3 3-3M2 10h8"
+                    stroke="currentColor"
+                    strokeWidth="1.4"
+                    fill="none"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+                <span>MIDI</span>
               </button>
             </div>
           </div>

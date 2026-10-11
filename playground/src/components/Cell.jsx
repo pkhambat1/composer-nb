@@ -129,6 +129,7 @@ function Cell({
       }
       onClick={onSelect}
       data-screen-label={`Cell ${index + 1} (${cell.type})`}
+      data-cell-id={cell.id}
     >
       <div className="cell-prompt">
         {cell.type === "music" && runState !== "idle" ? (
