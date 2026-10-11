@@ -3,7 +3,7 @@ import React from "react"
 import { APP_CONSTANTS } from "../shared/constants.js"
 
 const SIDE_TABS = [
-  { id: "notebook", label: "Notebook", hint: "Cells & playback" },
+  { id: "notebook", label: "Notebook", hint: "Write and play" },
   { id: "chords", label: "Chord library", hint: "Browse chord shapes" },
 ]
 

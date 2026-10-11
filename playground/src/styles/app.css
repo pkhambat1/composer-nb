@@ -1232,6 +1232,97 @@ body {
   align-items: center;
   gap: 10px;
 }
+/* Practice controls and sharing, on the right of the player */
+.icon-btn-on {
+  color: var(--accent);
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+.tempo-ctl {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  overflow: hidden;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-dim);
+}
+.tempo-btn {
+  appearance: none;
+  border: 0;
+  background: var(--paper);
+  color: var(--text-dim);
+  font: inherit;
+  font-size: 13px;
+  line-height: 1;
+  width: 22px;
+  height: 22px;
+  cursor: pointer;
+}
+.tempo-btn:hover:not(:disabled) {
+  color: var(--accent);
+  background: var(--accent-soft);
+}
+.tempo-btn:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+.tempo-val {
+  padding: 0 6px;
+  min-width: 52px;
+  text-align: center;
+  border-left: 1px solid var(--border);
+  border-right: 1px solid var(--border);
+  line-height: 22px;
+  white-space: nowrap;
+}
+.tempo-val-changed {
+  color: var(--accent);
+  font-weight: 600;
+}
+.share-wrap {
+  position: relative;
+}
+.share-menu {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 4px);
+  z-index: 30;
+  min-width: 240px;
+  background: var(--paper);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+  padding: 4px;
+  display: flex;
+  flex-direction: column;
+}
+.share-item {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  text-align: left;
+  padding: 7px 9px;
+  border-radius: 3px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.share-item:hover {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+.share-hint {
+  font-weight: 400;
+  font-size: 11px;
+  color: var(--text-mute);
+}
 /* bricks | sheet: how the drums are drawn */
 .view-toggle {
   display: inline-flex;
@@ -1262,6 +1353,10 @@ body {
 .view-btn-on {
   background: var(--accent-soft);
   color: var(--accent);
+}
+.view-btn-lone {
+  border: 1px solid var(--border);
+  border-radius: 3px;
 }
 .chord-strip {
   display: contents;
@@ -1496,6 +1591,93 @@ body {
 .status-bar:hover .sb-shortcuts {
   max-width: 500px;
   opacity: 1;
+}
+
+/* Phones and narrow windows: the sidebar becomes a top bar, cells take the width, and the
+   player's controls wrap under the waveform. */
+@media (max-width: 760px) {
+  .app-shell {
+    flex-direction: column;
+  }
+  .app-lhs {
+    width: auto;
+    height: auto;
+    position: static;
+    flex-direction: row;
+    align-items: center;
+    padding: 4px 8px;
+    border-right: 0;
+    border-bottom: 1px solid var(--border);
+    overflow: visible;
+  }
+  .lhs-brand {
+    padding: 4px 8px 4px 4px;
+    flex-shrink: 0;
+  }
+  .lhs-nav {
+    flex-direction: row;
+    gap: 2px;
+    padding: 0;
+    overflow-x: auto;
+  }
+  .lhs-tab {
+    padding: 6px 8px;
+    white-space: nowrap;
+  }
+  .lhs-tab-hint {
+    display: none;
+  }
+  .app-main {
+    height: auto;
+    overflow: visible;
+  }
+  .nb-title-bar {
+    padding: 8px 12px;
+  }
+  .nb-main {
+    padding: 8px 4px 70px;
+  }
+  .cell {
+    grid-template-columns: 28px 1fr;
+  }
+  .cell-prompt {
+    padding: 9px 2px 0 2px;
+  }
+  .cell-body {
+    padding-right: 6px;
+  }
+  .cell-output {
+    grid-template-columns: 1fr;
+  }
+  .out-prompt {
+    display: none;
+  }
+  .out-content {
+    padding: 0;
+    max-height: none;
+  }
+  .music-row {
+    flex-wrap: wrap;
+    padding: 8px;
+  }
+  .out-controls-right {
+    width: 100%;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+  }
+  .dg-cell {
+    height: 12px;
+    font-size: 8px;
+    line-height: 12px;
+  }
+  .dg-lane,
+  .dg-count,
+  .dg-head {
+    font-size: 9px;
+  }
+  .sb-shortcuts {
+    display: none;
+  }
 }
 
 [data-theme="retro"] body::before {

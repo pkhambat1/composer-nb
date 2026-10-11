@@ -1,11 +1,11 @@
-// components/DrumSheet.jsx — Drum hits as sheet music, a staff per block, with a playhead
+// components/DrumSheet.jsx — A play's output as sheet music, a system per block, with a playhead
 import React from "react"
 import abcjs from "abcjs"
 import { sheetAbc } from "composer-nb/sheet"
 
-function SheetBlock({ block, index, setTimings }) {
+function SheetBlock({ block, index, counts, setTimings }) {
   const mountRef = React.useRef(null)
-  const abc = React.useMemo(() => sheetAbc(block), [block])
+  const { abc, tablature } = React.useMemo(() => sheetAbc(block, { counts }), [block, counts])
 
   React.useLayoutEffect(() => {
     const el = mountRef.current
@@ -19,12 +19,13 @@ function SheetBlock({ block, index, setTimings }) {
       paddingleft: 0,
       paddingright: 0,
       foregroundColor: "currentColor",
+      ...(tablature.some((t) => t.instrument) && { tablature }),
     })
     // When each note sounds, at the tempo in the ABC, so the playhead can find it
     tune.setTiming(0, 0)
     setTimings(index, tune.noteTimings.filter((t) => t.type === "event"))
     return () => setTimings(index, null)
-  }, [abc, index, setTimings])
+  }, [abc, tablature, index, setTimings])
 
   return (
     <div className="ds-block">
@@ -36,7 +37,7 @@ function SheetBlock({ block, index, setTimings }) {
   )
 }
 
-function DrumSheet({ blocks, getTime, playing }) {
+function DrumSheet({ blocks, counts, getTime, playing }) {
   const rootRef = React.useRef(null)
   const timingsRef = React.useRef(new Map())
   const setTimings = React.useCallback((index, timings) => {
@@ -71,10 +72,11 @@ function DrumSheet({ blocks, getTime, playing }) {
     return () => cancelAnimationFrame(raf)
   }, [blocks, getTime, playing])
 
+  const drawn = (b) => b.drumEvents.length || b.noteEvents.length || b.chordEvents?.length
   return (
     <div className="drum-sheet" ref={rootRef}>
       {blocks.map((b, i) =>
-        b.drumEvents.length ? <SheetBlock key={i} block={b} index={i} setTimings={setTimings} /> : null,
+        drawn(b) ? <SheetBlock key={i} block={b} index={i} counts={counts} setTimings={setTimings} /> : null,
       )}
     </div>
   )

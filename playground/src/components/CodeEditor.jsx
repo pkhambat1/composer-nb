@@ -81,7 +81,7 @@ const CodeEditor = React.forwardRef(function CodeEditor(props, ref) {
             e.stopPropagation()
             onInterrupt()
           }}
-          title="Cancel — click to interrupt"
+          title="Waiting its turn — click to cancel"
         >
           <svg width="10" height="10" viewBox="0 0 10 10">
             <circle cx="5" cy="5" r="4" stroke="currentColor" strokeWidth="1.2" fill="none" />
@@ -97,12 +97,12 @@ const CodeEditor = React.forwardRef(function CodeEditor(props, ref) {
             e.stopPropagation()
             onRun()
           }}
-          title="Run cell (Shift+Enter)"
+          title="Play this cell (Shift+Enter)"
         >
           <svg width="10" height="10" viewBox="0 0 10 10">
             <polygon points="2,1 9,5 2,9" fill="currentColor" />
           </svg>
-          <span>Run</span>
+          <span>Play</span>
         </button>
       )}
       {runState === "running" && onInterrupt && (
@@ -112,13 +112,13 @@ const CodeEditor = React.forwardRef(function CodeEditor(props, ref) {
             e.stopPropagation()
             onInterrupt()
           }}
-          title="Running — click to interrupt"
+          title="Rendering the audio — click to stop"
         >
           <svg width="10" height="10" viewBox="0 0 10 10">
             <circle cx="5" cy="5" r="4" stroke="currentColor" strokeWidth="1.2" fill="none" />
             <path d="M5 3v2.5l1.5 1" stroke="currentColor" strokeWidth="1.2" fill="none" strokeLinecap="round" />
           </svg>
-          <span>Running</span>
+          <span>Rendering</span>
         </button>
       )}
     </div>

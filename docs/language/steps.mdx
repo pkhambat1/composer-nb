@@ -86,7 +86,7 @@ play {
 
 </Cell>
 
-A bare `rest` as the last part fills to the end of the block the line is in. The line then has no length of its own, so the other lines decide how long the block is, and its hits play once each time through.
+The length `...` is what is left of the block the line is in, so a last part `...rest` is silence to the end, and `...x-` repeats `x-` to the end. The line then has no length of its own: the other lines decide how long the block is, and what comes before the `...` plays once each time through.
 
 <Cell>
 
@@ -99,7 +99,7 @@ pattern manias = {
   hat: --x-
   kick: x--x-x---x--x-xx--
   snare: -------x--------x-
-  snare.ghost: -xx, rest
+  snare.ghost: -xx, ...rest
 }
 
 play 4 bars manias

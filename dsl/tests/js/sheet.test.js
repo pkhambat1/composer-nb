@@ -5,23 +5,24 @@ vi.mock("tone", () => ({}))
 const { parseSource } = await import("../../js/music-engine.js")
 const { sheetAbc } = await import("../../js/sheet.js")
 
-// The voice lines of the first block's ABC.
-const voices = (src) => {
+const sheet = (src, opts) => {
   const p = parseSource(src)
   expect(p.errors).toEqual([])
-  return sheetAbc(p.outputs[0].blocks[0])
-    .split("\n")
-    .filter((l) => l.startsWith("[V:"))
+  return sheetAbc(p.outputs[0].blocks[0], opts)
 }
-const head = (src) => sheetAbc(parseSource(src).outputs[0].blocks[0]).split("\n").slice(0, 5)
+// The voice lines of the first block's ABC.
+const voices = (src, opts) =>
+  sheet(src, opts)
+    .abc.split("\n")
+    .filter((l) => l.startsWith("[V:") || l.startsWith("w:"))
+const head = (src) => sheet(src).abc.split("\n").slice(0, 5)
 
 const X = "!style=x!g"
 
 describe("drum sheet music", () => {
   it("puts the hands in a voice with stems up and the feet in one with stems down", () => {
-    const abc = sheetAbc(
-      parseSource("play {\n  hat: x-x- x-x- x-x- x-x-\n  snare: ---- x--- ---- x---\n  kick: x--- ---- x-x- ----\n}")
-        .outputs[0].blocks[0],
+    const { abc, tablature } = sheet(
+      "play {\n  hat: x-x- x-x- x-x- x-x-\n  snare: ---- x--- ---- x---\n  kick: x--- ---- x-x- ----\n}",
     )
     expect(abc).toBe(
       [
@@ -29,22 +30,23 @@ describe("drum sheet music", () => {
         "L:1/16",
         "M:4/4",
         "Q:1/4=120",
-        "K:perc",
+        "K:C",
         "%%score (H F)",
-        "V:H stem=up",
-        "V:F stem=down",
+        'V:H clef=perc stem=up name="drums"',
+        "V:F clef=perc stem=down",
         `[V:H] ${X}2${X}2 [c${X}]2${X}2 ${X}2${X}2 [c${X}]2${X}2 |`,
         "[V:F] F4 z4 F2F2 z4 |",
       ].join("\n"),
     )
+    expect(tablature).toEqual([{ instrument: "" }, { instrument: "" }])
   })
 
   it("leaves out a voice with nothing in it", () => {
-    const abc = sheetAbc(parseSource("play kick: x--- ---- x-x- ----").outputs[0].blocks[0])
-    expect(abc).not.toContain("%%score")
+    const { abc } = sheet("play kick: x--- ---- x-x- ----")
+    expect(abc).toContain("%%score F\n")
     expect(abc).not.toContain("V:H")
-    expect(abc).toContain("V:F stem=down\n[V:F] F4 z4 F2F2 z4 |")
-    expect(sheetAbc(parseSource("play piano: C---").outputs[0].blocks[0])).toBe("")
+    expect(abc).toContain("V:F clef=perc stem=down\n[V:F] F4 z4 F2F2 z4 |")
+    expect(sheet("pattern p = { kick: x }\nplay 1 bars p").abc).not.toBe("")
   })
 
   it("writes the time and tempo, and beams an added-up meter by its groups", () => {
@@ -53,7 +55,7 @@ describe("drum sheet music", () => {
       "L:1/16",
       "M:7/8",
       "Q:1/4=90",
-      "K:perc",
+      "K:C",
     ])
     // by the beat, and the odd eighth on its own
     expect(voices("time 7 over 8\nplay kick: x--x---")).toEqual(["[V:F] F3F z4 z4 z2 |"])
@@ -115,5 +117,52 @@ describe("drum sheet music", () => {
     expect(voices("pattern g = { kick: x--- }\nplay 2 bars g")).toEqual([
       "[V:F] F4 F4 F4 F4 | F4 F4 F4 F4 |",
     ])
+  })
+
+  it("counts the hands' notes under the staff when asked", () => {
+    expect(voices("play {\n  hat: x-x- x-x- x-x- x-x-\n  kick: x---\n}", { counts: true })).toEqual([
+      `[V:H] ${X}2${X}2 ${X}2${X}2 ${X}2${X}2 ${X}2${X}2 |`,
+      "w: 1 & 2 & 3 & 4 & |",
+      "[V:F] F4 z4 z4 z4 |",
+    ])
+    expect(voices("play snare: x-x- ---x --xx x---", { counts: true })[1]).toBe("w: 1 & a & a 4 |")
+    expect(voices("play snare: x--- ---- ---- ----")).toHaveLength(1)
+  })
+})
+
+describe("pitched lines on the sheet", () => {
+  it("writes a guitar an octave up on a treble-8 staff, with a tab staff", () => {
+    const { abc, tablature } = sheet("play guitar: C---E---G---C---")
+    expect(abc).toContain('%%score P1\nV:P1 clef=treble-8 name="guitar"\n[V:P1] C4 E4 G4 C4 |')
+    expect(tablature).toEqual([{ instrument: "guitar", label: "guitar" }])
+  })
+
+  it("puts a drum staff first and each instrument on its own staff", () => {
+    const { abc, tablature } = sheet("play {\n  kick: x---\n  bass: C---\n  piano: C---\n}")
+    expect(abc).toContain("%%score F P1 P2\n")
+    expect(abc).toContain('V:P1 clef=bass name="bass"')
+    expect(abc).toContain('V:P2 clef=bass name="piano"')
+    expect(voices("play {\n  kick: x---\n  bass: C---\n  piano: C---\n}")).toEqual([
+      "[V:F] F4 z4 z4 z4 |",
+      "[V:P1] C4 z4 z4 z4 |", // C3 sounding, written an octave up
+      "[V:P2] C,4 z4 z4 z4 |", // C3 as it sounds
+    ])
+    expect(tablature).toEqual([{ instrument: "" }, { instrument: "" }, { instrument: "" }])
+  })
+
+  it("writes a note as long as it sounds, tied past the beat, with its accidental once a bar", () => {
+    // 8 steps of F#, then 6 more from the ninth: tied across the beats, the sharp once
+    expect(voices("play guitar: F#------ -F#-----")).toEqual(["[V:P1] ^F4- F4 F4- F2z2 |"])
+    expect(voices("play guitar: C-F#-C---")).toEqual(["[V:P1] C2^F2 C4 z4 z4 |"])
+    expect(voices("play guitar: F#-F-")).toEqual(["[V:P1] ^F2=F2 z4 z4 z4 |"])
+  })
+
+  it("writes a chord chart as chords with the symbol above the first", () => {
+    const line = voices("play piano: chords C G")[0]
+    expect(line).toMatch(/^\[V:P1\] "C"\[[^\]]+\]4- \[[^\]]+\]4 "G"\[[^\]]+\]4- \[[^\]]+\]4 \|$/)
+  })
+
+  it("marks accents and ghost notes on a riff", () => {
+    expect(voices("play guitar: ^C-~E-")).toEqual(["[V:P1] !>!C2\"<(\"\">)\"E2 z4 z4 z4 |"])
   })
 })

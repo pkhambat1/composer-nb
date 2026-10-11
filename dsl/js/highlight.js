@@ -94,7 +94,7 @@ function valueToken(t, kind) {
     const name = /^[a-z][a-z0-9]+$/.test(t) && !isRoman(t) && !TYPES.includes(t)
     return [part(name ? "tk-word" : "tk-error", t)]
   }
-  if (t === "-" || t === "_") return [part("tk-rest", t)]
+  if (t === "-" || t === "_" || t === "rest") return [part("tk-rest", t)]
   if (kind !== "chord") {
     if (STEPS_RE.test(t)) return stepRun(t)
     if (BEAT_RE.test(t)) return [part("tk-beat", t)]
@@ -125,6 +125,11 @@ function values(text, kind) {
     if (chart && k === 0) return [part("tk-directive-key", p)]
     if (p === ",") return [part("tk-punct", p)]
     if (kind === "drum") {
+      // ...rest, ...x-: the rest of the block, then what fills it
+      if (p.startsWith("...")) {
+        const thing = p.slice(3)
+        return [part("tk-directive-key", "..."), ...(thing ? valueToken(thing, kind) : [])]
+      }
       // 2 beats rest: a length in front of what fills it
       if (UNITS.includes(p)) return [part("tk-directive-key", p)]
       if (/^[\d(]/.test(p) && UNITS.includes(words[k + 1])) return [part("tk-directive-val", p)]

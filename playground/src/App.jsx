@@ -6,7 +6,16 @@ import React from "react"
 import * as Tone from "tone"
 import * as MusicEngine from "composer-nb/engine"
 import { APP_CONSTANTS } from "./shared/constants.js"
-import { EMBED, embedCell, embedTheme, listenForTheme, reportHeight } from "./shared/embed.js"
+import {
+  EMBED,
+  OPEN,
+  embedCell,
+  embedTheme,
+  listenForTheme,
+  openedCells,
+  reportHeight,
+  shareNotebookUrl,
+} from "./shared/embed.js"
 import { useCellManager } from "./hooks/useCellManager.js"
 import { usePlayback } from "./hooks/usePlayback.js"
 import { useKeyboard } from "./hooks/useKeyboard.js"
@@ -15,7 +24,9 @@ import Sidebar from "./components/Sidebar.jsx"
 import Toolbar from "./components/Toolbar.jsx"
 import Cell from "./components/Cell.jsx"
 import StatusBar from "./components/StatusBar.jsx"
-import ChordBrowserPanel from "./components/ChordBrowser.jsx"
+
+// The chord library brings every chord shape with it, so it loads when first opened
+const ChordBrowserPanel = React.lazy(() => import("./components/ChordBrowser.jsx"))
 
 // ============================================================================
 // App
@@ -23,12 +34,19 @@ import ChordBrowserPanel from "./components/ChordBrowser.jsx"
 
 export default function App() {
   const [sideTab, setSideTab] = React.useState("notebook")
+  const [chordsOpened, setChordsOpened] = React.useState(false)
+  const openTab = React.useCallback((tab) => {
+    if (tab === "chords") setChordsOpened(true)
+    setSideTab(tab)
+  }, [])
   const [kernelStatus, setKernelStatus] = React.useState("idle")
   const [activeCellId, setActiveCellId] = React.useState(null)
   const [runCounter, setRunCounter] = React.useState(0)
   const abortRef = React.useRef(null)
-  // Cell management hook
-  const cm = useCellManager(EMBED ? [embedCell()] : APP_CONSTANTS.STARTER_CELLS)
+  // Cell management hook. A shared link opens on its own cells.
+  const cm = useCellManager(
+    EMBED ? [embedCell()] : openedCells() || APP_CONSTANTS.STARTER_CELLS,
+  )
   const {
     cells,
     selectedId,
@@ -80,8 +98,12 @@ export default function App() {
 
   const playback = usePlayback(armAudio)
 
+  // Play all: every music cell renders, then they play one after another.
+  const playAllRef = React.useRef(null) // { ids, rendered, pending }
+
+  // Renders a cell, and plays it when asked (the cell's own button and Shift+Enter).
   const runCell = React.useCallback(
-    async (id) => {
+    async (id, play = false) => {
       const c = cells.find((x) => x.id === id)
       if (!c) return
       if (c.type === "text") {
@@ -132,6 +154,8 @@ export default function App() {
           status: "idle",
           output: { kind: "rendered", buffer, parsed, duration: dur },
         })
+        playAllRef.current?.rendered.add(id)
+        if (play) playback.playCell(id)
       } catch (e) {
         if (abortRef.current !== runId) return
         updateCell(id, {
@@ -143,6 +167,13 @@ export default function App() {
           abortRef.current = null
           setActiveCellId(null)
           setKernelStatus("idle")
+        }
+        // The last of a play-all's renders starts the playing
+        const pa = playAllRef.current
+        if (pa && pa.ids.includes(id) && --pa.pending === 0) {
+          const first = pa.ids.find((i) => pa.rendered.has(i))
+          if (first) playback.playCell(first)
+          else playAllRef.current = null
         }
       }
     },
@@ -160,10 +191,10 @@ export default function App() {
     if (processingRef.current) return
     processingRef.current = true
     while (queueRef.current.length > 0) {
-      const id = queueRef.current.shift()
+      const { id, play } = queueRef.current.shift()
       await new Promise((resolve) => {
         skipRef.current = resolve
-        runCellRef.current(id).then(resolve, resolve)
+        runCellRef.current(id, play).then(resolve, resolve)
       })
       skipRef.current = null
     }
@@ -171,12 +202,18 @@ export default function App() {
     setKernelStatus("idle")
   }, [])
 
-  const queuedRunCell = React.useCallback((id) => {
+  const queuedRunCell = React.useCallback((id, play = false) => {
     updateCell(id, { status: "waiting", output: null, runCount: null })
     setKernelStatus("busy")
-    queueRef.current.push(id)
+    queueRef.current.push({ id, play })
     processQueue()
   }, [updateCell, processQueue])
+
+  // The cell's own Play button and Shift+Enter: render, then play
+  const playCellNow = React.useCallback((id) => {
+    playAllRef.current = null
+    queuedRunCell(id, true)
+  }, [queuedRunCell])
 
   const interruptCell = React.useCallback(
     (id) => {
@@ -184,7 +221,7 @@ export default function App() {
       if (!c) return
       if (c.status === "waiting") {
         // Just remove from queue, don't touch anything else
-        queueRef.current = queueRef.current.filter((qid) => qid !== id)
+        queueRef.current = queueRef.current.filter((q) => q.id !== id)
         updateCell(id, { status: "idle" })
         if (queueRef.current.length === 0 && !activeCellId) {
           setKernelStatus("idle")
@@ -201,10 +238,11 @@ export default function App() {
   )
 
   const stopAll = React.useCallback(() => {
+    playAllRef.current = null
     // Clear entire queue
     const waiting = [...queueRef.current]
     queueRef.current = []
-    waiting.forEach((id) => updateCell(id, { status: "idle" }))
+    waiting.forEach(({ id }) => updateCell(id, { status: "idle" }))
     // Reset any running/rendering cells
     cells.forEach((c) => {
       if (c.status === "running" || c.status === "rendering") {
@@ -220,11 +258,48 @@ export default function App() {
 
   const queuedRunAll = React.useCallback(() => {
     playback.stopAll()
-    for (const c of cells) {
-      if (c.type !== "music") continue
-      queuedRunCell(c.id)
-    }
+    const ids = cells.filter((c) => c.type === "music").map((c) => c.id)
+    playAllRef.current = { ids, rendered: new Set(), pending: ids.length }
+    for (const id of ids) queuedRunCell(id)
   }, [cells, playback, queuedRunCell])
+
+  // When a cell finishes in a play-all, the next rendered one plays
+  const onPlaybackFinished = React.useCallback(
+    (id) => {
+      playback.onPlaybackFinished(id)
+      const pa = playAllRef.current
+      if (!pa) return
+      const list = pa.ids.filter((i) => pa.rendered.has(i))
+      const k = list.indexOf(id)
+      if (k >= 0 && k + 1 < list.length) playback.playCell(list[k + 1])
+      else playAllRef.current = null
+    },
+    [playback],
+  )
+  // Pressing play on a cell by hand ends a play-all
+  const togglePlayback = React.useCallback(
+    (id) => {
+      playAllRef.current = null
+      return playback.togglePlayback(id)
+    },
+    [playback],
+  )
+
+  // A shared link renders its cells as soon as it opens.
+  const runAllRef = React.useRef(queuedRunAll)
+  React.useEffect(() => {
+    runAllRef.current = queuedRunAll
+  }, [queuedRunAll])
+  React.useEffect(() => {
+    if (OPEN) runAllRef.current()
+  }, [])
+
+  const [shared, setShared] = React.useState(false)
+  const shareNotebook = React.useCallback(async () => {
+    await navigator.clipboard.writeText(shareNotebookUrl(cells))
+    setShared(true)
+    setTimeout(() => setShared(false), 1500)
+  }, [cells])
 
   // Keyboard shortcuts hook
   useKeyboard({
@@ -232,7 +307,7 @@ export default function App() {
     editingId,
     cells,
     findIndex,
-    runCell: queuedRunCell,
+    runCell: playCellNow,
     insertCell,
     deleteCell,
     undoDelete,
@@ -255,18 +330,20 @@ export default function App() {
           accent={accent}
           drumView={settings.drumView || "bricks"}
           onSetDrumView={(v) => setSetting("drumView", v)}
+          sheetCounts={!!settings.sheetCounts}
+          onSetSheetCounts={(v) => setSetting("sheetCounts", v)}
           focusedCellId={playback.focusedCellId}
           isPlaying={playback.isPlaying}
           onSelect={() => setSelectedId(c.id)}
           onEnterEdit={() => setEditingId(c.id)}
           onLeaveEdit={() => setEditingId((cur) => (cur === c.id ? null : cur))}
           onChange={(v) => updateCell(c.id, { source: v })}
-          onRun={() => queuedRunCell(c.id)}
+          onRun={() => playCellNow(c.id)}
           onInterrupt={() => interruptCell(c.id)}
           onDelete={() => deleteCell(c.id)}
           onSetPreview={(v) => updateCell(c.id, { previewMode: v })}
-          onTogglePlayback={playback.togglePlayback}
-          onPlaybackFinished={playback.onPlaybackFinished}
+          onTogglePlayback={togglePlayback}
+          onPlaybackFinished={onPlaybackFinished}
           registerPlayer={playback.registerPlayer}
           unregisterPlayer={playback.unregisterPlayer}
           armAudio={armAudio}
@@ -288,7 +365,7 @@ export default function App() {
     <div className="app-shell">
       <Sidebar
         sideTab={sideTab}
-        onTabChange={setSideTab}
+        onTabChange={openTab}
         theme={theme}
         onSetTheme={(v) => setSetting("theme", v)}
       />
@@ -298,7 +375,7 @@ export default function App() {
           <div className="nb-sticky-header">
           <div className="nb-title-bar">
             <h1 className="panel-title">Notebook</h1>
-            <p className="panel-subtitle">Cells & playback</p>
+            <p className="panel-subtitle">A music notebook, in place of paper</p>
           </div>
           <Toolbar
             onAddCode={() =>
@@ -320,6 +397,8 @@ export default function App() {
               playback.stopAll()
               stopAll()
             }}
+            onShare={shareNotebook}
+            shared={shared}
             kernelStatus={kernelStatus}
           />
           </div>
@@ -337,7 +416,11 @@ export default function App() {
           <StatusBar editingId={editingId} kernelStatus={kernelStatus} />
 
         </div>
-        <ChordBrowserPanel style={{ display: sideTab === "chords" ? undefined : "none" }} />
+        {chordsOpened && (
+          <React.Suspense fallback={null}>
+            <ChordBrowserPanel style={{ display: sideTab === "chords" ? undefined : "none" }} />
+          </React.Suspense>
+        )}
       </div>
     </div>
   )

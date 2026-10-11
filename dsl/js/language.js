@@ -30,10 +30,11 @@
    and a pattern given a length repeats for that long: pattern groove = 3 bars {,
    play 6 bars groove. Anything that repeats has to fit what it's in a whole number of
    times. On a drum's line a length measures rest or steps, in steps, beats or bars, and
-   commas separate the line's parts: 2 beats rest, dd, 1 beats rest. A bare rest as the
-   last part fills to the end of the block the line is in: -xx, rest plays those hits once
-   each time through, and the line has no length of its own, so the other lines decide
-   how long the block is. Lengths are always
+   commas separate the line's parts: 2 beats rest, dd, 1 beats rest. The length ... is
+   what's left of the block the line is in: -xx, ...rest plays those hits once each time
+   through and then nothing, -xx, ...x- plays them and then x- to the end, and either
+   way the line has no length of its own, so the other lines decide how long the block
+   is. Lengths are always
    plural (1 bars), so bars only ever says how long and bar only ever says which.
    Every number is arithmetic: (1+2) bars groove, tempo 60*2. So * and / only ever do
    arithmetic, and a time is two numbers (7 over 8), not a fraction.
@@ -531,7 +532,7 @@ function defineWord(type, name, value, ln, state, err, blocks = null) {
     if (parts.toEnd) {
       return err(
         ln,
-        `A name's steps have a length of their own. rest fills to the end of a block, so it goes on the drum's line: snare: ${name}, rest`,
+        `A name's steps have a length of their own. ... is the rest of a block, so it goes on the drum's line: snare: ${name}, ...rest`,
       )
     }
     written = parts.tokens
@@ -1254,8 +1255,9 @@ function figureRun(text, blocks, st, err, ln, part) {
 // they're drawn (x--x, with spaces for the eye) or a length in front of what fills it:
 // 2 beats rest is silence that long, and 2 beats x- repeats x- for that long. A length's
 // part comes back as the steps it stands for. A line of beats (2e 4) passes through.
-// A bare rest, last, fills to the end of the block the line is in (`toEnd`).
-// Returns { tokens, toEnd }, or null after saying what's wrong.
+// The length ... is what's left of the block the line is in, so a last part ...rest is
+// silence to the end (`toEnd`), and ...x- is x- repeated to the end (`toEnd`, with the
+// steps as `fill`). Returns { tokens, toEnd, fill }, or null after saying what's wrong.
 function stepParts(value, blocks, st, err, ln, part = null) {
   const fail = (msg) => {
     err(ln, msg)
@@ -1269,10 +1271,36 @@ function stepParts(value, blocks, st, err, ln, part = null) {
   const { barTicks } = meterOf(st)
   const out = []
   let toEnd = false
+  let fill = null
   let drawn = null // the part before, when it was drawn steps
   for (const [i, text] of parts.entries()) {
     if (!text)
       return fail("A comma goes between two parts of a line, so something goes on each side")
+    const rest = /^\.\.\.\s*(.*)$/.exec(text)
+    if (rest) {
+      // ...rest or ...x-: to the end of the block
+      if (i < parts.length - 1) {
+        return fail("... is the rest of the block, so nothing goes after it")
+      }
+      const thing = rest[1].trim()
+      if (!thing) return fail("... needs what fills the rest of the block: ...rest, or steps to repeat: ...x-")
+      if (thing === "rest") {
+        if (parts.length === 1) {
+          return fail("...rest on its own plays nothing. Put the hits in front of it: -xx, ...rest")
+        }
+        toEnd = true
+        continue
+      }
+      const fig = figureRun(thing, blocks, st, err, ln, part)
+      if (fig == null) return null
+      if (!fig || /^-+$/.test(fig)) return fail("Silence to the end of the block is ...rest")
+      toEnd = true
+      fill = fig
+      continue
+    }
+    if (text.includes("...")) {
+      return fail(`... starts its own part, so a comma goes before it: ${text.replace(/\s*\.\.\./, ", ...")}`)
+    }
     const len = lengthAt(text)
     if (!len) {
       const tokens = tokenize(text)
@@ -1292,20 +1320,9 @@ function stepParts(value, blocks, st, err, ln, part = null) {
       }
       if (unit === 0) return fail(`${tokens[0]} needs a number in front: 2 ${tokens[0]} rest`)
       if (tokens.includes("rest")) {
-        // rest on its own: silence to the end of the block
-        if (tokens.length > 1) {
-          return fail(
-            `rest is a part of its own, so a comma goes before it: ${tokens.filter((t) => t !== "rest").join(" ")}, rest`,
-          )
-        }
-        if (i < parts.length - 1) {
-          return fail("rest fills to the end of the block it's in, so nothing goes after it")
-        }
-        if (parts.length === 1) {
-          return fail("rest on its own plays nothing. Put the hits in front of it: -xx, rest")
-        }
-        toEnd = true
-        continue
+        return fail(
+          "rest takes a length in front: 2 beats rest, or ...rest for the rest of the block. One step of rest is -",
+        )
       }
       if (parts.length > 1 && tokens.some((t) => BEAT_RE.test(t))) {
         return fail(
@@ -1357,7 +1374,7 @@ function stepParts(value, blocks, st, err, ln, part = null) {
     }
     out.push(fig.repeat(n / fig.length))
   }
-  return { tokens: out, toEnd }
+  return { tokens: out, toEnd, fill }
 }
 
 // Why a | in steps is in the wrong place, after `n` steps, or null if a bar ends there.
@@ -1371,9 +1388,10 @@ function barLineProblem(n, st) {
 }
 
 // Steps: kick: x--x--- — one character per step, each one step long. Spaces are for the
-// eye, and so is |, which has to fall where a bar ends. An `open` line ended in rest: its
-// hits play once from the start, and it has no length to give the block it's in.
-function stepPattern(part, tokens, st, err, open = false) {
+// eye, and so is |, which has to fall where a bar ends. An `open` line ended in ...: its
+// hits play once from the start, then `fill` repeats to the end (or nothing does), and it
+// has no length to give the block it's in.
+function stepPattern(part, tokens, st, err, open = false, fill = null) {
   const steps = []
   let ok = true
   const barLine = () => {
@@ -1441,8 +1459,11 @@ function stepPattern(part, tokens, st, err, open = false) {
     }
     for (const t of w.tokens) t === "|" ? barLine() : addRun(t, tok)
   }
+  // ...x-: the steps that repeat to the end, checked as this drum's
+  const filler = fill ? [...fill].map((c) => stepMods(c, part, err, " (after ...)")) : null
+  if (filler?.includes(undefined)) ok = false
   if (!ok) return null
-  if (!steps.length) {
+  if (!steps.length && !filler) {
     err(part.ln, `${part.name} has nothing to play`)
     return null
   }
@@ -1453,8 +1474,12 @@ function stepPattern(part, tokens, st, err, open = false) {
     open,
     expand(total, loop) {
       const out = []
-      for (let k = 0; k * stepTicks < total && ((loop && !open) || k < steps.length); k++) {
-        const s = steps[k % steps.length]
+      for (let k = 0; k * stepTicks < total; k++) {
+        let s
+        if (k < steps.length) s = steps[k]
+        else if (filler) s = filler[(k - steps.length) % filler.length]
+        else if (loop && !open) s = steps[k % steps.length]
+        else break
         if (s) pushHit(out, part, k * stepTicks, s, stepTicks / 2, st.kit)
       }
       return out
@@ -1465,9 +1490,10 @@ function stepPattern(part, tokens, st, err, open = false) {
 // A drum's block of steps, one layer a line: snare.ghost: { --x- / ------------ddd- }.
 // The layers play together, each repeating until they all line up again, and where two
 // hit the same step the lower line wins. A rest never does, so a layer only changes the
-// steps it hits. A layer ended in rest plays once and doesn't count toward the length.
-// Returns the steps as one run (--x---x---x-ddd-), or null after saying what's wrong.
-// With `part`, each layer is checked as that drum's steps, on its own line.
+// steps it hits. A layer ended in ... plays once (then its fill, if it has one) and doesn't
+// count toward the length. Returns the steps as one run (--x---x---x-ddd-), or null after
+// saying what's wrong. With `part`, each layer is checked as that drum's steps, on its own
+// line.
 function stepBlock(block, st, err, part = null) {
   const layers = []
   for (const line of block.lines) layers.push(stepLayer(line, st, err, part))
@@ -1476,7 +1502,7 @@ function stepBlock(block, st, err, part = null) {
   if (!fixed.length) {
     err(
       block.ln,
-      "Every layer here ends in rest, so nothing says how long the block is. One layer needs a length of its own",
+      "Every layer here ends in ..., so nothing says how long the block is. One layer needs a length of its own",
     )
     return null
   }
@@ -1489,7 +1515,7 @@ function stepBlock(block, st, err, part = null) {
     if (l.toEnd && l.run.length > length) {
       err(
         l.ln,
-        `This layer's hits run ${count(l.run.length, "step")} before its rest, and the block is only ${count(length, "step")} long`,
+        `This layer's hits run ${count(l.run.length, "step")} before its ..., and the block is only ${count(length, "step")} long`,
       )
       return null
     }
@@ -1498,7 +1524,10 @@ function stepBlock(block, st, err, part = null) {
   for (let k = 0; k < length; k++) {
     let step = "-"
     for (const l of layers) {
-      const c = l.toEnd ? (l.run[k] ?? "-") : l.run[k % l.run.length]
+      let c
+      if (!l.toEnd) c = l.run[k % l.run.length]
+      else if (k < l.run.length) c = l.run[k]
+      else c = l.fill ? l.fill[(k - l.run.length) % l.fill.length] : "-"
       if (c !== "-") step = c
     }
     run += step
@@ -1507,7 +1536,7 @@ function stepBlock(block, st, err, part = null) {
 }
 
 // One layer in a block of steps: steps, names of steps or blocks of steps, in a row.
-// Returns { run, toEnd, ln }, or null.
+// Returns { run, toEnd, fill, ln }, or null.
 function stepLayer(line, st, err, part) {
   const layer = stepLayerRun(line, st, err, part)
   return layer && { ...layer, ln: line.ln }
@@ -1527,7 +1556,8 @@ function stepLayerRun(line, st, err, part) {
   const here = part ? { ...part, ln: line.ln } : null
   const parts = stepParts(line.text, line.blocks, st, err, line.ln, here)
   if (!parts) return null
-  const { tokens, toEnd } = parts
+  const { tokens, toEnd, fill } = parts
+  if (fill && !check(fill, " (after ...)")) return null
   if (listsBeats(tokens)) {
     // A layer of beats: 2 4
     const where = {
@@ -1571,7 +1601,7 @@ function stepLayerRun(line, st, err, part) {
       return fail(`"${tok}" isn't defined above. Name it first: steps ${tok} = x-x-`)
     } else return fail(`"${tok}" isn't a step. ${STEP_HELP}`)
   }
-  return { run, toEnd }
+  return { run, toEnd, fill }
 }
 
 // ---------------------------------------------------------------------------
@@ -1862,7 +1892,7 @@ function readPart(part, st, barTicks, err) {
   if (!parts) return null
   const pattern = listsBeats(parts.tokens)
     ? beatPattern(part, parts.tokens, st, barTicks, err)
-    : stepPattern(part, parts.tokens, st, err, parts.toEnd)
+    : stepPattern(part, parts.tokens, st, err, parts.toEnd, parts.fill)
   return pattern && { ...pattern, part }
 }
 
@@ -1972,7 +2002,7 @@ function tile(clip, durSec) {
 // In a pattern (ctx.repeats) the lines repeat too, and without `bars` it lasts until
 // everything in it lines up again. In a play the lines play once, and it lasts as long as
 // the longest thing in it. Whatever repeats has to fit, except in a play with a length of
-// its own (ctx.cuts), which stops there. A line ended in rest (`open`) plays once, has no
+// its own (ctx.cuts), which stops there. A line ended in ... (`open`) plays once, has no
 // say in the length, and has to fit in it.
 function layer(parts, once, repeated, st, bars, err, ctx) {
   const meter = meterOf(st)
@@ -1996,7 +2026,7 @@ function layer(parts, once, repeated, st, bars, err, ctx) {
   if (!bars && !lengths.length) {
     err(
       ctx.ln ?? read[0].part.ln,
-      `Every line ${ctx.where} ends in rest, so nothing says how long it is. Say so: ${ctx.sized}`,
+      `Every line ${ctx.where} ends in ..., so nothing says how long it is. Say so: ${ctx.sized}`,
     )
     return null
   }
@@ -2029,7 +2059,7 @@ function layer(parts, once, repeated, st, bars, err, ctx) {
       err(
         p.part.ln,
         `${ctx.what} is ${sayTicks(totalTicks, st, barTicks)} long, and the ${p.part.name} ` +
-          `line's hits run ${sayTicks(p.ticks, st, barTicks)} before its rest`,
+          `line's hits run ${sayTicks(p.ticks, st, barTicks)} before its ...`,
       )
       return null
     }
@@ -2385,9 +2415,9 @@ function gridResolution(drumEvents, noteEvents, barTicks) {
   return 24
 }
 
-// Joins neighbouring spans in the same meter, then gives each its drum hits and notes as
-// ticks from its start — the shape the grid draws.
-function gridBlocks(spans, drumEvents, noteEvents) {
+// Joins neighbouring spans in the same meter, then gives each its drum hits, notes and
+// chords as ticks from its start — the shape the grid and the sheet draw.
+function gridBlocks(spans, drumEvents, noteEvents, chordEvents = []) {
   const merged = []
   for (const s of [...spans].sort((a, b) => a.startSec - b.startSec)) {
     const last = merged[merged.length - 1]
@@ -2404,13 +2434,15 @@ function gridBlocks(spans, drumEvents, noteEvents) {
     const inside = drumEvents
       .filter((e) => e.secStart >= s.startSec - 1e-9 && e.secStart < s.startSec + s.durSec - 1e-9)
       .map((e) => ({ ...e, tick: Math.round((e.secStart - s.startSec) / s.secPerTick) }))
-    const notes = noteEvents
-      .filter((e) => e.secStart >= s.startSec - 1e-9 && e.secStart < s.startSec + s.durSec - 1e-9)
-      .map((e) => ({
-        ...e,
-        tick: Math.round((e.secStart - s.startSec) / s.secPerTick),
-        ticks: Math.round(e.secDur / s.secPerTick),
-      }))
+    const within = (events) =>
+      events
+        .filter((e) => e.secStart >= s.startSec - 1e-9 && e.secStart < s.startSec + s.durSec - 1e-9)
+        .map((e) => ({
+          ...e,
+          tick: Math.round((e.secStart - s.startSec) / s.secPerTick),
+          ticks: Math.round(e.secDur / s.secPerTick),
+        }))
+    const notes = within(noteEvents)
     const barSec = s.barTicks * s.secPerTick
     return {
       ...s,
@@ -2419,6 +2451,7 @@ function gridBlocks(spans, drumEvents, noteEvents) {
       times: 1,
       drumEvents: inside,
       noteEvents: notes,
+      chordEvents: within(chordEvents),
       res: gridResolution(inside, notes, s.barTicks),
     }
   })
@@ -2665,6 +2698,7 @@ export function parseCell(src, inherited = initialState()) {
             out.spans,
             out.drumEvents,
             out.events.filter((e) => e.note),
+            out.events.filter((e) => e.chord),
           ),
         })
       }
