@@ -5,7 +5,7 @@
 **[Open the playground →](https://composer-nb.vercel.app)** · **[Docs](https://pkhambat.mintlify.site)** · `pip install composer-nb`
 
 <p align="center">
-  <img src="docs/images/playground.png" width="820" alt="The composer-nb playground running a cell: guitar chords and a bass line over a drum pattern, with a waveform player, a grid of the steps and chord diagrams">
+  <img src="docs/images/playground.png" width="820" alt="The composer-nb playground playing a cell: guitar chords and a bass line over a drum pattern, with a waveform player, the three staves of sheet music and the chord diagrams">
 </p>
 
 ## How a cell reads
