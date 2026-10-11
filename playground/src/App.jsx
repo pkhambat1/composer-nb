@@ -17,7 +17,9 @@ import {
   shareNotebookUrl,
 } from "./shared/embed.js"
 import { cellId, useCellManager } from "./hooks/useCellManager.js"
+import { openingNotebook, useNotebooks } from "./hooks/useNotebooks.js"
 import GroovesPanel from "./components/GroovesPanel.jsx"
+import NotebooksPanel from "./components/NotebooksPanel.jsx"
 import { usePlayback } from "./hooks/usePlayback.js"
 import { useKeyboard } from "./hooks/useKeyboard.js"
 import { useTheme } from "./components/theme-panel.jsx"
@@ -44,10 +46,12 @@ export default function App() {
   const [activeCellId, setActiveCellId] = React.useState(null)
   const [runCounter, setRunCounter] = React.useState(0)
   const abortRef = React.useRef(null)
-  // Cell management hook. A shared link opens on its own cells.
-  const cm = useCellManager(
-    EMBED ? [embedCell()] : openedCells() || APP_CONSTANTS.STARTER_CELLS,
+  // The notebook the page opens with: a shared link's cells, the one that was open, or the
+  // starters as the first one. In a frame there's just the one cell, kept nowhere.
+  const [opening] = React.useState(() =>
+    EMBED ? null : openingNotebook(APP_CONSTANTS.STARTER_CELLS, openedCells()),
   )
+  const cm = useCellManager(EMBED ? [embedCell()] : opening.cells)
   const {
     cells,
     selectedId,
@@ -60,6 +64,13 @@ export default function App() {
     deleteCell,
     undoDelete,
   } = cm
+
+  const notebooks = useNotebooks({
+    store: opening?.store || { current: null, list: [] },
+    cells,
+    setCells: cm.setCells,
+    setSelectedId,
+  })
 
   const [settings, setSetting] = useTheme(
     EMBED ? { ...APP_CONSTANTS.THEME_DEFAULTS, theme: embedTheme() } : APP_CONSTANTS.THEME_DEFAULTS,
@@ -396,7 +407,7 @@ export default function App() {
         <div className="notebook-root" style={{ display: sideTab === "notebook" ? undefined : "none" }}>
           <div className="nb-sticky-header">
           <div className="nb-title-bar">
-            <h1 className="panel-title">Notebook</h1>
+            <h1 className="panel-title">{notebooks.current?.title || "Notebook"}</h1>
             <p className="panel-subtitle">A music notebook, in place of paper</p>
           </div>
           <Toolbar
@@ -438,6 +449,15 @@ export default function App() {
           <StatusBar editingId={editingId} kernelStatus={kernelStatus} />
 
         </div>
+        <NotebooksPanel
+          style={{ display: sideTab === "notebooks" ? undefined : "none" }}
+          notebooks={notebooks}
+          onOpened={() => {
+            playback.stopAll()
+            stopAll()
+            openTab("notebook")
+          }}
+        />
         <GroovesPanel style={{ display: sideTab === "grooves" ? undefined : "none" }} onOpen={openGroove} />
         {chordsOpened && (
           <React.Suspense fallback={null}>

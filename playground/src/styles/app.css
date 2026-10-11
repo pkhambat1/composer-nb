@@ -1362,6 +1362,80 @@ body {
 .chord-strip {
   display: contents;
 }
+/* The notebooks on this device */
+.notebooks-panel {
+  padding-bottom: 60px;
+}
+.notebooks-list {
+  max-width: 1020px;
+  margin: 0 auto;
+  padding: 16px 18px;
+  display: grid;
+  gap: 10px;
+}
+.notebooks-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 6px;
+}
+.notebooks-problem {
+  color: var(--traceback);
+  font-size: 12px;
+}
+.notebook-card {
+  background: var(--paper);
+  border: 1px solid var(--border-soft);
+  border-radius: 4px;
+  padding: 10px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.notebook-card-open {
+  border-color: var(--accent);
+}
+.notebook-title {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  text-align: left;
+  font: inherit;
+  font-weight: 600;
+  font-size: 15px;
+  color: var(--text);
+  cursor: pointer;
+}
+.notebook-title:hover {
+  color: var(--accent);
+}
+.notebook-rename {
+  font: inherit;
+  font-weight: 600;
+  font-size: 15px;
+  color: var(--text);
+  background: var(--paper);
+  border: 1px solid var(--accent);
+  border-radius: 3px;
+  padding: 2px 6px;
+  max-width: 420px;
+}
+.notebook-meta {
+  font-size: 12px;
+  color: var(--text-mute);
+}
+.notebook-actions {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 2px;
+}
+.icon-btn-danger:hover {
+  color: var(--traceback);
+  border-color: var(--traceback);
+}
 /* The grooves library */
 .grooves-panel {
   padding-bottom: 60px;
