@@ -79,7 +79,9 @@ function load(name) {
 export async function prepareKit(events) {
   const names = [
     ...new Set(
-      events.filter((ev) => ev.kit !== "synth").flatMap((ev) => samplesOf(ev).map(([n]) => n)),
+      events
+        .filter((ev) => ev.kit !== "synth" && ev.lane !== "sticking")
+        .flatMap((ev) => samplesOf(ev).map(([n]) => n)),
     ),
   ]
   const buffers = {}
@@ -178,8 +180,9 @@ export async function schedule(kit, events, output) {
   let synth = null
   let openHat = null
   for (const ev of events) {
-    // A little human looseness in timing and force.
-    const time = Math.max(0, ev.secStart + (Math.random() - 0.5) * 0.006)
+    if (ev.lane === "sticking") continue // a hand's name, not a sound
+    // A little human looseness in timing and force, and the swing, if any.
+    const time = Math.max(0, ev.secStart + (ev.secSwing || 0) + (Math.random() - 0.5) * 0.006)
     const vel = Math.min(1, ev.vel * (0.95 + Math.random() * 0.1))
     // The next hi-hat hit closes an open one, like a real hi-hat.
     if (ev.inst === "hat" && openHat && time > openHat.time) {

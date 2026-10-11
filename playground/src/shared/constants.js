@@ -13,6 +13,8 @@ export const APP_CONSTANTS = {
     accent: "#1a73e8",
     density: "cozy",
     monoFont: "IBM Plex Mono",
+    drumView: "bricks", // or sheet: the drums as sheet music
+    sheetCounts: false, // count the hands' notes under the staff
   },
 
   // Available accent colors
@@ -24,6 +26,14 @@ export const APP_CONSTANTS = {
   // Starter cells (id, runCount, output, status are added at runtime). Each piece has a
   // text cell that says what it is, then its music cell.
   STARTER_CELLS: [
+    {
+      type: "text",
+      source: `# A music notebook, in place of paper
+
+Write what plays, hear it, and see it as bricks or as sheet music. A notebook is cells, like a page: text cells like this one, and music cells with a groove, a riff or a chord chart. Press **Play** on a cell (or Shift+Enter) to hear it, and **Share** to copy a link that opens on it, playing. The language is small and the whole of it is under **Docs**.
+
+Below are six grooves to start from. Change anything and play it again.`,
+    },
     {
       type: "text",
       source: `## The Sound of Muzak
@@ -55,6 +65,31 @@ play {
   crash: 1
   groove
 }`,
+    },
+    {
+      type: "text",
+      source: `## Circle of Manias
+
+**Porcupine Tree** · *The Incident* (2009) · drums by Gavin Harrison
+
+Nine eighths to the bar. The hi-hat alternates open and closed on every eighth, while the kick and snare play a figure of eighteen sixteenths, so the two only line up again every two bars. The ghost notes at the top of the figure end in \`...rest\`: they play once each time through, and the other lines decide how long the pattern is.
+
+[YouTube](https://www.youtube.com/results?search_query=Porcupine+Tree+Circle+of+Manias)`,
+    },
+    {
+      type: "music",
+      source: `time 9 over 8
+tempo 100
+
+pattern manias = {
+  hat.open: x---
+  hat: --x-
+  kick: x--x-x---x--x-xx--
+  snare: -------x--------x-
+  snare.ghost: -xx, ...rest
+}
+
+play 4 bars manias`,
     },
     {
       type: "text",

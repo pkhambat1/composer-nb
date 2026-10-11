@@ -26,13 +26,13 @@ play groove
 
 ## Duration
 
-Each line repeats at its own length, and the pattern lasts until they end together: the least common multiple of their lengths. Above, the floor tom repeats every 3 steps, the kick every 4 and the snare every 5, so they meet after 60 steps: three bars of `5 over 4`.
+Each line repeats at its own length, and the pattern lasts until they end together: the least common multiple of their lengths. Above, the floor tom repeats every 3 steps, the kick every 4 and the snare every 5, so they meet after 60 steps: three bars of `5 over 4`. A line that ends in [`...`](/language/steps#rests-and-lengths) has no length of its own and doesn't count.
 
 A length in front sets the duration instead: `pattern groove = 4 bars { ... }`. Everything inside must then fit it a whole number of times, and the error names the shortest length that would. A pattern whose lines don't meet within 64 bars needs a length.
 
 ## Sequences
 
-Patterns or blocks in a row play one after another. See [Blocks](/language/overview#blocks) for how a block's layout decides this. A length in front repeats an item, and parentheses put several items under one length.
+Patterns or blocks in a row play one after another. See [Blocks](/language/overview#blocks) for how a block's layout decides this. A length in front of a name or a bracketed group repeats it for that long; in front of braces it is the block's own length, which comes to the same thing, and is what a block of lines ending in `...` needs.
 
 <Cell>
 

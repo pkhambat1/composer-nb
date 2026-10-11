@@ -53,7 +53,8 @@ def test_tom_is_only_its_three_drums():
 def test_top_of_a_cell_offers_settings_types_and_play():
     assert texts("%%music\nt") == ["time ", "tempo "]
     assert texts("%%music\np") == ["pattern ", "play "]
-    assert texts("%%music\ns") == ["steps "]  # no sound: the instrument is the line's name
+    # no sound: the instrument is the line's name
+    assert texts("%%music\ns") == ["swing ", "steps ", "sticking "]
     assert texts("%%music\nn") == ["notes "]
     assert texts("%%music\nc") == ["capo ", "chords "]
     assert "kick: " not in texts("%%music\n")

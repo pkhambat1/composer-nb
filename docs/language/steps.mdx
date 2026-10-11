@@ -55,6 +55,46 @@ The drum kit is one instrument, chosen by [`kit`](/language/settings#kit). Each 
 
 Spaces are ignored, so steps can be grouped by beat. A `steps` value is as long as its characters: `x--x---` is seven steps.
 
+## Hits spread over steps
+
+`3 in 8` is three hits spread as evenly as eight steps allow: `x--x--x-`, the tresillo. It is a part of its own, with a comma between it and anything else on the line, and a `steps` name can hold it.
+
+<Cell>
+
+```composer-nb
+steps tresillo = 3 in 8
+
+play {
+  kick: tresillo
+  hat: 2 in 8
+  snare: 2 beats rest, 5 in 8
+}
+```
+
+</Cell>
+
+## Stickings
+
+`sticking: RLRR LRLL` names the hand on each step, `R` or `L`, with `-` where none is named. It is a line of the block like a kit piece's, and repeats like one. Each hand goes with the hands' hits at that moment: the grid shows it as a row, and the sheet writes the letter under the note. A hand on a step where no hand plays is an error. A `sticking` name holds one.
+
+<Cell>
+
+```composer-nb
+steps pa = ^---
+steps radiddle = -xxx
+sticking para = RLRR LRLL
+
+pattern hands = {
+  snare: pa
+  snare.ghost: radiddle
+  sticking: para
+}
+
+play 2 bars hands
+```
+
+</Cell>
+
 ## Beats
 
 A line can list beats instead, counted `1 e & a`. A character in front gives the hit: `^4`, `~3a`, `d3`. A list of beats is one bar long, and it can't share a line with steps.
@@ -85,6 +125,29 @@ play {
 ```
 
 </Cell>
+
+The length `...` is what is left of the block the line is in, so a last part `...rest` is silence to the end, and `...x-` repeats `x-` to the end. The line then has no length of its own: the other lines decide how long the block is, and what comes before the `...` plays once each time through.
+
+<Cell>
+
+```composer-nb
+time 9 over 8
+tempo 100
+
+pattern manias = {
+  hat.open: x---
+  hat: --x-
+  kick: x--x-x---x--x-xx--
+  snare: -------x--------x-
+  snare.ghost: -xx, ...rest
+}
+
+play 4 bars manias
+```
+
+</Cell>
+
+This is *Circle of Manias* by Porcupine Tree. The hats are 4 steps long and the kick and snare 18, so the pattern is 36 steps, and the ghost notes come back at the top of each pass.
 
 ## Layers
 

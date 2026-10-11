@@ -1,0 +1,30 @@
+---
+title: "For musicians"
+description: "What a cell is, how to play it, and how to send it to someone."
+---
+
+import { Cell } from "/snippets/cell.jsx"
+
+You write what plays, one line per kit piece or instrument, and press **Play**. A bar of 4/4 is sixteen steps; `x` is a hit and `-` is nothing. Lines of different lengths drift against each other until they meet again, which is how a polyrhythm is written: just the lines.
+
+<Cell>
+
+```composer-nb
+tempo 100
+
+play {
+  hat: x-x- x-x- x-x- x-x-
+  snare: ---- x--- ---- x---
+  kick: x--- --x- x--- ----
+}
+```
+
+</Cell>
+
+**Hear it.** Play renders the audio and plays it. The tempo stepper slows it down or speeds it up without changing the pitch, and Loop plays it round and round. Run a cell again while it plays and it carries on from where it was.
+
+**See it.** Bricks: a row per kit piece, a cell per step, counted `1 e & a`. Or sheet music: the kit on a percussion staff with the hands up and the feet down, each instrument on a staff of its own, a guitar with its tab, with counts and [stickings](/language/steps#stickings) for practice.
+
+**Keep it and send it.** WAV and MIDI downloads, Print for a PDF of the sheet, and Share, which copies a link that opens the playground on the cell, playing.
+
+**Write more.** Each page under Language is one thing you can write: [Settings](/language/settings) for the time, tempo and swing, [Steps](/language/steps) for the kit, [Notes](/language/notes) and [Chords](/language/chords) for the instruments, [Patterns](/language/patterns) for lines that play together and repeat, and [play](/language/play) for what you hear.

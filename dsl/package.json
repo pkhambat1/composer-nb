@@ -18,6 +18,7 @@
     "directory": "dsl"
   },
   "author": "Pezanne Khambatta",
+  "license": "MIT",
   "type": "module",
   "main": "./dist/composer-nb.js",
   "exports": {
@@ -27,6 +28,8 @@
     "./chord-lookup": "./js/chord-lookup.js",
     "./editing": "./js/editing.js",
     "./grid": "./js/grid.js",
+    "./sheet": "./js/sheet.js",
+    "./midi": "./js/midi.js",
     "./highlight": "./js/highlight.js"
   },
   "files": [
@@ -41,6 +44,7 @@
   },
   "dependencies": {
     "@tombatossals/chords-db": "0.5.1",
+    "abcjs": "^6.7.1",
     "tonal": "^6.4.2",
     "tone": "14.8.49"
   },

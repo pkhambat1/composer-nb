@@ -3,12 +3,15 @@ title: "Settings"
 description: "Global values: time, tempo, kit, key, capo, octave and an instrument's sound."
 ---
 
+import { Cell } from "/snippets/cell.jsx"
+
 A setting is a name followed by its value, with no `=` or `:`. It applies from its line to the end of the cell, or of the block it is in.
 
 | Setting | Value | Default | Sets |
 | --- | --- | --- | --- |
 | `time` | `<count> over <unit>` | `4 over 4` | The time signature. |
 | `tempo` | 20 to 400 | `120` | Quarter notes per minute. |
+| `swing` | 50 to 75 | `50` | Where the off-beat eighth falls, as a percentage of the beat. |
 | `kit` | `rock` or `synth` | `rock` | The drum kit. |
 | `key` | `C`, `Am`, `Bb`, `F#m` and so on | `C` | The key [Roman numerals](/language/chords#roman-numerals) are read in. |
 | `capo` | 0 to 12 | `0` | The fret a guitar's chords are played from. |
@@ -18,6 +21,25 @@ A setting is a name followed by its value, with no `=` or `:`. It applies from i
 ## time
 
 The unit is the note value counted: 1, 2, 4, 8 or 16. The count can be a sum, as in `time 3+4 over 8`, which groups the grid without changing the bar. `over` is required because `/` is division: `7/8` is the number 0.875.
+
+## swing
+
+`swing 67` plays the off-beat eighths at two thirds of the beat, a triplet feel; `50` is straight and `75` dotted. Sixteenths move with the eighth they belong to. Only the sound moves: the grid and the sheet stay as written.
+
+<Cell>
+
+```composer-nb
+swing 67
+tempo 100
+
+play {
+  ride: x-x- x-x- x-x- x-x-
+  hat.pedal: 2 4
+  kick: 1 3
+}
+```
+
+</Cell>
 
 ## kit
 

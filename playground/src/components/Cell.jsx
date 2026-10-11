@@ -80,6 +80,10 @@ function Cell({
   onSetPreview,
   theme,
   accent,
+  drumView,
+  onSetDrumView,
+  sheetCounts,
+  onSetSheetCounts,
   focusedCellId,
   isPlaying,
   onTogglePlayback,
@@ -107,8 +111,6 @@ function Cell({
     ta.style.height = ta.scrollHeight + 2 + "px"
   }, [cell.type, cell.source, editing])
 
-  const promptText =
-    cell.type === "music" ? (cell.runCount != null ? `In [${cell.runCount}]:` : "In [ ]:") : ""
   const runState =
     cell.status === "running" || cell.status === "rendering"
       ? "running"
@@ -127,11 +129,15 @@ function Cell({
       }
       onClick={onSelect}
       data-screen-label={`Cell ${index + 1} (${cell.type})`}
+      data-cell-id={cell.id}
     >
       <div className="cell-prompt">
-        {cell.type === "music" ? (
-          <span className={"prompt-text" + (runState === "running" ? " prompt-running" : "") + (runState === "waiting" ? " prompt-waiting" : "")}>
-            {runState === "waiting" ? "In [\u2026]:" : runState === "running" ? "In [*]:" : promptText}
+        {cell.type === "music" && runState !== "idle" ? (
+          <span
+            className={"prompt-text" + (runState === "running" ? " prompt-running" : " prompt-waiting")}
+            title={runState === "running" ? "Rendering" : "Waiting to render"}
+          >
+            {runState === "running" ? "●" : "…"}
           </span>
         ) : null}
       </div>
@@ -160,6 +166,10 @@ function Cell({
               armAudio={armAudio}
               theme={theme}
               accent={accent}
+              drumView={drumView}
+              onSetDrumView={onSetDrumView}
+              sheetCounts={sheetCounts}
+              onSetSheetCounts={onSetSheetCounts}
               runCount={cell.runCount}
             />
           </>
@@ -259,6 +269,8 @@ export default React.memo(Cell, (prev, next) =>
   prev.isActive === next.isActive &&
   prev.theme === next.theme &&
   prev.accent === next.accent &&
+  prev.drumView === next.drumView &&
+  prev.sheetCounts === next.sheetCounts &&
   prev.focusedCellId === next.focusedCellId &&
   prev.isPlaying === next.isPlaying,
 )

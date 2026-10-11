@@ -2,8 +2,68 @@
 import React from "react"
 import WaveSurfer from "wavesurfer.js"
 import * as MusicEngine from "composer-nb/engine"
-import ChordDiagram from "./ChordDiagram.jsx"
+import { embedSnippet, shareCellUrl } from "../shared/embed.js"
 import DrumGrid from "./DrumGrid.jsx"
+
+// Loaded when first shown: the chord shapes for the diagrams, abcjs for the sheet music
+const ChordDiagram = React.lazy(() => import("./ChordDiagram.jsx"))
+const DrumSheet = React.lazy(() => import("./DrumSheet.jsx"))
+
+// Share: a link that opens the playground on this cell, or an iframe that shows it.
+function ShareMenu({ source, theme }) {
+  const [open, setOpen] = React.useState(false)
+  const [copied, setCopied] = React.useState(null)
+  const ref = React.useRef(null)
+
+  React.useEffect(() => {
+    if (!open) return
+    const close = (e) => {
+      if (ref.current && !ref.current.contains(e.target)) setOpen(false)
+    }
+    document.addEventListener("mousedown", close)
+    return () => document.removeEventListener("mousedown", close)
+  }, [open])
+
+  const copy = async (what, text) => {
+    await navigator.clipboard.writeText(text)
+    setCopied(what)
+    setTimeout(() => {
+      setCopied(null)
+      setOpen(false)
+    }, 1200)
+  }
+
+  return (
+    <div className="share-wrap" ref={ref} onClick={(e) => e.stopPropagation()}>
+      <button
+        type="button"
+        className={"icon-btn" + (open ? " icon-btn-on" : "")}
+        onClick={() => setOpen((v) => !v)}
+        title="Share this cell"
+      >
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round">
+          <path d="M4.8 7.2l2.4-2.4M5.2 8.4l-1 1a1.7 1.7 0 0 1-2.4-2.4l1-1M6.8 3.6l1-1a1.7 1.7 0 0 1 2.4 2.4l-1 1" />
+        </svg>
+        <span>Share</span>
+      </button>
+      {open && (
+        <div className="share-menu">
+          <button type="button" className="share-item" onClick={() => copy("link", shareCellUrl(source))}>
+            {copied === "link" ? "Link copied" : "Copy link"}
+            <span className="share-hint">opens the playground on this cell, playing</span>
+          </button>
+          <button type="button" className="share-item" onClick={() => copy("embed", embedSnippet(source, theme))}>
+            {copied === "embed" ? "Embed copied" : "Copy embed"}
+            <span className="share-hint">an iframe for a page of your own</span>
+          </button>
+        </div>
+      )}
+    </div>
+  )
+}
+
+// Tempo for practice: a rate on the player, so the audio isn't rendered again.
+const RATES = [0.5, 0.6, 0.7, 0.8, 0.9, 1, 1.1, 1.2, 1.3, 1.4, 1.5]
 
 function themeColors(theme, accent) {
   if (theme === "retro") {
@@ -44,11 +104,34 @@ function themeColors(theme, accent) {
 
 const noTime = () => 0
 
-// Everything below the playback row: settings summary, the grid of drums and notes, chord
-// diagrams, errors.
-function CellDetails({ parsed, accent, getTime = noTime, playing = false }) {
+// Everything below the playback row: settings summary, the drums and notes as a grid of
+// bricks or as sheet music, chord diagrams, errors.
+function CellDetails({
+  parsed,
+  accent,
+  drumView,
+  onSetDrumView,
+  sheetCounts,
+  onSetSheetCounts,
+  getTime = noTime,
+  playing = false,
+}) {
   const chords = parsed.events.filter((e) => e.chord && !e.repeat)
-  const drawn = (b) => b.drumEvents.length > 0 || b.noteEvents.length > 0
+  const drawn = (b) => b.drumEvents.length > 0 || b.noteEvents.length > 0 || b.chordEvents?.length > 0
+  const sheet = drumView === "sheet"
+  // Print: only this cell's sheet goes to the printer (see @media print)
+  const sheetRef = React.useRef(null)
+  const printSheet = () => {
+    const el = sheetRef.current
+    if (!el) return
+    el.classList.add("printing")
+    const done = () => {
+      el.classList.remove("printing")
+      window.removeEventListener("afterprint", done)
+    }
+    window.addEventListener("afterprint", done)
+    window.print()
+  }
   const meta = parsed.blocks
     .filter((b) => !drawn(b))
     .map((b) => `time ${b.time} · tempo ${b.tempo} · ${b.bars} bar${b.bars === 1 ? "" : "s"}`)
@@ -65,8 +148,60 @@ function CellDetails({ parsed, accent, getTime = noTime, playing = false }) {
 
       {parsed.blocks.some(drawn) && (
         <div className="out-section">
-          <div className="out-section-label">{parsed.notes.length ? "Steps" : "Drums"}</div>
-          <DrumGrid blocks={parsed.blocks} getTime={getTime} playing={playing} />
+          <div className="out-section-label out-section-row">
+            <span>{sheet ? "Sheet music" : parsed.notes.length ? "Steps" : "Drums"}</span>
+            <span className="view-toggle" role="group" aria-label="How the hits are drawn">
+              {["bricks", "sheet"].map((v) => (
+                <button
+                  key={v}
+                  type="button"
+                  className={"view-btn" + (drumView === v ? " view-btn-on" : "")}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    onSetDrumView(v)
+                  }}
+                >
+                  {v}
+                </button>
+              ))}
+            </span>
+            {sheet && parsed.blocks.some((b) => b.drumEvents.length > 0) && (
+              <button
+                type="button"
+                className={"view-btn view-btn-lone" + (sheetCounts ? " view-btn-on" : "")}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onSetSheetCounts(!sheetCounts)
+                }}
+                title="Count the hands' notes under the staff"
+                aria-pressed={sheetCounts}
+              >
+                counts
+              </button>
+            )}
+            {sheet && (
+              <button
+                type="button"
+                className="view-btn view-btn-lone"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  printSheet()
+                }}
+                title="Print the sheet, or save it as a PDF"
+              >
+                print
+              </button>
+            )}
+          </div>
+          {sheet ? (
+            <React.Suspense fallback={<div className="dg-head">Drawing the staff…</div>}>
+              <div className="sheet-print" ref={sheetRef}>
+                <DrumSheet blocks={parsed.blocks} counts={sheetCounts} getTime={getTime} playing={playing} />
+              </div>
+            </React.Suspense>
+          ) : (
+            <DrumGrid blocks={parsed.blocks} getTime={getTime} playing={playing} />
+          )}
         </div>
       )}
 
@@ -74,15 +209,17 @@ function CellDetails({ parsed, accent, getTime = noTime, playing = false }) {
         <div className="out-section">
           <div className="out-section-label">Chord diagrams</div>
           <div className="chord-strip">
-            {chords.map((e, i) => (
-              <div key={i} className="chord-chip">
-                <span className="chord-label">{e.chord.label}</span>
-                <ChordDiagram chord={e.chord} instrument={e.instrument} accent={accent} />
-                <span className="chord-notes">
-                  {e.chord.noteNames.map((n) => n.replace(/\d+$/, "")).join(" ")}
-                </span>
-              </div>
-            ))}
+            <React.Suspense fallback={null}>
+              {chords.map((e, i) => (
+                <div key={i} className="chord-chip">
+                  <span className="chord-label">{e.chord.label}</span>
+                  <ChordDiagram chord={e.chord} instrument={e.instrument} accent={accent} />
+                  <span className="chord-notes">
+                    {e.chord.noteNames.map((n) => n.replace(/\d+$/, "")).join(" ")}
+                  </span>
+                </div>
+              ))}
+            </React.Suspense>
           </div>
         </div>
       )}
@@ -122,6 +259,10 @@ export default function MusicOutput({
   armAudio,
   theme,
   accent,
+  drumView,
+  onSetDrumView,
+  sheetCounts,
+  onSetSheetCounts,
   runCount,
 }) {
   const waveMountRef = React.useRef(null)
@@ -130,10 +271,19 @@ export default function MusicOutput({
   const onPlaybackFinishedRef = React.useRef(onPlaybackFinished)
   const [ready, setReady] = React.useState(false)
   const [timeTick, setTimeTick] = React.useState(0)
+  // Practice controls: play slower or faster than written, and round and round
+  const [rate, setRate] = React.useState(1)
+  const [loop, setLoop] = React.useState(false)
+  const loopRef = React.useRef(loop)
+  // Where playback was when the cell was run again, so the new audio carries on from there
+  const resumeRef = React.useRef(null)
 
   React.useEffect(() => {
     onPlaybackFinishedRef.current = onPlaybackFinished
   }, [onPlaybackFinished])
+  React.useEffect(() => {
+    loopRef.current = loop
+  }, [loop])
 
   const getTime = React.useCallback(
     () => (ready && wsRef.current ? wsRef.current.getCurrentTime() : 0),
@@ -195,6 +345,11 @@ export default function MusicOutput({
     }
     const onFinish = () => {
       if (aborted) return
+      if (loopRef.current) {
+        ws.seekTo(0)
+        ws.play().catch(() => {})
+        return
+      }
       onPlaybackFinishedRef.current(cell.id)
     }
 
@@ -217,6 +372,12 @@ export default function MusicOutput({
 
     ws.on("ready", () => {
       if (aborted) return
+      // Edited while playing: pick up where it was, as far as the new audio goes
+      if (resumeRef.current != null) {
+        const dur = ws.getDuration()
+        if (dur > 0) ws.seekTo(Math.min(resumeRef.current, dur - 0.01) / dur)
+        resumeRef.current = null
+      }
       setReady(true)
     })
     ws.on("finish", onFinish)
@@ -228,6 +389,7 @@ export default function MusicOutput({
       container.removeEventListener("pointerdown", onPointerDown)
       window.removeEventListener("pointerup", onPointerUp)
       ws.un("finish", onFinish)
+      if (ws.isPlaying()) resumeRef.current = ws.getCurrentTime()
       ws.destroy()
       wsRef.current = null
       setReady(false)
@@ -247,6 +409,12 @@ export default function MusicOutput({
       cursorColor: colors.primary,
     })
   }, [theme, accent, ready])
+
+  // The rate changes the speed and keeps the pitch, so a slowed-down kit still sounds like one
+  React.useEffect(() => {
+    if (!ready || !wsRef.current) return
+    wsRef.current.setPlaybackRate(rate, true)
+  }, [rate, ready])
 
   React.useEffect(() => {
     if (!ready || !wsRef.current) return
@@ -279,16 +447,23 @@ export default function MusicOutput({
     const parsed = output.parsed
     return (
       <div className="cell-output">
-        <div className="out-prompt">Out [{runCount}]:</div>
+        <div className="out-prompt" />
         <div className="out-content">
           <div className="out-section">
             <div className="out-section-label">Playback</div>
             <div className="music-row music-row-controls rendering-placeholder">
-              <span className="rendering-text">Rendering audio...</span>
+              <span className="rendering-text">Rendering the audio…</span>
             </div>
           </div>
 
-          <CellDetails parsed={parsed} accent={accent} />
+          <CellDetails
+            parsed={parsed}
+            accent={accent}
+            drumView={drumView}
+            onSetDrumView={onSetDrumView}
+            sheetCounts={sheetCounts}
+            onSetSheetCounts={onSetSheetCounts}
+          />
         </div>
       </div>
     )
@@ -317,7 +492,7 @@ export default function MusicOutput({
   if (output.kind === "info") {
     return (
       <div className="cell-output cell-output-info">
-        <div className="out-prompt">Out [{runCount}]:</div>
+        <div className="out-prompt" />
         <div className="info-msg">{output.message}</div>
       </div>
     )
@@ -335,10 +510,18 @@ export default function MusicOutput({
     const fname = `cell-${runCount || "out"}.wav`
     MusicEngine.downloadWav(output.buffer, fname)
   }
+  const onMidi = () => MusicEngine.downloadMidi(parsed.outputs, `cell-${runCount || "out"}.mid`)
+  // The tempo shown is the first block's, at the rate the player is set to
+  const written = parsed.blocks[0]?.tempo || 120
+  const step = (by) => {
+    const i = RATES.indexOf(rate)
+    const next = RATES[Math.min(RATES.length - 1, Math.max(0, (i < 0 ? 5 : i) + by))]
+    setRate(next)
+  }
 
   return (
     <div className="cell-output">
-      <div className="out-prompt">Out [{runCount}]:</div>
+      <div className="out-prompt" />
       <div className="out-content">
         <div className="out-section">
           <div className="out-section-label">Playback</div>
@@ -382,7 +565,31 @@ export default function MusicOutput({
                 {formatTime(currentTime)} / {formatTime(duration)}
               </span>
             )}
-            <div className="out-controls-right">
+            <div className="out-controls-right" onClick={(e) => e.stopPropagation()}>
+              <span className="tempo-ctl" title="Play slower or faster than written">
+                <button type="button" className="tempo-btn" onClick={() => step(-1)} disabled={rate <= RATES[0]} aria-label="Slower">
+                  −
+                </button>
+                <span className={"tempo-val" + (rate !== 1 ? " tempo-val-changed" : "")}>
+                  ♩= {Math.round(written * rate)}
+                </span>
+                <button type="button" className="tempo-btn" onClick={() => step(1)} disabled={rate >= RATES[RATES.length - 1]} aria-label="Faster">
+                  +
+                </button>
+              </span>
+              <button
+                type="button"
+                className={"icon-btn" + (loop ? " icon-btn-on" : "")}
+                onClick={() => setLoop((v) => !v)}
+                title={loop ? "Playing round and round" : "Play round and round"}
+                aria-pressed={loop}
+              >
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M2 5V4.5A1.5 1.5 0 0 1 3.5 3H9M9 3L7.5 1.5M9 3L7.5 4.5M10 7v.5A1.5 1.5 0 0 1 8.5 9H3M3 9l1.5 1.5M3 9l1.5-1.5" />
+                </svg>
+                <span>Loop</span>
+              </button>
+              <ShareMenu source={cell.source} theme={theme} />
               <button className="icon-btn" onClick={onExport} title="Download as WAV">
                 <svg width="12" height="12" viewBox="0 0 12 12">
                   <path
@@ -396,6 +603,19 @@ export default function MusicOutput({
                 </svg>
                 <span>WAV</span>
               </button>
+              <button className="icon-btn" onClick={onMidi} title="Download as MIDI, for a DAW or a notation program">
+                <svg width="12" height="12" viewBox="0 0 12 12">
+                  <path
+                    d="M6 1v7m-3-3l3 3 3-3M2 10h8"
+                    stroke="currentColor"
+                    strokeWidth="1.4"
+                    fill="none"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+                <span>MIDI</span>
+              </button>
             </div>
           </div>
         </div>
@@ -403,6 +623,10 @@ export default function MusicOutput({
         <CellDetails
           parsed={parsed}
           accent={accent}
+          drumView={drumView}
+          onSetDrumView={onSetDrumView}
+          sheetCounts={sheetCounts}
+          onSetSheetCounts={onSetSheetCounts}
           getTime={getTime}
           playing={!!displayPlaying}
         />

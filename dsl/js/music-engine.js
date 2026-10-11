@@ -5,6 +5,7 @@ import * as ChordLookup from "./chord-lookup.js"
 import * as Drums from "./drums.js"
 import { midiToName } from "./chords.js"
 import { initialState, parseCell } from "./language.js"
+import { midiFile } from "./midi.js"
 
 export { midiToName, parseKey, buildChord } from "./chords.js"
 export { initialState } from "./language.js"
@@ -238,7 +239,7 @@ export async function renderToBuffer(parsed) {
         synths[voiceOf(ev)].triggerAttackRelease(
           ev.note.name,
           ev.secDur * 0.96,
-          ev.secStart,
+          ev.secStart + (ev.secSwing || 0),
           ev.vel,
         )
       }
@@ -283,14 +284,15 @@ function playChord(synth, ev) {
   const bassVel = isGuitar(inst) ? 0.6 : 0.7
   const chordVel = 0.55
   const dur = ev.secDur * 0.96
+  const at = ev.secStart + (ev.secSwing || 0)
   const usingPos = ev.chord.fromGuitarPosition
   if (!usingPos) {
-    synth.triggerAttackRelease(midiToName(ev.chord.bassMidi), dur, ev.secStart, bassVel)
+    synth.triggerAttackRelease(midiToName(ev.chord.bassMidi), dur, at, bassVel)
     if (isGuitar(inst) && ev.chord.notesMidi[0]) {
       synth.triggerAttackRelease(
         midiToName(ev.chord.notesMidi[0] - 12),
         dur,
-        ev.secStart + 0.006,
+        at + 0.006,
         bassVel * 0.85,
       )
     }
@@ -301,7 +303,7 @@ function playChord(synth, ev) {
     // bump; otherwise stagger the chord notes after the separate bass hit.
     const offset = usingPos ? idx * stagger : (idx + 1) * stagger
     const vel = usingPos && idx === 0 ? bassVel : chordVel
-    synth.triggerAttackRelease(n, dur, ev.secStart + offset, vel)
+    synth.triggerAttackRelease(n, dur, at + offset, vel)
   })
 }
 
@@ -496,11 +498,20 @@ export function bufferToWav(buffer) {
 }
 
 export function downloadWav(buffer, filename) {
-  const blob = bufferToWav(buffer)
+  downloadBlob(bufferToWav(buffer), filename || "composition.wav")
+}
+
+// The cell's plays as a MIDI file, for a DAW or a notation program.
+export function downloadMidi(outputs, filename) {
+  const bytes = midiFile(outputs)
+  downloadBlob(new Blob([bytes], { type: "audio/midi" }), filename || "composition.mid")
+}
+
+function downloadBlob(blob, filename) {
   const url = URL.createObjectURL(blob)
   const a = document.createElement("a")
   a.href = url
-  a.download = filename || "composition.wav"
+  a.download = filename
   document.body.appendChild(a)
   a.click()
   setTimeout(() => {

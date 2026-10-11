@@ -40,7 +40,7 @@ function AddCellDropdown({ onAddCode, onAddText }) {
   )
 }
 
-export default function Toolbar({ onAddCode, onAddText, onRun, onRunAll, onStop, onDelete, kernelStatus }) {
+export default function Toolbar({ onAddCode, onAddText, onRunAll, onStop, onShare, shared, kernelStatus }) {
   const Icon = (children, viewBox = "0 0 16 16") => (
     <svg width="14" height="14" viewBox={viewBox} fill="currentColor">
       {children}
@@ -67,7 +67,7 @@ export default function Toolbar({ onAddCode, onAddText, onRun, onRunAll, onStop,
         <div className="tb-group">
           {kernelStatus === "busy"
             ? btn(
-                "Running \u2014 click to interrupt",
+                "Rendering \u2014 click to stop",
                 onStop,
                 <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
                   <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
@@ -90,12 +90,12 @@ export default function Toolbar({ onAddCode, onAddText, onRun, onRunAll, onStop,
                       />
                     </circle>
                   </svg>
-                  <span style={{ fontSize: 12, fontWeight: 600 }}>Running&hellip;</span>
+                  <span style={{ fontSize: 12, fontWeight: 600 }}>Rendering&hellip;</span>
                 </span>,
                 { primary: true },
               )
             : btn(
-                "Run All cells",
+                "Play every cell, top to bottom",
                 onRunAll,
                 <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
                   {Icon(
@@ -104,10 +104,28 @@ export default function Toolbar({ onAddCode, onAddText, onRun, onRunAll, onStop,
                       <polygon points="8,2 13,8 8,14" />
                     </>,
                   )}
-                  <span style={{ fontSize: 12, fontWeight: 600 }}>Run All</span>
+                  <span style={{ fontSize: 12, fontWeight: 600 }}>Play all</span>
                 </span>,
                 { primary: true },
               )}
+        </div>
+        <div className="tb-group">
+          {btn(
+            "Copy a link that opens this notebook",
+            onShare,
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+              {Icon(
+                <path
+                  d="M6.5 9.5l3-3M7 11l-1.5 1.5a2.1 2.1 0 0 1-3-3L4 8M9 5l1.5-1.5a2.1 2.1 0 0 1 3 3L12 8"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                />,
+              )}
+              <span style={{ fontSize: 12, fontWeight: 600 }}>{shared ? "Link copied" : "Share"}</span>
+            </span>,
+          )}
         </div>
       </div>
     </div>
