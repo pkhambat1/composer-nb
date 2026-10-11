@@ -2085,6 +2085,13 @@ const anonCtx = (ln) => ({
   what: "This pattern",
   sized: "4 bars { ... }",
 })
+// What plays at its own pace is a pattern of its own, whose length comes from its lines
+// or from a length in front of its braces.
+const paceCtx = (ln) => ({
+  ...anonCtx(ln),
+  where: "at this pace",
+  sized: "every 3 steps 4 bars { ... }",
+})
 // What plays in a bar is a pattern that lasts that bar.
 const placeCtx = (l) => {
   const bars = l.from === l.to ? `bar ${l.from}` : `bar ${l.from} to ${l.to}`
@@ -2384,7 +2391,7 @@ function blockClip(lines, state, err, ctx, stack, bars = 0) {
     // What's after every is a pattern of its own, where a step lasts that long.
     const ticks = paceTicks(l, st, err)
     if (!ticks) return null
-    const clip = blockClip([l.line], { ...st, stepTicks: ticks }, err, anonCtx(l.ln), stack)
+    const clip = blockClip([l.line], { ...st, stepTicks: ticks }, err, paceCtx(l.ln), stack)
     if (!clip) return null
     repeated.push({ clip, what: "This pattern", ln: l.ln })
   }
@@ -2574,11 +2581,16 @@ function sequenceClip(items, state, err, ln, stack = []) {
       err(ln, undefinedName(it.name, state))
       return null
     }
+    // A length in front of a pattern's name repeats it for that long. In front of braces
+    // it is the block's own length, which is the same thing when the block has one, and
+    // the only thing when its lines end in ... and it has none.
     let clip = it.items
       ? sequenceClip(it.items, state, err, ln, stack)
-      : sectionClip(sec, state, err, ln, stack)
+      : it.block
+        ? sectionClip({ ...sec, bars: it.bars || sec.bars }, state, err, ln, stack)
+        : sectionClip(sec, state, err, ln, stack)
     if (!clip) return null
-    if (it.bars) {
+    if (it.bars && !it.block) {
       const what = loopName(it)
       clip = layer([], [], [{ clip, what, ln }], state, it.bars, err, playCtx(ln))
       if (!clip) return null

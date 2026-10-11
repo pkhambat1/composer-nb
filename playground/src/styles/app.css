@@ -1231,6 +1231,7 @@ body {
   display: flex;
   align-items: center;
   gap: 10px;
+  flex-wrap: wrap;
 }
 /* Practice controls and sharing, on the right of the player */
 .icon-btn-on {

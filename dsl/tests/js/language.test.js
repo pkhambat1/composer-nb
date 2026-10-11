@@ -784,8 +784,9 @@ describe("what repeats has to fit", () => {
     expect(allErrors(GROOVE + "play {\n  4 bars groove\n}")).toEqual([
       "groove is 3 bars long, which doesn't fit 4 bars a whole number of times. It lines up every 3 bars",
     ])
+    // a length in front of braces is the block's own length, so its lines have to fit it
     expect(firstError("play {\n  2 bars { kick: x-x-x- }\n}")).toMatch(
-      /This pattern is 6 steps long, which doesn't fit 2 bars/,
+      /The kick line is 6 steps long, which doesn't fit 2 bars/,
     )
     expect(
       firstError(
@@ -1129,6 +1130,11 @@ pattern manias = {
     expect(firstError("play snare: {\n  -xx, ...rest\n}")).toMatch(
       /Every layer here ends in \.\.\., so nothing says how long the block is/,
     )
+    // at its own pace, the length comes from the lines at that pace, or from a length in front
+    expect(firstError("play every 3 steps snare: -xx, ...rest")).toMatch(
+      /Every line at this pace ends in \.\.\., so nothing says how long it is. Say so: every 3 steps 4 bars \{ ... \}/,
+    )
+    expect(parseSource("play every 3 steps 1 bars { snare: -xx, ...rest }").errors).toEqual([])
     expect(durations("play 2 bars snare.ghost: -xx, ...rest")).toEqual([4])
   })
 

@@ -20,8 +20,8 @@ VARIATIONS = {
 SPLIT = ["tom"]  # drums that are only their variations: tom is three drums
 # Instruments that play notes and chords, each on a line of its own like a drum
 PITCHED = ["guitar", "guitar.electric", "piano", "piano.electric", "organ", "pad", "bass"]
-SETTINGS = ["time", "tempo", "key", "capo", "octave", "kit"]
-TYPES = ["steps", "notes", "chords", "pattern"]
+SETTINGS = ["time", "tempo", "swing", "key", "capo", "octave", "kit"]
+TYPES = ["steps", "sticking", "notes", "chords", "pattern"]
 KITS = ["rock", "synth"]
 UNITS = ["steps", "beats", "bars"]  # what a length on a drum's line is measured in
 
