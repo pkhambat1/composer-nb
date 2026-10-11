@@ -16,7 +16,12 @@ export function starterGrooves() {
     const byline = text.source
       .split("\n")
       .find((l) => l.startsWith("**") || /^An? /.test(l))
-    out.push({ title, byline: (byline || "").replace(/[*]/g, ""), text, music })
+    // The groove's page of its own, made at build time by scripts/grooves.js
+    const slug = title
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-|-$/g, "")
+    out.push({ title, slug, byline: (byline || "").replace(/[*]/g, ""), text, music })
   }
   return out
 }
@@ -48,6 +53,11 @@ export default function GroovesPanel({ style, onOpen }) {
               <button type="button" className="icon-btn" onClick={() => copy(g)} title="A link that opens the playground on this groove, playing">
                 {copied === g.title ? "Link copied" : "Copy link"}
               </button>
+              {!import.meta.env.DEV && (
+                <a className="icon-btn" href={`/grooves/${g.slug}/`} target="_blank" rel="noreferrer" title="Its page, to read and send">
+                  Page
+                </a>
+              )}
             </div>
           </div>
         ))}
