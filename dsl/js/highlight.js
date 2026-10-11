@@ -89,6 +89,13 @@ function valueToken(t, kind) {
   if (t === "{" || t === "}") return [part("tk-punct", t)] // an instrument's block of layers
   // loop is gone: whether something repeats depends on where it is
   if (t === "loop") return [part("tk-error", t)]
+  if (kind === "sticking") {
+    // RLRR LRLL: a hand for each step
+    if (/^[RL-]+$/.test(t)) {
+      return [...t].map((ch) => (ch === "-" ? part("tk-rest", ch) : part("tk-step", ch)))
+    }
+    return [part(/^[a-z][a-z0-9]+$/.test(t) ? "tk-word" : "tk-error", t)]
+  }
   if (kind === "notes") {
     if (NOTES_RE.test(t)) return noteRun(t)
     const name = /^[a-z][a-z0-9]+$/.test(t) && !isRoman(t) && !TYPES.includes(t)
@@ -129,6 +136,11 @@ function values(text, kind) {
       if (p.startsWith("...")) {
         const thing = p.slice(3)
         return [part("tk-directive-key", "..."), ...(thing ? valueToken(thing, kind) : [])]
+      }
+      // 3 in 8: hits spread over steps
+      if (p === "in") return [part("tk-directive-key", p)]
+      if (/^\d+$/.test(p) && (words[k + 1] === "in" || words[k - 1] === "in")) {
+        return [part("tk-directive-val", p)]
       }
       // 2 beats rest: a length in front of what fills it
       if (UNITS.includes(p)) return [part("tk-directive-key", p)]
@@ -205,8 +217,8 @@ function playable(text) {
   const track = /^([A-Za-z][A-Za-z0-9]*(?:\.[A-Za-z0-9]+)?)(\s*)(:)(.*)$/.exec(text)
   if (track) {
     const name = track[1].toLowerCase()
-    const known = PARTS.includes(name)
-    const kind = PITCHED.includes(name) ? "pitched" : "drum"
+    const known = PARTS.includes(name) || name === "sticking"
+    const kind = PITCHED.includes(name) ? "pitched" : name === "sticking" ? "sticking" : "drum"
     return [
       part(known ? "tk-inst" : "tk-error", track[1]),
       part(null, track[2]),
@@ -260,8 +272,10 @@ function line(code) {
     if (word === "pattern") {
       const len = length(value)
       out.push(...len.parts, ...playable(len.rest))
-    } else out.push(...values(value, { chords: "chord", notes: "notes" }[word] || "drum"))
-  } else if (["pattern", "steps", "notes"].includes(word) && /^(\s|$)/.test(after)) {
+    } else {
+      out.push(...values(value, { chords: "chord", notes: "notes", sticking: "sticking" }[word] || "drum"))
+    }
+  } else if (["pattern", "steps", "sticking", "notes"].includes(word) && /^(\s|$)/.test(after)) {
     // pattern groove {: a type without its name and =
     out.push(part("tk-error", word), ...names(after))
   } else if ((word === "bar" || word === "bars") && /^\s+\S/.test(after)) {

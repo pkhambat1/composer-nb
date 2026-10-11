@@ -62,6 +62,8 @@ function drumNote(hits, u) {
   if (notes.some((n) => n.at.open)) deco += "!open!"
   if (notes.some((n) => n.span)) deco += "!/!"
   if (notes.every((n) => n.ghost)) deco += GHOST
+  const hand = notes.find((n) => n.hand)?.hand
+  if (hand) deco += `"_${hand}"` // the sticking, under the note
   const heads = notes.map((n) => (n.at.head ? `!style=${n.at.head}!` : "") + n.at.pitch)
   return deco + (heads.length === 1 ? heads[0] : `[${heads.join("")}]`) + dur(u)
 }
@@ -255,11 +257,15 @@ export function sheetAbc(block, { counts = false } = {}) {
   }
   const hands = new Map()
   const feet = new Map()
+  // A sticking's R or L goes under the hands' hit at the same moment
+  const handAt = new Map()
+  for (const e of block.drumEvents) if (e.lane === "sticking") handAt.set(e.tick, e.hand)
   for (const e of block.drumEvents) {
     const at = STAFF[e.lane]
     if (!at || e.hidden) continue
     const span = spans.get(`${e.lane}@${e.tick}`)
-    put(at.foot ? feet : hands, e.tick, span ? { ...e, span } : e)
+    const hand = at.foot ? null : handAt.get(e.tick)
+    put(at.foot ? feet : hands, e.tick, { ...e, ...(span && { span }), ...(hand && { hand }) })
   }
   add({ id: "H", kind: "drum", clef: "perc", stem: "up", name: "drums", hits: hands, counts })
   add({ id: "F", kind: "drum", clef: "perc", stem: "down", hits: feet })

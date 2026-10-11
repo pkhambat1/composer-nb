@@ -1151,6 +1151,101 @@ pattern manias = {
   })
 })
 
+describe("swing", () => {
+  it("moves the off-beat late in the sound, and nowhere in the writing", () => {
+    const p = parseSource("swing 67\nplay hat: x-x- x-x-")
+    expect(p.errors).toEqual([])
+    const hits = p.outputs[0].drumEvents
+    const sounds = (events) => events.map((e) => e.secStart + (e.secSwing || 0))
+    const near = (got, want) => {
+      expect(got).toHaveLength(want.length)
+      got.forEach((v, i) => expect(v).toBeCloseTo(want[i], 4))
+    }
+    // at 120 a beat is half a second: the & sounds at 67% of it, and is written at 50%
+    near(sounds(hits), [0, 0.335, 0.5, 0.835])
+    near(hits.map((e) => e.secStart), [0, 0.25, 0.5, 0.75])
+    expect(p.outputs[0].blocks[0].drumEvents.map((e) => e.tick)).toEqual([0, 48, 96, 144])
+    // sixteenths move with the eighth they belong to
+    near(sounds(parseSource("swing 67\nplay hat: xxxx").outputs[0].drumEvents), [0, 0.1675, 0.335, 0.4175])
+  })
+
+  it("takes 50 to 75", () => {
+    expect(firstError("swing 40")).toMatch(/swing is where the off-beat eighth falls, from 50 \(straight\) to 75/)
+    expect(firstError("swing 80")).toMatch(/from 50 \(straight\) to 75/)
+    const straight = parseSource("swing 50\nplay hat: x-x-").outputs[0].drumEvents
+    expect(straight.every((e) => e.secSwing === undefined)).toBe(true)
+  })
+})
+
+describe("hits spread over steps: 3 in 8", () => {
+  it("spreads the hits as evenly as whole steps allow", () => {
+    expect(sound("play kick: 3 in 8")).toBe(sound("play kick: x--x--x-"))
+    expect(sound("play kick: 5 in 8")).toBe(sound("play kick: x-xx-xx-"))
+    expect(sound("play kick: 2 in 5, 3 in 8")).toBe(sound("play kick: x-x-- x--x--x-"))
+    expect(sound("steps tresillo = 3 in 8\nplay kick: tresillo")).toBe(sound("play kick: x--x--x-"))
+    expect(sound("play kick: 4 in 4")).toBe(sound("play kick: xxxx"))
+  })
+
+  it("needs at least as many steps as hits, up to 64, and commas around it", () => {
+    expect(firstError("play kick: 9 in 8")).toMatch(
+      /9 in 8 puts 9 hits in 8 steps, so it needs at least as many steps as hits/,
+    )
+    expect(firstError("play kick: 3 in 65")).toMatch(/more than 64 steps/)
+    expect(firstError("play kick: x-- 3 in 8")).toMatch(
+      /3 in 8 is a part of its own, so put a comma before it: x--, 3 in 8/,
+    )
+    expect(firstError("play kick: 3 in 8 x--")).toMatch(/put a comma after it: 3 in 8, x--/)
+    expect(firstError("play kick: x in 8")).toMatch(/in goes between two numbers/)
+    expect(firstError("tresillo = 3 in 8")).toMatch(/Put its type in front: steps tresillo = 3 in 8/)
+  })
+})
+
+describe("stickings", () => {
+  const PARA = "play {\n  snare: xxxx xxxx\n  sticking: RLRR LRLL\n}"
+
+  it("names the hand on each step, on the hands' hits", () => {
+    const p = parseSource(PARA)
+    expect(p.errors).toEqual([])
+    const hands = p.outputs[0].drumEvents.filter((e) => e.lane === "sticking")
+    expect(hands.map((e) => e.hand).join("")).toBe("RLRRLRLL")
+    expect(hands.every((e) => e.vel === 0)).toBe(true)
+    // the grid draws it as a row of letters under the drums
+    const rows = gridRows(p.outputs[0].blocks[0]).rows
+    expect(rows.at(-1).label).toBe("sticking")
+    expect(rows.at(-1).cells.get(1)).toEqual({ hit: true, sticking: true, text: "L" })
+  })
+
+  it("can be named, and repeats in a pattern like any line", () => {
+    expect(sound("sticking para = RLRR LRLL\n" + PARA.replace("RLRR LRLL", "para"))).toBe(sound(PARA))
+    expect(sound("pattern p = {\n  snare: xx\n  sticking: RL\n}\nplay 1 bars p")).toBe(
+      sound("play {\n  snare: xxxx xxxx xxxx xxxx\n  sticking: RLRL RLRL RLRL RLRL\n}"),
+    )
+  })
+
+  it("has to land on a hand's hit, which the feet aren't", () => {
+    expect(firstError("play {\n  snare: x---\n  sticking: -R--\n}")).toMatch(
+      /R on bar 1, beat 1e names a hand, but no hand plays there/,
+    )
+    expect(firstError("play {\n  kick: xxxx\n  sticking: RLRL\n}")).toMatch(
+      /R on bar 1, beat 1 names a hand, but no hand plays there/,
+    )
+    // the hits may come from another pattern: it's checked once the play is together
+    expect(parseSource("pattern hands = {\n  sticking: RLRR LRLL\n}\nplay {\n  snare: xxxx xxxx\n  hands\n}").errors).toEqual([])
+  })
+
+  it("is R, L or - on each step, and nothing else", () => {
+    expect(firstError("play sticking: RLxx")).toMatch(
+      /"RLxx" isn't a sticking. A sticking is a hand for each step, R, L or -: sticking: RLRR LRLL/,
+    )
+    expect(firstError("play sticking: ----")).toMatch(/This sticking names no hand/)
+    expect(firstError("sticking para = RLRR\nplay snare: para")).toMatch(
+      /para is a sticking, so it goes on the sticking line: sticking: para/,
+    )
+    expect(firstError("pattern sticking = { kick: x }")).toMatch(/sticking already means something/)
+    expect(firstError("para = RLRR LRLL")).toMatch(/Put its type in front: sticking para = RLRR LRLL/)
+  })
+})
+
 describe("lengths are always plural", () => {
   it("so bars says how long, and bar says which", () => {
     expect(durations("pattern g = { kick: x--- }\nplay 1 bars g")).toEqual([2])

@@ -238,7 +238,7 @@ export async function renderToBuffer(parsed) {
         synths[voiceOf(ev)].triggerAttackRelease(
           ev.note.name,
           ev.secDur * 0.96,
-          ev.secStart,
+          ev.secStart + (ev.secSwing || 0),
           ev.vel,
         )
       }
@@ -283,14 +283,15 @@ function playChord(synth, ev) {
   const bassVel = isGuitar(inst) ? 0.6 : 0.7
   const chordVel = 0.55
   const dur = ev.secDur * 0.96
+  const at = ev.secStart + (ev.secSwing || 0)
   const usingPos = ev.chord.fromGuitarPosition
   if (!usingPos) {
-    synth.triggerAttackRelease(midiToName(ev.chord.bassMidi), dur, ev.secStart, bassVel)
+    synth.triggerAttackRelease(midiToName(ev.chord.bassMidi), dur, at, bassVel)
     if (isGuitar(inst) && ev.chord.notesMidi[0]) {
       synth.triggerAttackRelease(
         midiToName(ev.chord.notesMidi[0] - 12),
         dur,
-        ev.secStart + 0.006,
+        at + 0.006,
         bassVel * 0.85,
       )
     }
@@ -301,7 +302,7 @@ function playChord(synth, ev) {
     // bump; otherwise stagger the chord notes after the separate bass hit.
     const offset = usingPos ? idx * stagger : (idx + 1) * stagger
     const vel = usingPos && idx === 0 ? bassVel : chordVel
-    synth.triggerAttackRelease(n, dur, ev.secStart + offset, vel)
+    synth.triggerAttackRelease(n, dur, at + offset, vel)
   })
 }
 

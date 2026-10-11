@@ -77,10 +77,21 @@ export const PITCHED = [
   "bass",
 ]
 export const PARTS = [...PITCHED, ...LANES]
-export const SETTINGS = ["time", "tempo", "key", "capo", "octave", "kit"]
+export const SETTINGS = ["time", "tempo", "swing", "key", "capo", "octave", "kit"]
 // The types a name can have. Its type goes in front of it: steps pair = ^-x-
-export const TYPES = ["steps", "notes", "chords", "pattern"]
-export const KEYWORDS = [...TYPES, "play", "bars", "beats", "bar", "to", "every", "rest", "over"]
+export const TYPES = ["steps", "sticking", "notes", "chords", "pattern"]
+export const KEYWORDS = [
+  ...TYPES,
+  "play",
+  "bars",
+  "beats",
+  "bar",
+  "to",
+  "every",
+  "rest",
+  "over",
+  "in",
+]
 export const KITS = ["rock", "synth"]
 // Instruments with more than one sound. Naming the instrument and a sound is a setting,
 // like kit: guitar.electric muted. The first sound is the one it has until then.
@@ -88,11 +99,14 @@ export const SOUNDS = { "guitar.electric": ["clean", "muted"] }
 const SETTING_EXAMPLE = {
   time: "7 over 8",
   tempo: "90",
+  swing: "60",
   key: "Am",
   capo: "2",
   octave: "3",
   kit: "rock",
 }
+// The hands of a sticking line: R, L, or - for a step with no hand named
+const STICKING_RE = /^[RL-]+$/
 
 const MAX_SECONDS = 600
 const MAX_BARS = 64
@@ -124,6 +138,7 @@ export function initialState() {
     groups: [4],
     unit: 4,
     tempo: 120,
+    swing: 50, // where the off-beat eighth falls, as a percentage of the beat: 50 is straight
     stepTicks: TPQ / 4, // a step is a 16th note, unless every says otherwise
     key: "C",
     capo: 0,
@@ -434,6 +449,15 @@ function applySetting(name, value, ln, state, err) {
     state.tempo = num.value
     return true
   }
+  if (name === "swing") {
+    const n = whole(50, 75)
+    if (n == null) {
+      err(ln, "swing is where the off-beat eighth falls, from 50 (straight) to 75 (dotted): swing 67 is a triplet feel")
+      return false
+    }
+    state.swing = n
+    return true
+  }
   if (name === "key") {
     if (!parseKey(value)) {
       err(ln, "key looks like C, Am, Bb or F#m")
@@ -500,6 +524,21 @@ function defineWord(type, name, value, ln, state, err, blocks = null) {
     )
   }
   if (ROMAN.includes(name)) return err(ln, `${name} is a chord, so pick another name`)
+  if (type === "sticking") {
+    // sticking para = RLRR LRLL: a hand for each step
+    const tokens = []
+    for (const t of tokenize(value)) {
+      const w = state.words[t]
+      if (t === "|" || STICKING_RE.test(t)) tokens.push(t)
+      else if (w?.type === "sticking") tokens.push(...w.tokens)
+      else if (w) return err(ln, `${t} is ${w.type}, so it can't go in a sticking`)
+      else return err(ln, `"${t}" isn't a sticking. ${STICKING_HELP}`)
+    }
+    if (!tokens.length) return err(ln, `sticking ${name} = needs something after the =`)
+    delete state.sections[name]
+    state.words[name] = { type, tokens, line: ln }
+    return
+  }
   if (type === "notes") {
     // notes riff = E---F# E-E--: one line of notes, drawn on the steps
     if (noteLengths(value)) return err(ln, NO_NOTE_LENGTHS)
@@ -596,7 +635,7 @@ function defineWord(type, name, value, ln, state, err, blocks = null) {
 // ---------------------------------------------------------------------------
 
 const DEF_RE = /^([A-Za-z][A-Za-z0-9]*)\s*=\s*(.*)$/
-const TYPED_RE = /^(steps|notes|chords|pattern)\s+([A-Za-z][A-Za-z0-9]*)\s*=\s*(.*)$/
+const TYPED_RE = /^(steps|sticking|notes|chords|pattern)\s+([A-Za-z][A-Za-z0-9]*)\s*=\s*(.*)$/
 const TRACK_RE = /^([A-Za-z][A-Za-z0-9]*(?:\.[A-Za-z0-9]+)?)\s*:\s*(.*)$/
 // bar 2 ..., bar 3 to 4 ...: a place in front of what plays there
 const PLACE_RE = /^bar(\s+\S|$)/
@@ -634,14 +673,19 @@ function holdsSteps(block, st) {
 // What a value is, from how it's written: a pattern (braces, a length, an instrument's
 // line, or other patterns' names), steps, notes or chords. Braces holding steps are steps.
 function shapeOf(value, st, blocks = null) {
-  // A length in front of rest or steps is steps: 2 beats rest, dd
+  // A length in front of rest or steps is steps: 2 beats rest, dd. So are hits spread
+  // over steps: 3 in 8
   const drawn = (text) => tokenize(text).every((t) => stepsToken(t, st, blocks))
   const measured = (text) => {
+    if (EUCLID_RE.test(text)) return true
     const len = lengthAt(text)
     return !!len && (len.thing === "rest" || (len.thing !== "" && drawn(len.thing)))
   }
   const parts = value.split(",").map((p) => p.trim())
   if (parts.some(measured) && parts.every((p) => measured(p) || drawn(p))) return "steps"
+  if (tokenize(value).every((t) => t === "|" || STICKING_RE.test(t) || st.words[t]?.type === "sticking")) {
+    return "sticking"
+  }
   const tokens = tokenize(value)
   const stepsLike = tokens.every((t) => stepsToken(t, st, blocks))
   if (stepsLike && tokens.some((t) => blocks?.[t])) return "steps"
@@ -908,12 +952,14 @@ function classify({ ln, text, blocks }, err, st) {
     err(ln, `${name} is a setting, not an instrument, so it takes no colon: ${name} ${value}`)
     return null
   }
-  if (PARTS.includes(name)) {
+  if (PARTS.includes(name) || name === "sticking") {
     if (!value) {
       err(ln, `${name}: needs something after the colon`)
       return null
     }
     if (PITCHED.includes(name)) return { kind: "part", ln, name, value, pitched: true, blocks }
+    // sticking: RLRR LRLL: which hand plays each step, shown on the hands' hits
+    if (name === "sticking") return { kind: "part", ln, name, value, sticking: true, blocks }
     const [drum, art = "hit"] = name.split(".")
     return { kind: "part", ln, name, value, drum, art, blocks }
   }
@@ -1213,6 +1259,72 @@ function stepMods(c, part, err, where) {
 // What steps can be measured in. Always plural, whatever the number.
 export const UNITS = ["steps", "beats", "bars"]
 
+// 3 in 8: this many hits, spread as evenly as they go over this many steps.
+const EUCLID_RE = /^(\d+)\s+in\s+(\d+)$/
+// Bjorklund's algorithm: pairs the hits with the rests until the remainder is one group,
+// which spreads the hits as evenly as whole steps allow. 3 in 8 is x--x--x-, the tresillo.
+function bjorklund(hits, steps) {
+  let main = Array.from({ length: hits }, () => "x")
+  let rem = Array.from({ length: steps - hits }, () => "-")
+  while (rem.length > 1) {
+    const n = Math.min(main.length, rem.length)
+    const paired = main.slice(0, n).map((s, i) => s + rem[i])
+    rem = main.length > n ? main.slice(n) : rem.slice(n)
+    main = paired
+  }
+  return main.join("") + rem.join("")
+}
+
+const STICKING_HELP = "A sticking is a hand for each step, R, L or -: sticking: RLRR LRLL"
+
+// sticking: RLRR LRLL — which hand plays each step. Its events go with the hands' hits at
+// the same moments, which the grid and the sheet show as R and L.
+function stickingPattern(part, st, err) {
+  const hands = []
+  let ok = true
+  for (const tok of tokenize(part.value)) {
+    const w = st.words[tok]
+    const runs = tok === "|" ? ["|"] : STICKING_RE.test(tok) ? [tok] : w?.type === "sticking" ? w.tokens : null
+    if (!runs) {
+      err(
+        part.ln,
+        w ? `${tok} is ${w.type}, so it can't go in a sticking` : `"${tok}" isn't a sticking. ${STICKING_HELP}`,
+      )
+      ok = false
+      continue
+    }
+    for (const r of runs) {
+      if (r === "|") {
+        const problem = barLineProblem(hands.length, st)
+        if (problem) {
+          err(part.ln, problem)
+          ok = false
+        }
+      } else hands.push(...[...r].map((c) => (c === "-" ? null : c)))
+    }
+  }
+  if (!ok) return null
+  if (!hands.some(Boolean)) {
+    err(part.ln, "This sticking names no hand. Put R or L on the steps the hands play")
+    return null
+  }
+  const stepTicks = st.stepTicks
+  return {
+    kind: "drum",
+    ticks: hands.length * stepTicks,
+    expand(total, loop) {
+      const out = []
+      for (let k = 0; k * stepTicks < total && (loop || k < hands.length); k++) {
+        const hand = hands[k % hands.length]
+        if (hand) {
+          out.push({ inst: "sticking", art: "hit", lane: "sticking", hand, tick: k * stepTicks, vel: 0, line: part.ln })
+        }
+      }
+      return out
+    },
+  }
+}
+
 // "2 beats rest" → the length in front and what it measures, or null if `text` doesn't
 // start with a length.
 function lengthAt(text) {
@@ -1276,6 +1388,29 @@ function stepParts(value, blocks, st, err, ln, part = null) {
   for (const [i, text] of parts.entries()) {
     if (!text)
       return fail("A comma goes between two parts of a line, so something goes on each side")
+    // 3 in 8: hits spread as evenly as they go over the steps, a part of its own
+    const euclid = EUCLID_RE.exec(text)
+    if (euclid) {
+      const [hits, steps] = [Number(euclid[1]), Number(euclid[2])]
+      if (hits < 1 || hits > steps) return fail(`${text} puts ${hits} hits in ${steps} steps, so it needs at least as many steps as hits`)
+      if (steps > 64) return fail(`${text} is more than 64 steps. Spread the hits over fewer`)
+      out.push(bjorklund(hits, steps))
+      drawn = null
+      continue
+    }
+    const inAt = tokenize(text).indexOf("in")
+    if (inAt > 0) {
+      const tokens = tokenize(text)
+      const [a, b] = [tokens[inAt - 1], tokens[inAt + 1]]
+      if (/^\d+$/.test(a) && /^\d+$/.test(b)) {
+        const before = tokens.slice(0, inAt - 1).join(" ")
+        const after = tokens.slice(inAt + 2).join(" ")
+        return fail(
+          `${a} in ${b} is a part of its own, so put a comma ${before ? "before" : "after"} it: ${[before, `${a} in ${b}`, after].filter(Boolean).join(", ")}`,
+        )
+      }
+      return fail("in goes between two numbers: 3 in 8 spreads 3 hits over 8 steps")
+    }
     const rest = /^\.\.\.\s*(.*)$/.exec(text)
     if (rest) {
       // ...rest or ...x-: to the end of the block
@@ -1452,7 +1587,9 @@ function stepPattern(part, tokens, st, err, open = false, fill = null) {
     if (w.type !== "steps") {
       err(
         part.ln,
-        `${tok} is ${w.type}, so it goes on a line like piano: ${w.type === "chords" ? "chords " : ""}${tok}, not on a drum's`,
+        w.type === "sticking"
+          ? `${tok} is a sticking, so it goes on the sticking line: sticking: ${tok}`
+          : `${tok} is ${w.type}, so it goes on a line like piano: ${w.type === "chords" ? "chords " : ""}${tok}, not on a drum's`,
       )
       ok = false
       continue
@@ -1883,6 +2020,10 @@ function pitchedPattern(part, st, barTicks, err) {
 
 // One instrument's line.
 function readPart(part, st, barTicks, err) {
+  if (part.sticking) {
+    const pattern = stickingPattern(part, st, err)
+    return pattern && { ...pattern, part }
+  }
   if (part.pitched) {
     const pattern = pitchedPattern(part, st, barTicks, err)
     return pattern && { ...pattern, part }
@@ -1983,6 +2124,42 @@ function checkLoops(loops, total, st, barTicks, err) {
   return false
 }
 
+// How swing moves a tick: the first half of each beat stretches to swing% of it and the
+// second half shrinks to fit, so the off-beat eighth falls late and everything between
+// moves with it. Null when the swing is straight.
+function swingWarp(st) {
+  const s = st.swing / 100
+  if (s === 0.5) return null
+  return (tick) => {
+    const beat = Math.floor(tick / TPQ)
+    const pos = (tick - beat * TPQ) / TPQ
+    const moved = pos < 0.5 ? (pos / 0.5) * s : s + ((pos - 0.5) / 0.5) * (1 - s)
+    return (beat + moved) * TPQ
+  }
+}
+
+// A sticking names a hand on a step where no hand plays: said at the end, once the whole
+// play is together, since the hits may come from another pattern than the sticking.
+function checkStickings(clip, err) {
+  const feet = new Set(["kick", "hat.pedal", "sticking"])
+  const moment = (e) => Math.round(e.secStart * 1e6)
+  const played = new Set(clip.drumEvents.filter((e) => !feet.has(e.lane)).map(moment))
+  for (const e of clip.drumEvents) {
+    if (e.lane !== "sticking" || played.has(moment(e))) continue
+    const span = clip.spans.find((s) => e.secStart >= s.startSec - 1e-9 && e.secStart < s.startSec + s.durSec)
+    let where = ""
+    if (span) {
+      const tick = Math.round((e.secStart - span.startSec) / span.secPerTick)
+      const bar = Math.floor(tick / span.barTicks) + 1
+      const beat = Math.floor((tick % span.barTicks) / TPQ) + 1
+      const sub = { 0: "", 24: "e", 48: "&", 72: "a" }[tick % TPQ] ?? "+"
+      where = ` on bar ${bar}, beat ${beat}${sub}`
+    }
+    err(e.line, `${e.hand}${where} names a hand, but no hand plays there`)
+    return
+  }
+}
+
 // `clip` played end to end until `durSec`. The last time through may be cut short.
 function tile(clip, durSec) {
   const out = { events: [], drumEvents: [], spans: [] }
@@ -2065,14 +2242,25 @@ function layer(parts, once, repeated, st, bars, err, ctx) {
     }
   }
   const durSec = totalTicks * secPerTick
+  // Swing moves the sound, not the writing: secSwing is how much later a hit plays than
+  // where it's written, and the grid and the sheet stay straight.
+  const warp = swingWarp(st)
+  const late = (tick) => (warp ? { secSwing: (warp(tick) - tick) * secPerTick } : {})
   const own = read.map((p) => {
     const line = { ln: p.part.ln, events: [], drumEvents: [], spans: [] }
     for (const e of p.expand(totalTicks, ctx.repeats && !p.open)) {
       if (p.kind === "drum") {
         // A double's second stroke keeps how far it is from the first, to go with it.
         const gap = e.gap ? { gapSec: e.gap * secPerTick } : {}
-        line.drumEvents.push({ ...e, secStart: e.tick * secPerTick, ...gap })
-      } else line.events.push({ ...e, secStart: e.tick * secPerTick, secDur: e.ticks * secPerTick })
+        line.drumEvents.push({ ...e, secStart: e.tick * secPerTick, ...gap, ...late(e.tick) })
+      } else {
+        line.events.push({
+          ...e,
+          secStart: e.tick * secPerTick,
+          secDur: e.ticks * secPerTick,
+          ...late(e.tick),
+        })
+      }
     }
     return line
   })
@@ -2682,6 +2870,7 @@ export function parseCell(src, inherited = initialState()) {
       }
       noteCapo(arg)
       const out = ok ? blockClip(arg, state, err, outputCtx(ln), [], bars) : null
+      if (out) checkStickings(out, err)
       if (out && out.durSec > MAX_SECONDS) {
         err(ln, "This plays for over 10 minutes. Use a shorter length")
       } else if (out) {

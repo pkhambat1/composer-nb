@@ -40,7 +40,8 @@ function DrumBlock({ block, index }) {
               {Array.from({ length: per }, (_, col) => {
                 const e = row.cells.get(bar * per + col)
                 let cls = "dg-cell" + (shaded(col) ? " dg-alt" : "") + (e?.note ? " dg-note" : "")
-                if (e?.hit) {
+                if (e?.sticking) cls += " dg-stk"
+                else if (e?.hit) {
                   cls += " dg-hit"
                   if (e.accent) cls += " dg-acc"
                   if (e.ghost) cls += " dg-ghost"
