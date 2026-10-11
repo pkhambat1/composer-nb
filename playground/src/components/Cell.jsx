@@ -154,10 +154,14 @@ function Cell({
       : cell.status === "waiting"
         ? "waiting"
         : "idle"
-  // The lines the last run found mistakes on, for the editor to mark
+  // The lines the last run found mistakes on, for the editor to mark, as long as the
+  // source is still what that run saw
   const errorLines = React.useMemo(
-    () => (cell.output?.kind === "error" ? new Set(cell.output.lines || []) : null),
-    [cell.output],
+    () =>
+      cell.output?.kind === "error" && cell.output.source === cell.source
+        ? new Set(cell.output.lines || [])
+        : null,
+    [cell.output, cell.source],
   )
 
   return (

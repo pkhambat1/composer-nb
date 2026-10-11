@@ -1466,6 +1466,20 @@ body {
   color: var(--text);
   font-size: 12px;
 }
+/* A chord in the library: a button that copies its name */
+.chord-chip-btn {
+  appearance: none;
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+}
+.chord-chip-btn:hover {
+  border-color: var(--accent);
+}
+.chord-chip-copied .chord-label {
+  color: var(--accent);
+  font-weight: 600;
+}
 .chord-notes {
   color: var(--text-mute);
   font-weight: 600;
@@ -1700,7 +1714,17 @@ body {
     height: auto;
     overflow: visible;
   }
+  /* The sticky header stays short: no subtitle, less padding */
   .nb-title-bar {
+    padding: 6px 12px;
+  }
+  .nb-title-bar .panel-subtitle {
+    display: none;
+  }
+  .nb-title-bar .panel-title {
+    font-size: 17px;
+  }
+  .toolbar {
     padding: 8px 12px;
   }
   .nb-main {

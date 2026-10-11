@@ -138,7 +138,7 @@ export default function App() {
           playback.stopCell(id)
           updateCell(id, {
             status: "idle",
-            output: { kind: "error", error: lines, lines: parsed.errors.map((e) => e.line) },
+            output: { kind: "error", error: lines, lines: parsed.errors.map((e) => e.line), source: c.source },
           })
           return
         }
