@@ -21,8 +21,13 @@ function ShareMenu({ source, theme }) {
     const close = (e) => {
       if (ref.current && !ref.current.contains(e.target)) setOpen(false)
     }
+    const onKey = (e) => e.key === "Escape" && setOpen(false)
     document.addEventListener("mousedown", close)
-    return () => document.removeEventListener("mousedown", close)
+    document.addEventListener("keydown", onKey)
+    return () => {
+      document.removeEventListener("mousedown", close)
+      document.removeEventListener("keydown", onKey)
+    }
   }, [open])
 
   const copy = async (what, text) => {
@@ -77,8 +82,13 @@ function MuteMenu({ parsed, muted, onChange }) {
     const close = (e) => {
       if (ref.current && !ref.current.contains(e.target)) setOpen(false)
     }
+    const onKey = (e) => e.key === "Escape" && setOpen(false)
     document.addEventListener("mousedown", close)
-    return () => document.removeEventListener("mousedown", close)
+    document.addEventListener("keydown", onKey)
+    return () => {
+      document.removeEventListener("mousedown", close)
+      document.removeEventListener("keydown", onKey)
+    }
   }, [open])
 
   if (choices.length < 2) return null
@@ -526,7 +536,13 @@ export default function MusicOutput({
   React.useEffect(() => {
     const ws = wsRef.current
     if (!ws || !ready) return
-    const play = () => ws.play().catch((err) => console.warn("Playback failed:", err.message))
+    // A browser refuses to play before the page is touched (a shared link opens playing),
+    // and then the cell isn't playing: the first press of Play is what plays it
+    const play = () =>
+      ws.play().catch((err) => {
+        console.warn("Playback failed:", err.message)
+        onPlaybackFinishedRef.current(cell.id)
+      })
     if (focusedCellId === cell.id && isPlaying) {
       if (ws.isPlaying()) return
       // From the top with count-in on: a bar of clicks first

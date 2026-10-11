@@ -13,8 +13,13 @@ function CellMenu({ onDelete, onMoveUp, onMoveDown, onDuplicate, first, last }) 
     const close = (e) => {
       if (menuRef.current && !menuRef.current.contains(e.target)) setOpen(false)
     }
+    const onKey = (e) => e.key === "Escape" && setOpen(false)
     document.addEventListener("mousedown", close)
-    return () => document.removeEventListener("mousedown", close)
+    document.addEventListener("keydown", onKey)
+    return () => {
+      document.removeEventListener("mousedown", close)
+      document.removeEventListener("keydown", onKey)
+    }
   }, [open])
 
   return (
