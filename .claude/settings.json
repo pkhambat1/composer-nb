@@ -1,4 +1,9 @@
 {
+  "permissions": {
+    "allow": [
+      "Bash(gh pr merge:*)"
+    ]
+  },
   "enabledPlugins": {
     "code-review@claude-plugins-official": true,
     "superpowers@claude-plugins-official": true,
