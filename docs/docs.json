@@ -28,6 +28,7 @@
         "group": "Get started",
         "pages": [
           "index",
+          "for-musicians",
           "jupyter"
         ]
       },

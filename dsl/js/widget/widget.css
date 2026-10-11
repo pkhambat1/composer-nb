@@ -185,6 +185,54 @@
   color: var(--cnb-error);
 }
 
+/* bricks | sheet: how the hits are drawn */
+.cnb-view {
+  display: inline-flex;
+  align-self: flex-start;
+  border: 1px solid color-mix(in srgb, var(--cnb-text) 18%, transparent);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.cnb-view-btn {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: var(--cnb-mute);
+  font-family: var(--cnb-mono);
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 2px 8px;
+  cursor: pointer;
+}
+.cnb-view-btn + .cnb-view-btn {
+  border-left: 1px solid color-mix(in srgb, var(--cnb-text) 18%, transparent);
+}
+.cnb-view-on {
+  color: var(--cnb-accent);
+  background: color-mix(in srgb, var(--cnb-accent) 14%, transparent);
+}
+/* Sheet music, drawn by abcjs in the text colour */
+.cnb-sheet {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  color: var(--cnb-text);
+}
+.cnb-staff {
+  width: 100%;
+  overflow: hidden;
+}
+.cnb-staff svg {
+  display: block;
+  max-width: 100%;
+}
+.cnb-staff .cnb-now,
+.cnb-staff .cnb-now * {
+  fill: var(--cnb-accent);
+  color: var(--cnb-accent);
+}
+
 /* Drum grid: one row per drum, one cell per step, counted 1 e & a. */
 .cnb-grid {
   display: flex;

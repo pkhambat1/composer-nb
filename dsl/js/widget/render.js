@@ -10,6 +10,8 @@ import {
 } from "../music-engine.js"
 import { TPQ } from "../language.js"
 import { gridRows } from "../grid.js"
+import { sheetAbc } from "../sheet.js"
+import abcjs from "abcjs"
 
 // Tone.Offline swaps Tone's global context while it renders, so two cells
 // rendering at once (Run All) would trample each other. Render one at a time, and skip
@@ -125,6 +127,67 @@ function renderDrumGrid(blocks) {
   return { grid, setTime }
 }
 
+// --- Sheet: the same blocks as sheet music, drawn by abcjs, with a playhead ---
+
+function renderSheet(blocks) {
+  const sheet = h("div", "cnb-sheet")
+  const timings = new Map() // block index → when each note sounds
+  blocks.forEach((block, bi) => {
+    const { abc, tablature } = sheetAbc(block)
+    if (!abc) return
+    if (blocks.length > 1) sheet.append(h("div", "cnb-grid-head", describeBlock(block)))
+    const staff = h("div", "cnb-staff")
+    sheet.append(staff)
+    // Drawn once the sheet is on the page, so the staff can take its width
+    const draw = () => {
+      const [tune] = abcjs.renderAbc(staff, abc, {
+        responsive: "resize",
+        staffwidth: Math.max(staff.clientWidth, 320),
+        wrap: { minSpacing: 1.8, maxSpacing: 2.7, preferredMeasuresPerLine: 4 },
+        paddingtop: 0,
+        paddingbottom: 0,
+        paddingleft: 0,
+        paddingright: 0,
+        foregroundColor: "currentColor",
+        ...(tablature.some((t) => t.instrument) && { tablature }),
+      })
+      tune.setTiming(0, 0)
+      timings.set(bi, tune.noteTimings.filter((t) => t.type === "event"))
+    }
+    if (staff.isConnected) draw()
+    else {
+      const watch = new ResizeObserver(() => {
+        if (!staff.clientWidth) return
+        watch.disconnect()
+        draw()
+      })
+      watch.observe(staff)
+    }
+  })
+
+  let last = null
+  const setTime = (t, active) => {
+    let now = null
+    if (active) {
+      const bi = blocks.findIndex((b) => b.plays.some((at) => t >= at && t < at + b.durSec))
+      if (bi >= 0) {
+        const at = blocks[bi].plays.find((s) => t >= s && t < s + blocks[bi].durSec)
+        const ms = (t - at) * 1000
+        for (const ev of timings.get(bi) || []) if (ev.milliseconds <= ms + 1) now = ev
+      }
+    }
+    if (now === last) return
+    sheet.querySelectorAll(".cnb-now").forEach((el) => el.classList.remove("cnb-now"))
+    for (const group of now?.elements || []) for (const el of group) el.classList.add("cnb-now")
+    last = now
+  }
+  return { sheet, setTime }
+}
+
+// How the hits are drawn, for every cell on the page: bricks, or sheet music
+let view = "bricks"
+const views = new Set() // each output's switch, so they change together
+
 // --- Player --------------------------------------------------------------------
 
 function renderPlayer(slot, buffer, filename, onTime) {
@@ -235,8 +298,36 @@ function renderOutput(output, filename, messages) {
   slot.append(status)
   box.append(slot)
 
-  const { grid, setTime } = renderDrumGrid(output.blocks)
-  if (grid.childElementCount) box.append(grid)
+  // The hits, as bricks or as sheet music, with a switch when there's anything to draw
+  const { grid, setTime: gridTime } = renderDrumGrid(output.blocks)
+  let sheetView = null
+  const drawn = h("div", "cnb-drawn")
+  const setTime = (t, active) => {
+    const follow = view === "sheet" && sheetView ? sheetView.setTime : gridTime
+    follow(t, active)
+  }
+  if (grid.childElementCount) {
+    const toggle = h("div", "cnb-view")
+    const buttons = {}
+    for (const v of ["bricks", "sheet"]) {
+      const b = h("button", "cnb-view-btn", v)
+      b.type = "button"
+      b.addEventListener("click", () => {
+        view = v
+        for (const show of views) show()
+      })
+      buttons[v] = b
+      toggle.append(b)
+    }
+    const show = () => {
+      for (const [v, b] of Object.entries(buttons)) b.classList.toggle("cnb-view-on", view === v)
+      if (view === "sheet" && !sheetView) sheetView = renderSheet(output.blocks)
+      drawn.replaceChildren(view === "sheet" ? sheetView.sheet : grid)
+    }
+    views.add(show)
+    show()
+    box.append(toggle, drawn)
+  }
 
   const firstTime = output.chords.filter((e) => !e.repeat)
   if (firstTime.length) {
@@ -275,6 +366,7 @@ function renderOutput(output, filename, messages) {
     dispose() {
       disposed = true
       disposePlayer?.()
+      for (const show of views) if (!box.isConnected) views.delete(show)
     },
   }
 }

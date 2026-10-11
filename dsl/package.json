@@ -44,6 +44,7 @@
   },
   "dependencies": {
     "@tombatossals/chords-db": "0.5.1",
+    "abcjs": "^6.7.1",
     "tonal": "^6.4.2",
     "tone": "14.8.49"
   },
