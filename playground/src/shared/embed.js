@@ -23,6 +23,10 @@ const hash = new URLSearchParams(window.location.hash.slice(1))
 export const EMBED = query.has("embed")
 export const OPEN = !EMBED && query.has("open")
 
+// The cell or notebook a link holds is read when the page loads, so a new link opened in
+// the same tab (the address bar, a link on a page) loads the page again
+if (EMBED || OPEN) window.addEventListener("hashchange", () => window.location.reload())
+
 // The cell the frame opens with.
 export function embedCell() {
   return { type: "music", source: hash.get("src") || "" }
