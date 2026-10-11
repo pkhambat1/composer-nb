@@ -4,7 +4,7 @@ import * as Tone from "tone"
 import * as ChordLookup from "./chord-lookup.js"
 import * as Drums from "./drums.js"
 import { midiToName } from "./chords.js"
-import { initialState, parseCell } from "./language.js"
+import { TPQ, initialState, parseCell } from "./language.js"
 import { midiFile } from "./midi.js"
 
 export { midiToName, parseKey, buildChord } from "./chords.js"
@@ -178,7 +178,36 @@ const isGuitar = (inst) => inst.split(".")[0] === "guitar"
 // (guitar.electric muted).
 const voiceOf = (ev) => (ev.sound ? `${ev.instrument} ${ev.sound}` : ev.instrument)
 
-export async function renderToBuffer(parsed) {
+// Tone.Offline swaps Tone's global context while it renders, so two renders at once would
+// trample each other. They go one at a time, whoever asks.
+let renderQueue = Promise.resolve()
+export function renderToBuffer(parsed) {
+  const job = renderQueue.then(() => renderNow(parsed))
+  renderQueue = job.catch(() => {})
+  return job
+}
+
+// One bar of stick clicks at the block's tempo and length, out loud, now. Resolves when
+// the bar is over, so playback can start on the one.
+export async function countIn(block) {
+  const tempo = block?.tempo || 120
+  const quarters = block ? block.barTicks / TPQ : 4
+  const beatSec = 60 / tempo
+  await Tone.start()
+  const filter = new Tone.Filter(2500, "highpass").toDestination()
+  const click = new Tone.NoiseSynth({ envelope: { attack: 0.001, decay: 0.03, sustain: 0 } })
+  click.connect(filter)
+  click.volume.value = -8
+  const now = Tone.now() + 0.05
+  for (let k = 0; k < Math.ceil(quarters); k++) {
+    click.triggerAttackRelease(0.03, now + k * beatSec, k === 0 ? 1 : 0.6)
+  }
+  await new Promise((r) => setTimeout(r, (quarters * beatSec + 0.05) * 1000))
+  click.dispose()
+  filter.dispose()
+}
+
+async function renderNow(parsed) {
   const chordEvents = parsed.events.filter((ev) => ev.chord)
   const noteEvents = parsed.events.filter((ev) => ev.note)
 
