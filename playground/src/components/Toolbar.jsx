@@ -10,8 +10,13 @@ function AddCellDropdown({ onAddCode, onAddText }) {
     const handler = (e) => {
       if (ref.current && !ref.current.contains(e.target)) setOpen(false)
     }
+    const onKey = (e) => e.key === "Escape" && setOpen(false)
     document.addEventListener("mousedown", handler)
-    return () => document.removeEventListener("mousedown", handler)
+    document.addEventListener("keydown", onKey)
+    return () => {
+      document.removeEventListener("mousedown", handler)
+      document.removeEventListener("keydown", onKey)
+    }
   }, [open])
 
   return (
@@ -40,7 +45,7 @@ function AddCellDropdown({ onAddCode, onAddText }) {
   )
 }
 
-export default function Toolbar({ onAddCode, onAddText, onRunAll, onStop, onShare, shared, kernelStatus }) {
+export default function Toolbar({ onAddCode, onAddText, onRunAll, onStop, onShare, shared, onKeep, kernelStatus }) {
   const Icon = (children, viewBox = "0 0 16 16") => (
     <svg width="14" height="14" viewBox={viewBox} fill="currentColor">
       {children}
@@ -127,6 +132,15 @@ export default function Toolbar({ onAddCode, onAddText, onRunAll, onStop, onShar
             </span>,
           )}
         </div>
+        {onKeep && (
+          <div className="tb-group">
+            {btn(
+              "Keep this notebook on this device",
+              onKeep,
+              <span style={{ fontSize: 12, fontWeight: 600 }}>Keep</span>,
+            )}
+          </div>
+        )}
       </div>
     </div>
   )

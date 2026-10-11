@@ -69,6 +69,7 @@ export default function App() {
 
   const notebooks = useNotebooks({
     store: opening?.store || { current: null, list: [] },
+    draft: opening?.draft || null,
     cells,
     setCells: cm.setCells,
     setSelectedId,
@@ -411,8 +412,10 @@ export default function App() {
         <div className="notebook-root" style={{ display: sideTab === "notebook" ? undefined : "none" }}>
           <div className="nb-sticky-header">
           <div className="nb-title-bar">
-            <h1 className="panel-title">{notebooks.current?.title || "Notebook"}</h1>
-            <p className="panel-subtitle">A music notebook, in place of paper</p>
+            <h1 className="panel-title">{notebooks.current?.title || notebooks.draft?.title || "Notebook"}</h1>
+            <p className="panel-subtitle">
+              {notebooks.draft ? "From a link. Change it or press Keep, and it's kept on this device" : "A music notebook, in place of paper"}
+            </p>
           </div>
           <Toolbar
             onAddCode={() =>
@@ -436,6 +439,7 @@ export default function App() {
             }}
             onShare={shareNotebook}
             shared={shared}
+            onKeep={notebooks.draft ? () => notebooks.keep(cells) : null}
             kernelStatus={kernelStatus}
           />
           </div>
