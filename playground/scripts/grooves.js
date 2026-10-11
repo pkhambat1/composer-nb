@@ -16,22 +16,28 @@ const slugOf = (title) =>
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-|-$/g, "")
 
-// The starters come in pairs: a text cell with a ## title, then the music cell.
+// The starters and the rudiments come in pairs: a text cell with a ## title, then the
+// music cell.
 const grooves = []
-const cells = APP_CONSTANTS.STARTER_CELLS
-for (let i = 0; i + 1 < cells.length; i++) {
-  const [text, music] = [cells[i], cells[i + 1]]
-  if (text.type !== "text" || music.type !== "music") continue
-  const title = /^##\s+(.+)$/m.exec(text.source)?.[1]
-  if (!title) continue
-  const body = text.source.replace(/^##\s+.+\n/, "")
-  // The text is the byline, then the paragraph about the groove, then a link
-  const lines = body
-    .split("\n")
-    .map((l) => l.trim())
-    .filter((l) => l && !l.startsWith("["))
-  const description = (lines[1] || lines[0] || title).replace(/[`*]/g, "")
-  grooves.push({ title, slug: slugOf(title), body, description, source: music.source })
+const sections = [
+  ["Transcriptions", APP_CONSTANTS.STARTER_CELLS],
+  ["Rudiments", APP_CONSTANTS.RUDIMENTS],
+]
+for (const [section, cells] of sections) {
+  for (let i = 0; i + 1 < cells.length; i++) {
+    const [text, music] = [cells[i], cells[i + 1]]
+    if (text.type !== "text" || music.type !== "music") continue
+    const title = /^##\s+(.+)$/m.exec(text.source)?.[1]
+    if (!title) continue
+    const body = text.source.replace(/^##\s+.+\n/, "")
+    // The text is the byline, then the paragraph about the groove, then a link
+    const lines = body
+      .split("\n")
+      .map((l) => l.trim())
+      .filter((l) => l && !l.startsWith("["))
+    const description = (lines[1] || lines[0] || title).replace(/[`*]/g, "")
+    grooves.push({ section, title, slug: slugOf(title), body, description, source: music.source })
+  }
 }
 
 const escape = (s) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;")
@@ -48,7 +54,7 @@ const style = `
   pre { background: #ffffff; border: 1px solid #e0e0e0; border-radius: 4px; padding: 12px 14px; overflow: auto; font: 13px/1.55 "IBM Plex Mono", ui-monospace, Menlo, monospace; }
   iframe { width: 100%; height: 420px; border: 0; border-radius: 6px; background: #fff; }
   .card { background: #fff; border: 1px solid #e0e0e0; border-radius: 4px; padding: 14px 16px; margin: 12px 0; }
-  .card h2 { margin: 0 0 4px; }
+  .card h3 { margin: 0 0 4px; font-size: 18px; }
   .card p { margin: 0 0 8px; color: #585858; font-size: 14px; }
   .open { display: inline-block; margin: 12px 0 0; font-weight: 600; }
   footer { margin-top: 40px; font-size: 13px; color: #8a8a8a; }
@@ -104,10 +110,17 @@ ${foot}`
 
 const index = `${head("Grooves", "Transcriptions and exercises to play, slow down and start from: Porcupine Tree, Gavin Harrison's exercises, polyrhythms.", "/grooves/")}
 <h1>Grooves</h1>
-<p>Transcriptions and exercises, each with the playground on it. Open one, slow it down, change it.</p>
-${grooves
+<p>Transcriptions and rudiments, each with the playground on it. Open one, slow it down, change it.</p>
+${sections
   .map(
-    (g) => `<div class="card"><h2><a href="/grooves/${g.slug}/">${escape(g.title)}</a></h2><p>${escape(g.description)}</p></div>`,
+    ([section]) =>
+      `<h2>${escape(section)}</h2>\n` +
+      grooves
+        .filter((g) => g.section === section)
+        .map(
+          (g) => `<div class="card"><h3><a href="/grooves/${g.slug}/">${escape(g.title)}</a></h3><p>${escape(g.description)}</p></div>`,
+        )
+        .join("\n"),
   )
   .join("\n")}
 ${foot}`

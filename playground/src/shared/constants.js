@@ -32,7 +32,7 @@ export const APP_CONSTANTS = {
 
 Write what plays, hear it, and see it as bricks or as sheet music. A notebook is cells, like a page: text cells like this one, and music cells with a groove, a riff or a chord chart. Press **Play** on a cell (or Shift+Enter) to hear it, and **Share** to copy a link that opens on it, playing. The language is small and the whole of it is under **Docs**.
 
-Below are six grooves to start from. Change anything and play it again.`,
+What you write is kept on this device as you go; **Notebooks** lists your notebooks, and **Grooves** has transcriptions to start from. Below are six of them. Change anything and play it again.`,
     },
     {
       type: "text",
@@ -201,6 +201,127 @@ pattern groove = {
 }
 
 play groove`,
+    },
+  ],
+
+  // Rudiments, in the Grooves tab and on pages of their own: each a text cell, then its
+  // music cell with the sticking.
+  RUDIMENTS: [
+    {
+      type: "text",
+      source: `## Single stroke roll
+
+A rudiment
+
+Alternate hands, every stroke the same. Slow it down with the tempo stepper, loop it, and let Ramp bring it back up a step at a time.`,
+    },
+    {
+      type: "music",
+      source: `tempo 100
+
+pattern roll = {
+  snare: xxxx xxxx xxxx xxxx
+  sticking: RLRL RLRL RLRL RLRL
+}
+
+play 2 bars roll`,
+    },
+    {
+      type: "text",
+      source: `## Double stroke roll
+
+A rudiment
+
+Two strokes a hand. The second of each pair should be as full as the first: that's the whole exercise.`,
+    },
+    {
+      type: "music",
+      source: `tempo 90
+
+pattern roll = {
+  snare: xxxx xxxx xxxx xxxx
+  sticking: RRLL RRLL RRLL RRLL
+}
+
+play 2 bars roll`,
+    },
+    {
+      type: "text",
+      source: `## Single paradiddle
+
+A rudiment
+
+Right left right right, left right left left, with the accent on the first of each four. The hands swap lead every group, which is the point of it.`,
+    },
+    {
+      type: "music",
+      source: `tempo 100
+
+pattern paradiddle = {
+  snare: ^xxx ^xxx ^xxx ^xxx
+  sticking: RLRR LRLL RLRR LRLL
+}
+
+play 2 bars paradiddle`,
+    },
+    {
+      type: "text",
+      source: `## Double paradiddle
+
+A rudiment
+
+Six strokes a group, so it sits in 3 over 4: two singles, then the diddle. Accent the first of each six.`,
+    },
+    {
+      type: "music",
+      source: `time 3 over 4
+tempo 100
+
+pattern paradiddle = {
+  snare: ^xxxxx ^xxxxx
+  sticking: RLRLRR LRLRLL
+}
+
+play 2 bars paradiddle`,
+    },
+    {
+      type: "text",
+      source: `## Paradiddle-diddle
+
+A rudiment
+
+A paradiddle with a second diddle on the end, six strokes a group. The lead hand stays the same, so it loops without swapping.`,
+    },
+    {
+      type: "music",
+      source: `time 3 over 4
+tempo 100
+
+pattern pdd = {
+  snare: ^xxxxx ^xxxxx
+  sticking: RLRRLL RLRRLL
+}
+
+play 2 bars pdd`,
+    },
+    {
+      type: "text",
+      source: `## Five-stroke roll
+
+A rudiment
+
+Two doubles and a single: a \`d\` is a double stroke, two strokes of the same hand in one step, so the sticking names the hand of each double. The accent lands on the fifth stroke.`,
+    },
+    {
+      type: "music",
+      source: `tempo 80
+
+pattern five = {
+  snare: dd^- dd^-
+  sticking: RLR- LRL-
+}
+
+play 2 bars five`,
     },
   ],
 }

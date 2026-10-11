@@ -1324,6 +1324,23 @@ body {
   font-size: 11px;
   color: var(--text-mute);
 }
+.mute-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 9px;
+  font-size: 12px;
+  color: var(--text);
+  cursor: pointer;
+  border-radius: 3px;
+}
+.mute-item:hover {
+  background: var(--accent-soft);
+}
+/* A muted row of the grid */
+.dg-muted {
+  opacity: 0.3;
+}
 /* bricks | sheet: how the drums are drawn */
 .view-toggle {
   display: inline-flex;
@@ -1446,6 +1463,14 @@ body {
   padding: 16px 18px;
   display: grid;
   gap: 14px;
+}
+.grooves-section {
+  margin: 10px 0 0;
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-mute);
 }
 .groove-card {
   background: var(--paper);
