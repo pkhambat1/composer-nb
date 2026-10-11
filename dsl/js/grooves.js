@@ -1,5 +1,5 @@
-/* The grooves library: transcriptions and rudiments to start from. Each is a text cell's
-   worth of words (a title, a byline, a paragraph and a link) and a music cell. The
+/* The grooves library: transcriptions, harmony cells and rudiments to start from. Each is
+   a text cell's worth of words (a title, a byline, a paragraph and a link) and a music cell. The
    playground opens with the transcriptions, lists them all in its Grooves tab and builds a
    page for each; the MCP server searches them. Pure data, shared so there is one copy. */
 
@@ -137,6 +137,132 @@ pattern groove = {
 }
 
 play groove`,
+  },
+  {
+    section: "Harmony",
+    title: "ii–V–I",
+    byline: "The cadence jazz is built on",
+    body: "Dm7 to G7 to Cmaj7: the ii sets up the V, and the V resolves home. Written as numerals, so `key` moves it: change `key C` to `key F` and the whole thing follows. The bass walks a quarter note a step, `swing 67` puts the ride's off-beats late, and `octave 4` keeps the piano's voicings around middle C.",
+    link: null,
+    source: `tempo 132
+swing 67
+key C
+octave 4
+
+pattern turnaround = {
+  piano: chords ii7 V7|Imaj7 -|ii7 V7|Imaj7 -
+  bass: D2---F2---G2---B2---|C3---E3---G3---A3---|D3---F3---G2---F2---|E2---G2---A2---B2---
+  ride: x-x- x-x- x-x- x-x-
+  hat.pedal: 2 4
+  kick: 1 3
+}
+
+play turnaround`,
+  },
+  {
+    section: "Harmony",
+    title: "Dorian vamp",
+    byline: "D dorian: minor with a major sixth",
+    body: "D to D on the white keys, so the B is natural. That B is what makes the IV chord (G) major under a minor i (Dm7), the sound of So What and Oye Como Va, and the melody leans on it. `key D dorian` reads the numerals in the mode: `i7 IV` is Dm7 G, and `VII` is C.",
+    link: null,
+    source: `tempo 100
+key D dorian
+octave 4
+
+pattern vamp = {
+  piano: {
+    chords i7 - IV -|i7 - VII -
+    A4---B4---C5---D5---|E5-------C5---A4---
+  }
+  bass: D2-------A2---B2---|D2-------C2---A2---
+  hat: x-
+  snare.cross: 2 4
+  kick: 1 3
+}
+
+play vamp`,
+  },
+  {
+    section: "Harmony",
+    title: "Mixolydian vamp",
+    byline: "A mixolydian: major with a flat seventh",
+    body: "The G is natural in A, so the seventh degree is a G chord, not G#. I to VII to IV and back (A, G, D, A) is the rock vamp, and the melody lands on that G. In `key A mixolydian` the numeral `VII` is the mode's own seventh degree, so there is no flat to write.",
+    link: null,
+    source: `tempo 112
+key A mixolydian
+octave 4
+
+pattern vamp = {
+  guitar.electric: chords I - VII -|IV - I -
+  piano: A4-B4-C#5---E5-------|D5-------C#5---G4---
+  bass: A2-------G2-------|D2-------A2-------
+  hat: x-
+  snare: 2 4
+  kick: 1 2& 3
+}
+
+play vamp`,
+  },
+  {
+    section: "Harmony",
+    title: "Lydian float",
+    byline: "F lydian: major with a raised fourth",
+    body: "F to F on the white keys puts a B natural where F major has a Bb. Two chords a whole step apart, F and G, and a melody that lands on the B: the floating, film-score sound. The `pad` holds each chord for a bar, written `I|II`.",
+    link: null,
+    source: `tempo 72
+key F lydian
+octave 4
+
+pattern float = {
+  pad: chords I|II
+  piano: F4---A4---B4---C5---|D5-------B4---G4---
+  bass: F2---------------|G2---------------
+}
+
+play float`,
+  },
+  {
+    section: "Harmony",
+    title: "12-bar blues",
+    byline: "Twelve bars, three chords, all dominant sevenths",
+    body: "I7 for four bars, IV7 for two, back to I7 for two, then V7 IV7 I7 V7 to turn around. `%` repeats the bar before, and `swing 67` makes the ride shuffle. Change `key A` to `key E` and the chart moves.",
+    link: null,
+    source: `tempo 120
+swing 67
+key A
+octave 3
+
+pattern blues = {
+  guitar.electric: chords I7|%|%|%|IV7|%|I7|%|V7|IV7|I7|V7
+  ride: x-x- x-x- x-x- x-x-
+  snare: 2 4
+  kick: 1 3
+}
+
+play blues`,
+  },
+  {
+    section: "Harmony",
+    title: "Harmonic minor cadence",
+    byline: "A minor, with the leading tone raised",
+    body: "A minor's own V chord is Em, and it pulls nowhere. Raise its third to G# and E7 leans into Am: the harmonic-minor cadence. `V7` in `key Am` spells it for you, and the melody's G# gets its sharp on the sheet.",
+    link: null,
+    source: `tempo 90
+key Am
+octave 4
+
+pattern cadence = {
+  piano: {
+    chords i iv|V7 i
+    E5-------F5-------|G#5---B4---C5-------
+  }
+  bass: A2-------D2-------|E2-------A2-------
+  hat: x---
+  snare.cross: 3
+  kick: 1
+}
+
+play cadence`,
   },
   {
     section: "Rudiments",

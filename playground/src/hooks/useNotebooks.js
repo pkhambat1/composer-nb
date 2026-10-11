@@ -33,7 +33,7 @@ function saveStore(store) {
 }
 
 // A notebook's title: its first heading when it has one, else what its first music cell
-// names and its time: "groove · 6 over 8".
+// names and its time, or its key: "groove · 6 over 8", "cadence · Am".
 export function titleOf(cells, fallback = "Untitled") {
   for (const c of cells) {
     if (c.type !== "text") continue
@@ -44,7 +44,8 @@ export function titleOf(cells, fallback = "Untitled") {
   if (music) {
     const name = /^\s*pattern\s+([A-Za-z][A-Za-z0-9]*)/m.exec(music.source)?.[1]
     const time = /^\s*time\s+(\S.*?)\s*$/m.exec(music.source)?.[1]
-    const parts = [name, time].filter(Boolean)
+    const key = /^\s*key\s+(\S.*?)\s*$/m.exec(music.source)?.[1]
+    const parts = [name, time || key].filter(Boolean)
     if (parts.length) return parts.join(" · ")
   }
   return fallback
