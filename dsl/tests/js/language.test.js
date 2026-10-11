@@ -3,7 +3,7 @@ import { describe, it, expect, vi } from "vitest"
 vi.mock("tone", () => ({}))
 
 const { parseSource } = await import("../../js/music-engine.js")
-const { LANES } = await import("../../js/language.js")
+const { LANES, MODES, initialState, parseCell } = await import("../../js/language.js")
 const { highlightMusic } = await import("../../js/highlight.js")
 const { gridRows } = await import("../../js/grid.js")
 const { prepareKit } = await import("../../js/drums.js")
@@ -1958,5 +1958,44 @@ describe("the grid", () => {
   it("leaves chords to the chart above it", () => {
     const { rows } = grid(play("piano: chords Am F", "kick: 1 3"))
     expect(rows.map((r) => r.label)).toEqual(["kick"])
+  })
+})
+
+describe("key", () => {
+  const labels = (src) => {
+    const p = parseCell(src, initialState())
+    expect(p.errors).toEqual([])
+    return p.outputs[0].chords.map((e) => e.chord.label).join(" ")
+  }
+  it("reads a major key as its letter, a minor key with m, and a mode by name", () => {
+    expect(labels("key Bb\nplay piano: chords I IV V vi")).toBe("Bb Eb F Gm")
+    expect(labels("key F#m\nplay piano: chords i iv V7 VI")).toBe("F#m Bm C#7 D")
+    expect(labels("key D dorian\nplay piano: chords i ii|III IV|v vi°|VII")).toBe("Dm Em F G Am Bdim C")
+    expect(labels("key G mixolydian\nplay piano: chords I VII|IV v")).toBe("G F C Dm")
+    expect(labels("key E phrygian\nplay piano: chords i II|III")).toBe("Em F G")
+    expect(labels("key F lydian\nplay piano: chords I II")).toBe("F G")
+    expect(labels("key B locrian\nplay piano: chords i° II")).toBe("Bdim C")
+    expect(labels("key A aeolian\nplay piano: chords i VII")).toBe("Am G")
+  })
+  it("spells a flat key's chords with flats, and a sharp key's with sharps", () => {
+    expect(labels("key Gm\nplay piano: chords i VI|VII")).toBe("Gm Eb F")
+    expect(labels("key A\nplay piano: chords ii iii")).toBe("Bm C#m")
+    expect(labels("key Bb dorian\nplay piano: chords i IV")).toBe("Bbm Eb")
+  })
+  it("names the modes, and says how a major or minor key is written", () => {
+    expect(MODES).toEqual(["ionian", "dorian", "phrygian", "lydian", "mixolydian", "aeolian", "locrian"])
+    const errs = (src) => parseCell(src, initialState()).errors.map((e) => e.msg)
+    expect(errs("key A minor")).toEqual(["A minor key is written as its chord: key Am"])
+    expect(errs("key C major")).toEqual(["A major key is written as its chord: key C"])
+    expect(errs("key D Dorian")).toEqual(["Modes are lowercase: key D dorian"])
+    expect(errs("key H dorian")[0]).toContain("key D dorian. The modes are ionian, dorian")
+    expect(errs("key D blues")[0]).toContain("The modes are")
+  })
+  it("goes with each block, for the sheet's key signature", () => {
+    const p = parseCell("key D dorian\nplay kick: x---", initialState())
+    expect(p.outputs[0].blocks[0].key).toBe("D dorian")
+    expect(p.fromAbove).toEqual([])
+    const after = parseCell("play kick: x---", p.state)
+    expect(after.fromAbove).toEqual(["key D dorian"])
   })
 })

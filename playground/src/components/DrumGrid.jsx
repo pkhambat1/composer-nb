@@ -1,11 +1,8 @@
 // components/DrumGrid.jsx — Drum hits and notes bar by bar, counted 1 e & a, with a playhead
 import React from "react"
 import { TPQ } from "composer-nb/language"
-import { gridRows } from "composer-nb/grid"
+import { countingOf, gridCounts, gridRows } from "composer-nb/grid"
 import { quietens } from "../shared/mute.js"
-
-const SAY = { 1: [""], 2: ["", "&"], 3: ["", "&", "a"], 4: ["", "e", "&", "a"] }
-const COUNTING = { 1: "1 2 3", 2: "1 & 2 &", 3: "1 & a", 4: "1 e & a" }
 
 // Whether a row of the grid is muted: a drum's by its lane, an instrument's by its name
 const quietRow = (muted, row) =>
@@ -15,23 +12,15 @@ function DrumBlock({ block, index, muted }) {
   const { per, rows } = gridRows(block)
   // Wide enough for the longest line name, e.g. guitar.electric
   const labels = Math.max(...rows.map((r) => r.label.length), 5) + 1
-
-  // Shade alternate groups for added-up meters like (3+4)/4, otherwise alternate beats.
-  const groupEnds = []
-  let acc = 0
-  for (const g of block.groups) groupEnds.push((acc += (g * 4) / block.unit))
-  const shaded = (col) => {
-    const q = col / block.res
-    return block.groups.length > 1
-      ? groupEnds.findIndex((end) => q < end - 1e-9) % 2 === 1
-      : Math.floor(q) % 2 === 1
-  }
+  // How the cells are counted, and which groups of beats are shaded
+  const counts = gridCounts(block)
+  const shaded = (col) => counts[col].shaded
 
   return (
     <div className="dg-block">
       <div className="dg-head">
         time {block.time} · tempo {block.tempo} · {block.bars} bar{block.bars === 1 ? "" : "s"} · counting{" "}
-        {COUNTING[block.res] || "in small steps"}
+        {countingOf(block)}
       </div>
       {Array.from({ length: block.bars }, (_, bar) => (
         <div
@@ -62,18 +51,15 @@ function DrumBlock({ block, index, muted }) {
             </React.Fragment>
           ))}
           <div className="dg-lane dg-bar-num">{block.bars > 1 ? `bar ${bar + 1}` : ""}</div>
-          {Array.from({ length: per }, (_, col) => {
-            const sub = col % block.res
-            return (
-              <div
-                key={col}
-                className={"dg-count" + (sub ? "" : " dg-count-beat")}
-                data-k={`${index}-${bar}-${col}`}
-              >
-                {sub ? (SAY[block.res]?.[sub] ?? "·") : Math.floor(col / block.res) + 1}
-              </div>
-            )
-          })}
+          {counts.map((c, col) => (
+            <div
+              key={col}
+              className={"dg-count" + (c.beat ? " dg-count-beat" : "")}
+              data-k={`${index}-${bar}-${col}`}
+            >
+              {c.label === "." ? "·" : c.label}
+            </div>
+          ))}
         </div>
       ))}
     </div>

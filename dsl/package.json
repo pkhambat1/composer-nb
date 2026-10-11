@@ -30,7 +30,10 @@
     "./grid": "./js/grid.js",
     "./sheet": "./js/sheet.js",
     "./midi": "./js/midi.js",
-    "./highlight": "./js/highlight.js"
+    "./highlight": "./js/highlight.js",
+    "./chords": "./js/chords.js",
+    "./grooves": "./js/grooves.js",
+    "./links": "./js/links.js"
   },
   "files": [
     "dist",

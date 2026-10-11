@@ -1,0 +1,61 @@
+---
+title: "Assistants"
+description: "composer-nb as a tool for Claude, Cursor or any assistant that speaks MCP: it writes a cell, checks it, draws the sheet and sends a link."
+---
+
+An assistant can talk about music all day and produce nothing you can hear. Plugged into composer-nb, what it hands back plays: a cell it has checked against the parser, the sheet music as a picture, and a link that opens the playground on it, playing.
+
+The connection is an [MCP](https://modelcontextprotocol.io) server. Once it is connected you write in English, in the chat you already use:
+
+> Take the single paradiddle and move the accent to the second stroke, in 3 over 4 at 90.
+
+The assistant writes the cell, calls `parse`, and if the parser says `line 5: The snare line is 6 steps long, which doesn't fit 12 steps a whole number of times`, it fixes the cell before you see it. Then it calls `render` for the sheet and `link` for the link.
+
+## Connect it
+
+**Claude.ai and Claude Desktop.** Settings → Connectors → Add custom connector, with the URL:
+
+```text
+https://composer-nb.vercel.app/mcp
+```
+
+**Claude Code.**
+
+```bash
+claude mcp add --transport http composer-nb https://composer-nb.vercel.app/mcp
+```
+
+**Cursor, Windsurf, VS Code and the rest** take the same URL as a remote MCP server, or run it on your machine with Node 20 or later:
+
+```json
+{
+  "mcpServers": {
+    "composer-nb": {
+      "command": "npx",
+      "args": ["-y", "composer-nb-mcp"]
+    }
+  }
+}
+```
+
+Nothing is stored on the server: a request is a cell in, a result out.
+
+## Tools
+
+| Tool | Does |
+| --- | --- |
+| `parse` | Checks a cell. Returns the errors with their line numbers, the settings and names in effect, and for each play a grid of every hit and note, bar by bar, with the chords it heard. |
+| `render` | The sheet music as a PNG (the kit on a percussion staff, each instrument on a staff of its own), or a MIDI file, or the ABC notation. |
+| `link` | A link that opens the playground on the cell, playing, with the practice controls, and an iframe to put it on a page. With a list of cells, a link to a whole notebook. |
+| `library` | Searches the [grooves](https://composer-nb.vercel.app/grooves/): transcriptions and rudiments to start from, each with its code and its link. |
+| `reference` | The pages under Language on this site, for the assistant to read. |
+
+The reference pages and the grooves are also MCP resources, for clients that read those.
+
+## What to ask for
+
+- A groove from a description: "seven-eight, hats on every eighth alternating open and closed, kick and snare resolving every two bars."
+- Variations: "the same at 80 with just the hands, then bring it up ten at a time", each a link.
+- An exercise written out: "a paradiddle with the accent on 2 and 4, in 6/8, with the sticking", as a sheet to print.
+- A chord chart with a bass line under it, in a key or a mode, as a MIDI file for your DAW.
+- An explanation that plays: "I don't understand how the ride and the kick line up here", with the kick muted in the link.

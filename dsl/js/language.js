@@ -1,7 +1,7 @@
 /* The music-cell language. A cell is a script, read top to bottom. Every line starts by
    saying what it is:
      tempo 90                 a setting: a reserved word and its value (time 7 over 8,
-                              key Am). Settings aren't names, so no =.
+                              key Am, key D dorian). Settings aren't names, so no =.
      steps pair = ^-x-        a name, with its type in front. There are four types:
      notes riff = E---F# E-E--  steps (a drum's hits), notes, chords, and pattern (lines
      chords verse = Am E7|G D   in braces that play together). A name only ever holds
@@ -93,6 +93,8 @@ export const KEYWORDS = [
   "in",
 ]
 export const KITS = ["rock", "synth"]
+// The modes a key can be in, by name: key D dorian. Major and minor keys are written C and Am.
+export const MODES = ["ionian", "dorian", "phrygian", "lydian", "mixolydian", "aeolian", "locrian"]
 // Instruments with more than one sound. Naming the instrument and a sound is a setting,
 // like kit: guitar.electric muted. The first sound is the one it has until then.
 export const SOUNDS = { "guitar.electric": ["clean", "muted"] }
@@ -464,10 +466,19 @@ function applySetting(name, value, ln, state, err) {
   }
   if (name === "key") {
     if (!parseKey(value)) {
-      err(ln, "key looks like C, Am, Bb or F#m")
+      const plain = /^([A-G][#b]?)\s+(major|minor)$/i.exec(value.trim())
+      const mode = /^([A-G][#b]?)\s+([A-Za-z]+)$/.exec(value.trim())
+      err(
+        ln,
+        plain
+          ? `A ${plain[2].toLowerCase()} key is written as its chord: key ${plain[1]}${plain[2].toLowerCase() === "minor" ? "m" : ""}`
+          : mode && MODES.includes(mode[2].toLowerCase())
+            ? `Modes are lowercase: key ${mode[1]} ${mode[2].toLowerCase()}`
+            : `key looks like C, Am, Bb or F#m, or a root and a mode: key D dorian. The modes are ${MODES.join(", ")}`,
+      )
       return false
     }
-    state.key = value
+    state.key = value.trim().replace(/\s+/g, " ")
     return true
   }
   if (name === "capo") {
@@ -2054,6 +2065,7 @@ function meterOf(st) {
     groups: st.groups,
     unit: st.unit,
     tempo: st.tempo,
+    key: st.key,
     barTicks,
     secPerTick,
   }
@@ -2629,6 +2641,7 @@ function gridBlocks(spans, drumEvents, noteEvents, chordEvents = []) {
       last &&
       last.time === s.time &&
       last.tempo === s.tempo &&
+      last.key === s.key &&
       Math.abs(last.startSec + last.durSec - s.startSec) < 1e-6
     ) {
       last.durSec += s.durSec

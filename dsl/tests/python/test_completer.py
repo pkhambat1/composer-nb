@@ -18,7 +18,7 @@ def texts(cell, songs=None):
 
 
 @pytest.mark.parametrize(
-    "name", ["DRUMS", "VARIATIONS", "SPLIT", "PITCHED", "SETTINGS", "TYPES", "KITS", "UNITS"]
+    "name", ["DRUMS", "VARIATIONS", "SPLIT", "PITCHED", "SETTINGS", "TYPES", "KITS", "MODES", "UNITS"]
 )
 def test_words_match_the_language(name):
     # One line, or an object or a list over several lines up to its closing bracket
@@ -75,6 +75,9 @@ def test_settings_offer_their_values():
     assert texts("%%music\nkit s") == ["synth"]
     assert texts("%%music\ntime 7 ") == ["over "]
     assert texts("%%music\ntempo ") == []
+    assert texts("%%music\nkey D ") == completer.MODES
+    assert texts("%%music\nkey F# m") == ["mixolydian"]
+    assert texts("%%music\nkey ") == []
 
 
 def test_instrument_lines_offer_names_of_their_type():

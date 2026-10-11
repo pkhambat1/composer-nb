@@ -4,7 +4,7 @@ import CodeEditor from "./CodeEditor.jsx"
 import MusicOutput from "./MusicOutput.jsx"
 import MarkdownContent from "./MarkdownCell.jsx"
 
-function CellMenu({ onDelete }) {
+function CellMenu({ onDelete, onMoveUp, onMoveDown, onDuplicate, first, last }) {
   const [open, setOpen] = React.useState(false)
   const menuRef = React.useRef(null)
 
@@ -36,6 +36,38 @@ function CellMenu({ onDelete }) {
       </button>
       {open && (
         <div className="cell-menu-dropdown">
+          <button
+            className="cell-menu-item"
+            disabled={first}
+            onClick={(e) => {
+              e.stopPropagation()
+              setOpen(false)
+              onMoveUp()
+            }}
+          >
+            Move up
+          </button>
+          <button
+            className="cell-menu-item"
+            disabled={last}
+            onClick={(e) => {
+              e.stopPropagation()
+              setOpen(false)
+              onMoveDown()
+            }}
+          >
+            Move down
+          </button>
+          <button
+            className="cell-menu-item"
+            onClick={(e) => {
+              e.stopPropagation()
+              setOpen(false)
+              onDuplicate()
+            }}
+          >
+            Duplicate
+          </button>
           <button
             className="cell-menu-item cell-menu-item-danger"
             onClick={(e) => {
@@ -77,6 +109,11 @@ function Cell({
   onRun,
   onInterrupt,
   onDelete,
+  onMoveUp,
+  onMoveDown,
+  onDuplicate,
+  first,
+  last,
   onSetPreview,
   theme,
   accent,
@@ -117,6 +154,11 @@ function Cell({
       : cell.status === "waiting"
         ? "waiting"
         : "idle"
+  // The lines the last run found mistakes on, for the editor to mark
+  const errorLines = React.useMemo(
+    () => (cell.output?.kind === "error" ? new Set(cell.output.lines || []) : null),
+    [cell.output],
+  )
 
   return (
     <div
@@ -142,7 +184,14 @@ function Cell({
         ) : null}
       </div>
       <div className="cell-body">
-        <CellMenu onDelete={onDelete} />
+        <CellMenu
+          onDelete={onDelete}
+          onMoveUp={onMoveUp}
+          onMoveDown={onMoveDown}
+          onDuplicate={onDuplicate}
+          first={first}
+          last={last}
+        />
         {cell.type === "music" ? (
           <>
             <CodeEditor
@@ -154,6 +203,7 @@ function Cell({
               onRun={onRun}
               onInterrupt={onInterrupt}
               runState={runState}
+              errorLines={errorLines}
             />
             <MusicOutput
               cell={cell}
@@ -272,5 +322,7 @@ export default React.memo(Cell, (prev, next) =>
   prev.drumView === next.drumView &&
   prev.sheetCounts === next.sheetCounts &&
   prev.focusedCellId === next.focusedCellId &&
-  prev.isPlaying === next.isPlaying,
+  prev.isPlaying === next.isPlaying &&
+  prev.first === next.first &&
+  prev.last === next.last,
 )

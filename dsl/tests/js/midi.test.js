@@ -93,3 +93,18 @@ describe("MIDI export", () => {
     expect(swung[1][0]).toBe(64 - 12) // at 67% of the beat
   })
 })
+
+describe("the key signature", () => {
+  it("is in the tempo track: sharps, or flats as a negative count, and minor", () => {
+    const meta = (src) => {
+      const p = parseSource(src)
+      expect(p.errors).toEqual([])
+      const bytes = [...midiFile(p.outputs)]
+      const at = bytes.findIndex((b, i) => b === 0xff && bytes[i + 1] === 0x59)
+      return bytes.slice(at, at + 5)
+    }
+    expect(meta("key D\nplay kick: x---")).toEqual([0xff, 0x59, 0x02, 2, 0])
+    expect(meta("key Gm\nplay kick: x---")).toEqual([0xff, 0x59, 0x02, 0xfe, 1])
+    expect(meta("key D dorian\nplay kick: x---")).toEqual([0xff, 0x59, 0x02, 0, 0])
+  })
+})

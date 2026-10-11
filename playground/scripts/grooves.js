@@ -5,40 +5,21 @@ import { mkdirSync, writeFileSync } from "node:fs"
 import { dirname, join } from "node:path"
 import { fileURLToPath } from "node:url"
 import { marked } from "marked"
-import { APP_CONSTANTS } from "../src/shared/constants.js"
+import { GROOVES, SECTIONS, grooveText, plain, slugOf } from "composer-nb/grooves"
 
 const dist = join(dirname(fileURLToPath(import.meta.url)), "..", "dist")
 const site = "https://composer-nb.vercel.app"
 
-const slugOf = (title) =>
-  title
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-|-$/g, "")
-
-// The starters and the rudiments come in pairs: a text cell with a ## title, then the
-// music cell.
-const grooves = []
-const sections = [
-  ["Transcriptions", APP_CONSTANTS.STARTER_CELLS],
-  ["Rudiments", APP_CONSTANTS.RUDIMENTS],
-]
-for (const [section, cells] of sections) {
-  for (let i = 0; i + 1 < cells.length; i++) {
-    const [text, music] = [cells[i], cells[i + 1]]
-    if (text.type !== "text" || music.type !== "music") continue
-    const title = /^##\s+(.+)$/m.exec(text.source)?.[1]
-    if (!title) continue
-    const body = text.source.replace(/^##\s+.+\n/, "")
-    // The text is the byline, then the paragraph about the groove, then a link
-    const lines = body
-      .split("\n")
-      .map((l) => l.trim())
-      .filter((l) => l && !l.startsWith("["))
-    const description = (lines[1] || lines[0] || title).replace(/[`*]/g, "")
-    grooves.push({ section, title, slug: slugOf(title), body, description, source: music.source })
-  }
-}
+// Each groove's page: its words (the text cell without its title), a line for <meta>, its code
+const grooves = GROOVES.map((g) => ({
+  section: g.section,
+  title: g.title,
+  slug: slugOf(g.title),
+  body: grooveText(g).replace(/^##\s+.+\n/, ""),
+  description: plain(g.body),
+  source: g.source,
+}))
+const sections = SECTIONS.map((s) => [s])
 
 const escape = (s) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;")
 

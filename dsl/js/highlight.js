@@ -9,7 +9,7 @@
      .tk-error
    Whitespace is kept exactly, so the layer lines up with the textarea under it. */
 import { KEYWORDS, LANES, PARTS, PITCHED, SETTINGS, SOUNDS, TYPES, UNITS } from "./language.js"
-import { isRoman } from "./chords.js"
+import { isRoman, parseKey } from "./chords.js"
 
 const ROMAN_RE = /^([#b])?(VII|VI|IV|V|III|II|I|vii|vi|iv|v|iii|ii|i)([°oø]?)(.*)$/
 const STEPS_RE = /^[-x^~d]+$/
@@ -305,6 +305,11 @@ function line(code) {
     out.push(part("tk-directive-key", inst), part(null, gap))
     out.push(part(SOUNDS[inst].includes(sound) ? "tk-directive-val" : "tk-error", sound))
     out.push(part(null, end))
+  } else if (word === "key" && /^\s/.test(after)) {
+    // key Am, key D dorian: the key, as one value
+    const m = /^(\s+)(.*?)(\s*)$/.exec(after)
+    out.push(part("tk-directive-key", word), part(null, m[1]))
+    out.push(part(parseKey(m[2]) ? "tk-directive-val" : "tk-error", m[2]), part(null, m[3]))
   } else if (SETTINGS.includes(word) && /^\s/.test(after)) {
     // tempo 90, time 7 over 8
     out.push(part("tk-directive-key", word))

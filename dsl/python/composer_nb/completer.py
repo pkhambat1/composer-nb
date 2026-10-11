@@ -23,6 +23,7 @@ PITCHED = ["guitar", "guitar.electric", "piano", "piano.electric", "organ", "pad
 SETTINGS = ["time", "tempo", "swing", "key", "capo", "octave", "kit"]
 TYPES = ["steps", "sticking", "notes", "chords", "pattern"]
 KITS = ["rock", "synth"]
+MODES = ["ionian", "dorian", "phrygian", "lydian", "mixolydian", "aeolian", "locrian"]
 UNITS = ["steps", "beats", "bars"]  # what a length on a drum's line is measured in
 
 LANES = [
@@ -163,6 +164,8 @@ def _statement(head: str, body: str, names: Names) -> List[Option]:
         return [("over ", "keyword")]
     if first in SETTING_VALUES and len(words) == 1:
         return _options(SETTING_VALUES[first], "value")
+    if first == "key" and len(words) == 2 and re.fullmatch(r"[A-G][#b]?", words[1]):
+        return _options(MODES, "value")  # key D dorian: a root, then its mode
     if inside and first not in SETTINGS:
         return _sequence(words, patterns, [])  # patterns to play in order: intro verse
     return []

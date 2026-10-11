@@ -4,7 +4,7 @@ import { highlightMusic } from "composer-nb/highlight"
 import { editKey } from "composer-nb/editing"
 
 const CodeEditor = React.forwardRef(function CodeEditor(props, ref) {
-  const { value, onChange, onFocus, onBlur, placeholder, onRun, onInterrupt, runState } = props
+  const { value, onChange, onFocus, onBlur, placeholder, onRun, onInterrupt, runState, errorLines } = props
   const localRef = React.useRef(null)
   const setRef = (el) => {
     localRef.current = el
@@ -46,20 +46,25 @@ const CodeEditor = React.forwardRef(function CodeEditor(props, ref) {
   return (
     <div className="code-input">
       <pre className="code-hl" aria-hidden="true">
-        {lines.map((parts, li) => (
-          <React.Fragment key={li}>
-            {li > 0 ? "\n" : null}
-            {parts.map((p, pi) =>
-              p.c ? (
-                <span key={pi} className={p.c}>
-                  {p.s}
-                </span>
-              ) : (
-                p.s
-              ),
-            )}
-          </React.Fragment>
-        ))}
+        {lines.map((parts, li) => {
+          const painted = parts.map((p, pi) =>
+            p.c ? (
+              <span key={pi} className={p.c}>
+                {p.s}
+              </span>
+            ) : (
+              p.s
+            ),
+          )
+          // A line the last run reported, tinted until the cell runs again
+          const wrong = errorLines?.has(li + 1)
+          return (
+            <React.Fragment key={li}>
+              {li > 0 ? "\n" : null}
+              {wrong ? <span className="hl-error-line">{painted}</span> : painted}
+            </React.Fragment>
+          )
+        })}
         {"\n"}
       </pre>
       <textarea

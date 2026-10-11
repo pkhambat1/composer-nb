@@ -2,6 +2,8 @@
    such as abcjs to draw. The drums are a percussion staff with the hands in one voice and
    the feet in another; each pitched instrument's line is a staff of its own, and a guitar's
    comes with a tab staff. Pure, like grid.js. */
+import { abcKey, keySignature, parseKey } from "./chords.js"
+import { beatGroups, isCompound } from "./grid.js"
 import { TPQ } from "./language.js"
 
 // Where each kit piece sits on the staff (its ABC pitch), its notehead, and whether a foot
@@ -36,14 +38,6 @@ const PLAIN = LENGTHS.filter((d) => d % 3 !== 0)
 // A length in sixteenths, as ABC writes it after a note: 1 is nothing, 2 is "2", 0.5 is "/".
 const dur = (u) => (u === 1 ? "" : Number.isInteger(u) ? String(u) : u === 0.5 ? "/" : `${u * 2}/2`)
 
-// The beam groups of a bar, in ticks: the groups of an added-up meter, else each beat.
-function beamGroups(block) {
-  if (block.groups.length > 1) return block.groups.map((g) => (g * 4 * TPQ) / block.unit)
-  const out = []
-  for (let left = block.barTicks; left > 0; left -= TPQ) out.push(Math.min(TPQ, left))
-  return out
-}
-
 // A ghost note is written in parentheses: text to the left and right of it
 const GHOST = '"<("">)"'
 
@@ -68,30 +62,35 @@ function drumNote(hits, u) {
   return deco + (heads.length === 1 ? heads[0] : `[${heads.join("")}]`) + dur(u)
 }
 
-// A pitch as ABC writes it: C is middle C, c the octave above, C, the octave below, with
-// the accidental when the bar hasn't had it yet. `acc` is the bar's accidentals so far.
-const SHARPS = ["C", "^C", "D", "^D", "E", "F", "^F", "G", "^G", "A", "^A", "B"]
-function abcPitch(midi, acc) {
+// A pitch as ABC writes it: C is middle C, c the octave above, C, the octave below, and an
+// accidental when the key signature and the bar so far don't give it already. `acc` is the
+// bar's accidentals so far, by letter and octave; `sig` is the key: its signature's marks
+// by letter, and how it spells its black keys.
+const SHARP_SPELL = ["C", "^C", "D", "^D", "E", "F", "^F", "G", "^G", "A", "^A", "B"]
+const FLAT_SPELL = ["C", "_D", "D", "_E", "E", "F", "_G", "G", "_A", "A", "_B", "B"]
+function abcPitch(midi, acc, sig) {
   const octave = Math.floor(midi / 12) - 1
-  const name = SHARPS[midi % 12]
-  const sharp = name[0] === "^"
-  const letter = sharp ? name[1] : name
-  const key = letter + octave
+  const pc = ((midi % 12) + 12) % 12
+  // A minor key's raised seventh is a sharp whatever the key's spelling: F# in G minor
+  const leading = sig.key.mode === "minor" || sig.key.mode === "aeolian"
+  const flat = sig.key.flats && !(leading && pc === (sig.key.tonicPc + 11) % 12)
+  const spelt = (flat ? FLAT_SPELL : SHARP_SPELL)[pc]
+  const needed = /^[\^_]/.test(spelt) ? spelt[0] : ""
+  const letter = needed ? spelt[1] : spelt
+  const at = letter + octave
+  const current = acc.has(at) ? acc.get(at) : sig.marks.get(letter) || ""
   let mark = ""
-  if (sharp && acc.get(key) !== "^") {
-    mark = "^"
-    acc.set(key, "^")
-  } else if (!sharp && acc.get(key) === "^") {
-    mark = "="
-    acc.set(key, "")
+  if (needed !== current) {
+    mark = needed || "="
+    acc.set(at, needed)
   }
-  const at = octave >= 5 ? letter.toLowerCase() + "'".repeat(octave - 5) : letter + ",".repeat(Math.max(0, 4 - octave))
-  return mark + at
+  const name = octave >= 5 ? letter.toLowerCase() + "'".repeat(octave - 5) : letter + ",".repeat(Math.max(0, 4 - octave))
+  return mark + name
 }
 
 // One note or chord of a pitched line, `u` sixteenths long, tied on when `tie`. A chord
 // chart's symbol goes above its first note.
-function pitchedNote(hits, u, tie, acc, cont) {
+function pitchedNote(hits, u, tie, acc, cont, sig) {
   const notes = [...new Map(hits.map((h) => [h.midi, h])).values()].sort((a, b) => a.midi - b.midi)
   let deco = ""
   if (!cont) {
@@ -100,7 +99,7 @@ function pitchedNote(hits, u, tie, acc, cont) {
     const symbol = notes.find((n) => n.symbol)?.symbol
     if (symbol) deco += `"${symbol}"`
   }
-  const heads = notes.map((n) => abcPitch(n.midi, acc))
+  const heads = notes.map((n) => abcPitch(n.midi, acc, sig))
   return deco + (heads.length === 1 ? heads[0] : `[${heads.join("")}]`) + dur(u) + (tie ? "-" : "")
 }
 
@@ -160,11 +159,11 @@ function group(hits, ticks, mk) {
           const left = Math.min(Math.round(spanOf(h) / slot), n - i - k) - 1
           carry = left > 0 ? { hits: h, left } : null
           s += mk(h, nominal, left > 0 || (past && !left), cont)
-          out.push({ s, tick: (i + k) * slot, cont })
+          out.push({ s, tick: (i + k) * slot, cont, triplet: true })
         } else if (carry) {
           carry.left--
           s += mk(carry.hits, nominal, carry.left > 0, true)
-          out.push({ s, tick: (i + k) * slot, cont: true })
+          out.push({ s, tick: (i + k) * slot, cont: true, triplet: true })
           if (!carry.left) carry = null
         } else {
           s += "z" + dur(nominal)
@@ -181,7 +180,7 @@ function group(hits, ticks, mk) {
     const here = at(i)
     if (!here.length) {
       const d = longest(PLAIN, i, free)
-      out.push({ s: "z" + dur((d * slot) / 24) })
+      out.push({ s: "z" + dur((d * slot) / 24), len: (d * slot) / 24 })
       i += d
       continue
     }
@@ -194,7 +193,7 @@ function group(hits, ticks, mk) {
     while (left > 0) {
       const d = longest(LENGTHS, i, left)
       const tie = left - d > 0 || (past && left - d === 0)
-      out.push({ s: mk(here, (d * slot) / 24, tie, cont), tick: i * slot, cont })
+      out.push({ s: mk(here, (d * slot) / 24, tie, cont), tick: i * slot, cont, len: (d * slot) / 24, hits: here, tie })
       i += d
       left -= d
       cont = true
@@ -213,11 +212,52 @@ function carried(hits, ticks) {
   return null
 }
 
-// What a note is counted as, by where it falls in the beat: 1 e & a, and 1 & a for triplets.
-function countOf(tick) {
+// What a note is counted as, by where it falls in the beat: 1 e & a, and 1 & a for
+// triplets. A compound meter is counted in eighths: 1 & 2 & 3 &.
+function countOf(tick, block) {
+  if (isCompound(block)) {
+    const eighth = TPQ / 2
+    const n = Math.floor(tick / eighth) + 1
+    return { 0: String(n), 24: "&" }[tick % eighth] || "*"
+  }
   const beat = Math.floor(tick / TPQ) + 1
   const pos = tick % TPQ
   return { 0: String(beat), 24: "e", 48: "&", 72: "a", 32: "&", 64: "a" }[pos] || "*"
+}
+
+// A note's lengths that can cross the beats: a quarter, a dotted quarter, a half, a
+// dotted half and a whole, in sixteenths, and where in the bar each may start.
+const LONG = [4, 6, 8, 12, 16]
+const startsLong = (len, at) => (len === 16 ? at === 0 : len >= 8 ? at % 4 === 0 : at % 2 === 0)
+const midisOf = (hits) => hits.map((h) => h.midi).sort((a, b) => a - b).join(",")
+
+// A note written as tied pieces, one a beam group, becomes one note where its length is
+// one that may cross the beats from where it starts: a whole note on the one, not four
+// tied quarters. A note that doesn't start the bar still shows the bar's middle, as a
+// tie there, in a bar with an even number of beats (`mid`, in sixteenths, or null).
+// `pieces` are a bar's, with `at`, where each starts, in sixteenths.
+function joinLong(pieces, mid) {
+  const out = []
+  for (let i = 0; i < pieces.length; i++) {
+    let p = pieces[i]
+    if (p.hits && !p.triplet) {
+      const from = i
+      while (p.tie) {
+        const next = pieces[i + 1]
+        if (!next?.hits || next.triplet || !next.cont || midisOf(next.hits) !== midisOf(p.hits)) break
+        const len = p.len + next.len
+        if (!LONG.includes(len) || !startsLong(len, p.at)) break
+        if (mid != null && p.at > 0 && p.at < mid && p.at + len > mid) break
+        const s = p.s.replace(/(\d+\/2|\d+|\/)?-?$/, dur(len) + (next.tie ? "-" : ""))
+        p = { ...p, s, len, tie: next.tie }
+        i++
+      }
+      // A merged note is a quarter or longer, so nothing beams to it: a space follows it
+      if (i > from && pieces[i + 1]) pieces[i + 1] = { ...pieces[i + 1], first: true }
+    }
+    out.push(p)
+  }
+  return out
 }
 
 // A chord's note name, as the engine spells it (C#3), as a midi number.
@@ -229,14 +269,15 @@ function midiOf(name) {
 }
 
 // A pitched instrument's clef, and how far above its sound it's written: guitars and basses
-// an octave up, as their parts are, the rest where their notes sit.
+// an octave up, as their parts are, the rest where their notes sit: a bass clef when most
+// of them are below middle C.
 function clefFor(inst, midis) {
   const kind = inst.split(".")[0]
   if (kind === "guitar") return { clef: "treble-8", shift: 12, tab: true }
   if (kind === "bass") return { clef: "bass", shift: 12 }
   const sorted = [...midis].sort((a, b) => a - b)
   const mid = sorted.length ? sorted[Math.floor(sorted.length / 2)] : 60
-  return { clef: mid < 55 ? "bass" : "treble", shift: 0 }
+  return { clef: mid < 60 ? "bass" : "treble", shift: 0 }
 }
 
 // `block` is one of a parsed output's `blocks`. Returns its ABC and, for abcjs, which
@@ -294,7 +335,12 @@ export function sheetAbc(block, { counts = false } = {}) {
   }
   if (!voices.length) return { abc: "", tablature: [] }
 
-  const groups = beamGroups(block)
+  const groups = beatGroups(block)
+  // The middle of a bar of an even number of equal beats, in sixteenths: 4 over 4, 6 over 8
+  const even = groups.length % 2 === 0 && groups.every((g) => g === groups[0])
+  const mid = even ? block.barTicks / 2 / 24 : null
+  const key = parseKey(block.key) || parseKey("C")
+  const sig = { key, marks: keySignature(key) }
   const lines = []
   for (const v of voices) {
     const bars = []
@@ -304,26 +350,33 @@ export function sheetAbc(block, { counts = false } = {}) {
       let start = bar * block.barTicks
       const acc = new Map() // the bar's accidentals so far
       const mk =
-        v.kind === "drum" ? (h, u) => drumNote(h, u) : (h, u, tie, cont) => pitchedNote(h, u, tie, acc, cont)
-      const out = []
-      const syllables = []
+        v.kind === "drum" ? (h, u) => drumNote(h, u) : (h, u, tie, cont) => pitchedNote(h, u, tie, acc, cont, sig)
+      // The bar's pieces, each knowing where it starts in the bar (in sixteenths) and
+      // whether it starts a beam group, which a space in the ABC marks
+      const pieces = []
       for (const ticks of groups) {
         const inside = new Map()
         if (carry) inside.set(0, carry)
         for (const [t, h] of v.hits) if (t >= start && t < start + ticks) inside.set(t - start, h)
         carry = carried(inside, ticks)
-        const pieces = group(inside, ticks, mk)
-        out.push(pieces.map((x) => x.s).join(""))
-        for (const x of pieces) {
-          if (x.tick == null) continue
-          syllables.push(x.cont ? "*" : countOf(start - bar * block.barTicks + x.tick))
-        }
+        const from = start - bar * block.barTicks
+        group(inside, ticks, mk).forEach((x, i) =>
+          pieces.push({ ...x, at: x.tick == null ? null : (from + x.tick) / 24, first: i === 0 }),
+        )
         start += ticks
       }
-      bars.push(out.join(" "))
-      said.push(syllables.join(" "))
+      const written = v.kind === "pitched" ? joinLong(pieces, mid) : pieces
+      bars.push(written.map((x, i) => (i && x.first ? " " : "") + x.s).join(""))
+      said.push(
+        pieces
+          .filter((x) => x.at != null)
+          .map((x) => (x.cont ? "*" : countOf(x.at * 24, block)))
+          .join(" "),
+      )
     }
-    lines.push(`[V:${v.id}] ${bars.join(" | ")} |`)
+    // A percussion staff has no key signature, so a key with one is turned off there
+    const none = v.kind === "drum" && key.sharps ? "[K:none] " : ""
+    lines.push(`[V:${v.id}] ${none}${bars.join(" | ")} |`)
     if (v.counts) lines.push(`w: ${said.join(" | ")} |`)
   }
 
@@ -338,7 +391,7 @@ export function sheetAbc(block, { counts = false } = {}) {
     "L:1/16",
     `M:${count}/${block.unit}`,
     `Q:1/4=${block.tempo}`,
-    "K:C",
+    `K:${abcKey(key)}`,
     `%%score ${score.join(" ")}`,
     ...voices.map(
       (v) =>

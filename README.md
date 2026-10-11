@@ -95,6 +95,10 @@ play 6 bars {
   <img src="docs/images/one-bar-only.svg" width="820" alt="A groove whose lines repeat in both bars, with a bar 2 block that adds a ghost-note burst, an open hi-hat and a pedal close in bar 2 only">
 </p>
 
+## From an assistant
+
+composer-nb is an [MCP](https://modelcontextprotocol.io) server too, so Claude, Cursor or any assistant that speaks MCP can write a cell, check it against the parser, draw the sheet and hand you a link that plays. In Claude, add a custom connector with the URL `https://composer-nb.vercel.app/mcp`; elsewhere, run it with `npx -y composer-nb-mcp`. See [Assistants](https://pkhambat.mintlify.site/assistants) in the docs.
+
 ## In Jupyter
 
 ```bash
@@ -113,6 +117,7 @@ Then start a cell with `%%music`. Each `play` gives a player, a waveform, a grid
 | ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `dsl/`        | The language. `dsl/js/` has the parser, chord builder and audio renderer. `dsl/python/` is the [`composer-nb`](dsl/README.md) Python package, which plays the language in Jupyter notebooks. `dsl/js/music.js` is the `composer-nb` npm package, which plays it in Observable notebooks and web pages. |
 | `playground/` | A notebook-style web app for writing the language and hearing it. It uses `dsl/` as a package, so both always run the same parser.                                                                                                                                                                     |
+| `mcp/`        | The [`composer-nb-mcp`](mcp/README.md) package: the language as an MCP server, for assistants. `api/` serves it on Vercel at `/mcp`, with the sheet and MIDI of a cell at `/api/sheet` and `/api/midi`.                                                                                                |
 | `docs/`       | The [docs site](https://pkhambat.mintlify.site): `.mdx` pages and `docs.json`, built by [Mintlify](https://mintlify.com). Also the images in these READMEs.                                                                                                                                            |
 
 ## Working on it
@@ -122,7 +127,8 @@ npm install     # installs both folders (npm workspaces)
 npm run dev     # playground at http://localhost:5173
 npm test        # language tests
 npm run lint
-npm run build   # builds the notebook widget, the npm bundle and the playground
+npm run build   # builds the notebook widget, the npm bundle, the MCP server's reference and the playground
+npm run mcp     # the MCP server over stdio; npm run mcp -- --http 3333 serves it at localhost:3333/mcp
 npm run docs    # docs site preview at http://localhost:3000
 ```
 
@@ -153,6 +159,10 @@ The player is also an npm package, [`composer-nb`](https://www.npmjs.com/package
 
 1. Bump `version` in `dsl/package.json`.
 2. Run `npm publish -w dsl`. It builds the bundle first, and asks you to sign in with your passkey in the browser.
+
+## Releasing the MCP server
+
+The server is the npm package [`composer-nb-mcp`](https://www.npmjs.com/package/composer-nb-mcp), published by hand like the player: bump `version` in `mcp/package.json` and run `npm publish -w mcp`. Its `composer-nb` dependency has to be a published version, so release the player first when the language changed. The hosted one at composer-nb.vercel.app/mcp deploys with the playground.
 
 ## Releasing the docs
 
