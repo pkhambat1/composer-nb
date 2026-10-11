@@ -224,6 +224,7 @@
   overflow: hidden;
 }
 .cnb-staff svg {
+  overflow: visible;
   display: block;
   max-width: 100%;
 }

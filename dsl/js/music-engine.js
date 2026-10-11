@@ -29,6 +29,11 @@ export function parseChain(sources) {
 
 // Measured to match the clean electric guitar above 150 Hz.
 const MUTED_LEVEL = 6.5
+// The sampled instruments, apart from the piano, come from one soundfont library.
+const SOUNDFONTS = "https://gleitz.github.io/midi-js-soundfonts/MusyngKite/"
+// A sampler's notes, spread over the range an instrument plays in: the rest are pitched
+// from the nearest one.
+const SPREAD = ["C2", "E2", "G2", "C3", "E3", "G3", "C4", "E4", "G4", "C5", "E5", "G5", "C6"]
 
 function makeSynth(T, kind) {
   if (kind === "piano") {
@@ -60,14 +65,12 @@ function makeSynth(T, kind) {
     return s
   }
   if (kind === "piano.electric") {
-    const s = new T.PolySynth(T.FMSynth, {
-      harmonicity: 3,
-      modulationIndex: 10,
-      envelope: { attack: 0.005, decay: 0.3, sustain: 0.2, release: 1.5 },
-      modulation: { type: "sine" },
-      modulationEnvelope: { attack: 0.01, decay: 0.5, sustain: 0.1, release: 0.5 },
+    const s = new T.Sampler({
+      urls: Object.fromEntries(SPREAD.map((n) => [n, n + ".mp3"])),
+      release: 1.2,
+      baseUrl: SOUNDFONTS + "electric_piano_1-mp3/",
     })
-    s.volume.value = -10
+    s.volume.value = 3
     return s
   }
   if (kind === "pad") {
@@ -92,7 +95,7 @@ function makeSynth(T, kind) {
         C5: "C5.mp3",
       },
       release: 2.4,
-      baseUrl: "https://gleitz.github.io/midi-js-soundfonts/MusyngKite/acoustic_guitar_steel-mp3/",
+      baseUrl: SOUNDFONTS + "acoustic_guitar_steel-mp3/",
     })
     s.volume.value = -2
     return s
@@ -128,7 +131,7 @@ function makeSynth(T, kind) {
         E5: "E5.mp3",
       },
       release: 1.2,
-      baseUrl: "https://gleitz.github.io/midi-js-soundfonts/MusyngKite/electric_guitar_clean-mp3/",
+      baseUrl: SOUNDFONTS + "electric_guitar_clean-mp3/",
     })
     // These samples are recorded quietly. This sits a riff under the snare and cymbals
     // of a drum groove (compared above 150 Hz, where the kick doesn't hide them).
@@ -136,28 +139,25 @@ function makeSynth(T, kind) {
     return s
   }
   if (kind === "bass") {
-    const s = new T.PolySynth(T.MonoSynth, {
-      oscillator: { type: "sawtooth" },
-      filter: { Q: 2, type: "lowpass", rolloff: -24 },
-      envelope: { attack: 0.01, decay: 0.3, sustain: 0.4, release: 0.8 },
-      filterEnvelope: {
-        attack: 0.01,
-        decay: 0.2,
-        sustain: 0.3,
-        release: 0.6,
-        baseFrequency: 80,
-        octaves: 2.6,
-      },
+    // A fingered electric bass, sampled
+    const s = new T.Sampler({
+      urls: Object.fromEntries(
+        ["E1", "A1", "D2", "G2", "C3", "E3", "A3", "C4", "G4"].map((n) => [n, n + ".mp3"]),
+      ),
+      release: 0.6,
+      baseUrl: SOUNDFONTS + "electric_bass_finger-mp3/",
     })
-    s.volume.value = -8
+    // Measured against the piano and the kit: a bass that sits under them, not on top
+    s.volume.value = -1
     return s
   }
   if (kind === "organ") {
-    const s = new T.PolySynth(T.Synth, {
-      oscillator: { type: "fatsine", count: 3, spread: 12 },
-      envelope: { attack: 0.02, decay: 0.0, sustain: 1.0, release: 0.4 },
+    const s = new T.Sampler({
+      urls: Object.fromEntries(SPREAD.map((n) => [n, n + ".mp3"])),
+      release: 0.15,
+      baseUrl: SOUNDFONTS + "drawbar_organ-mp3/",
     })
-    s.volume.value = -12
+    s.volume.value = 2
     return s
   }
   const s = new T.PolySynth(T.FMSynth, {

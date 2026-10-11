@@ -52,6 +52,7 @@ export async function sheetSvg(block, { counts = false, width = STAFF_WIDTH } = 
       paddingleft: PAD,
       paddingright: PAD,
       foregroundColor: "#000000",
+      format: { tablabelfont: "Helvetica 11" },
       ...(tablature.some((t) => t.instrument) && { tablature }),
     })
     const svg = el.querySelector("svg")
