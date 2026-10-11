@@ -40,7 +40,7 @@ function AddCellDropdown({ onAddCode, onAddText }) {
   )
 }
 
-export default function Toolbar({ onAddCode, onAddText, onRun, onRunAll, onStop, onDelete, kernelStatus }) {
+export default function Toolbar({ onAddCode, onAddText, onRunAll, onStop, kernelStatus }) {
   const Icon = (children, viewBox = "0 0 16 16") => (
     <svg width="14" height="14" viewBox={viewBox} fill="currentColor">
       {children}

@@ -18,6 +18,7 @@
     "directory": "dsl"
   },
   "author": "Pezanne Khambatta",
+  "license": "MIT",
   "type": "module",
   "main": "./dist/composer-nb.js",
   "exports": {

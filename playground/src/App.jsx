@@ -146,7 +146,7 @@ export default function App() {
         }
       }
     },
-    [cells, runCounter, updateCell, playback],
+    [cells, runCounter, updateCell, playback, setEditingId],
   )
 
   // --- Run queue: array queue with sequential processing ------------------
@@ -315,13 +315,11 @@ export default function App() {
                 "text",
               )
             }
-            onRun={() => selectedId && queuedRunCell(selectedId)}
             onRunAll={queuedRunAll}
             onStop={() => {
               playback.stopAll()
               stopAll()
             }}
-            onDelete={() => selectedId && deleteCell(selectedId)}
             kernelStatus={kernelStatus}
           />
           </div>
