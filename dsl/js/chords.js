@@ -49,7 +49,7 @@ export const MODE_SCALES = {
 const MODE_FIFTHS = { major: 0, ionian: 0, lydian: -1, mixolydian: 1, dorian: 2, minor: 3, aeolian: 3, phrygian: 4, locrian: 5 }
 const LETTER_FIFTHS = { F: -1, C: 0, G: 1, D: 2, A: 3, E: 4, B: 5 }
 const DEGREE = { i: 0, ii: 1, iii: 2, iv: 3, v: 4, vi: 5, vii: 6 }
-const ROMAN_RE = /^([#b]?)(VII|VI|IV|V|III|II|I|vii|vi|iv|v|iii|ii|i)([°oø]?)(.*)$/
+const ROMAN_RE = /^([#b]?)(VII|VI|IV|V|III|II|I|vii|vi|iv|v|iii|ii|i)(.*)$/
 
 // "C", "Am", "F#m", "Bb", "D dorian" → the key: its root, mode and scale, the sharps in its
 // signature (negative for flats) and whether its black keys are spelt with flats. null when
@@ -94,23 +94,23 @@ export function abcKey(key) {
 // Strict check: a numeral plus chord-suffix characters only, so words like "intro" or
 // "vibe" aren't mistaken for i and vi chords.
 const ROMAN_TOKEN_RE =
-  /^[#b]?(VII|VI|IV|V|III|II|I|vii|vi|iv|v|iii|ii|i)[°oø]?(?:maj|min|sus|add|dim|aug|M|m|b|#|\+|\d)*$/
+  /^[#b]?(VII|VI|IV|V|III|II|I|vii|vi|iv|v|iii|ii|i)(?:maj|min|sus|add|dim|aug|M|m|b|#|\+|\d)*$/
 
 export function isRoman(token) {
   return ROMAN_TOKEN_RE.test(token.split("/")[0])
 }
 
-// Case sets the quality: V is major and v minor; ° (or o) is diminished, ø half-diminished.
+// Case sets the third: V is major and v minor. What follows is the quality, written as it
+// is after a chord's root: V7, ii7, IVmaj7, viidim, viidim7, viim7b5.
 function romanToSymbol(main, key) {
   const m = ROMAN_RE.exec(main)
   if (!m) return null
-  const [, acc, numeral, mark, rest] = m
+  const [, acc, numeral, rest] = m
   const shift = acc === "#" ? 1 : acc === "b" ? -1 : 0
   const pc = (key.tonicPc + key.scale[DEGREE[numeral.toLowerCase()]] + shift + 12) % 12
   const names = acc === "b" || (!acc && key.flats) ? FLAT_NAMES : SHARP_NAMES
   let quality
-  if (mark === "ø") quality = "m7b5" + rest.replace(/^7/, "")
-  else if (mark) quality = rest.startsWith("7") ? "dim7" + rest.slice(1) : "dim" + rest
+  if (/^(dim|m7b5)/.test(rest)) quality = rest
   else if (numeral === numeral.toUpperCase() || rest.startsWith("sus")) quality = rest
   else quality = rest.startsWith("maj") ? "mMaj" + rest.slice(3) : "m" + rest
   return names[pc] + quality

@@ -158,7 +158,7 @@ export function createServer({ site = SITE } = {}) {
     {
       title: "Grooves and rudiments to start from",
       description:
-        "Searches the grooves library: transcriptions (Porcupine Tree in 7 and 9, Gavin Harrison's paradiddle challenge, a 3 over 4 over 5 polyrhythm, Polyrhythmics), harmony cells (a ii–V–I with a walking bass, dorian, mixolydian and lydian vamps, a 12-bar blues, a harmonic-minor cadence) and the rudiments with their stickings. Each comes as a cell to start from, with its page and a link that plays it. Search by words (paradiddle, dorian, blues, 7/8, guitar) or leave the query empty for the list.",
+        "Searches the grooves library: transcriptions (Porcupine Tree in 7 and 9, Gavin Harrison's paradiddle challenge, a 3 over 4 over 5 polyrhythm, Polyrhythmics), harmony cells (a ii–V–I with a walking bass, dorian, mixolydian and lydian vamps, a 12-bar blues, a harmonic-minor cadence, a phrygian riff, a lydian groove in 15/16) and the rudiments with their stickings. Each comes as a cell to start from, with its page and a link that plays it. Search by words (paradiddle, dorian, blues, 7/8, guitar) or leave the query empty for the list.",
       inputSchema: {
         query: z.string().optional().describe("Words to look for in the titles, the notes and the code"),
       },

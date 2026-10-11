@@ -35,13 +35,13 @@ A symbol is a root, a quality and an optional bass note: `C`, `Am`, `F#m`, `Bb7`
 
 ## Roman numerals
 
-Uppercase is a major chord and lowercase a minor one, on that degree of the current [`key`](/language/settings#key). Degrees come from the key's scale: the major scale in a major key, the natural minor in a minor key, and the mode's scale in a mode, so `II` in `E phrygian` is F. A `b` or `#` in front moves the root a semitone. After the numeral, `°` or `o` makes it diminished, `ø` half-diminished, and any quality can follow: `V7`, `ii7`.
+Uppercase is a major chord and lowercase a minor one, on that degree of the current [`key`](/language/settings#key). Degrees come from the key's scale: the major scale in a major key, the natural minor in a minor key, and the mode's scale in a mode, so `II` in `E phrygian` is F. A `b` or `#` in front moves the root a semitone. The case gives the third, and a quality follows the numeral as it follows a chord's root: `V7`, `ii7`, `IVmaj7`, `viidim`, `viidim7`, `viim7b5`.
 
 <Cell>
 
 ```composer-nb
 key C
-play piano: chords I vi|IV V7|bVII IV|ii7 vii°
+play piano: chords I vi|IV V7|bVII IV|ii7 viidim
 ```
 
 </Cell>

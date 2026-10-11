@@ -11,7 +11,7 @@
 import { KEYWORDS, LANES, PARTS, PITCHED, SETTINGS, SOUNDS, TYPES, UNITS } from "./language.js"
 import { isRoman, parseKey } from "./chords.js"
 
-const ROMAN_RE = /^([#b])?(VII|VI|IV|V|III|II|I|vii|vi|iv|v|iii|ii|i)([°oø]?)(.*)$/
+const ROMAN_RE = /^([#b])?(VII|VI|IV|V|III|II|I|vii|vi|iv|v|iii|ii|i)(.*)$/
 const STEPS_RE = /^[-x^~d]+$/
 // A beat, with how it's hit in front when that isn't a plain hit: 4, 2e, ^4, ~3a, d3&
 const BEAT_RE = /^[\^~d]?\d+(e|&|a)?$/
@@ -36,8 +36,7 @@ function chordToken(token) {
   if (rm) {
     const lower = rm[2] === rm[2].toLowerCase()
     parts.push(part("tk-root " + (lower ? "tk-root-min" : "tk-root-maj"), (rm[1] || "") + rm[2]))
-    if (rm[3]) parts.push(part("tk-quality", rm[3]))
-    rest = rm[4] || ""
+    rest = rm[3] || ""
   } else {
     const am = /^([A-G][b#]?)(.*)$/.exec(core)
     if (!am) return [part("tk-error", token)]
@@ -47,7 +46,7 @@ function chordToken(token) {
   let i = 0
   while (i < rest.length) {
     const r = rest.slice(i)
-    const q = /^(maj|min|sus2|sus4|sus|dim|aug|m|M|°|o|\+|ø|Δ)/.exec(r)
+    const q = /^(maj|min|sus2|sus4|sus|dim|aug|m|M|\+)/.exec(r)
     const e = q ? null : /^(add9|b5|#5|b9|#9|#11|b13|13|11|9|7|6|2|4)/.exec(r)
     const m = q || e
     if (!m) {
