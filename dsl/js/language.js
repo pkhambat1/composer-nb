@@ -520,6 +520,15 @@ function applySetting(name, value, ln, state, err) {
 }
 
 const CHORD_MARKS = ["|", "-", "_", "%"]
+// vii°, viiø: a diminished numeral is written with dim, as a chord is
+const DIM_MARK = /^([#b]?(?:VII|VI|IV|V|III|II|I|vii|vi|iv|v|iii|ii|i))([°ø])(.*)$/
+function dimMarkProblem(tok) {
+  const m = DIM_MARK.exec(tok)
+  if (!m) return null
+  const [, numeral, mark, rest] = m
+  const written = mark === "ø" ? `${numeral}m7b5` : `${numeral}dim${rest}`
+  return `"${tok}": a diminished numeral takes dim, as a chord does: ${written} (viidim, viidim7, or viim7b5 for half-diminished)`
+}
 
 // steps name = ^-x-, chords name = Am E7|G D: steps or chords to hand to an instrument.
 // What's written has to be the type that's declared.
@@ -636,7 +645,7 @@ function defineWord(type, name, value, ln, state, err, blocks = null) {
         ln,
         isStepRun(t)
           ? `"${t}" is steps, and ${name} is chords. For steps, write steps ${name} = ${value}`
-          : `"${t}" isn't a chord I know`,
+          : dimMarkProblem(t) || `"${t}" isn't a chord I know`,
       )
     }
   }
@@ -1010,9 +1019,10 @@ function chordSlot(tok, part, st, key, err) {
   if (!chord) {
     err(
       part.ln,
-      drawsNotes(tok)
+      dimMarkProblem(tok) ||
+        (drawsNotes(tok)
         ? `"${tok}" is notes, and this line says chords. A line of notes has no word in front: ${part.name}: ${spaceNotes(tok)}`
-        : `"${tok}" isn't a chord I know`,
+        : `"${tok}" isn't a chord I know`),
     )
     return null
   }

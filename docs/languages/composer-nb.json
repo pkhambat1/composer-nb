@@ -66,7 +66,7 @@
     },
     "numeral": {
       "name": "string.unquoted.chord.composer-nb",
-      "match": "(?<![A-Za-z0-9#])[#b]?(VII|VI|IV|V|III|II|I|vii|vi|iv|v|iii|ii|i)[°oø]?(maj|min|sus|add|dim|aug|M|m|b|#|\\+|\\d)*(?![A-Za-z0-9])"
+      "match": "(?<![A-Za-z0-9#])[#b]?(VII|VI|IV|V|III|II|I|vii|vi|iv|v|iii|ii|i)(maj|min|sus|add|dim|aug|M|m|b|#|\\+|\\d)*(?![A-Za-z0-9])"
     },
     "chord": {
       "name": "string.unquoted.chord.composer-nb",

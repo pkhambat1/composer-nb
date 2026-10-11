@@ -1644,7 +1644,7 @@ describe("chords", () => {
   })
 
   it("read Roman numerals in the key", () => {
-    expect(labels("key C\nplay piano: chords I vi|IV V7|bVII IV|ii7 vii°")).toEqual([
+    expect(labels("key C\nplay piano: chords I vi|IV V7|bVII IV|ii7 viidim")).toEqual([
       "C",
       "Am",
       "F",
@@ -1970,11 +1970,11 @@ describe("key", () => {
   it("reads a major key as its letter, a minor key with m, and a mode by name", () => {
     expect(labels("key Bb\nplay piano: chords I IV V vi")).toBe("Bb Eb F Gm")
     expect(labels("key F#m\nplay piano: chords i iv V7 VI")).toBe("F#m Bm C#7 D")
-    expect(labels("key D dorian\nplay piano: chords i ii|III IV|v vi°|VII")).toBe("Dm Em F G Am Bdim C")
+    expect(labels("key D dorian\nplay piano: chords i ii|III IV|v vidim|VII")).toBe("Dm Em F G Am Bdim C")
     expect(labels("key G mixolydian\nplay piano: chords I VII|IV v")).toBe("G F C Dm")
     expect(labels("key E phrygian\nplay piano: chords i II|III")).toBe("Em F G")
     expect(labels("key F lydian\nplay piano: chords I II")).toBe("F G")
-    expect(labels("key B locrian\nplay piano: chords i° II")).toBe("Bdim C")
+    expect(labels("key B locrian\nplay piano: chords idim II")).toBe("Bdim C")
     expect(labels("key A aeolian\nplay piano: chords i VII")).toBe("Am G")
   })
   it("spells a flat key's chords with flats, and a sharp key's with sharps", () => {
@@ -1997,5 +1997,39 @@ describe("key", () => {
     expect(p.fromAbove).toEqual([])
     const after = parseCell("play kick: x---", p.state)
     expect(after.fromAbove).toEqual(["key D dorian"])
+  })
+})
+
+describe("numerals' qualities", () => {
+  const labels = (src) => {
+    const p = parseCell(src, initialState())
+    expect(p.errors).toEqual([])
+    return p.outputs[0].chords.map((e) => e.chord.label).join(" ")
+  }
+  it("follow the numeral as a chord's follow its root", () => {
+    expect(labels("play piano: chords viidim viidim7|viim7b5 IVmaj7")).toBe("Bdim Bdim7 Bm7b5 Fmaj7")
+    expect(labels("play piano: chords ii7 iimaj7|Vsus4 V7")).toBe("Dm7 DmMaj7 Gsus4 G7")
+  })
+  it("are typed, not drawn: ° and ø say what to write", () => {
+    const errs = (src) => parseCell(src, initialState()).errors.map((e) => e.msg)
+    expect(errs("play piano: chords vii°")[0]).toContain("viidim (viidim, viidim7, or viim7b5")
+    expect(errs("play piano: chords vii°7")[0]).toContain("viidim7")
+    expect(errs("play piano: chords viiø")[0]).toContain("viim7b5")
+    expect(errs("chords turn = ii vii°")[0]).toContain("viidim")
+    expect(highlightMusic("play piano: chords vii°")[0].some((p) => p.c === "tk-error")).toBe(true)
+  })
+})
+
+describe("the grooves library", () => {
+  it("holds cells that parse, in three sections", async () => {
+    const { GROOVES, SECTIONS, searchGrooves } = await import("../../js/grooves.js")
+    expect(SECTIONS).toEqual(["Transcriptions", "Harmony", "Rudiments"])
+    for (const g of GROOVES) {
+      const p = parseCell(g.source, initialState())
+      expect(p.errors, g.title).toEqual([])
+      expect(p.outputs.length, g.title).toBeGreaterThan(0)
+    }
+    expect(searchGrooves("phrygian").map((g) => g.title)[0]).toBe("Phrygian riff")
+    expect(searchGrooves("lydian").map((g) => g.title)).toContain("Lydian groove in fifteen")
   })
 })

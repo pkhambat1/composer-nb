@@ -265,6 +265,62 @@ pattern cadence = {
 play cadence`,
   },
   {
+    section: "Harmony",
+    title: "Phrygian riff",
+    byline: "E phrygian, palm muted",
+    body: "Phrygian is minor with a flat second: the F a half step above the E. The riff stays on the low string and the kick doubles every eighth.",
+    link: null,
+    source: `key E phrygian
+tempo 140
+octave 2
+guitar.electric muted
+
+pattern riff = {
+  guitar.electric: E-E-F-E- E-E-G-F-|E-E-F-E- B-A-G-F-
+  kick: x-x-x-x- x-x-x-x-
+  snare: ---- x--- ---- x---
+  hat: x-
+}
+
+play 2 bars riff`,
+  },
+  {
+    section: "Harmony",
+    title: "Lydian groove in fifteen",
+    byline: "G lydian, in Gavin Harrison's territory",
+    body: "A bar of 4+4+4+3 sixteenths. The ride bell plays every three against the groups, the backbeat sits on 2 and 4 with ghost notes between, the feet mark the quarters, and `bar 2` opens the hi-hat. The riff is G lydian: the C# on the and of 1, and the pad's I to II, a pair of major chords only lydian has.",
+    link: null,
+    source: `time 4+4+4+3 over 16
+tempo 112
+key G lydian
+octave 2
+guitar.electric muted
+
+pattern groove = {
+  ride.bell: x--x--x--x--x--
+  snare: ---- x--- ---- x--
+  snare.ghost: -x-- --x- -x-- ---
+  kick: x--- --x- x--- -x-
+  hat.pedal: 1 2 3 4
+  bar 2 {
+    hat.open: ^3&
+    snare.ghost: d4
+  }
+}
+
+pattern riff = {
+  guitar.electric: G-G- C#3-G- D3--- B-A|G-G- C#3-G- D3-B- A--
+  bass: G2--------------|A2--------------
+  pad: chords I|II
+}
+
+play 4 bars {
+  crash: 1
+  groove
+  riff
+}`,
+  },
+  {
     section: "Rudiments",
     title: "Single stroke roll",
     byline: "A rudiment",
