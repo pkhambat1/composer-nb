@@ -109,12 +109,12 @@ describe("drum sheet music", () => {
     expect(voices("play {\n  kick: x---\n  hat.pedal: --x-\n}")).toEqual(["[V:F] F2!style=x!D2 z4 z4 z4 |"])
   })
 
-  it("writes the sticking under the hands' notes", () => {
+  it("writes the sticking above the hands' notes", () => {
     expect(voices("play {\n  snare: xxxx\n  sticking: RLRR\n}")).toEqual([
-      '[V:H] "_R"c"_L"c"_R"c"_R"c z4 z4 z4 |',
+      '[V:H] "^R"c"^L"c"^R"c"^R"c z4 z4 z4 |',
     ])
     expect(voices("play {\n  hat: x-x-\n  kick: x---\n  sticking: R-L-\n}")).toEqual([
-      `[V:H] "_R"${X}2"_L"${X}2 z4 z4 z4 |`,
+      `[V:H] "^R"${X}2"^L"${X}2 z4 z4 z4 |`,
       "[V:F] F4 z4 z4 z4 |",
     ])
   })

@@ -63,7 +63,7 @@ function drumNote(hits, u) {
   if (notes.some((n) => n.span)) deco += "!/!"
   if (notes.every((n) => n.ghost)) deco += GHOST
   const hand = notes.find((n) => n.hand)?.hand
-  if (hand) deco += `"_${hand}"` // the sticking, under the note
+  if (hand) deco += `"^${hand}"` // the sticking, above the staff, clear of the feet's rests
   const heads = notes.map((n) => (n.at.head ? `!style=${n.at.head}!` : "") + n.at.pitch)
   return deco + (heads.length === 1 ? heads[0] : `[${heads.join("")}]`) + dur(u)
 }

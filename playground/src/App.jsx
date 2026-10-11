@@ -110,7 +110,8 @@ export default function App() {
         setEditingId((e) => (e === id ? null : e))
         return
       }
-      playback.stopCell(id)
+      // A cell that is playing keeps playing from where it was once its new audio is
+      // ready, so a groove can be edited while it runs
       setKernelStatus("busy")
       setActiveCellId(id)
       updateCell(id, { status: "running", output: null })
@@ -126,6 +127,7 @@ export default function App() {
         if (abortRef.current !== runId) return
         if (parsed.errors && parsed.errors.length > 0) {
           const lines = parsed.errors.map((e) => `Line ${e.line}: ${e.msg}`).join("\n")
+          playback.stopCell(id)
           updateCell(id, { status: "idle", output: { kind: "error", error: lines } })
           return
         }
@@ -133,6 +135,7 @@ export default function App() {
           const message =
             "Nothing plays in this cell. Its settings and names carry on to the cells below. " +
             "To hear something, add a play, such as play piano: chords C Am|F G."
+          playback.stopCell(id)
           setRunCounter(runCounter + 1)
           updateCell(id, { status: "idle", runCount: runCounter + 1, output: { kind: "info", message } })
           return
@@ -158,6 +161,7 @@ export default function App() {
         if (play) playback.playCell(id)
       } catch (e) {
         if (abortRef.current !== runId) return
+        playback.stopCell(id)
         updateCell(id, {
           status: "idle",
           output: { kind: "error", error: String((e && e.message) || e) },

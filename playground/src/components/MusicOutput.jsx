@@ -247,6 +247,8 @@ export default function MusicOutput({
   const [rate, setRate] = React.useState(1)
   const [loop, setLoop] = React.useState(false)
   const loopRef = React.useRef(loop)
+  // Where playback was when the cell was run again, so the new audio carries on from there
+  const resumeRef = React.useRef(null)
 
   React.useEffect(() => {
     onPlaybackFinishedRef.current = onPlaybackFinished
@@ -342,6 +344,12 @@ export default function MusicOutput({
 
     ws.on("ready", () => {
       if (aborted) return
+      // Edited while playing: pick up where it was, as far as the new audio goes
+      if (resumeRef.current != null) {
+        const dur = ws.getDuration()
+        if (dur > 0) ws.seekTo(Math.min(resumeRef.current, dur - 0.01) / dur)
+        resumeRef.current = null
+      }
       setReady(true)
     })
     ws.on("finish", onFinish)
@@ -353,6 +361,7 @@ export default function MusicOutput({
       container.removeEventListener("pointerdown", onPointerDown)
       window.removeEventListener("pointerup", onPointerUp)
       ws.un("finish", onFinish)
+      if (ws.isPlaying()) resumeRef.current = ws.getCurrentTime()
       ws.destroy()
       wsRef.current = null
       setReady(false)
