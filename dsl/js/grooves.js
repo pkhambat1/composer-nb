@@ -265,6 +265,161 @@ pattern cadence = {
 play cadence`,
   },
   {
+    section: "Harmony",
+    title: "ii–V–I in B flat",
+    byline: "A jazz turnaround, with a walking bass",
+    body: "The three chords jazz is made of, in Bb: ii7 V7 Imaj7 is Cm7 F7 Bbmaj7. The bass walks chord tones on the beats and approaches the one from a half step below. `swing 62` swings the ride.",
+    link: null,
+    source: `key Bb
+tempo 132
+swing 62
+
+pattern turnaround = {
+  piano: chords ii7 V7|Imaj7 -
+  bass: C2--- Eb2--- G2--- A2---|Bb2--- F2--- D2--- F2---
+  ride: x-x- x-x- x-x- x-x-
+  hat.pedal: 2 4
+  kick: 1 3
+}
+
+play 2 bars turnaround`,
+  },
+  {
+    section: "Harmony",
+    title: "Dorian vamp",
+    byline: "D dorian",
+    body: "Dorian is minor with a major sixth. The B natural in the piano's second bar and the major IV under it are what give it away: one scale, two chords, room to play.",
+    link: null,
+    source: `key D dorian
+tempo 120
+
+pattern vamp = {
+  piano.electric: {
+    chords i - IV -|i - IV VII
+    D5---F5---E5---D5---|A4-------B4---C5---
+  }
+  bass: D2------- G2-------|D2------- C2-------
+  hat: x-
+  kick: x--- --x- x--- ----
+  snare: ---- x--- ---- x---
+}
+
+play 2 bars vamp`,
+  },
+  {
+    section: "Harmony",
+    title: "Lydian float",
+    byline: "F lydian",
+    body: "Lydian is major with a raised fourth: the B natural in the piano, and the II chord, G major, that no major key has. A pad holds each chord for the bar.",
+    link: null,
+    source: `key F lydian
+tempo 72
+
+pattern float = {
+  pad: chords I - - -|II - - -
+  piano: F4--- A4--- C5--- B4---|G4--- B4--- D5--- E5---
+  ride: x---
+  kick: 1
+}
+
+play 2 bars float`,
+  },
+  {
+    section: "Harmony",
+    title: "Phrygian riff",
+    byline: "E phrygian, palm muted",
+    body: "Phrygian is minor with a flat second: the F a half step above the E. The riff stays on the low string and the kick doubles every eighth.",
+    link: null,
+    source: `key E phrygian
+tempo 140
+octave 2
+guitar.electric muted
+
+pattern riff = {
+  guitar.electric: E-E-F-E- E-E-G-F-|E-E-F-E- B-A-G-F-
+  kick: x-x-x-x- x-x-x-x-
+  snare: ---- x--- ---- x---
+  hat: x-
+}
+
+play 2 bars riff`,
+  },
+  {
+    section: "Harmony",
+    title: "Mixolydian shuffle",
+    byline: "A mixolydian",
+    body: "Mixolydian is major with a flat seventh: the G natural in the bass and the VII chord, G major. A shuffle, so `swing 58`, with the kick on 3 and the and of 3.",
+    link: null,
+    source: `key A mixolydian
+tempo 100
+swing 58
+
+pattern shuffle = {
+  organ: chords I - VII -|I - IV VII
+  bass: A2--- A2--- G2--- G2---|A2--- A2--- D2--- G2---
+  hat: x-x- x-x- x-x- x-x-
+  snare: 2 4
+  kick: 1 3 3&
+}
+
+play 2 bars shuffle`,
+  },
+  {
+    section: "Harmony",
+    title: "Andalusian cadence",
+    byline: "A minor: i VII VI V",
+    body: "The flamenco descent, Am G F E. The last chord is written as an uppercase V, so it comes out major, with the G# the natural minor doesn't have.",
+    link: null,
+    source: `key Am
+tempo 96
+
+pattern cadence = {
+  guitar: chords i VII|VI V
+  bass: A2------- G2-------|F2------- E2-------
+  hat: x-x- x-x- x-x- x-x-
+  snare: 2 4
+  kick: 1 3
+}
+
+play 2 bars cadence`,
+  },
+  {
+    section: "Harmony",
+    title: "Lydian groove in fifteen",
+    byline: "G lydian, in Gavin Harrison's territory",
+    body: "A bar of 4+4+4+3 sixteenths. The ride bell plays every three against the groups, the backbeat sits on 2 and 4 with ghost notes between, the feet mark the quarters, and `bar 2` opens the hi-hat. The riff is G lydian: the C# on the and of 1, and the pad's I to II, a pair of major chords only lydian has.",
+    link: null,
+    source: `time 4+4+4+3 over 16
+tempo 112
+key G lydian
+octave 2
+guitar.electric muted
+
+pattern groove = {
+  ride.bell: x--x--x--x--x--
+  snare: ---- x--- ---- x--
+  snare.ghost: -x-- --x- -x-- ---
+  kick: x--- --x- x--- -x-
+  hat.pedal: 1 2 3 4
+  bar 2 {
+    hat.open: ^3&
+    snare.ghost: d4
+  }
+}
+
+pattern riff = {
+  guitar.electric: G-G- C#3-G- D3--- B-A|G-G- C#3-G- D3-B- A--
+  bass: G2--------------|A2--------------
+  pad: chords I|II
+}
+
+play 4 bars {
+  crash: 1
+  groove
+  riff
+}`,
+  },
+  {
     section: "Rudiments",
     title: "Single stroke roll",
     byline: "A rudiment",

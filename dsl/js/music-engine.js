@@ -3,7 +3,7 @@
 import * as Tone from "tone"
 import * as ChordLookup from "./chord-lookup.js"
 import * as Drums from "./drums.js"
-import { midiToName } from "./chords.js"
+import { midiToName, spellLike } from "./chords.js"
 import { TPQ, initialState, parseCell } from "./language.js"
 import { midiFile } from "./midi.js"
 
@@ -227,9 +227,9 @@ async function renderNow(parsed) {
         ev.chord = {
           ...ev.chord,
           notesMidi: voicing,
-          noteNames: voicing.map(midiToName),
+          noteNames: voicing.map((m) => spellLike(ev.chord, m)),
           bassMidi: voicing[0],
-          bassName: midiToName(voicing[0]),
+          bassName: spellLike(ev.chord, voicing[0]),
           fromGuitarPosition: true,
         }
       }

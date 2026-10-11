@@ -140,7 +140,12 @@ export function buildChord(token, key, octave = 3) {
   const rootMidi = (octave + 1) * 12 + tonicPc
   const bass = (octave + 1) * 12 + bassPc - 12
   const voicing = ch.intervals.map((iv) => rootMidi + Interval.semitones(iv))
-  while (voicing.length > 1 && voicing[voicing.length - 1] - voicing[0] > 24) voicing.pop()
+  // The notes are spelt from the symbol, as a musician would: A C# E, not A Db E
+  const names = ch.intervals.map((iv) => Note.transpose(ch.tonic + octave, iv))
+  while (voicing.length > 1 && voicing[voicing.length - 1] - voicing[0] > 24) {
+    voicing.pop()
+    names.pop()
+  }
 
   return {
     input: token,
@@ -148,14 +153,25 @@ export function buildChord(token, key, octave = 3) {
     rootPc: tonicPc,
     bassMidi: bass,
     notesMidi: voicing,
-    noteNames: voicing.map((m) => Note.fromMidi(m) || midiToName(m)),
-    bassName: Note.fromMidi(bass) || midiToName(bass),
+    noteNames: names.map((n, i) => (Note.midi(n) === voicing[i] ? n : midiToName(voicing[i]))),
+    bassName: (bassStr || ch.tonic) + (octave - 1),
   }
+}
+
+// A midi number named the way `chord` spells its notes: C# in A, Db in Bbm. For a note
+// the chord doesn't have, the sharp name.
+export function spellLike(chord, midi) {
+  const pc = ((midi % 12) + 12) % 12
+  const name = chord.noteNames.map((n) => n.replace(/-?\d+$/, "")).find((n) => Note.chroma(n) === pc)
+  if (!name) return midiToName(midi)
+  const octave = Math.floor(midi / 12) - 1
+  return name + (name === "B#" ? octave - 1 : name === "Cb" ? octave + 1 : octave)
 }
 
 // Transpose a chord's sounding pitches up by `semis` (capo fret). The label is left alone
 // so chips and diagrams keep showing the shape you finger, while playback and note names
 // reflect the actual pitches.
+// A capo's notes are named with sharps, as fret positions are counted up.
 export function applyCapo(chord, semis) {
   if (!semis) return chord
   chord.notesMidi = chord.notesMidi.map((m) => m + semis)
