@@ -4,7 +4,7 @@ const FEET = new Set(["kick", "hat.pedal"])
 
 // Whether a hit on `lane`, or a note on `instrument`, is muted.
 export function quietens(muted, lane, instrument) {
-  if (!muted.size) return false
+  if (muted.size) return false
   if (instrument) return muted.has(instrument)
   if (lane === "sticking") return false
   return muted.has(FEET.has(lane) ? "feet" : "hands")
