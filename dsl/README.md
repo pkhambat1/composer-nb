@@ -295,7 +295,7 @@ pattern groove = {
 play hit groove groove hit
 ```
 
-Inside braces, a pattern's name on a line of its own plays next to the lines beside it. A pattern without a name plays wherever a name could: `play hit { snare: xxxx } hit`.
+Inside braces, a pattern's name on a line of its own plays next to the lines beside it. A pattern without a name plays wherever a name could, joined to its neighbours by `then`, on the same line as the `}` before it: `play hit then { snare: xxxx } then hit`. Blocks on lines of their own play together, and `} {` on one line is an error.
 
 ### Repeating and lengths
 

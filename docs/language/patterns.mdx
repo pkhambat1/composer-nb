@@ -32,7 +32,7 @@ A length in front sets the duration instead: `pattern groove = 4 bars { ... }`. 
 
 ## Sequences
 
-Patterns or blocks in a row play one after another. See [Blocks](/language/overview#blocks) for how a block's layout decides this. A length in front of a name or a bracketed group repeats it for that long; in front of braces it is the block's own length, which comes to the same thing, and is what a block of lines ending in `...` needs.
+Names in a row play one after another. A block or a bracketed group in a row is joined to its neighbours by `then`, on the same line as the `}` or `)` before it. See [Blocks](/language/overview#blocks). A length in front of a name or a bracketed group repeats it for that long; in front of braces it is the block's own length, which comes to the same thing, and is what a block of lines ending in `...` needs.
 
 <Cell>
 
@@ -44,7 +44,7 @@ pattern chorus = {
   snare: ----x---
 }
 
-play intro 4 bars (verse chorus) intro
+play intro then 4 bars (verse chorus) then intro
 ```
 
 </Cell>

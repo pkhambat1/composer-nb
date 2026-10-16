@@ -14,7 +14,7 @@ A cell is a program. The interpreter evaluates its statements top to bottom, one
 | Setting | `tempo 90` | Anywhere. See [Settings](/language/settings). |
 | Declaration | `steps fill = x-x-` | Anywhere. See [Types](#types). |
 | Line | `kick: x--x---` | In a block, or after `play`. |
-| Sequence | `intro verse verse` | In a block, or after `play`. See [Sequences](/language/patterns#sequences). |
+| Sequence | `intro verse verse` | In a block, or after `play`. Blocks and groups in it are joined by `then`. See [Sequences](/language/patterns#sequences). |
 | `bar`, `every` | `bar 4 { ... }` | In a block, or after `play`. See [bar](/language/patterns#bar) and [Step length](/language/steps#step-length). |
 | `play` | `play groove` | Top level only. See [play](/language/play). |
 
@@ -62,27 +62,28 @@ A block is statements in braces, and it evaluates to a value. Where the block is
 | After a kit piece's colon | One `steps` value, from [layers](/language/steps#layers). |
 | After an instrument's colon | [Layers](/language/notes#layers) of `notes` and `chords` that sound together. |
 
-The statements in a block start together, and a statement ends with its line. So the layout decides how blocks combine:
+The statements in a block start together, one per line. A block or a group that plays in order with something else is joined to it by `then`, written on the same line as the `}` or `)` before it. Blocks on lines of their own play together.
 
-| Blocks written | Play |
+| Written | Plays |
 | --- | --- |
-| On separate lines | Together, merged. |
-| In a row, on one line or joined by `} {` | One after another, as a [sequence](/language/patterns#sequences). |
+| `{ ... }` on a line of its own | Together with the other lines. |
+| `{ ... } then { ... }` | One after another, as a [sequence](/language/patterns#sequences). |
+| `} {`, `} outro`, `intro {` | An error: put `then` between them. |
 
 <Cell>
 
 ```composer-nb
 play {
-  { kick: x--- } { snare: x--- }
+  { kick: x--- } then { snare: x--- }
   { hat: x- }
 }
 ```
 
 </Cell>
 
-The kick and then the snare play in sequence, and the hats play under both.
+The kick plays first and the snare after it, with the hats under both.
 
-A block holds one line per kit piece or instrument. To layer one, give its line a block.
+A block holds one line per kit piece or instrument. To layer one, give its line a block. On a kit piece's line, or a layer, a block is the whole value, so nothing goes beside it: `hat: x--- { ... }` is an error. To put steps in a row with a block, name it: `steps fig = { ... }` and `hat: x--- fig`.
 
 Where a line is decides whether it repeats. In a pattern, every line repeats until the pattern ends. Directly in a `play`, a line plays once. A `steps` value is not a loop: `x--x---` is seven steps, and the pattern around it does the repeating.
 
