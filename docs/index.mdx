@@ -25,7 +25,7 @@ pattern groove = {
 play 3 bars {
   {
     snare.rim: ^-
-  } {
+  } then {
     bar 1 crash: 1
     groove
   }
@@ -34,7 +34,7 @@ play 3 bars {
 
 </Cell>
 
-This is *What Happens Now?* by Porcupine Tree. The `play` holds two blocks joined by `} {`, so they play in [sequence](/language/overview#blocks): an accented rim as a pickup, then the groove with a crash in its first bar. Each line of `groove` repeats at its own length: 7 steps for the kick and rim, 3 for the ride bell, 10 for the guitar. They only meet again after 15 bars, and `play 3 bars` stops it after three.
+This is *What Happens Now?* by Porcupine Tree. The `play` holds two blocks joined by `then`, so they play in [sequence](/language/overview#blocks): an accented rim as a pickup, and after it the groove with a crash in its first bar. Each line of `groove` repeats at its own length: 7 steps for the kick and rim, 3 for the ride bell, 10 for the guitar. They only meet again after 15 bars, and `play 3 bars` stops it after three.
 
 ## Why instructions
 

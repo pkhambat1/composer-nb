@@ -18,6 +18,8 @@ const BEAT_RE = /^[\^~d]?\d+(e|&|a)?$/
 // Notes drawn on steps: E---F# E-E--, with # or b, an octave, and ^ or ~ in front
 const NOTES_RE = /^(?:-|_|[\^~]?[A-G][#b]?[0-8]?)+$/
 const NAME_RE = /^[A-Za-z][A-Za-z0-9]*$/
+// What a length's arithmetic is made of: (1+2)*2 bars
+const SUM_RE = /^[\d\s./+*()-]*\d[\d\s./+*()-]*$/
 const TRACK_RE = /^[A-Za-z][A-Za-z0-9]*(?:\.[A-Za-z0-9]+)?\s*:/
 
 const part = (c, s) => ({ c, s })
@@ -115,6 +117,45 @@ function pieces(text, re) {
   return text.split(re).filter((p) => p !== "")
 }
 
+// A block is the whole of what a kit piece's line, a layer or a steps name holds, so
+// anything beside one is a mistake: kick: x--- { x- }. Which of the line's `words` are
+// beside a block: the second thing on the line and after it, a block or a run of steps,
+// once there's a block among them.
+function beside(words) {
+  const marked = new Set()
+  let depth = 0 // how deep in a block opened on this line
+  let things = 0 // the blocks and runs of steps at the top level so far
+  let run = false // whether the last of them is a run of steps
+  let block = false // whether any of them is a block
+  words.forEach((w, k) => {
+    if (w === "}") {
+      if (depth > 0) depth--
+      else {
+        // ends a block from an earlier line, which what comes next is beside
+        things = 1
+        run = false
+        block = true
+      }
+      return
+    }
+    if (depth > 0) {
+      if (w === "{") depth++
+      return
+    }
+    if (w === "{") {
+      things++
+      run = false
+      block = true
+      depth++
+    } else if (!run) {
+      things++
+      run = true
+    }
+    if (things > 1 && block && w !== "," && w !== "|") marked.add(k)
+  })
+  return marked
+}
+
 // `kind` is what the value is: a drum's steps ("drum"), notes, a chart of chords ("chord"),
 // what a pitched instrument's line holds ("pitched": notes, or chords and then a chart),
 // or anything a name could hold ("word").
@@ -124,10 +165,12 @@ function values(text, kind) {
   // piano: chords Am F|C G: the word, then the chart
   const chart = kind === "pitched" && words[0] === "chords"
   if (kind === "pitched") kind = chart ? "chord" : "notes"
+  const mistakes = kind === "drum" ? beside(words) : new Set()
   let k = -1 // which word this is
   return all.flatMap((p) => {
     if (/^\s+$/.test(p)) return [part(null, p)]
     k++
+    if (mistakes.has(k)) return [part("tk-error", p)]
     if (chart && k === 0) return [part("tk-directive-key", p)]
     if (p === ",") return [part("tk-punct", p)]
     if (kind === "drum") {
@@ -156,27 +199,91 @@ function values(text, kind) {
   })
 }
 
-// intro verse, 6 bars (verse chorus), groove { snare: xxxx }: patterns' names, lengths
-// and patterns without a name.
-function names(text) {
-  const open = text.indexOf("{")
-  if (open >= 0) return [...names(text.slice(0, open)), ...braces(text.slice(open))]
+// Whether the ( at `at` holds a length's arithmetic, (1+2) bars, and not a group of names.
+function sum(text, at) {
+  let depth = 0
+  let end = text.length
+  for (let i = at; i < end; i++) {
+    if (text[i] === "(") depth++
+    else if (text[i] === ")" && --depth === 0) end = i
+  }
+  return SUM_RE.test(text.slice(at + 1, end))
+}
+
+// A block or a group is joined to what's beside it by then, so a name, block or group
+// straight after a } or ) is a mistake, and so is a block or group straight after a name.
+// Between two names a space is enough.
+const needsThen = (prev, delimited) => prev === "close" || (prev === "name" && delimited)
+
+// A row of things to play: patterns' names, lengths, and patterns without a name:
+// intro verse, 6 bars (verse chorus), intro then { snare: xxxx } then outro. `prev` is
+// the last thing in the row before `text`: null at the start of a statement, "name",
+// "close" for a } or ), or "then". A length isn't a thing of its own, so it leaves `prev`
+// as it was.
+function names(text, prev = null) {
+  const out = []
+  const open = [] // each ( still open: whether it holds a length's arithmetic
   let number = false // whether the last thing was a number, which * can multiply
-  return pieces(text, /(\s+|[()*{}])/).map((p) => {
-    if (/^\s+$/.test(p)) return part(null, p)
+  let sized = false // whether a length was just given, so the thing it measures is next
+  let then = null // the last then, which is a mistake if nothing comes after it
+  let at = 0
+  for (const p of pieces(text, /(\s+|[()*{}])/)) {
+    const here = at
+    at += p.length
+    if (/^\s+$/.test(p)) {
+      out.push(part(null, p))
+      continue
+    }
     const wasNumber = number
     number = /^[\d./+-]+$/.test(p) || (number && p === "*")
     // * only does arithmetic: 2*3 bars
-    if (p === "*") return part(wasNumber ? "tk-punct" : "tk-error", p)
-    if ("(){}".includes(p)) return part("tk-punct", p)
-    if (p === "bars") return part("tk-directive-key", p)
+    if (p === "*") out.push(part(wasNumber ? "tk-punct" : "tk-error", p))
+    else if (p === "(") {
+      const arithmetic = sum(text, here)
+      open.push(arithmetic)
+      out.push(part(!arithmetic && needsThen(prev, true) ? "tk-error" : "tk-punct", p))
+      if (!arithmetic) {
+        prev = null // a group is a row of its own
+        sized = false
+      }
+    } else if (p === ")") {
+      out.push(part("tk-punct", p))
+      // (1+2) is a number, like the ones in it
+      if (open.pop()) number = true
+      else {
+        if (prev === "then" && then) then.c = "tk-error" // (intro then) has nothing after it
+        prev = "close"
+        sized = false
+      }
+    } else if (p === "{") {
+      // a block takes the rest of its line, and what's after it
+      return [...out, ...braces(text.slice(here), prev)]
+    } else if (p === "}") out.push(part("tk-punct", p))
+    else if (p === "bars") {
+      sized = true
+      out.push(part("tk-directive-key", p))
+    }
     // a length is always plural: 1 bars
-    if (p === "bar") return part("tk-error", p)
-    if (number) return part("tk-directive-val", p)
+    else if (p === "bar") out.push(part("tk-error", p))
+    else if (p === "then") {
+      // then goes between two things: not first, not twice, not after a length
+      const joins = prev && prev !== "then" && !sized && !wasNumber
+      then = part(joins ? "tk-directive-key" : "tk-error", p)
+      out.push(then)
+      prev = "then"
+      sized = false
+    } else if (number) out.push(part("tk-directive-val", p))
     // after a number only bars can follow, so anything else there is a mistake: 4 barz
-    if (wasNumber) return part("tk-error", p)
-    return part(NAME_RE.test(p) ? "tk-word" : "tk-error", p)
-  })
+    else if (wasNumber) out.push(part("tk-error", p))
+    else {
+      out.push(part(NAME_RE.test(p) && !needsThen(prev, false) ? "tk-word" : "tk-error", p))
+      prev = "name"
+      sized = false
+    }
+  }
+  // intro then: a then is joined to what comes after it
+  if (prev === "then" && then) then.c = "tk-error"
+  return out
 }
 
 // A length in front of something: "3 bars " → its parts, and what's left, which starts
@@ -229,8 +336,9 @@ function playable(text) {
 }
 
 // { ... } on one line: the brace, what's inside, the closing brace and anything after.
-function braces(text) {
-  const out = [part("tk-punct", "{")]
+// `prev` is the last thing in the row in front of it (see names).
+function braces(text, prev = null) {
+  const out = [part(needsThen(prev, true) ? "tk-error" : "tk-punct", "{")]
   const inner = text.slice(1)
   let close = -1
   for (let i = 0, depth = 0; i < inner.length && close < 0; i++) {
@@ -240,8 +348,8 @@ function braces(text) {
   if (close < 0) return out.concat(inner.trim() ? line(inner) : [part(null, inner)])
   const body = inner.slice(0, close)
   out.push(...(body.trim() ? line(body) : [part(null, body)]), part("tk-punct", "}"))
-  // { ... } outro: what follows a block is more to play in a row
-  out.push(...names(inner.slice(close + 1)))
+  // { ... } then outro: what follows a block is more to play in a row, joined by then
+  out.push(...names(inner.slice(close + 1), "close"))
   return out
 }
 
@@ -258,8 +366,8 @@ function line(code) {
   if (soundSetting && !SOUNDS[soundSetting[1]]) soundSetting = null
   const typed = TYPES.includes(word) && /^(\s+)([A-Za-z][A-Za-z0-9]*)(\s*)(=)(\s*)(.*)$/.exec(after)
   if (body.startsWith("}")) {
-    // } outro: what follows a block is more to play in a row
-    out.push(part("tk-punct", "}"), ...names(body.slice(1)))
+    // } then outro: what follows a block is more to play in a row, joined by then
+    out.push(part("tk-punct", "}"), ...names(body.slice(1), "close"))
   } else if (typed) {
     // steps pair = ^-x-, chords verse = Am F, pattern groove = 3 bars { ... }: the type,
     // the name, and a value of that type

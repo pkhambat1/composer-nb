@@ -46,7 +46,7 @@
     },
     "keyword": {
       "name": "keyword.control.composer-nb",
-      "match": "\\b(play|bar|bars|beats|steps|chords|to|every|rest|over)\\b"
+      "match": "\\b(play|bar|bars|beats|steps|chords|to|every|rest|over|then)\\b"
     },
     "value": {
       "name": "constant.language.composer-nb",
