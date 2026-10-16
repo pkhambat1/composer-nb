@@ -3,7 +3,7 @@ title: "Assistants"
 description: "composer-nb as a tool for Claude, Cursor or any assistant that speaks MCP: it writes a cell, checks it, draws the sheet and sends a link."
 ---
 
-An assistant can talk about music all day and produce nothing you can hear. Plugged into composer-nb, what it hands back plays: a cell it has checked against the parser, the sheet music as a picture, and a link that opens the playground on it, playing.
+An assistant can talk about music all day and produce nothing you can hear. Plugged into composer-nb, what it hands back plays: a cell it has checked against the parser, the sheet music as a picture, and a link that opens the playground on it, ready to play.
 
 The connection is an [MCP](https://modelcontextprotocol.io) server. Once it is connected you write in English, in the chat you already use:
 
@@ -25,18 +25,7 @@ https://composer-nb.vercel.app/mcp
 claude mcp add --transport http composer-nb https://composer-nb.vercel.app/mcp
 ```
 
-**Cursor, Windsurf, VS Code and the rest** take the same URL as a remote MCP server, or run it on your machine with Node 20 or later:
-
-```json
-{
-  "mcpServers": {
-    "composer-nb": {
-      "command": "npx",
-      "args": ["-y", "composer-nb-mcp"]
-    }
-  }
-}
-```
+**Cursor, Windsurf, VS Code and the rest** take the same URL as a remote MCP server.
 
 Nothing is stored on the server: a request is a cell in, a result out.
 
@@ -46,7 +35,7 @@ Nothing is stored on the server: a request is a cell in, a result out.
 | --- | --- |
 | `parse` | Checks a cell. Returns the errors with their line numbers, the settings and names in effect, and for each play a grid of every hit and note, bar by bar, with the chords it heard. |
 | `render` | The sheet music as a PNG (the kit on a percussion staff, each instrument on a staff of its own), or a MIDI file, or the ABC notation. |
-| `link` | A link that opens the playground on the cell, playing, with the practice controls, and an iframe to put it on a page. With a list of cells, a link to a whole notebook. |
+| `link` | A link that opens the playground on the cell, ready to play, with the practice controls. With a list of cells, a link to a whole notebook. |
 | `library` | Searches the [grooves](https://composer-nb.vercel.app/grooves/): transcriptions and rudiments to start from, each with its code and its link. |
 | `reference` | The pages under Language on this site, for the assistant to read. |
 

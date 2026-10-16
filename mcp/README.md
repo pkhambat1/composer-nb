@@ -12,20 +12,9 @@ The [composer-nb](https://github.com/pkhambat1/composer-nb) language as an [MCP]
 claude mcp add --transport http composer-nb https://composer-nb.vercel.app/mcp
 ```
 
-**Cursor, Windsurf, VS Code and the rest** take the same URL as a remote server, or run it on your machine with Node 20 or later:
+**Cursor, Windsurf, VS Code and the rest** take the same URL as a remote server.
 
-```json
-{
-  "mcpServers": {
-    "composer-nb": {
-      "command": "npx",
-      "args": ["-y", "composer-nb-mcp"]
-    }
-  }
-}
-```
-
-`composer-nb-mcp --http 3333` serves it over HTTP at `localhost:3333/mcp` instead. `COMPOSER_NB_SITE` sets the playground the links open.
+This package is not on npm. To run it from a checkout, `npm run mcp` serves it over stdio and `npm run mcp -- --http 3333` serves it at `localhost:3333/mcp`. `COMPOSER_NB_SITE` sets the playground the links open.
 
 ## Tools
 
@@ -33,7 +22,7 @@ claude mcp add --transport http composer-nb https://composer-nb.vercel.app/mcp
 | --- | --- |
 | `parse` | Checks a cell: the errors with their line numbers, the settings and names in effect, and for each play a grid of every hit and note, bar by bar, with the chords it heard. |
 | `render` | The sheet music as a PNG, a MIDI file, or the ABC notation. |
-| `link` | A link that opens the playground on the cell, playing, and an iframe to put it on a page. With a list of cells, a link to a whole notebook. |
+| `link` | A link that opens the playground on the cell, ready to play. With a list of cells, a link to a whole notebook. |
 | `library` | Searches the grooves: transcriptions and rudiments to start from. |
 | `reference` | The language reference, page by page. |
 

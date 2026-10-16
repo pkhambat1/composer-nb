@@ -6,7 +6,7 @@ import { createRequire } from "node:module"
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { GROOVES, grooveText, plain, searchGrooves, slugOf } from "composer-nb/grooves"
-import { SITE, embedSnippet, notebookUrl, openUrl } from "composer-nb/links"
+import { SITE, notebookUrl, openUrl } from "composer-nb/links"
 import { describe, parse, playersOf } from "./cell.js"
 import { INSTRUCTIONS } from "./instructions.js"
 import { REFERENCE } from "./reference.js"
@@ -121,22 +121,21 @@ export function createServer({ site = SITE } = {}) {
     {
       title: "A link that plays a cell",
       description:
-        "A link that opens the playground on a cell, playing, with practice controls (tempo, loop, count-in, mute a part), sheet music, and WAV and MIDI downloads: send it, and it plays on a phone. Also an iframe to put the cell on a page. Give cells instead of source for a link to a whole notebook of text and music cells.",
+        "A link that opens the playground on a cell, ready to play, with practice controls (tempo, loop, count-in, mute a part), sheet music, and WAV and MIDI downloads: send it, and it opens on a phone. Give cells instead of source for a link to a whole notebook of text and music cells.",
       inputSchema: {
         source: SOURCE.optional(),
         cells: z
           .array(z.object({ type: z.enum(["text", "music"]), source: z.string() }))
           .optional()
           .describe("A notebook: text cells (markdown) and music cells, in order"),
-        theme: z.enum(["light", "dark"]).default("light").describe("The embedded cell's theme"),
       },
     },
-    async ({ source, cells, theme }) => {
+    async ({ source, cells }) => {
       if (cells?.length) {
         const music = cells.filter((c) => c.type === "music")
         const bad = music.map((c) => parse(c.source).parsed.errors.length).filter(Boolean).length
         const note = bad ? ` ${plural(bad, "music cell")} of ${music.length} has errors; parse each to see them.` : ""
-        return { content: [text(`Opens the playground on the notebook, playing:\n${notebookUrl(site, cells)}${note}`)] }
+        return { content: [text(`Opens the playground on the notebook, ready to play:\n${notebookUrl(site, cells)}${note}`)] }
       }
       if (!source) return { isError: true, content: [text("Give source (one cell) or cells (a notebook).")] }
       const { parsed } = parse(source)
@@ -146,7 +145,7 @@ export function createServer({ site = SITE } = {}) {
       return {
         content: [
           text(
-            `Opens the playground on the cell, playing:\n${openUrl(site, source)}\n\nAn iframe for a page of your own:\n${embedSnippet(site, source, theme)}${warn}`,
+            `Opens the playground on the cell, ready to play:\n${openUrl(site, source)}${warn}`,
           ),
         ],
       }

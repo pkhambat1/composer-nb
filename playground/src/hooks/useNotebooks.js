@@ -4,6 +4,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { cellId } from "./useCellManager.js"
 import { leaveLink } from "../shared/embed.js"
+import { fingerprint, refreshStarters } from "../shared/starters.js"
 
 const KEY = "composer-nb:notebooks"
 const FILE_KIND = "composer-nb notebook"
@@ -68,9 +69,15 @@ export function withIds(cells) {
 // does, else a draft, which is kept on the device once it's changed or saved), else the
 // notebook that was open, else the starters as the first notebook. Returns { store, cells }
 // and, for a draft, its title, its cells as they came, and the notebook that was open
-// before it (where Close goes back to).
+// before it (where Close goes back to). A starter notebook nobody has changed gets the
+// current starters first.
 export function openingNotebook(starters, opened) {
   let store = loadStore() || { current: null, list: [] }
+  const refreshed = refreshStarters(store, starters)
+  if (refreshed !== store) {
+    store = refreshed
+    saveStore(store)
+  }
   if (opened) {
     const nb = store.list.find((n) => sameCells(n.cells, opened))
     if (nb) {
@@ -84,7 +91,13 @@ export function openingNotebook(starters, opened) {
   }
   const current = store.list.find((n) => n.id === store.current)
   if (current) return { store, cells: current.cells }
-  const first = { id: notebookId(), title: "Welcome", cells: bare(starters), updated: Date.now() }
+  const first = {
+    id: notebookId(),
+    title: "Welcome",
+    cells: bare(starters),
+    starters: fingerprint(starters),
+    updated: Date.now(),
+  }
   store = { current: first.id, list: [first, ...store.list] }
   saveStore(store)
   return { store, cells: first.cells }
@@ -167,10 +180,11 @@ export function useNotebooks({
     [setCells, setSelectedId, put],
   )
 
+  // `fields` are kept with the notebook: `starters` marks one made from the starters
   const add = useCallback(
-    (title, cells) => {
+    (title, cells, fields = {}) => {
       setDraft(null)
-      const nb = { id: notebookId(), title, cells: bare(cells), updated: Date.now() }
+      const nb = { id: notebookId(), title, cells: bare(cells), ...fields, updated: Date.now() }
       put({ current: nb.id, list: [nb, ...storeRef.current.list] })
       const fresh = withIds(nb.cells)
       setCells(fresh)
@@ -187,7 +201,7 @@ export function useNotebooks({
       const s = storeRef.current
       const back = s.list.find((n) => n.id === draft?.previous) || s.list[0]
       if (back) open(back.id)
-      else add("Welcome", starters)
+      else add("Welcome", starters, { starters: fingerprint(starters) })
     },
     [draft, open, add],
   )

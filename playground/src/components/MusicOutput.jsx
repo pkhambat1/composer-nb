@@ -2,7 +2,7 @@
 import React from "react"
 import WaveSurfer from "wavesurfer.js"
 import * as MusicEngine from "composer-nb/engine"
-import { embedSnippet, shareCellUrl } from "../shared/embed.js"
+import { shareCellUrl } from "../shared/embed.js"
 import { muteChoices, quietens } from "../shared/mute.js"
 import DrumGrid from "./DrumGrid.jsx"
 
@@ -10,8 +10,8 @@ import DrumGrid from "./DrumGrid.jsx"
 const ChordDiagram = React.lazy(() => import("./ChordDiagram.jsx"))
 const DrumSheet = React.lazy(() => import("./DrumSheet.jsx"))
 
-// Share: a link that opens the playground on this cell, or an iframe that shows it.
-function ShareMenu({ source, theme }) {
+// Share: a link that opens the playground on this cell.
+function ShareMenu({ source }) {
   const [open, setOpen] = React.useState(false)
   const [copied, setCopied] = React.useState(null)
   const ref = React.useRef(null)
@@ -56,11 +56,7 @@ function ShareMenu({ source, theme }) {
         <div className="share-menu">
           <button type="button" className="share-item" onClick={() => copy("link", shareCellUrl(source))}>
             {copied === "link" ? "Link copied" : "Copy link"}
-            <span className="share-hint">opens the playground on this cell, playing</span>
-          </button>
-          <button type="button" className="share-item" onClick={() => copy("embed", embedSnippet(source, theme))}>
-            {copied === "embed" ? "Embed copied" : "Copy embed"}
-            <span className="share-hint">an iframe for a page of your own</span>
+            <span className="share-hint">opens the playground on this cell, ready to play</span>
           </button>
         </div>
       )}
@@ -536,8 +532,8 @@ export default function MusicOutput({
   React.useEffect(() => {
     const ws = wsRef.current
     if (!ws || !ready) return
-    // A browser refuses to play before the page is touched (a shared link opens playing),
-    // and then the cell isn't playing: the first press of Play is what plays it
+    // A browser refuses to play before the page is touched (a shared link tries to play on
+    // load), and then the cell isn't playing: the first press of Play is what plays it
     const play = () =>
       ws.play().catch((err) => {
         console.warn("Playback failed:", err.message)
@@ -728,7 +724,7 @@ export default function MusicOutput({
                 <span>Count-in</span>
               </button>
               <MuteMenu parsed={parsed} muted={muted} onChange={setMuted} />
-              <ShareMenu source={cell.source} theme={theme} />
+              <ShareMenu source={cell.source} />
               <button className="icon-btn" onClick={onExport} title="Download as WAV">
                 <svg width="12" height="12" viewBox="0 0 12 12">
                   <path

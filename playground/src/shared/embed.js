@@ -7,15 +7,10 @@
    how tall it is, so the parent can size it (composer-nb:height), and follows the parent's
    theme when the parent says it changed (composer-nb:theme).
 
-   Open mode: the whole playground opened on shared content, which plays as soon as it
-   loads (/?open#src=... or /?open#nb=...). The Share buttons make these. */
-import {
-  THEMES,
-  cellsOf,
-  embedSnippet as snippet,
-  notebookUrl,
-  openUrl,
-} from "composer-nb/links"
+   Open mode: the whole playground opened on shared content, which starts playing as soon
+   as it loads when the browser allows it (/?open#src=... or /?open#nb=...). The Share
+   buttons make these. */
+import { THEMES, cellsOf, notebookUrl, openUrl } from "composer-nb/links"
 
 const query = new URLSearchParams(window.location.search)
 const hash = new URLSearchParams(window.location.hash.slice(1))
@@ -62,11 +57,6 @@ export function shareCellUrl(source) {
 // A link that opens the playground on a whole notebook.
 export function shareNotebookUrl(cells) {
   return notebookUrl(site(), cells)
-}
-
-// An iframe that shows one cell, for a page of your own.
-export function embedSnippet(source, theme = "light") {
-  return snippet(site(), source, theme)
 }
 
 // Tells the parent page how tall `el` is, now and whenever that changes.

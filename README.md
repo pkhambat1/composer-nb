@@ -97,7 +97,7 @@ play 6 bars {
 
 ## From an assistant
 
-composer-nb is an [MCP](https://modelcontextprotocol.io) server too, so Claude, Cursor or any assistant that speaks MCP can write a cell, check it against the parser, draw the sheet and hand you a link that plays. In Claude, add a custom connector with the URL `https://composer-nb.vercel.app/mcp`; elsewhere, run it with `npx -y composer-nb-mcp`. See [Assistants](https://pkhambat.mintlify.site/assistants) in the docs.
+composer-nb is an [MCP](https://modelcontextprotocol.io) server too, so Claude, Cursor or any assistant that speaks MCP can write a cell, check it against the parser, draw the sheet and hand you a link that plays. In Claude, add a custom connector with the URL `https://composer-nb.vercel.app/mcp`; elsewhere, give that URL to the assistant as a remote MCP server. See [Assistants](https://pkhambat.mintlify.site/assistants) in the docs.
 
 ## In Jupyter
 
@@ -159,10 +159,6 @@ The player is also an npm package, [`composer-nb`](https://www.npmjs.com/package
 
 1. Bump `version` in `dsl/package.json`.
 2. Run `npm publish -w dsl`. It builds the bundle first, and asks you to sign in with your passkey in the browser.
-
-## Releasing the MCP server
-
-The server is the npm package [`composer-nb-mcp`](https://www.npmjs.com/package/composer-nb-mcp), published by hand like the player: bump `version` in `mcp/package.json` and run `npm publish -w mcp`. Its `composer-nb` dependency has to be a published version, so release the player first when the language changed. The hosted one at composer-nb.vercel.app/mcp deploys with the playground.
 
 ## Releasing the docs
 

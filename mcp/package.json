@@ -1,6 +1,7 @@
 {
   "name": "composer-nb-mcp",
   "version": "0.1.0",
+  "private": true,
   "description": "An MCP server for composer-nb: an assistant writes music as text, checks it, hears it, draws the sheet and sends a link.",
   "keywords": [
     "mcp",

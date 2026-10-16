@@ -7,7 +7,8 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build && node scripts/grooves.js",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test": "vitest run"
   },
   "dependencies": {
     "abcjs": "^6.7.1",
@@ -21,6 +22,7 @@
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^4.3.4",
-    "vite": "^6.3.5"
+    "vite": "^6.3.5",
+    "vitest": "^2.1.9"
   }
 }
