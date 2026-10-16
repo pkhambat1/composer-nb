@@ -1,5 +1,5 @@
-// components/Sidebar.jsx — The left side: the notebooks on this device, the reference panels,
-// and the theme popover
+// components/Sidebar.jsx — The left side: a notebook opened from a link, the notebooks on this
+// device, the reference panels, and the theme popover
 import React from "react"
 import { APP_CONSTANTS } from "../shared/constants.js"
 
@@ -95,8 +95,27 @@ export default function Sidebar({
       </div>
 
       <nav className="lhs-nav">
-        {/* The notebooks kept on this device, the open one marked. A link's cells open as a
-            draft above them until they are kept. */}
+        {/* A link's cells, open but not saved: apart from the notebooks until they are */}
+        {draft && (
+          <>
+            <div className="lhs-section">
+              <span className="lhs-section-label">Shared with you</span>
+            </div>
+            <button
+              type="button"
+              className={"lhs-tab lhs-tab-shared" + (onNotebook ? " lhs-tab-active" : "")}
+              onClick={() => onTabChange("notebook")}
+              title="Opened from a link, not in your notebooks"
+            >
+              <svg className="lhs-tab-icon" width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" aria-hidden="true">
+                <path d="M6.5 9.5l3-3M7 11l-1.5 1.5a2.1 2.1 0 0 1-3-3L4 8M9 5l1.5-1.5a2.1 2.1 0 0 1 3 3L12 8" />
+              </svg>
+              <span className="lhs-tab-label">{draft.title}</span>
+            </button>
+          </>
+        )}
+
+        {/* The notebooks kept on this device, the open one marked */}
         <div className="lhs-section">
           <span className="lhs-section-label">Notebooks</span>
           <button
@@ -111,17 +130,6 @@ export default function Sidebar({
             </svg>
           </button>
         </div>
-        {draft && (
-          <button
-            type="button"
-            className={"lhs-tab lhs-tab-notebook" + (onNotebook ? " lhs-tab-active" : "")}
-            onClick={() => onTabChange("notebook")}
-            title="Opened from a link, not kept yet"
-          >
-            <span className="lhs-tab-label">{draft.title}</span>
-            <span className="lhs-tab-note">from a link</span>
-          </button>
-        )}
         {list.map((nb) => (
           <button
             key={nb.id}
@@ -142,14 +150,14 @@ export default function Sidebar({
         </div>
         <button
           type="button"
-          className={"lhs-tab" + (sideTab === "chords" ? " lhs-tab-active" : "")}
+          className={"lhs-tab lhs-tab-ref" + (sideTab === "chords" ? " lhs-tab-active" : "")}
           onClick={() => onTabChange("chords")}
           title="Guitar chord shapes: click one to copy its name"
         >
           <span className="lhs-tab-label">Chord library</span>
         </button>
         <a
-          className="lhs-tab"
+          className="lhs-tab lhs-tab-ref"
           href={APP_CONSTANTS.DOCS_URL}
           target="_blank"
           rel="noreferrer"

@@ -3,6 +3,7 @@
    an account would sync the same thing. */
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { cellId } from "./useCellManager.js"
+import { leaveLink } from "../shared/embed.js"
 
 const KEY = "composer-nb:notebooks"
 const FILE_KIND = "composer-nb notebook"
@@ -64,9 +65,10 @@ export function withIds(cells) {
 }
 
 // What the page opens with: the cells a link brought (the notebook that holds them, if one
-// does, else a draft, which is kept on the device once it's changed or kept), else the
+// does, else a draft, which is kept on the device once it's changed or saved), else the
 // notebook that was open, else the starters as the first notebook. Returns { store, cells }
-// and, for a draft, its title and cells as they came.
+// and, for a draft, its title, its cells as they came, and the notebook that was open
+// before it (where Close goes back to).
 export function openingNotebook(starters, opened) {
   let store = loadStore() || { current: null, list: [] }
   if (opened) {
@@ -77,7 +79,8 @@ export function openingNotebook(starters, opened) {
       return { store, cells: nb.cells }
     }
     const cells = bare(opened)
-    return { store: { ...store, current: null }, cells, draft: { title: titleOf(cells, "Shared cell"), cells } }
+    const draft = { title: titleOf(cells, "Shared cell"), cells, previous: store.current }
+    return { store: { ...store, current: null }, cells, draft }
   }
   const current = store.list.find((n) => n.id === store.current)
   if (current) return { store, cells: current.cells }
@@ -87,12 +90,26 @@ export function openingNotebook(starters, opened) {
   return { store, cells: first.cells }
 }
 
-export function useNotebooks({ store: initial, draft: opened = null, cells, setCells, setSelectedId }) {
+export function useNotebooks({
+  store: initial,
+  draft: opened = null,
+  cells,
+  setCells,
+  setSelectedId,
+  onKept, // called with the notebook a draft became, when it's saved or changed
+}) {
   const [store, setStore] = useState(initial)
   const storeRef = useRef(store)
   storeRef.current = store
   // A link's cells, open but not yet kept: its title, and the cells as they came
   const [draft, setDraft] = useState(opened)
+  const onKeptRef = useRef(onKept)
+  onKeptRef.current = onKept
+
+  // Once there's no draft, the link has done its job
+  useEffect(() => {
+    if (!draft) leaveLink()
+  }, [draft])
 
   const put = useCallback((next) => {
     saveStore(next)
@@ -107,6 +124,7 @@ export function useNotebooks({ store: initial, draft: opened = null, cells, setC
       const nb = { id: notebookId(), title: d.title, cells: bare(cellsNow), updated: Date.now() }
       setDraft(null)
       put({ current: nb.id, list: [nb, ...storeRef.current.list] })
+      onKeptRef.current?.(nb)
     },
     [draft, put],
   )
@@ -160,6 +178,18 @@ export function useNotebooks({ store: initial, draft: opened = null, cells, setC
       return nb.id
     },
     [put, setCells, setSelectedId],
+  )
+
+  // Closes a draft without keeping it: back to the notebook that was open before the link,
+  // or the first one, or the starters for someone whose first visit was the link
+  const discard = useCallback(
+    (starters) => {
+      const s = storeRef.current
+      const back = s.list.find((n) => n.id === draft?.previous) || s.list[0]
+      if (back) open(back.id)
+      else add("Welcome", starters)
+    },
+    [draft, open, add],
   )
 
   const create = useCallback(
@@ -243,5 +273,5 @@ export function useNotebooks({ store: initial, draft: opened = null, cells, setC
   const current = useMemo(() => store.list.find((n) => n.id === store.current) || null, [store])
   const list = useMemo(() => [...store.list].sort((a, b) => b.updated - a.updated), [store])
 
-  return { list, current, draft, keep, open, create, duplicate, rename, remove, exportFile, importFile }
+  return { list, current, draft, keep, discard, open, create, duplicate, rename, remove, exportFile, importFile }
 }

@@ -20,6 +20,7 @@ import { cellId, useCellManager } from "./hooks/useCellManager.js"
 import { openingNotebook, useNotebooks } from "./hooks/useNotebooks.js"
 import { grooveText } from "composer-nb/grooves"
 import NotebookTitle from "./components/NotebookTitle.jsx"
+import SharedBanner from "./components/SharedBanner.jsx"
 import { usePlayback } from "./hooks/usePlayback.js"
 import { useKeyboard } from "./hooks/useKeyboard.js"
 import { useTheme } from "./components/theme-panel.jsx"
@@ -67,12 +68,21 @@ export default function App() {
     duplicateCell,
   } = cm
 
+  // The name a shared notebook was saved under, shown for a moment where its banner was
+  const [savedAs, setSavedAs] = React.useState(null)
+  React.useEffect(() => {
+    if (!savedAs) return
+    const t = setTimeout(() => setSavedAs(null), 6000)
+    return () => clearTimeout(t)
+  }, [savedAs])
+
   const notebooks = useNotebooks({
     store: opening?.store || { current: null, list: [] },
     draft: opening?.draft || null,
     cells,
     setCells: cm.setCells,
     setSelectedId,
+    onKept: (nb) => setSavedAs(nb.title),
   })
 
   // In a frame the page's theme rules; otherwise the choices are kept on this device
@@ -463,11 +473,7 @@ export default function App() {
           <div className="nb-sticky-header">
           <NotebookTitle
             title={notebooks.draft?.title || notebooks.current?.title || "Notebook"}
-            subtitle={
-              notebooks.draft
-                ? "From a link. Change it or press Keep, and it's kept on this device"
-                : "Kept on this device as you write"
-            }
+            subtitle={notebooks.draft ? "Opened from a link" : "Kept on this device as you write"}
             menu={notebookMenu}
           />
           <Toolbar
@@ -490,9 +496,19 @@ export default function App() {
             onStop={quiet}
             onShare={shareNotebook}
             shared={shared}
-            onKeep={notebooks.draft ? () => notebooks.keep(cells) : null}
             kernelStatus={kernelStatus}
           />
+          {notebooks.draft ? (
+            <SharedBanner
+              onSave={() => notebooks.keep(cells)}
+              onClose={() => {
+                quiet()
+                notebooks.discard(APP_CONSTANTS.STARTER_CELLS)
+              }}
+            />
+          ) : savedAs ? (
+            <SharedBanner saved={savedAs} onDismiss={() => setSavedAs(null)} />
+          ) : null}
           </div>
 
           <main

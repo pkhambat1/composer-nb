@@ -78,7 +78,6 @@ export default function Toolbar({
   onStop,
   onShare,
   shared,
-  onKeep,
   kernelStatus,
 }) {
   const Icon = (children, viewBox = "0 0 16 16") => (
@@ -167,15 +166,6 @@ export default function Toolbar({
             </span>,
           )}
         </div>
-        {onKeep && (
-          <div className="tb-group">
-            {btn(
-              "Keep this notebook on this device",
-              onKeep,
-              <span style={{ fontSize: 12, fontWeight: 600 }}>Keep</span>,
-            )}
-          </div>
-        )}
       </div>
     </div>
   )
