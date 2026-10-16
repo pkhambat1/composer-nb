@@ -239,15 +239,53 @@ body {
 .lhs-nav {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 1px;
   padding: 0 8px;
+}
+/* A heading over a run of rows: the notebooks, with a + for a new one, and the reference */
+.lhs-section {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px 4px;
+}
+.lhs-section + .lhs-tab,
+.lhs-section + .lhs-section {
+  margin-top: 0;
+}
+.lhs-tab + .lhs-section {
+  margin-top: 14px;
+}
+.lhs-section-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-mute);
+}
+.lhs-section-btn {
+  appearance: none;
+  border: none;
+  background: none;
+  color: var(--text-mute);
+  cursor: pointer;
+  width: 20px;
+  height: 20px;
+  margin: -4px -6px -4px 0;
+  border-radius: 4px;
+  display: grid;
+  place-items: center;
+}
+.lhs-section-btn:hover {
+  color: var(--text);
+  background: var(--tb-btn-hover);
 }
 .lhs-tab {
   appearance: none;
   border: none;
   background: transparent;
   text-align: left;
-  padding: 10px 12px;
+  padding: 6px 12px;
   border-radius: 6px;
   cursor: pointer;
   color: var(--text-dim);
@@ -255,8 +293,9 @@ body {
   font: inherit;
   font-size: 13px;
   display: flex;
-  flex-direction: column;
-  gap: 2px;
+  align-items: baseline;
+  gap: 8px;
+  min-width: 0;
 }
 .lhs-tab:hover {
   background: var(--tb-btn-hover);
@@ -267,11 +306,19 @@ body {
   color: var(--accent);
 }
 .lhs-tab-label {
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.lhs-tab-active .lhs-tab-label {
   font-weight: 600;
 }
-.lhs-tab-hint {
+/* A draft from a link, not kept yet */
+.lhs-tab-note {
   font-size: 11px;
-  opacity: 0.75;
+  opacity: 0.7;
+  white-space: nowrap;
 }
 .app-main {
   flex: 1;
@@ -334,7 +381,7 @@ body {
   border-radius: 4px;
   background: var(--paper);
   color: var(--text);
-  min-width: 160px;
+  min-width: 220px;
 }
 .cb-btn {
   font: inherit;
@@ -558,6 +605,47 @@ body {
 .tb-dropdown-item + .tb-dropdown-item {
   border-top: 1px solid var(--border-soft);
 }
+.tb-btn-open {
+  background: var(--tb-btn-hover);
+  color: var(--text);
+}
+.tb-dropdown-add {
+  min-width: 260px;
+  max-width: 340px;
+  max-height: min(72vh, 680px);
+  overflow-y: auto;
+  padding: 4px;
+  border-radius: 6px;
+}
+.tb-dropdown-add .tb-dropdown-item {
+  border-top: 0;
+  border-radius: 4px;
+  padding: 6px 8px;
+}
+.tb-dropdown-label {
+  padding: 10px 8px 3px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-mute);
+}
+.tb-dropdown-starter {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.starter-title {
+  font-weight: 500;
+}
+.starter-byline {
+  font-size: 11px;
+  color: var(--text-mute);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
 .tb-btn-primary {
   background: var(--accent);
   color: white;
@@ -592,6 +680,83 @@ body {
 }
 .nb-title-bar .panel-subtitle {
   margin-top: 2px;
+}
+.nb-title-row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  min-height: 30px;
+}
+.nb-title-btn {
+  appearance: none;
+  border: none;
+  background: none;
+  padding: 2px 8px 2px 6px;
+  margin-left: -6px;
+  border-radius: 6px;
+  cursor: pointer;
+  color: var(--header-text);
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  max-width: 100%;
+}
+.nb-title-btn .panel-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.nb-title-btn:hover,
+.nb-title-btn-open {
+  background: var(--tb-btn-hover);
+}
+.nb-title-chevron {
+  color: var(--text-mute);
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+.nb-title-btn:hover .nb-title-chevron,
+.nb-title-btn-open .nb-title-chevron {
+  color: var(--text);
+}
+.nb-title-input {
+  font-family: var(--font-serif);
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--header-text);
+  background: var(--paper);
+  border: 1px solid var(--accent);
+  border-radius: 4px;
+  padding: 1px 6px;
+  margin-left: -7px;
+  width: min(100%, 420px);
+}
+.nb-title-input:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+.nb-title-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: -6px;
+  background: var(--paper);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  padding: 4px;
+  min-width: 170px;
+  z-index: 30;
+}
+[data-theme="dark"] .nb-title-menu {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+}
+.nb-title-menu-rule {
+  height: 1px;
+  background: var(--border-soft);
+  margin: 4px 2px;
+}
+.panel-subtitle-problem {
+  color: var(--traceback);
 }
 .kernel-status-label {
   color: var(--text-dim);
@@ -900,6 +1065,11 @@ body {
   resize: none;
   overflow: hidden;
   display: block;
+}
+/* The text is transparent so the highlight layer shows through; the prompt in an empty cell isn't */
+.code-area::placeholder {
+  color: var(--text-mute);
+  font-style: italic;
 }
 .code-area::selection {
   background: rgba(120, 160, 220, 0.35);
@@ -1323,133 +1493,6 @@ body {
   grid-template-columns: repeat(auto-fill, 125px);
   gap: 3px;
 }
-/* The notebooks on this device */
-.notebooks-panel {
-  padding-bottom: 60px;
-}
-.notebooks-list {
-  max-width: 1020px;
-  margin: 0 auto;
-  padding: 16px 18px;
-  display: grid;
-  gap: 10px;
-}
-.notebooks-actions {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
-  margin-bottom: 6px;
-}
-.notebooks-problem {
-  color: var(--traceback);
-  font-size: 12px;
-}
-.notebook-card {
-  background: var(--paper);
-  border: 1px solid var(--border-soft);
-  border-radius: 4px;
-  padding: 10px 14px;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-.notebook-card-open {
-  border-color: var(--accent);
-}
-.notebook-title {
-  appearance: none;
-  border: 0;
-  background: transparent;
-  padding: 0;
-  text-align: left;
-  font: inherit;
-  font-weight: 600;
-  font-size: 15px;
-  color: var(--text);
-  cursor: pointer;
-}
-.notebook-title:hover {
-  color: var(--accent);
-}
-.notebook-rename {
-  font: inherit;
-  font-weight: 600;
-  font-size: 15px;
-  color: var(--text);
-  background: var(--paper);
-  border: 1px solid var(--accent);
-  border-radius: 3px;
-  padding: 2px 6px;
-  max-width: 420px;
-}
-.notebook-meta {
-  font-size: 12px;
-  color: var(--text-mute);
-}
-.notebook-actions {
-  display: flex;
-  gap: 6px;
-  flex-wrap: wrap;
-  margin-top: 2px;
-}
-.icon-btn-danger:hover {
-  color: var(--traceback);
-  border-color: var(--traceback);
-}
-/* The grooves library */
-.grooves-panel {
-  padding-bottom: 60px;
-}
-.grooves-list {
-  max-width: 1020px;
-  margin: 0 auto;
-  padding: 16px 18px;
-  display: grid;
-  gap: 14px;
-}
-.grooves-section {
-  margin: 10px 0 0;
-  font-size: 13px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: var(--text-mute);
-}
-.groove-card {
-  background: var(--paper);
-  border: 1px solid var(--border-soft);
-  border-radius: 4px;
-  padding: 12px 14px;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-.groove-title {
-  font-weight: 600;
-  font-size: 15px;
-}
-.groove-byline {
-  font-size: 12px;
-  color: var(--text-dim);
-}
-.groove-code {
-  margin: 4px 0;
-  font-family: var(--font-mono);
-  font-size: 11px;
-  line-height: 1.5;
-  color: var(--text-dim);
-  background: var(--code-bg);
-  padding: 8px 10px;
-  border-radius: 3px;
-  overflow: auto;
-  max-height: 180px;
-}
-.groove-actions {
-  display: flex;
-  gap: 6px;
-  flex-wrap: wrap;
-}
 .chord-chip {
   display: flex;
   flex-direction: column;
@@ -1704,16 +1747,50 @@ body {
   }
   .lhs-nav {
     flex-direction: row;
+    align-items: center;
     gap: 2px;
     padding: 0;
     overflow-x: auto;
+    min-width: 0;
+  }
+  .lhs-section {
+    padding: 0 2px;
+  }
+  .lhs-section-label {
+    display: none;
+  }
+  .lhs-section-btn {
+    margin: 0;
+    width: 26px;
+    height: 26px;
+  }
+  /* In a line: the notebooks, then + for a new one, then the reference */
+  .lhs-section:first-child {
+    order: 1;
+  }
+  .lhs-section:not(:first-child) {
+    order: 2;
+    margin-left: 8px;
+  }
+  .lhs-tab:not(.lhs-tab-notebook) {
+    order: 3;
+  }
+  .lhs-tab + .lhs-section {
+    margin-top: 0;
   }
   .lhs-tab {
     padding: 6px 8px;
     white-space: nowrap;
+    flex-shrink: 0;
   }
-  .lhs-tab-hint {
+  .lhs-tab-label {
+    max-width: 160px;
+  }
+  .lhs-tab-note {
     display: none;
+  }
+  .nb-title-menu {
+    left: 0;
   }
   .app-main {
     height: auto;

@@ -163,7 +163,7 @@ export function useNotebooks({ store: initial, draft: opened = null, cells, setC
   )
 
   const create = useCallback(
-    () => add("Untitled", [{ type: "text", source: "# Untitled" }, { type: "music", source: "" }]),
+    () => add("Untitled", [{ type: "music", source: "" }]),
     [add],
   )
 

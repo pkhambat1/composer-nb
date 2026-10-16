@@ -18,8 +18,8 @@ import {
 } from "./shared/embed.js"
 import { cellId, useCellManager } from "./hooks/useCellManager.js"
 import { openingNotebook, useNotebooks } from "./hooks/useNotebooks.js"
-import GroovesPanel from "./components/GroovesPanel.jsx"
-import NotebooksPanel from "./components/NotebooksPanel.jsx"
+import { grooveText } from "composer-nb/grooves"
+import NotebookTitle from "./components/NotebookTitle.jsx"
 import { usePlayback } from "./hooks/usePlayback.js"
 import { useKeyboard } from "./hooks/useKeyboard.js"
 import { useTheme } from "./components/theme-panel.jsx"
@@ -310,21 +310,68 @@ export default function App() {
     if (OPEN) runAllRef.current()
   }, [])
 
-  // A groove from the library: its two cells go at the end of the notebook, and it plays
-  const openGroove = React.useCallback(
+  // A starter from the + menu: its words and its music go at the end of the notebook, and it plays
+  const addStarter = React.useCallback(
     (g) => {
       const textId = cellId()
       const musicId = cellId()
       const mk = (id, type, source) => ({ id, type, source, runCount: null, output: null, status: "idle" })
-      cm.setCells((cs) => [...cs, mk(textId, "text", g.text.source), mk(musicId, "music", g.music.source)])
+      // A new notebook's one empty cell gives way to it
+      const blank = (cs) => cs.length === 1 && cs[0].type === "music" && !cs[0].source.trim()
+      cm.setCells((cs) => [...(blank(cs) ? [] : cs), mk(textId, "text", grooveText(g)), mk(musicId, "music", g.source)])
       setSelectedId(musicId)
-      openTab("notebook")
       setTimeout(() => {
         queuedRunCell(musicId, true)
         document.querySelector(`[data-cell-id="${musicId}"]`)?.scrollIntoView({ block: "start", behavior: "smooth" })
       }, 60)
     },
-    [cm, setSelectedId, openTab, queuedRunCell],
+    [cm, setSelectedId, queuedRunCell],
+  )
+
+  // Another notebook: whatever plays stops, and the page shows the one asked for
+  const quiet = React.useCallback(() => {
+    playback.stopAll()
+    stopAll()
+  }, [playback, stopAll])
+  const openNotebook = React.useCallback(
+    (id) => {
+      if (!notebooks.draft && notebooks.current?.id === id) return openTab("notebook")
+      quiet()
+      notebooks.open(id)
+      openTab("notebook")
+    },
+    [notebooks, quiet, openTab],
+  )
+  const newNotebook = React.useCallback(() => {
+    quiet()
+    notebooks.create()
+    openTab("notebook")
+  }, [notebooks, quiet, openTab])
+  // The title's menu, for the open notebook (a draft has none yet: it has Keep)
+  const current = notebooks.current
+  const notebookMenu = React.useMemo(
+    () =>
+      current && !notebooks.draft
+        ? {
+            rename: (title) => notebooks.rename(current.id, title),
+            duplicate: () => {
+              quiet()
+              notebooks.duplicate(current.id)
+            },
+            exportFile: () => notebooks.exportFile(current.id),
+            importFile: async (file) => {
+              await notebooks.importFile(file)
+              quiet()
+              openTab("notebook")
+            },
+            remove: () => {
+              if (!window.confirm(`Delete "${current.title}"? This can't be undone.`)) return
+              quiet()
+              notebooks.remove(current.id)
+            },
+          }
+        : null,
+    [current, notebooks, quiet, openTab],
   )
 
   const [shared, setShared] = React.useState(false)
@@ -402,6 +449,9 @@ export default function App() {
   return (
     <div className="app-shell">
       <Sidebar
+        notebooks={notebooks}
+        onOpenNotebook={openNotebook}
+        onNewNotebook={newNotebook}
         sideTab={sideTab}
         onTabChange={openTab}
         theme={theme}
@@ -411,12 +461,15 @@ export default function App() {
       <div className="app-main">
         <div className="notebook-root" style={{ display: sideTab === "notebook" ? undefined : "none" }}>
           <div className="nb-sticky-header">
-          <div className="nb-title-bar">
-            <h1 className="panel-title">{notebooks.current?.title || notebooks.draft?.title || "Notebook"}</h1>
-            <p className="panel-subtitle">
-              {notebooks.draft ? "From a link. Change it or press Keep, and it's kept on this device" : "A music notebook, in place of paper"}
-            </p>
-          </div>
+          <NotebookTitle
+            title={notebooks.draft?.title || notebooks.current?.title || "Notebook"}
+            subtitle={
+              notebooks.draft
+                ? "From a link. Change it or press Keep, and it's kept on this device"
+                : "Kept on this device as you write"
+            }
+            menu={notebookMenu}
+          />
           <Toolbar
             onAddCode={() =>
               insertCell(
@@ -432,11 +485,9 @@ export default function App() {
                 "text",
               )
             }
+            onAddStarter={addStarter}
             onRunAll={queuedRunAll}
-            onStop={() => {
-              playback.stopAll()
-              stopAll()
-            }}
+            onStop={quiet}
             onShare={shareNotebook}
             shared={shared}
             onKeep={notebooks.draft ? () => notebooks.keep(cells) : null}
@@ -457,16 +508,6 @@ export default function App() {
           <StatusBar editingId={editingId} kernelStatus={kernelStatus} />
 
         </div>
-        <NotebooksPanel
-          style={{ display: sideTab === "notebooks" ? undefined : "none" }}
-          notebooks={notebooks}
-          onOpened={() => {
-            playback.stopAll()
-            stopAll()
-            openTab("notebook")
-          }}
-        />
-        <GroovesPanel style={{ display: sideTab === "grooves" ? undefined : "none" }} onOpen={openGroove} />
         {chordsOpened && (
           <React.Suspense fallback={null}>
             <ChordBrowserPanel style={{ display: sideTab === "chords" ? undefined : "none" }} />

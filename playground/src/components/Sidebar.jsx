@@ -1,23 +1,27 @@
-// components/Sidebar.jsx — Left sidebar navigation + theme popover
+// components/Sidebar.jsx — The left side: the notebooks on this device, the reference panels,
+// and the theme popover
 import React from "react"
 import { APP_CONSTANTS } from "../shared/constants.js"
-
-const SIDE_TABS = [
-  { id: "notebook", label: "Notebook", hint: "Write and play" },
-  { id: "notebooks", label: "Notebooks", hint: "Saved on this device" },
-  { id: "grooves", label: "Grooves", hint: "Transcriptions to start from" },
-  { id: "chords", label: "Chord library", hint: "Browse chord shapes" },
-]
 
 const THEMES = [
   { id: "light", label: "Light" },
   { id: "dark", label: "Dark" },
 ]
 
-export default function Sidebar({ sideTab, onTabChange, theme, onSetTheme }) {
+export default function Sidebar({
+  notebooks,
+  onOpenNotebook,
+  onNewNotebook,
+  sideTab,
+  onTabChange,
+  theme,
+  onSetTheme,
+}) {
   const [themeOpen, setThemeOpen] = React.useState(false)
   const popRef = React.useRef(null)
   const btnRef = React.useRef(null)
+  const { list, current, draft } = notebooks
+  const onNotebook = sideTab === "notebook"
 
   React.useEffect(() => {
     if (!themeOpen) return
@@ -40,7 +44,7 @@ export default function Sidebar({ sideTab, onTabChange, theme, onSetTheme }) {
           type="button"
           className="lhs-brand-link"
           onClick={() => onTabChange("notebook")}
-          title="Go to notebook"
+          title="Go to the notebook"
         >
           <svg className="lhs-brand-logo" width="22" height="22" viewBox="0 0 24 24">
             <circle cx="9" cy="17" r="3" fill="var(--accent)" />
@@ -89,28 +93,69 @@ export default function Sidebar({ sideTab, onTabChange, theme, onSetTheme }) {
           )}
         </div>
       </div>
+
       <nav className="lhs-nav">
-        {SIDE_TABS.map((tab) => (
+        {/* The notebooks kept on this device, the open one marked. A link's cells open as a
+            draft above them until they are kept. */}
+        <div className="lhs-section">
+          <span className="lhs-section-label">Notebooks</span>
           <button
-            key={tab.id}
             type="button"
-            className={"lhs-tab" + (sideTab === tab.id ? " lhs-tab-active" : "")}
-            onClick={() => onTabChange(tab.id)}
-            title={tab.hint}
+            className="lhs-section-btn"
+            onClick={onNewNotebook}
+            title="New notebook"
+            aria-label="New notebook"
           >
-            <span className="lhs-tab-label">{tab.label}</span>
-            <span className="lhs-tab-hint">{tab.hint}</span>
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+              <path d="M6 1.5v9M1.5 6h9" />
+            </svg>
+          </button>
+        </div>
+        {draft && (
+          <button
+            type="button"
+            className={"lhs-tab lhs-tab-notebook" + (onNotebook ? " lhs-tab-active" : "")}
+            onClick={() => onTabChange("notebook")}
+            title="Opened from a link, not kept yet"
+          >
+            <span className="lhs-tab-label">{draft.title}</span>
+            <span className="lhs-tab-note">from a link</span>
+          </button>
+        )}
+        {list.map((nb) => (
+          <button
+            key={nb.id}
+            type="button"
+            className={
+              "lhs-tab lhs-tab-notebook" +
+              (onNotebook && !draft && current?.id === nb.id ? " lhs-tab-active" : "")
+            }
+            onClick={() => onOpenNotebook(nb.id)}
+            title={nb.title}
+          >
+            <span className="lhs-tab-label">{nb.title}</span>
           </button>
         ))}
+
+        <div className="lhs-section">
+          <span className="lhs-section-label">Reference</span>
+        </div>
+        <button
+          type="button"
+          className={"lhs-tab" + (sideTab === "chords" ? " lhs-tab-active" : "")}
+          onClick={() => onTabChange("chords")}
+          title="Guitar chord shapes: click one to copy its name"
+        >
+          <span className="lhs-tab-label">Chord library</span>
+        </button>
         <a
           className="lhs-tab"
           href={APP_CONSTANTS.DOCS_URL}
           target="_blank"
           rel="noreferrer"
-          title="Opens the docs site"
+          title="The language reference, on the docs site"
         >
           <span className="lhs-tab-label">Docs ↗</span>
-          <span className="lhs-tab-hint">Language reference</span>
         </a>
       </nav>
     </aside>
