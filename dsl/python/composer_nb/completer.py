@@ -45,6 +45,12 @@ DEF_RE = re.compile(r"^\s*(steps|notes|chords|pattern)\s+([A-Za-z_]\w*)\s*=", re
 # The instrument line the cursor is on: its name, then what's been written after the colon.
 PART_RE = re.compile(r"(?:^|[\s{])([a-z]+(?:\.[a-z]+)?):([^:{}]*)$")
 NUMBER_RE = re.compile(r"^\d+$|\)$")
+# A length's arithmetic, (1+2)*2, as against a group of patterns, (verse chorus)
+SUM_RE = re.compile(r"[\d\s./+*()-]*\d[\d\s./+*()-]*")
+ARITHMETIC_RE = re.compile(r"[\d./+*-]*\d")
+# then joins a block or a group to the thing beside it in a row: intro then { ... } then outro.
+# It is reserved, so it is never a name.
+THEN = ("then ", "keyword")
 # What makes a { an instrument's block of layers: kick: or piano: in front of it, or
 # steps name =
 STEPS_OPENER_RE = re.compile(r"([a-z]+(?:\.[a-z]+)?)\s*:[^:{}]*$|^\s*steps\s+[A-Za-z_]\w*\s*=[^{}]*$")
@@ -74,14 +80,17 @@ def _names(defined: str) -> Names:
     """The names given in `defined`, by the type written in front of them."""
     types = {}
     for type_, name in DEF_RE.findall(defined):
-        types[name] = type_  # a name given again means the new thing
+        if name != "then":
+            types[name] = type_  # a name given again means the new thing
     return {t: sorted(n for n, given in types.items() if given == t) for t in TYPES}
 
 
-def _open_blocks(text: str) -> List[Tuple[str, Optional[str]]]:
+def _open_blocks(text: str) -> Tuple[List[Tuple[str, Optional[str]]], Optional[str]]:
     """The blocks still open at the end of `text`: what each holds (a drum's "steps", a
-    pitched instrument's "layers", or "lines"), and the name it's the value of, if any."""
+    pitched instrument's "layers", or "lines"), and the name it's the value of, if any.
+    Also what the block the last } closed held."""
     open_blocks: List[Tuple[str, Optional[str]]] = []
+    closed = None
     for line in text.split("\n"):
         code = line.split("//")[0]
         for i, c in enumerate(code):
@@ -96,9 +105,9 @@ def _open_blocks(text: str) -> List[Tuple[str, Optional[str]]]:
                     holds = "layers"
                 named = DEF_RE.match(code[:i])
                 open_blocks.append((holds, named and named.group(2)))
-            elif c == "}" and open_blocks:
-                open_blocks.pop()
-    return open_blocks
+            elif c == "}":
+                closed = open_blocks.pop()[0] if open_blocks else None
+    return open_blocks, closed
 
 
 def _pitched(written: List[str], names: Names) -> List[Option]:
@@ -110,19 +119,48 @@ def _pitched(written: List[str], names: Names) -> List[Option]:
     return _options(names["notes"], "variable")
 
 
+def _group_closed(text: str) -> bool:
+    """Whether `text` ends with a ) that closes a group of patterns, (verse chorus), and
+    not a length's arithmetic, (1+2)."""
+    depth = 0
+    for i in range(len(text) - 1, -1, -1):
+        if text[i] == ")":
+            depth += 1
+        elif text[i] == "(":
+            depth -= 1
+            if depth == 0:
+                return not SUM_RE.fullmatch(text[i + 1 : -1])
+    return False
+
+
 def _sequence(words: List[str], patterns: List[Option], parts: List[Option]) -> List[Option]:
     """What can come next in a row of patterns, after the `words` already written."""
     if not words:
         return patterns + parts
-    if NUMBER_RE.search(words[-1]):
+    last = words[-1]
+    if NUMBER_RE.search(last) or ARITHMETIC_RE.fullmatch(last):
         return [("bars ", "keyword")]  # a length, always plural: 3 bars groove
-    return patterns
+    if last in ("then", "bars"):
+        return patterns  # then needs what plays next, and a length what it measures
+    return patterns + [THEN]  # after a name a space is enough, and then is allowed too
 
 
-def _statement(head: str, body: str, names: Names) -> List[Option]:
-    """What can come next on a line that isn't an instrument's."""
+def _statement(
+    head: str, body: str, names: Names, closed: Optional[str] = None
+) -> List[Option]:
+    """What can come next on a line that isn't an instrument's. `closed` is what the block
+    the last } closed held."""
     inside = (body + head).count("{") > (body + head).count("}")
-    words = re.sub(r"[()=]", lambda m: " = " if m.group() == "=" else " ", re.split(r"[{}]", head)[-1]).split()
+    tail = head.rstrip()
+    # A block or a group in a row is joined to what comes next by then. A kit piece's or an
+    # instrument's block is the whole of its line, so nothing goes beside it.
+    if tail.endswith("}"):
+        return [THEN] if closed == "lines" else []
+    if tail.endswith(")") and _group_closed(tail):
+        return [THEN]
+    segment = re.split(r"[{}]", head)[-1]
+    words = re.sub(r"[()=]", lambda m: " = " if m.group() == "=" else " ", segment).split()
+    joined = head[: len(head) - len(segment)].endswith("}")  # the row goes on after a block
     patterns = _options(names["pattern"], "variable")
     parts = _options([p + ": " for p in PARTS], "property")
     if not words:
@@ -132,6 +170,9 @@ def _statement(head: str, body: str, names: Names) -> List[Option]:
             return parts + patterns + [("bar ", "keyword"), ("every ", "keyword")] + settings + types
         return settings + types + [("play ", "keyword")]
     first = words[0]
+    if first == "then":
+        # play { ... } then intro: a row goes on after a block, but no line starts with then
+        return _sequence(words, patterns, []) if joined else []
     if first == "play":
         return _sequence(words[1:], patterns, parts)
     if first == "pattern" and words[2:4] == ["=", "every"]:
@@ -194,7 +235,7 @@ def complete(text: str, cursor: int, songs: Optional[Dict[str, Song]] = None):
     inherited = songs[after.group(1)].chain if after and after.group(1) in songs else []
     names = _names("\n".join([*inherited, body]))
     # A name isn't defined until its braces close.
-    open_blocks = _open_blocks(body + head)
+    open_blocks, closed = _open_blocks(body + head)
     unfinished = {name for _, name in open_blocks if name}
     names = {t: [n for n in found if n not in unfinished] for t, found in names.items()}
 
@@ -223,7 +264,9 @@ def complete(text: str, cursor: int, songs: Optional[Dict[str, Song]] = None):
     elif open_blocks and open_blocks[-1][0] == "layers":
         options = _pitched(head.split(), names)  # a layer in a pitched instrument's block
     else:
-        options = _statement(head, body, names)
+        options = _statement(head, body, names, closed)
+        if head.rstrip().endswith("("):
+            options = [o for o in options if o != THEN]  # a group starts with a pattern
     return fragment, [o for o in options if o[0].startswith(fragment) and o[0] != fragment]
 
 
