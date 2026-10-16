@@ -2571,8 +2571,10 @@ function readSequence(line, ln, err, blocks = {}, st = null) {
     const missing = undefinedItem(prev) || undefinedItem(next)
     const line = `${closes(prev)} then ${opens(next)}`
     if (missing) fail(undefinedName(missing, st))
-    else if (delimited(prev) && delimited(next)) {
+    else if (prev.block && next.block) {
       fail(`Blocks in a row take then between them: ${line}. On lines of their own, blocks play together`)
+    } else if (prev.items && next.items) {
+      fail(`Groups in a row take then between them: ${line}. On lines of their own, groups play together`)
     } else fail(`${kind(prev)[0].toUpperCase()}${kind(prev).slice(1)} and ${kind(next)} take then between them: ${line}`)
     return false
   }

@@ -942,6 +942,10 @@ describe("then: a block in a row", () => {
     expect(firstError(G + "play g 2 bars (g g)")).toBe(
       "A name and a group take then between them: g then 2 bars (",
     )
+    expect(firstError(G + "play (g g) (g)")).toBe(
+      "Groups in a row take then between them: ) then (. On lines of their own, groups play together",
+    )
+    expect(firstError(G + "play { kick: x } (g)")).toBe("A block and a group take then between them: } then (")
     expect(firstError(G + "pattern p = {\n  g\n} g\nplay p")).toMatch(/\} then g/)
     // A name that isn't defined is said first
     expect(firstError("play {\n  groove {\n    kick: x\n  }\n}")).toMatch(/"groove" isn't defined/)
