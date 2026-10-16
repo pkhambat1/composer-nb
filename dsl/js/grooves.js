@@ -1,7 +1,7 @@
 /* The grooves library: transcriptions, harmony cells and rudiments to start from. Each is
    a text cell's worth of words (a title, a byline, a paragraph and a link) and a music cell. The
-   playground opens with the transcriptions, lists them all in its Grooves tab and builds a
-   page for each; the MCP server searches them. Pure data, shared so there is one copy. */
+   playground's welcome notebook holds them all and its build makes a page for each; the MCP
+   server searches them. Pure data, shared so there is one copy. */
 
 export const GROOVES = [
   {
@@ -12,6 +12,7 @@ export const GROOVES = [
     link: "https://www.youtube.com/watch?v=4ulgVOBpNWA",
     source: `time 7 over 8
 tempo 90
+swing 50
 
 pattern groove = {
   kick: x--x---
@@ -38,6 +39,7 @@ play {
     link: "https://www.youtube.com/results?search_query=Porcupine+Tree+Circle+of+Manias",
     source: `time 9 over 8
 tempo 100
+swing 50
 
 pattern manias = {
   hat.open: x---
@@ -57,6 +59,7 @@ play 4 bars manias`,
     link: "https://www.youtube.com/watch?v=v0Iv4SYJW-k",
     source: `time 7 over 8
 tempo 110
+swing 50
 octave 2
 guitar.electric muted
 
@@ -84,6 +87,7 @@ play 3 bars {
     link: "https://www.youtube.com/watch?v=XEWmzQ_fJmw",
     source: `time 3 over 4
 tempo 100
+swing 50
 
 steps pa = ^---
 steps radiddle = -xxx
@@ -111,6 +115,7 @@ play {
     link: "https://www.youtube.com/watch?v=YZPtPMCDEs4",
     source: `time 3 over 4
 tempo 82.5
+swing 50
 
 pattern groove = {
   ride.bell: x-x-x-xx-x-x
@@ -129,6 +134,7 @@ play 2 bars groove`,
     link: null,
     source: `time 5 over 4
 tempo 120
+swing 50
 
 pattern groove = {
   kick: x---
@@ -144,7 +150,8 @@ play groove`,
     byline: "The cadence jazz is built on",
     body: "Dm7 to G7 to Cmaj7: the ii sets up the V, and the V resolves home. Written as numerals, so `key` moves it: change `key C` to `key F` and the whole thing follows. The bass walks a quarter note a step, `swing 67` puts the ride's off-beats late, and `octave 4` keeps the piano's voicings around middle C.",
     link: null,
-    source: `tempo 132
+    source: `time 4 over 4
+tempo 132
 swing 67
 key C
 octave 4
@@ -165,7 +172,9 @@ play turnaround`,
     byline: "D dorian: minor with a major sixth",
     body: "D to D on the white keys, so the B is natural. That B is what makes the IV chord (G) major under a minor i (Dm7), the sound of So What and Oye Como Va, and the melody leans on it. `key D dorian` reads the numerals in the mode: `i7 IV` is Dm7 G, and `VII` is C.",
     link: null,
-    source: `tempo 100
+    source: `time 4 over 4
+tempo 100
+swing 50
 key D dorian
 octave 4
 
@@ -188,9 +197,12 @@ play vamp`,
     byline: "A mixolydian: major with a flat seventh",
     body: "The G is natural in A, so the seventh degree is a G chord, not G#. I to VII to IV and back (A, G, D, A) is the rock vamp, and the melody lands on that G. In `key A mixolydian` the numeral `VII` is the mode's own seventh degree, so there is no flat to write.",
     link: null,
-    source: `tempo 112
+    source: `time 4 over 4
+tempo 112
+swing 50
 key A mixolydian
 octave 4
+guitar.electric clean
 
 pattern vamp = {
   guitar.electric: chords I - VII -|IV - I -
@@ -209,7 +221,9 @@ play vamp`,
     byline: "F lydian: major with a raised fourth",
     body: "F to F on the white keys puts a B natural where F major has a Bb. Two chords a whole step apart, F and G, and a melody that lands on the B: the floating, film-score sound. The `pad` holds each chord for a bar, written `I|II`.",
     link: null,
-    source: `tempo 72
+    source: `time 4 over 4
+tempo 72
+swing 50
 key F lydian
 octave 4
 
@@ -227,10 +241,12 @@ play float`,
     byline: "Twelve bars, three chords, all dominant sevenths",
     body: "I7 for four bars, IV7 for two, back to I7 for two, then V7 IV7 I7 V7 to turn around. `%` repeats the bar before, and `swing 67` makes the ride shuffle. Change `key A` to `key E` and the chart moves.",
     link: null,
-    source: `tempo 120
+    source: `time 4 over 4
+tempo 120
 swing 67
 key A
 octave 3
+guitar.electric clean
 
 pattern blues = {
   guitar.electric: chords I7|%|%|%|IV7|%|I7|%|V7|IV7|I7|V7
@@ -247,7 +263,9 @@ play blues`,
     byline: "A minor, with the leading tone raised",
     body: "A minor's own V chord is Em, and it pulls nowhere. Raise its third to G# and E7 leans into Am: the harmonic-minor cadence. `V7` in `key Am` spells it for you, and the melody's G# gets its sharp on the sheet.",
     link: null,
-    source: `tempo 90
+    source: `time 4 over 4
+tempo 90
+swing 50
 key Am
 octave 4
 
@@ -270,8 +288,10 @@ play cadence`,
     byline: "E phrygian, palm muted",
     body: "Phrygian is minor with a flat second: the F a half step above the E. The riff stays on the low string and the kick doubles every eighth.",
     link: null,
-    source: `key E phrygian
+    source: `time 4 over 4
 tempo 140
+swing 50
+key E phrygian
 octave 2
 guitar.electric muted
 
@@ -292,6 +312,7 @@ play 2 bars riff`,
     link: null,
     source: `time 4+4+4+3 over 16
 tempo 112
+swing 50
 key G lydian
 octave 2
 guitar.electric muted
@@ -323,10 +344,12 @@ play 4 bars {
   {
     section: "Rudiments",
     title: "Single stroke roll",
-    byline: "A rudiment",
+    byline: "RLRL",
     body: "Alternate hands, every stroke the same. Slow it down with the tempo stepper, loop it, and let Ramp bring it back up a step at a time.",
     link: null,
-    source: `tempo 100
+    source: `time 4 over 4
+tempo 100
+swing 50
 
 pattern roll = {
   snare: xxxx xxxx xxxx xxxx
@@ -338,10 +361,12 @@ play 2 bars roll`,
   {
     section: "Rudiments",
     title: "Double stroke roll",
-    byline: "A rudiment",
+    byline: "RRLL",
     body: "Two strokes a hand. The second of each pair should be as full as the first: that's the whole exercise.",
     link: null,
-    source: `tempo 90
+    source: `time 4 over 4
+tempo 90
+swing 50
 
 pattern roll = {
   snare: xxxx xxxx xxxx xxxx
@@ -353,10 +378,12 @@ play 2 bars roll`,
   {
     section: "Rudiments",
     title: "Single paradiddle",
-    byline: "A rudiment",
+    byline: "RLRR LRLL",
     body: "Right left right right, left right left left, with the accent on the first of each four. The hands swap lead every group, which is the point of it.",
     link: null,
-    source: `tempo 100
+    source: `time 4 over 4
+tempo 100
+swing 50
 
 pattern paradiddle = {
   snare: ^xxx ^xxx ^xxx ^xxx
@@ -368,11 +395,12 @@ play 2 bars paradiddle`,
   {
     section: "Rudiments",
     title: "Double paradiddle",
-    byline: "A rudiment",
+    byline: "RLRLRR LRLRLL",
     body: "Six strokes a group, so it sits in 3 over 4: two singles, then the diddle. Accent the first of each six.",
     link: null,
     source: `time 3 over 4
 tempo 100
+swing 50
 
 pattern paradiddle = {
   snare: ^xxxxx ^xxxxx
@@ -384,11 +412,12 @@ play 2 bars paradiddle`,
   {
     section: "Rudiments",
     title: "Paradiddle-diddle",
-    byline: "A rudiment",
+    byline: "RLRRLL",
     body: "A paradiddle with a second diddle on the end, six strokes a group. The lead hand stays the same, so it loops without swapping.",
     link: null,
     source: `time 3 over 4
 tempo 100
+swing 50
 
 pattern pdd = {
   snare: ^xxxxx ^xxxxx
@@ -400,10 +429,12 @@ play 2 bars pdd`,
   {
     section: "Rudiments",
     title: "Five-stroke roll",
-    byline: "A rudiment",
+    byline: "RRLLR LLRRL",
     body: "Two doubles and a single: a `d` is a double stroke, two strokes of the same hand in one step, so the sticking names the hand of each double. The accent lands on the fifth stroke.",
     link: null,
-    source: `tempo 80
+    source: `time 4 over 4
+tempo 80
+swing 50
 
 pattern five = {
   snare: dd^- dd^-

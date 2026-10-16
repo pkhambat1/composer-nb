@@ -27,6 +27,12 @@ export const OPEN = !EMBED && query.has("open")
 // the same tab (the address bar, a link on a page) loads the page again
 if (EMBED || OPEN) window.addEventListener("hashchange", () => window.location.reload())
 
+// Takes a shared link off the address once its notebook is kept, closed or left, so
+// reloading the page opens the notebook that's open, not the link again
+export function leaveLink() {
+  if (OPEN && window.location.hash) window.history.replaceState(null, "", window.location.pathname)
+}
+
 // The cell the frame opens with.
 export function embedCell() {
   return { type: "music", source: hash.get("src") || "" }

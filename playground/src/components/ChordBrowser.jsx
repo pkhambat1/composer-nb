@@ -99,7 +99,7 @@ const ChordBrowserPanel = React.memo(function ChordBrowserPanel({ style }) {
           <input
             type="search"
             className="cb-search"
-            placeholder="Search chords (e.g. Am, G7)\u2026"
+            placeholder="Search chords, e.g. Am or G7"
             value={filter}
             onChange={(e) => { setFilter(e.target.value); setPage(0) }}
           />

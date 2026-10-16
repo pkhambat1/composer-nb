@@ -1,6 +1,7 @@
 // components/Toolbar.jsx — Top bar controls
 import React from "react"
 
+// The + menu: a music cell or a text cell, at the end of the notebook
 function AddCellDropdown({ onAddCode, onAddText }) {
   const [open, setOpen] = React.useState(false)
   const ref = React.useRef(null)
@@ -22,8 +23,10 @@ function AddCellDropdown({ onAddCode, onAddText }) {
   return (
     <div className="tb-dropdown-wrap" ref={ref}>
       <button
-        className="tb-btn"
+        className={"tb-btn" + (open ? " tb-btn-open" : "")}
         title="Add a cell at the end"
+        aria-haspopup="menu"
+        aria-expanded={open}
         onClick={() => setOpen((v) => !v)}
       >
         <span style={{ fontWeight: 700, fontSize: 16, lineHeight: "14px" }}>+</span>
@@ -32,7 +35,7 @@ function AddCellDropdown({ onAddCode, onAddText }) {
         </svg>
       </button>
       {open && (
-        <div className="tb-dropdown">
+        <div className="tb-dropdown" role="menu">
           <button className="tb-dropdown-item" onClick={() => { onAddCode(); setOpen(false) }}>
             Music cell
           </button>
@@ -45,7 +48,15 @@ function AddCellDropdown({ onAddCode, onAddText }) {
   )
 }
 
-export default function Toolbar({ onAddCode, onAddText, onRunAll, onStop, onShare, shared, onKeep, kernelStatus }) {
+export default function Toolbar({
+  onAddCode,
+  onAddText,
+  onRunAll,
+  onStop,
+  onShare,
+  shared,
+  kernelStatus,
+}) {
   const Icon = (children, viewBox = "0 0 16 16") => (
     <svg width="14" height="14" viewBox={viewBox} fill="currentColor">
       {children}
@@ -72,7 +83,7 @@ export default function Toolbar({ onAddCode, onAddText, onRunAll, onStop, onShar
         <div className="tb-group">
           {kernelStatus === "busy"
             ? btn(
-                "Rendering \u2014 click to stop",
+                "Rendering — click to stop",
                 onStop,
                 <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
                   <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
@@ -132,15 +143,6 @@ export default function Toolbar({ onAddCode, onAddText, onRunAll, onStop, onShar
             </span>,
           )}
         </div>
-        {onKeep && (
-          <div className="tb-group">
-            {btn(
-              "Keep this notebook on this device",
-              onKeep,
-              <span style={{ fontSize: 12, fontWeight: 600 }}>Keep</span>,
-            )}
-          </div>
-        )}
       </div>
     </div>
   )
