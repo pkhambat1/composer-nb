@@ -117,10 +117,10 @@ describe("tools", () => {
     expect(textOf(r)).toContain("line 1")
   })
 
-  it("link opens the playground on the cell, and embeds it", async () => {
+  it("link opens the playground on the cell", async () => {
     const t = textOf(await call("link", { source: MUZAK }))
     expect(t).toContain("https://example.test/?open#src=time%207%20over%208")
-    expect(t).toContain('<iframe src="https://example.test/?embed#src=')
+    expect(t).not.toContain("<iframe")
     expect(t).not.toContain("errors")
   })
 

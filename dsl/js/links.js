@@ -1,15 +1,13 @@
-/* The playground's addresses: a link that opens it on a cell or a notebook, playing, and
-   an iframe that shows one cell. Pure, so the playground's Share buttons and the MCP server
-   make the same links. `site` is the playground's origin, https://composer-nb.vercel.app.
+/* The playground's addresses: a link that opens it on a cell or a notebook, ready to play.
+   Pure, so the playground's Share buttons and the MCP server make the same links. `site` is
+   the playground's origin, https://composer-nb.vercel.app.
 
-   Open mode: the whole playground opened on shared content, which plays as soon as it
-   loads. The address is
+   Open mode: the whole playground opened on shared content, which starts playing as soon
+   as it loads when the browser allows it. The address is
      <site>/?open#src=<one cell's source, URI-encoded>
      <site>/?open#nb=<the notebook's cells as JSON, base64url-encoded>
-   Embed mode: the playground as a single cell in a frame, which is how the docs site shows
-   an example you can edit and play. The address is
-     <site>/?embed#src=<the cell's source, URI-encoded>&theme=dark
-   where theme is optional. */
+   Embed mode, the playground as a single cell in a frame, is the docs site's own
+   (playground/src/shared/embed.js). */
 
 export const SITE = "https://composer-nb.vercel.app"
 export const THEMES = ["light", "dark"]
@@ -23,16 +21,6 @@ export function openUrl(site, source) {
 export function notebookUrl(site, cells) {
   const json = JSON.stringify(cells.map((c) => ({ type: c.type, source: c.source })))
   return `${site}/?open#nb=${toBase64Url(json)}`
-}
-
-// The address of one cell in a frame.
-export function embedUrl(site, source, theme = "light") {
-  return `${site}/?embed#src=${encodeURIComponent(source)}&theme=${theme}`
-}
-
-// An iframe that shows one cell, for a page of your own.
-export function embedSnippet(site, source, theme = "light") {
-  return `<iframe src="${embedUrl(site, source, theme)}" style="width: 100%; height: 420px; border: 0; border-radius: 6px" loading="lazy"></iframe>`
 }
 
 // The cells a notebook link holds, or null when it doesn't hold any.
