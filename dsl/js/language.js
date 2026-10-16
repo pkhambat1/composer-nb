@@ -1719,6 +1719,12 @@ function stepLayerRun(line, st, err, part) {
   const parts = stepParts(line.text, line.blocks, st, err, line.ln, here)
   if (!parts) return null
   const { tokens, toEnd, fill } = parts
+  // Each step of this layer has to be one this drum can play
+  const check = (run, where) => {
+    if (!part) return true
+    const here = { ...part, ln: line.ln }
+    return [...run].every((c) => stepMods(c, here, err, where) !== undefined)
+  }
   if (fill && !check(fill, " (after ...)")) return null
   if (listsBeats(tokens)) {
     // A layer of beats: 2 4
@@ -1732,11 +1738,6 @@ function stepLayerRun(line, st, err, part) {
     }
     const run = beatsAsSteps(where, tokens, st, err)
     return run == null ? null : { run, toEnd: false }
-  }
-  const check = (run, where) => {
-    if (!part) return true
-    const here = { ...part, ln: line.ln }
-    return [...run].every((c) => stepMods(c, here, err, where) !== undefined)
   }
   let run = ""
   for (const tok of tokens) {
