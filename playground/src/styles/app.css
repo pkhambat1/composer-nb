@@ -611,43 +611,6 @@ body {
   background: var(--tb-btn-hover);
   color: var(--text);
 }
-.tb-dropdown-add {
-  min-width: 260px;
-  max-width: 340px;
-  max-height: min(72vh, 680px);
-  overflow-y: auto;
-  padding: 4px;
-  border-radius: 6px;
-}
-.tb-dropdown-add .tb-dropdown-item {
-  border-top: 0;
-  border-radius: 4px;
-  padding: 6px 8px;
-}
-.tb-dropdown-label {
-  padding: 10px 8px 3px;
-  font-size: 11px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--text-mute);
-}
-.tb-dropdown-starter {
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-}
-.starter-title {
-  font-weight: 500;
-}
-.starter-byline {
-  font-size: 11px;
-  color: var(--text-mute);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 100%;
-}
 .tb-btn-primary {
   background: var(--accent);
   color: white;

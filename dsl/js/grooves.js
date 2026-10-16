@@ -1,7 +1,7 @@
 /* The grooves library: transcriptions, harmony cells and rudiments to start from. Each is
    a text cell's worth of words (a title, a byline, a paragraph and a link) and a music cell. The
-   playground opens with the transcriptions and the harmony cells, lists them all in its + menu
-   and builds a page for each; the MCP server searches them. Pure data, shared so there is one copy. */
+   playground's welcome notebook holds them all and its build makes a page for each; the MCP
+   server searches them. Pure data, shared so there is one copy. */
 
 export const GROOVES = [
   {

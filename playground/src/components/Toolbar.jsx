@@ -1,9 +1,8 @@
 // components/Toolbar.jsx — Top bar controls
 import React from "react"
-import { GROOVES, SECTIONS, plain } from "composer-nb/grooves"
 
-// The + menu: a blank cell, or a starter from the library, which goes in with its words above it
-function AddCellDropdown({ onAddCode, onAddText, onAddStarter }) {
+// The + menu: a music cell or a text cell, at the end of the notebook
+function AddCellDropdown({ onAddCode, onAddText }) {
   const [open, setOpen] = React.useState(false)
   const ref = React.useRef(null)
 
@@ -21,16 +20,11 @@ function AddCellDropdown({ onAddCode, onAddText, onAddStarter }) {
     }
   }, [open])
 
-  const pick = (fn) => () => {
-    fn()
-    setOpen(false)
-  }
-
   return (
     <div className="tb-dropdown-wrap" ref={ref}>
       <button
         className={"tb-btn" + (open ? " tb-btn-open" : "")}
-        title="Add a cell at the end, or a starter from the library"
+        title="Add a cell at the end"
         aria-haspopup="menu"
         aria-expanded={open}
         onClick={() => setOpen((v) => !v)}
@@ -41,29 +35,13 @@ function AddCellDropdown({ onAddCode, onAddText, onAddStarter }) {
         </svg>
       </button>
       {open && (
-        <div className="tb-dropdown tb-dropdown-add" role="menu">
-          <button className="tb-dropdown-item" onClick={pick(onAddCode)}>
+        <div className="tb-dropdown" role="menu">
+          <button className="tb-dropdown-item" onClick={() => { onAddCode(); setOpen(false) }}>
             Music cell
           </button>
-          <button className="tb-dropdown-item" onClick={pick(onAddText)}>
+          <button className="tb-dropdown-item" onClick={() => { onAddText(); setOpen(false) }}>
             Text cell
           </button>
-          {SECTIONS.map((section) => (
-            <React.Fragment key={section}>
-              <div className="tb-dropdown-label">{section}</div>
-              {GROOVES.filter((g) => g.section === section).map((g) => (
-                <button
-                  key={g.title}
-                  className="tb-dropdown-item tb-dropdown-starter"
-                  onClick={pick(() => onAddStarter(g))}
-                  title="Goes in at the end of the notebook, and plays"
-                >
-                  <span className="starter-title">{g.title}</span>
-                  <span className="starter-byline">{plain(g.byline)}</span>
-                </button>
-              ))}
-            </React.Fragment>
-          ))}
         </div>
       )}
     </div>
@@ -73,7 +51,6 @@ function AddCellDropdown({ onAddCode, onAddText, onAddStarter }) {
 export default function Toolbar({
   onAddCode,
   onAddText,
-  onAddStarter,
   onRunAll,
   onStop,
   onShare,
@@ -101,7 +78,7 @@ export default function Toolbar({
     <div className="panel-header toolbar">
       <div className="toolbar-left">
         <div className="tb-group">
-          <AddCellDropdown onAddCode={onAddCode} onAddText={onAddText} onAddStarter={onAddStarter} />
+          <AddCellDropdown onAddCode={onAddCode} onAddText={onAddText} />
         </div>
         <div className="tb-group">
           {kernelStatus === "busy"

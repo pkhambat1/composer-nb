@@ -16,9 +16,8 @@ import {
   reportHeight,
   shareNotebookUrl,
 } from "./shared/embed.js"
-import { cellId, useCellManager } from "./hooks/useCellManager.js"
+import { useCellManager } from "./hooks/useCellManager.js"
 import { openingNotebook, useNotebooks } from "./hooks/useNotebooks.js"
-import { grooveText } from "composer-nb/grooves"
 import NotebookTitle from "./components/NotebookTitle.jsx"
 import SharedBanner from "./components/SharedBanner.jsx"
 import { usePlayback } from "./hooks/usePlayback.js"
@@ -320,24 +319,6 @@ export default function App() {
     if (OPEN) runAllRef.current()
   }, [])
 
-  // A starter from the + menu: its words and its music go at the end of the notebook, and it plays
-  const addStarter = React.useCallback(
-    (g) => {
-      const textId = cellId()
-      const musicId = cellId()
-      const mk = (id, type, source) => ({ id, type, source, runCount: null, output: null, status: "idle" })
-      // A new notebook's one empty cell gives way to it
-      const blank = (cs) => cs.length === 1 && cs[0].type === "music" && !cs[0].source.trim()
-      cm.setCells((cs) => [...(blank(cs) ? [] : cs), mk(textId, "text", grooveText(g)), mk(musicId, "music", g.source)])
-      setSelectedId(musicId)
-      setTimeout(() => {
-        queuedRunCell(musicId, true)
-        document.querySelector(`[data-cell-id="${musicId}"]`)?.scrollIntoView({ block: "start", behavior: "smooth" })
-      }, 60)
-    },
-    [cm, setSelectedId, queuedRunCell],
-  )
-
   // Another notebook: whatever plays stops, and the page shows the one asked for
   const quiet = React.useCallback(() => {
     playback.stopAll()
@@ -491,7 +472,6 @@ export default function App() {
                 "text",
               )
             }
-            onAddStarter={addStarter}
             onRunAll={queuedRunAll}
             onStop={quiet}
             onShare={shareNotebook}

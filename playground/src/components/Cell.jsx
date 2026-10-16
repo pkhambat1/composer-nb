@@ -213,7 +213,7 @@ function Cell({
               onInterrupt={onInterrupt}
               runState={runState}
               errorLines={errorLines}
-              placeholder="A groove, a riff or a chord chart, or a starter from the + menu. Shift+Enter plays it."
+              placeholder="A groove, a riff or a chord chart. Shift+Enter plays it."
             />
             <MusicOutput
               cell={cell}
