@@ -388,16 +388,23 @@ function line(code) {
   } else if ((word === "bar" || word === "bars") && /^\s+\S/.test(after)) {
     // bar 2 { ... }, bar 2 hat.pedal: 4, bar 3 to 4 fill: a place, then what plays there.
     // bars is only ever a length, so it's a mistake here.
-    const m = /^(\s+)([^\s{]+)(?:(\s+)(to)(\s+)([^\s{]+))?(\s*)(.*)$/.exec(after)
-    out.push(part(word === "bar" ? "tk-directive-key" : "tk-error", word), part(null, m[1]))
-    out.push(part("tk-directive-val", m[2]))
-    if (m[4]) {
-      out.push(part(null, m[3]), part("tk-directive-key", m[4]), part(null, m[5]))
-      out.push(part("tk-directive-val", m[6]))
+    const m = /^(\s+)([^\s{]+)(?:(\s+)(to)(\s+)([^\s{]+))?(\s*)([\s\S]*)$/.exec(after)
+    if (!m) {
+      // bar { ... }: the number is missing, as it is while it's being typed. The parser says
+      // so, and what follows is read as it would be after a bar.
+      const space = /^\s*/.exec(after)[0]
+      out.push(part("tk-error", word), part(null, space), ...braces(after.slice(space.length)))
+    } else {
+      out.push(part(word === "bar" ? "tk-directive-key" : "tk-error", word), part(null, m[1]))
+      out.push(part("tk-directive-val", m[2]))
+      if (m[4]) {
+        out.push(part(null, m[3]), part("tk-directive-key", m[4]), part(null, m[5]))
+        out.push(part("tk-directive-val", m[6]))
+      }
+      out.push(part(null, m[7]))
+      if (m[8].startsWith("{")) out.push(...braces(m[8]))
+      else if (m[8]) out.push(...playable(m[8]))
     }
-    out.push(part(null, m[7]))
-    if (m[8].startsWith("{")) out.push(...braces(m[8]))
-    else if (m[8]) out.push(...playable(m[8]))
   } else if (word === "play" && /^(\s|$)/.test(after)) {
     // play groove, play 3 bars { ... }, play kick: x--x
     const space = /^\s*/.exec(after)[0]
@@ -414,7 +421,7 @@ function line(code) {
     out.push(part(null, end))
   } else if (word === "key" && /^\s/.test(after)) {
     // key Am, key D dorian: the key, as one value
-    const m = /^(\s+)(.*?)(\s*)$/.exec(after)
+    const m = /^(\s+)([\s\S]*?)(\s*)$/.exec(after)
     out.push(part("tk-directive-key", word), part(null, m[1]))
     out.push(part(parseKey(m[2]) ? "tk-directive-val" : "tk-error", m[2]), part(null, m[3]))
   } else if (SETTINGS.includes(word) && /^\s/.test(after)) {
@@ -436,7 +443,7 @@ function line(code) {
     }
   } else if (word && /^\s*=/.test(after)) {
     // verse = Am E7|G D: a name without its type in front
-    const m = /^(\s*)(=)(\s*)(.*)$/.exec(after)
+    const m = /^(\s*)(=)(\s*)([\s\S]*)$/.exec(after)
     out.push(part("tk-error", word), part(null, m[1]), part("tk-punct", "="))
     out.push(part(null, m[3]))
     const len = length(m[4])
@@ -468,7 +475,9 @@ function opens(before, outer) {
 
 export function highlightMusic(src) {
   const open = [] // what each block still open holds
-  return src.split("\n").map((text) => {
+  return src.split("\n").map((raw) => {
+    // A line break may be \r\n. The parser trims it, so it's set aside here, and kept.
+    const text = raw.endsWith("\r") ? raw.slice(0, -1) : raw
     const cut = text.indexOf("//")
     const code = cut < 0 ? text : text.slice(0, cut)
     const holds = open[open.length - 1]
@@ -478,6 +487,7 @@ export function highlightMusic(src) {
       else if (code[i] === "}") open.pop()
     }
     if (cut >= 0) parts.push(part("tk-comment", text.slice(cut)))
+    if (text !== raw) parts.push(part(null, "\r"))
     return parts.filter((p) => p.s !== "")
   })
 }
