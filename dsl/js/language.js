@@ -2212,6 +2212,7 @@ function checkStickings(clip, err) {
 // `clip` played end to end until `durSec`. The last time through may be cut short.
 function tile(clip, durSec) {
   const out = { events: [], drumEvents: [], spans: [] }
+  if (!(clip.durSec > 0)) return { ...out, durSec } // nothing to repeat
   const times = Math.ceil(durSec / clip.durSec - 1e-6)
   for (let k = 0; k < times; k++) {
     const moved = shift(clip, k * clip.durSec, k > 0)
@@ -2257,8 +2258,15 @@ function layer(parts, once, repeated, st, bars, err, ctx) {
     return null
   }
   let totalTicks
-  if (bars) totalTicks = Math.round(bars * barTicks)
-  else if (ctx.repeats) {
+  if (bars) {
+    totalTicks = Math.round(bars * barTicks)
+    // A length too short for a single tick would be a clip of no length, which nothing
+    // can be filled with.
+    if (totalTicks < 1) {
+      err(ctx.ln, `${fmt(bars)} bars is shorter than the shortest note, so nothing fits in it`)
+      return null
+    }
+  } else if (ctx.repeats) {
     const whole = loops.filter((l) => nearWhole(l.ticks)).map((l) => Math.round(l.ticks))
     totalTicks = whole.reduce(lcm, 1)
     // ...and long enough to have the bars it names

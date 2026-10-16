@@ -723,6 +723,11 @@ describe("lengths", () => {
 
   it("explain lengths that don't work", () => {
     expect(firstError("bars: 3")).toMatch(/pattern groove = 3 bars \{, or play 3 bars \{ \.\.\. \}/)
+    // A length that rounds to no ticks at all used to hang the parser when repeated
+    expect(firstError("pattern p = 0.001 bars { kick: x--- }\nplay 4 bars p")).toBe(
+      "0.001 bars is shorter than the shortest note, so nothing fits in it",
+    )
+    expect(firstError("play 0.001 bars { kick: x--- }")).toMatch(/shorter than the shortest note/)
     expect(firstError("play 0 bars { kick: x- }")).toMatch(/A length is a number of bars/)
     expect(firstError("play 3 bars")).toMatch(/play 3 bars of what\?/)
     expect(firstError("pattern g = { kick: x }\nplay 3 g")).toMatch(/needs bars after it/)
