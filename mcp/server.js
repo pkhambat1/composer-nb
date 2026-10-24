@@ -3,10 +3,12 @@
    reference pages and the grooves are resources too, for clients that read those. One
    server is one McpServer; the transports are in bin.js (stdio) and http.js. */
 import { createRequire } from "node:module"
+import { registerAppTool } from "@modelcontextprotocol/ext-apps/server"
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 import { GROOVES, grooveText, plain, searchGrooves, slugOf } from "composer-nb/grooves"
 import { SITE, notebookUrl, openUrl } from "composer-nb/links"
+import { CELL_UI, registerCellApp } from "./app.js"
 import { describe, parse, playersOf } from "./cell.js"
 import { INSTRUCTIONS } from "./instructions.js"
 import { REFERENCE } from "./reference.js"
@@ -35,7 +37,10 @@ function failed(parsed, earlier, source) {
 function playLine(o, i) {
   const bars = o.blocks.reduce((a, b) => a + b.bars, 0)
   const who = playersOf(o)
-  return `Play ${i + 1} (line ${o.line}): ${o.label} · ${plural(bars, "bar")} · ${Math.round(o.durSec * 10) / 10} s` + (who.length ? ` · ${who.join(", ")}` : "")
+  return (
+    `Play ${i + 1} (line ${o.line}): ${o.label} · ${plural(bars, "bar")} · ${Math.round(o.durSec * 10) / 10} s` +
+    (who.length ? ` · ${who.join(", ")}` : "")
+  )
 }
 
 export function createServer({ site = SITE } = {}) {
@@ -47,17 +52,24 @@ export function createServer({ site = SITE } = {}) {
   const query = (source, after) =>
     `src=${encodeURIComponent(source)}` + (after ? `&after=${encodeURIComponent(after)}` : "")
 
-  server.registerTool(
+  // parse and link name the MCP App (app.js): a host that renders MCP Apps draws the
+  // player for the cell under the tool's result; every other host reads the text.
+  registerAppTool(
+    server,
     "parse",
     {
       title: "Check a cell and see what it plays",
       description:
-        "Checks a composer-nb cell and says what it plays. Returns the errors with their line numbers (a cell with errors plays nothing), the settings and names in effect at the end, and for each play a grid of every hit and note, bar by bar, with the chords it heard. Call it on every cell before showing the cell to anyone; fix the errors and call it again.",
+        "Checks a composer-nb cell and says what it plays. Returns the errors with their line numbers (a cell with errors plays nothing), the settings and names in effect at the end, and for each play a grid of every hit and note, bar by bar, with the chords it heard. Where the client renders MCP Apps, the player is drawn too: the audio, the grid or the sheet, the chords. Call it on every cell before showing the cell to anyone; fix the errors and call it again.",
       inputSchema: { source: SOURCE, after: AFTER },
+      _meta: { ui: { resourceUri: CELL_UI } },
     },
     async ({ source, after }) => {
       const { parsed, earlier } = parse(source, after)
-      return { isError: parsed.errors.length > 0, content: [text(describe(parsed, earlier, source))] }
+      return {
+        isError: parsed.errors.length > 0,
+        content: [text(describe(parsed, earlier, source))],
+      }
     },
   )
 
@@ -94,7 +106,10 @@ export function createServer({ site = SITE } = {}) {
             text(
               `A MIDI file of ${plural(parsed.outputs.length, "play")}, ${bytes.length} bytes: the drums on channel 10 with General MIDI notes, a track per instrument, the tempo and time signature in it. Download it at ${url}`,
             ),
-            { type: "resource", resource: { uri: url, mimeType: "audio/midi", blob: bytes.toString("base64") } },
+            {
+              type: "resource",
+              resource: { uri: url, mimeType: "audio/midi", blob: bytes.toString("base64") },
+            },
           ],
         }
       }
@@ -116,12 +131,14 @@ export function createServer({ site = SITE } = {}) {
     },
   )
 
-  server.registerTool(
+  registerAppTool(
+    server,
     "link",
     {
       title: "A link that plays a cell",
       description:
-        "A link that opens the playground on a cell, ready to play, with practice controls (tempo, loop, count-in, mute a part), sheet music, and WAV and MIDI downloads: send it, and it opens on a phone. Give cells instead of source for a link to a whole notebook of text and music cells.",
+        "A link that opens the playground on a cell, ready to play, with practice controls (tempo, loop, count-in, mute a part), sheet music, and WAV and MIDI downloads: send it, and it opens on a phone. Give cells instead of source for a link to a whole notebook of text and music cells. Where the client renders MCP Apps, the player is drawn under the link as well.",
+      _meta: { ui: { resourceUri: CELL_UI } },
       inputSchema: {
         source: SOURCE.optional(),
         cells: z
@@ -134,19 +151,26 @@ export function createServer({ site = SITE } = {}) {
       if (cells?.length) {
         const music = cells.filter((c) => c.type === "music")
         const bad = music.map((c) => parse(c.source).parsed.errors.length).filter(Boolean).length
-        const note = bad ? ` ${plural(bad, "music cell")} of ${music.length} has errors; parse each to see them.` : ""
-        return { content: [text(`Opens the playground on the notebook, ready to play:\n${notebookUrl(site, cells)}${note}`)] }
+        const note = bad
+          ? ` ${plural(bad, "music cell")} of ${music.length} has errors; parse each to see them.`
+          : ""
+        return {
+          content: [
+            text(
+              `Opens the playground on the notebook, ready to play:\n${notebookUrl(site, cells)}${note}`,
+            ),
+          ],
+        }
       }
-      if (!source) return { isError: true, content: [text("Give source (one cell) or cells (a notebook).")] }
+      if (!source)
+        return { isError: true, content: [text("Give source (one cell) or cells (a notebook).")] }
       const { parsed } = parse(source)
       const warn = parsed.errors.length
         ? `\n\nThe cell has ${plural(parsed.errors.length, "error")}, so the link opens on the errors, not on music. Parse it to see them.`
         : ""
       return {
         content: [
-          text(
-            `Opens the playground on the cell, ready to play:\n${openUrl(site, source)}${warn}`,
-          ),
+          text(`Opens the playground on the cell, ready to play:\n${openUrl(site, source)}${warn}`),
         ],
       }
     },
@@ -159,13 +183,22 @@ export function createServer({ site = SITE } = {}) {
       description:
         "Searches the grooves library: transcriptions (Porcupine Tree in 7 and 9, Gavin Harrison's paradiddle challenge, a 3 over 4 over 5 polyrhythm, Polyrhythmics), harmony cells (a ii–V–I with a walking bass, dorian, mixolydian and lydian vamps, a 12-bar blues, a harmonic-minor cadence, a phrygian riff, a lydian groove in 15/16) and the rudiments with their stickings. Each comes as a cell to start from, with its page and a link that plays it. Search by words (paradiddle, dorian, blues, 7/8, guitar) or leave the query empty for the list.",
       inputSchema: {
-        query: z.string().optional().describe("Words to look for in the titles, the notes and the code"),
+        query: z
+          .string()
+          .optional()
+          .describe("Words to look for in the titles, the notes and the code"),
       },
     },
     async ({ query: q }) => {
       const found = searchGrooves(q || "")
       if (!found.length) {
-        return { content: [text(`Nothing in the library matches "${q}". The grooves are: ${GROOVES.map((g) => g.title).join(", ")}.`)] }
+        return {
+          content: [
+            text(
+              `Nothing in the library matches "${q}". The grooves are: ${GROOVES.map((g) => g.title).join(", ")}.`,
+            ),
+          ],
+        }
       }
       const full = q ? found.slice(0, 3) : []
       const rest = q ? found.slice(3) : found
@@ -178,7 +211,12 @@ export function createServer({ site = SITE } = {}) {
       if (rest.length) {
         out.push(
           (q ? "Also: " : "The library:\n") +
-            rest.map((g) => `- ${g.title} (${g.section.toLowerCase()}): ${plain(g.byline)}. ${plain(g.body).split(". ")[0]}. ${grooveUrl(g)}`).join("\n"),
+            rest
+              .map(
+                (g) =>
+                  `- ${g.title} (${g.section.toLowerCase()}): ${plain(g.byline)}. ${plain(g.body).split(". ")[0]}. ${grooveUrl(g)}`,
+              )
+              .join("\n"),
         )
       }
       return { content: [text(out.join("\n\n"))] }
@@ -190,8 +228,7 @@ export function createServer({ site = SITE } = {}) {
     "reference",
     {
       title: "The language reference",
-      description:
-        `The language reference, page by page: ${REFERENCE.map((p) => `${p.id} (${p.description.replace(/\.$/, "").toLowerCase()})`).join(", ")}. Read the page before writing something you haven't written before; "all" is the whole reference.`,
+      description: `The language reference, page by page: ${REFERENCE.map((p) => `${p.id} (${p.description.replace(/\.$/, "").toLowerCase()})`).join(", ")}. Read the page before writing something you haven't written before; "all" is the whole reference.`,
       inputSchema: { topic: z.enum(topics).default("all") },
     },
     async ({ topic }) => {
@@ -200,12 +237,20 @@ export function createServer({ site = SITE } = {}) {
     },
   )
 
+  registerCellApp(server, { site })
+
   for (const page of REFERENCE) {
     server.registerResource(
       `reference-${page.id}`,
       `composer-nb://reference/${page.id}`,
-      { title: `Reference: ${page.title}`, description: page.description, mimeType: "text/markdown" },
-      async (uri) => ({ contents: [{ uri: uri.href, mimeType: "text/markdown", text: page.text }] }),
+      {
+        title: `Reference: ${page.title}`,
+        description: page.description,
+        mimeType: "text/markdown",
+      },
+      async (uri) => ({
+        contents: [{ uri: uri.href, mimeType: "text/markdown", text: page.text }],
+      }),
     )
   }
   for (const g of GROOVES) {
@@ -213,7 +258,11 @@ export function createServer({ site = SITE } = {}) {
     server.registerResource(
       `groove-${slug}`,
       `composer-nb://grooves/${slug}`,
-      { title: g.title, description: `${plain(g.byline)}. ${plain(g.body)}`, mimeType: "text/markdown" },
+      {
+        title: g.title,
+        description: `${plain(g.byline)}. ${plain(g.body)}`,
+        mimeType: "text/markdown",
+      },
       async (uri) => ({
         contents: [
           {

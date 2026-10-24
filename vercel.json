@@ -1,7 +1,8 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": null,
-  "buildCommand": "npm run build -w playground",
+  "buildCommand": "npm run build:app -w mcp && npm run build -w playground",
   "outputDirectory": "playground/dist",
+  "functions": { "api/mcp.js": { "includeFiles": "mcp/app/dist/**" } },
   "rewrites": [{ "source": "/mcp", "destination": "/api/mcp" }]
 }

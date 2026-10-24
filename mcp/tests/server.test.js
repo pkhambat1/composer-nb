@@ -35,7 +35,11 @@ play piano: {
 
 let client
 const call = async (name, args) => client.callTool({ name, arguments: args })
-const textOf = (r) => r.content.filter((c) => c.type === "text").map((c) => c.text).join("\n")
+const textOf = (r) =>
+  r.content
+    .filter((c) => c.type === "text")
+    .map((c) => c.text)
+    .join("\n")
 
 beforeAll(async () => {
   const [a, b] = InMemoryTransport.createLinkedPair()
@@ -47,7 +51,13 @@ beforeAll(async () => {
 describe("tools", () => {
   it("are parse, render, link, library and reference", async () => {
     const { tools } = await client.listTools()
-    expect(tools.map((t) => t.name).sort()).toEqual(["library", "link", "parse", "reference", "render"])
+    expect(tools.map((t) => t.name).sort()).toEqual([
+      "library",
+      "link",
+      "parse",
+      "reference",
+      "render",
+    ])
   })
 
   it("parse reports a clean cell with its settings, names and a grid", async () => {
@@ -64,7 +74,9 @@ describe("tools", () => {
   })
 
   it("parse reports errors with their lines and the line's text", async () => {
-    const r = await call("parse", { source: "tempo 90\n\nplay {\n  kick: x--x---\n  piano: Am F\n}" })
+    const r = await call("parse", {
+      source: "tempo 90\n\nplay {\n  kick: x--x---\n  piano: Am F\n}",
+    })
     expect(r.isError).toBe(true)
     const t = textOf(r)
     expect(t).toContain("1 error")
@@ -73,7 +85,10 @@ describe("tools", () => {
   })
 
   it("parse starts from the cells in after", async () => {
-    const r = await call("parse", { source: "play 1 bars groove", after: "tempo 70\npattern groove = { kick: x--- }" })
+    const r = await call("parse", {
+      source: "play 1 bars groove",
+      after: "tempo 70\npattern groove = { kick: x--- }",
+    })
     expect(r.isError).toBeFalsy()
     expect(textOf(r)).toContain("tempo 70")
   })
@@ -130,7 +145,14 @@ describe("tools", () => {
   })
 
   it("link takes a notebook of cells", async () => {
-    const t = textOf(await call("link", { cells: [{ type: "text", source: "# Hi" }, { type: "music", source: MUZAK }] }))
+    const t = textOf(
+      await call("link", {
+        cells: [
+          { type: "text", source: "# Hi" },
+          { type: "music", source: MUZAK },
+        ],
+      }),
+    )
     expect(t).toContain("https://example.test/?open#nb=")
   })
 
@@ -155,6 +177,33 @@ describe("tools", () => {
     const all = textOf(await call("reference", {}))
     expect(all).toContain("# Overview")
     expect(all).toContain("# play")
+  })
+})
+
+describe("the MCP App", () => {
+  it("is what parse and link name for a host that renders UI", async () => {
+    const { tools } = await client.listTools()
+    const byName = Object.fromEntries(tools.map((t) => [t.name, t]))
+    expect(byName.parse._meta.ui.resourceUri).toBe("ui://composer-nb/cell")
+    expect(byName.link._meta.ui.resourceUri).toBe("ui://composer-nb/cell")
+    expect(byName.render._meta?.ui).toBeUndefined()
+  })
+
+  it("reads as one page with the player in it, and the playground's address", async () => {
+    const { resources } = await client.listResources()
+    expect(resources.map((r) => r.uri)).toContain("ui://composer-nb/cell")
+    const [page] = (await client.readResource({ uri: "ui://composer-nb/cell" })).contents
+    expect(page.mimeType).toBe("text/html;profile=mcp-app")
+    expect(page.text).toContain('window.COMPOSER_NB_SITE = "https://example.test"')
+    expect(page.text).toContain("cnb-play") // the player's Play button, from the bundled renderer
+    expect(page.text.match(/<\/script>/g)).toHaveLength(2) // the inline bundle closes no tag of its own
+    expect(page._meta.ui.csp.connectDomains).toContain("https://cdn.jsdelivr.net")
+  })
+
+  it("leaves parse answering in text, with nothing structured to replace it", async () => {
+    const r = await call("parse", { source: MUZAK })
+    expect(r.structuredContent).toBeUndefined()
+    expect(textOf(r)).toContain("No errors.")
   })
 })
 
