@@ -30,7 +30,7 @@ describe("chord rhythm", () => {
   })
 
   it("% repeats the bar before", () => {
-    expect(labels("C G|%")).toEqual(["C", "G", "C", "G"])
+    expect(labels("C G|%|F G")).toEqual(["C", "G", "C", "G", "F", "G"])
   })
 
   it("rejects splits that don't land on sixteenths", () => {

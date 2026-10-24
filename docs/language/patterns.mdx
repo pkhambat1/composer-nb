@@ -1,6 +1,6 @@
 ---
 title: "Patterns"
-description: "The pattern type: lines that play together and repeat, how long a pattern lasts, sequences and bar."
+description: "The pattern type: lines that play together and repeat, how long a pattern lasts, groups and bar."
 ---
 
 import { Cell } from "/snippets/cell.jsx"
@@ -30,26 +30,43 @@ Each line repeats at its own length, and the pattern lasts until they end togeth
 
 A length in front sets the duration instead: `pattern groove = 4 bars { ... }`. Everything inside must then fit it a whole number of times, and the error names the shortest length that would. A pattern whose lines don't meet within 64 bars needs a length.
 
-## Sequences
+## Groups
 
-Names in a row play one after another. A block or a bracketed group in a row is joined to its neighbours by `then`, on the same line as the `}` or `)` before it. See [Blocks](/language/overview#blocks). A length in front of a name or a bracketed group repeats it for that long; in front of braces it is the block's own length, which comes to the same thing, and is what a block of lines ending in `...` needs.
+`( )` holds what plays in order: names, blocks, other groups, and lines of their own, one after another, separated by spaces or new lines. It is the one way to put things in order. On lines of their own, things play together, and two things on one line without brackets are an error. See [Blocks](/language/overview#blocks). A length in front of a name or a group repeats it for that long; in front of braces it is the block's own length, which comes to the same thing, and is what a block of lines ending in `...` needs.
 
 <Cell>
 
 ```composer-nb
 pattern intro = { crash: 1 }
-pattern verse = { kick: x---x--- }
+pattern verse = { kick: x--- ---- x-x- ---- }
 pattern chorus = {
-  kick: x-x-
-  snare: ----x---
+  kick: x-
+  snare: ---- x--- ---- x-x-
 }
 
-play intro then 4 bars (verse chorus) then intro
+play (intro 4 bars (verse chorus) intro)
 ```
 
 </Cell>
 
-A pattern can hold another by name, on a line of its own, and its value can be a sequence.
+A group can run over several lines, and a line of its own in it plays as a block of one line.
+
+<Cell>
+
+```composer-nb
+key C
+octave 4
+
+play (
+  piano: 1---2---3---4---
+  piano: 5---6---7---1'---
+  { piano: 1 bars 1' }
+)
+```
+
+</Cell>
+
+A pattern can hold another by name, on a line of its own, and its value can be a group.
 
 <Cell>
 
@@ -64,7 +81,12 @@ pattern verse = {
   beat
 }
 
-pattern song = verse verse
+pattern chorus = {
+  piano: chords F G|C -
+  beat
+}
+
+pattern song = (verse chorus)
 
 play song
 ```

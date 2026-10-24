@@ -29,7 +29,7 @@ const CHORDS = `tempo 100
 key Am
 
 play piano: {
-  chords i VI|III VII
+  chords i bVI|bIII bVII
   E5-------C5-------|E5---D5---C5---B4---
 }`
 

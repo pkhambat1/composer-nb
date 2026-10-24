@@ -67,8 +67,9 @@ def test_inside_braces_offers_instruments_and_patterns():
     assert texts(cell + "ri") == ["ride: ", "ride.bell: "]
     assert texts(cell + "gu") == ["guitar: ", "guitar.electric: "]
     assert texts(cell + "l") == []  # no loop: a pattern repeats by itself
-    assert texts(cell + "groove g") == ["groove"]
-    assert texts(cell + "groove ") == ["groove", "then "]  # a space is enough between names
+    assert texts(cell + "(groove g") == ["groove"]
+    assert texts(cell + "groove ") == []  # a line plays one thing
+    assert texts(cell + "(groove ") == ["groove"]  # a group plays them in order
 
 
 def test_settings_offer_their_values():
@@ -160,54 +161,44 @@ def test_play_offers_patterns_and_lengths():
     assert texts(cell + "play 3 bars (groove g") == ["groove"]
 
 
-def test_a_row_offers_then_after_a_name_and_names_after_then():
+def test_a_line_plays_one_thing_and_a_group_plays_them_in_order():
     cell = "%%music\nsteps pair = x-x-\npattern groove = { kick: x--x }\n"
-    assert "then " in texts(cell + "play groove ")
-    assert texts(cell + "play groove ") == ["groove", "then "]
-    assert texts(cell + "play groove t") == ["then "]
-    assert texts(cell + "play groove then ") == ["groove"]
-    assert texts(cell + "play groove then g") == ["groove"]
-    # after a length, names as before: then goes between two things
-    assert texts(cell + "play 3 bars ") == ["groove"]
-    assert texts(cell + "play groove then 3 ") == ["bars "]
-    assert texts(cell + "play groove then 3 bars ") == ["groove"]
-    assert texts(cell + "play 3 bars groove ") == ["groove", "then "]
-    # the same wherever a row can be
-    assert texts(cell + "pattern song = groove ") == ["groove", "then "]
-    assert texts(cell + "pattern song = groove then ") == ["groove"]
-    assert texts(cell + "play {\n  groove ") == ["groove", "then "]
-    assert texts(cell + "play {\n  groove then ") == ["groove"]
-    assert texts(cell + "play {\n  bar 2 groove ") == ["groove", "then "]
-    assert texts(cell + "play {\n  every 2 steps groove then ") == ["groove"]
-    # a group starts with a pattern, never then
-    assert texts(cell + "play groove (") == ["groove"]
-    assert texts(cell + "play (groove ") == ["groove", "then "]
-    # a line doesn't start with then
-    assert texts(cell + "play {\n  then ") == []
-    assert texts(cell + "then ") == []
+    # a line plays one thing, so nothing follows a name outside brackets
+    assert texts(cell + "play groove ") == []
+    assert texts(cell + "play 3 bars groove ") == []
+    assert texts(cell + "pattern song = groove ") == []
+    assert texts(cell + "play {\n  groove ") == []
+    # in a group, what plays in order goes on
+    assert texts(cell + "play (groove ") == ["groove"]
+    assert texts(cell + "play (groove g") == ["groove"]
+    assert texts(cell + "play (groove 3 ") == ["bars "]
+    assert texts(cell + "play (groove 3 bars ") == ["groove"]
+    assert texts(cell + "pattern song = (groove ") == ["groove"]
+    assert texts(cell + "play {\n  (groove ") == ["groove"]
+    assert texts(cell + "play {\n  bar 2 (groove ") == ["groove"]
+    assert texts(cell + "play {\n  every 2 steps (groove ") == ["groove"]
+    # a group starts with what plays: names, blocks and lines
+    assert texts(cell + "play (") == ["groove", *[p + ": " for p in completer.PARTS]]
+    # a group over several lines goes on with each line
+    assert texts(cell + "play (\n  groove\n  ") == ["groove", *[p + ": " for p in completer.PARTS]]
+    assert texts(cell + "play (\n  groove ") == ["groove"]
 
 
-def test_after_a_block_or_a_group_only_then_follows():
+def test_after_a_block_or_a_group_more_follows_only_in_a_group():
     cell = "%%music\nsteps pair = x-x-\npattern groove = { kick: x--x }\n"
-    assert texts(cell + "play { kick: x } ") == ["then "]
-    assert texts(cell + "play 3 bars { kick: x } ") == ["then "]
-    assert texts(cell + "play {\n  kick: x\n} ") == ["then "]
-    assert texts(cell + "play {\n  { kick: x } ") == ["then "]
-    assert texts(cell + "play {\n  {\n    kick: x\n  } ") == ["then "]
-    assert texts(cell + "play {\n  bar 2 { snare: 1 } ") == ["then "]
-    assert texts(cell + "play {\n  every 2 steps { kick: x } ") == ["then "]
-    assert texts(cell + "pattern song = { kick: x } ") == ["then "]
-    assert texts(cell + "play (groove) ") == ["then "]
-    assert texts(cell + "play 4 bars (groove groove) ") == ["then "]
-    assert texts(cell + "play {\n  (groove groove) ") == ["then "]
-    assert texts(cell + "play { kick: x } th") == ["then "]
-    assert texts(cell + "play { kick: x } g") == []  # no pattern straight after a block
-    # then goes on with the row, on the same line
-    assert texts(cell + "play { kick: x } then ") == ["groove"]
-    assert texts(cell + "play {\n  kick: x\n} then ") == ["groove"]
-    assert texts(cell + "play (groove groove) then ") == ["groove"]
-    assert texts(cell + "play { kick: x } then 2 ") == ["bars "]
-    assert texts(cell + "play { kick: x } then { snare: x } ") == ["then "]
+    assert texts(cell + "play { kick: x } ") == []
+    assert texts(cell + "play 3 bars { kick: x } ") == []
+    assert texts(cell + "play {\n  kick: x\n} ") == []
+    assert texts(cell + "play {\n  { kick: x } ") == []
+    assert texts(cell + "play {\n  bar 2 { snare: 1 } ") == []
+    assert texts(cell + "pattern song = { kick: x } ") == []
+    assert texts(cell + "play (groove) ") == []
+    assert texts(cell + "play 4 bars (groove groove) ") == []
+    assert texts(cell + "play {\n  (groove groove) ") == []
+    # in a group, more follows a block or a group
+    assert texts(cell + "play ({ kick: x } ") == ["groove"]
+    assert texts(cell + "play ((groove groove) ") == ["groove"]
+    assert texts(cell + "play ({ kick: x } { snare: x } ") == ["groove"]
     # a length's arithmetic is not a group
     assert texts(cell + "play (1+2) ") == ["bars "]
     assert texts(cell + "play (1+2) bars ") == ["groove"]
@@ -219,6 +210,13 @@ def test_after_a_block_or_a_group_only_then_follows():
     assert "play " in texts(cell + "play { kick: x }\n")
 
 
+def test_a_line_of_notes_takes_lengths():
+    cell = "%%music\nnotes riff = F---\nplay {\n  "
+    assert texts(cell + "bass: 3 ") == ["steps ", "beats ", "bars "]
+    assert texts(cell + "bass: 3 beats ") == ["rest", "riff"]
+    assert texts(cell + "bass: 3 beats C2, ") == ["riff"]
+
+
 def test_a_type_offers_what_it_holds_after_the_equals():
     cell = "%%music\nsteps pair = ^-x-\nnotes riff = F---\nchords verse = Am F\npattern hit = { crash: 1 }\n"
     assert texts(cell + "steps ") == []  # still writing the name
@@ -228,7 +226,7 @@ def test_a_type_offers_what_it_holds_after_the_equals():
     assert texts(cell + "pattern outro = ") == ["hit", *[p + ": " for p in completer.PARTS]]
     assert texts(cell + "pattern outro = 2 ") == ["bars "]
     assert texts(cell + "pattern outro = 2 bars h") == ["hit"]
-    assert texts(cell + "pattern outro = hit h") == ["hit"]
+    assert texts(cell + "pattern outro = (hit h") == ["hit"]
     assert texts(cell + "pattern fill = snare: ") == ["pair"]
 
 
@@ -236,16 +234,6 @@ def test_a_name_given_again_means_the_new_thing():
     cell = "%%music\nsteps riff = x-x-\nchords riff = Am F\nplay {\n  "
     assert texts(cell + "piano: chords ") == ["riff"]
     assert texts(cell + "hat: ") == []
-
-
-def test_then_is_not_a_name():
-    cell = "%%music\npattern then = { kick: x }\nsteps then = x-\npattern groove = { kick: x }\n"
-    assert completer._names("pattern then = { kick: x }\nsteps then = x-") == {
-        t: [] for t in completer.TYPES
-    }
-    assert texts(cell + "play t") == ["tom.high: ", "tom.low: ", "tom.floor: "]
-    assert texts(cell + "play {\n  hat: ") == []
-    assert texts(cell + "play groove ") == ["groove", "then "]  # the keyword, once
 
 
 def test_names_without_a_type_are_not_names_yet():

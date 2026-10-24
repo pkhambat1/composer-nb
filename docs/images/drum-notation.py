@@ -70,8 +70,8 @@ def accent(cx, y):
 def sheet_to_code():
     w, h, top = 968, 416, 160
     col = lambda i: 300 + i * 40
-    hat = "x-x-x-x-x-x-x-x-"
-    snare = "----^-------^---"
+    hat = "^-x-x-x-x-x-x-x-"
+    snare = "----^-------^-x-"
     kick = "x-------x-x-----"
     body = '<text class="h" x="28" y="44">One bar of sheet music, and the same bar in code</text>'
     body += '<text class="s dim" x="28" y="68">Each sixteenth note of the bar is one character. A character is under the note it plays.</text>'
@@ -86,9 +86,13 @@ def sheet_to_code():
             continue
         low = top + POS["hat"] * GAP / 2
         body += head(cx, low, "x")
+        if hat[i] == "^":
+            body += accent(cx, beam - 14)
         if snare[i] != "-":
             low = top + POS["snare"] * GAP / 2
-            body += head(cx, low) + accent(cx, beam - 14)
+            body += head(cx, low)
+            if snare[i] == "^":
+                body += accent(cx, beam - 14)
         if kick[i] != "-":
             low = top + POS["kick"] * GAP / 2
             body += head(cx, low)
@@ -105,7 +109,7 @@ def sheet_to_code():
         body += f'<text class="m" x="36" y="{y}" xml:space="preserve"><tspan class="inst">{name}</tspan><tspan class="p">:</tspan></text>'
         for i, c in enumerate(steps):
             body += f'<text class="m step" x="{col(i)}" y="{y}" text-anchor="middle" font-weight="{400 if c == "-" else 700}">{html.escape(c)}</text>'
-    body += f'<text class="s dim" x="28" y="{h - 22}" style="font-size:13px">The snare on 2 and 4 carries an accent mark, so it is written ^. The same two lines as beats: snare: ^2 ^4 and kick: 1 3 3&amp;.</text>'
+    body += f'<text class="s dim" x="28" y="{h - 22}" style="font-size:13px">An accent mark is written ^: the first hi-hat, and the snare on 2 and 4. As beats: snare: ^2 ^4 4&amp; and kick: 1 3 3&amp;.</text>'
     return svg(w, h, "A rock beat on a drum staff above the same beat as hat, snare and kick lines, with each character under its note", body)
 
 

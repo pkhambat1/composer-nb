@@ -40,7 +40,7 @@ function formatTime(sec) {
 
 function describeBlock(b) {
   const bars = `${b.bars} bar${b.bars === 1 ? "" : "s"}${b.times > 1 ? ` × ${b.times}` : ""}`
-  return `time ${b.time} · tempo ${b.tempo} · ${bars}`
+  return `time ${b.time} · tempo ${b.tempo} · key ${b.key} · ${bars}`
 }
 
 // The pitched instruments that play, e.g. "guitar, capo 2 · bass".

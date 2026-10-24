@@ -8,14 +8,14 @@ import { Cell } from "/snippets/cell.jsx"
 `play` evaluates what follows it and renders one output. It is the only statement that makes sound, and it goes at the top level of a cell.
 
 ```text
-play [<length>] <pattern, sequence, block or line>
+play [<length>] <pattern, group, block or line>
 ```
 
 <Cell>
 
 ```composer-nb
 pattern groove = {
-  kick: x---x---
+  kick: x---
   snare: ----x---
 }
 
@@ -38,8 +38,7 @@ A play is a timeline, and its statements start together.
 | In a play | Plays |
 | --- | --- |
 | A line | Once. |
-| A single pattern | Repeated until the play ends. |
-| A sequence of two or more | In order, once. |
+| A pattern, or a group in brackets | Repeated until the play ends. A group plays what's in it in order. |
 | `every` | Repeated until the play ends. |
 | `bar <n>` | In bar `n`. |
 
@@ -49,7 +48,7 @@ Without a length, a play lasts as long as its longest statement, and what repeat
 
 ## Output
 
-- A header with the time, tempo, number of bars and the instruments that play.
+- A header with the time, tempo, key, number of bars and the instruments that play.
 - Audio with a waveform, a WAV download, and a MIDI file for a DAW or a notation program.
 - A grid of every hit and note, bar by bar. The playground can draw it as sheet music instead: the kit on a percussion staff with hands up and feet down, each instrument on a staff of its own (a guitar with its tab) in the signature of the [`key`](/language/settings#key), and the sheet prints.
 - The chords played. The playground draws a diagram for each.

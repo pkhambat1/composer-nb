@@ -24,10 +24,16 @@ export const NOTE_TO_PC = {
 const SHARP_NAMES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"]
 const FLAT_NAMES = ["C", "Db", "D", "Eb", "E", "F", "Gb", "G", "Ab", "A", "Bb", "B"]
 
-export function midiToName(m) {
+export function midiToName(m, flats = false) {
   const pc = ((m % 12) + 12) % 12
   const oct = Math.floor(m / 12) - 1
-  return SHARP_NAMES[pc] + oct
+  return (flats ? FLAT_NAMES : SHARP_NAMES)[pc] + oct
+}
+
+// Semitones from a root to a degree of its major scale, moved by b or # in front: 3 is 4
+// semitones, b3 is 3. Shared by a chord's numeral and a note written as a degree.
+export function degreeSemitones(degree, acc = "") {
+  return MODE_SCALES.major[degree - 1] + (acc === "#" ? 1 : acc === "b" ? -1 : 0)
 }
 
 // The scales a key can be in: semitones above the tonic. A major key is written C and a
@@ -100,14 +106,21 @@ export function isRoman(token) {
   return ROMAN_TOKEN_RE.test(token.split("/")[0])
 }
 
+// A degree, 1 to 7, counted on the major scale of the key's root whatever the key's mode,
+// which is how a scale is described: natural minor is 1 2 b3 4 5 b6 b7. b and # in front
+// move it a semitone. Shared by a chord's numeral and a note written as a degree.
+export function degreePc(key, degree, acc = "") {
+  return (key.tonicPc + degreeSemitones(degree, acc) + 12) % 12
+}
+
 // Case sets the third: V is major and v minor. What follows is the quality, written as it
-// is after a chord's root: V7, ii7, IVmaj7, viidim, viidim7, viim7b5.
+// is after a chord's root: V7, ii7, IVmaj7, viidim, viidim7, viim7b5. The degree is counted
+// on the major scale of the root, so bVII in Am is G and III is C#.
 function romanToSymbol(main, key) {
   const m = ROMAN_RE.exec(main)
   if (!m) return null
   const [, acc, numeral, rest] = m
-  const shift = acc === "#" ? 1 : acc === "b" ? -1 : 0
-  const pc = (key.tonicPc + key.scale[DEGREE[numeral.toLowerCase()]] + shift + 12) % 12
+  const pc = degreePc(key, DEGREE[numeral.toLowerCase()] + 1, acc)
   const names = acc === "b" || (!acc && key.flats) ? FLAT_NAMES : SHARP_NAMES
   let quality
   if (/^(dim|m7b5)/.test(rest)) quality = rest
@@ -176,7 +189,7 @@ export function applyCapo(chord, semis) {
   if (!semis) return chord
   chord.notesMidi = chord.notesMidi.map((m) => m + semis)
   chord.bassMidi = chord.bassMidi + semis
-  chord.noteNames = chord.notesMidi.map(midiToName)
+  chord.noteNames = chord.notesMidi.map((m) => midiToName(m))
   chord.bassName = midiToName(chord.bassMidi)
   return chord
 }
