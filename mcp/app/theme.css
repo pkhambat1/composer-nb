@@ -1,0 +1,46 @@
+/* The player inside Claude: its colors from the host's style variables, which follow the
+   light and dark themes, through the --theme-* names the player's own styles read. */
+:root {
+  color-scheme: light dark;
+}
+body {
+  margin: 0;
+  padding: 6px 4px 10px;
+  background: transparent;
+  color: var(--color-text-primary, #141413);
+  font-family: var(--font-sans, system-ui, sans-serif);
+  font-size: var(--font-text-sm-size, 14px);
+}
+.cnb-host {
+  --theme-foreground: var(--color-text-primary, #141413);
+  --theme-foreground-muted: var(--color-text-tertiary, #73726c);
+  --theme-foreground-fainter: var(--color-text-ghost, rgba(20, 20, 19, 0.5));
+  --theme-foreground-faintest: var(--color-border-tertiary, rgba(31, 30, 29, 0.15));
+  --theme-foreground-focus: var(--color-text-info, #3266ad);
+  --theme-background: var(--color-background-primary, #ffffff);
+  --theme-red: var(--color-text-danger, #7f2c28);
+  --sans-serif: var(--font-sans, system-ui, sans-serif);
+  --monospace: var(--font-mono, ui-monospace, Menlo, monospace);
+}
+.cnb-host + .cnb-host {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: var(--border-width-regular, 1px) solid
+    var(--color-border-tertiary, rgba(31, 30, 29, 0.15));
+}
+#status {
+  color: var(--color-text-tertiary, #73726c);
+  font-size: var(--font-text-sm-size, 14px);
+}
+#foot {
+  margin: 8px 0 0;
+  font-size: var(--font-text-xs-size, 12px);
+}
+#foot a {
+  color: var(--color-text-info, #3266ad);
+  text-decoration: none;
+  font-weight: var(--font-weight-medium, 500);
+}
+#foot a:hover {
+  text-decoration: underline;
+}

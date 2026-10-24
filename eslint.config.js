@@ -44,6 +44,21 @@ export default [
     },
   },
   {
+    // The MCP App runs in the host's frame, not in Node
+    files: ["mcp/app/**/*.js"],
+    ignores: ["mcp/app/vite.config.js"],
+    languageOptions: {
+      ecmaVersion: 2022,
+      sourceType: "module",
+      globals: { ...globals.browser, __VERSION__: "readonly" },
+    },
+    plugins: { "@stylistic": stylistic },
+    rules: {
+      ...js.configs.recommended.rules,
+      ...sharedStylistic,
+    },
+  },
+  {
     files: ["playground/src/**/*.{js,jsx}", "dsl/js/**/*.js"],
     languageOptions: {
       ecmaVersion: 2022,
