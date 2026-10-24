@@ -1876,6 +1876,15 @@ function stepLayerRun(line, st, err, part) {
 // ---------------------------------------------------------------------------
 
 const NOTE_BASE = { C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, B: 11 }
+const LETTERS = "CDEFGAB"
+
+// How a note is spelt, for the sheet: its letter and how far that is raised or lowered. A
+// letter note is spelt as written, so Db stays Db. A degree takes the letter of its place in
+// the scale, counted from the key's root, so b3 in C is Eb and 7 in F# is E#.
+function spellOf(s, midi, key) {
+  const letter = s.degree ? LETTERS[(LETTERS.indexOf(key.root[0]) + s.degree - 1) % 7] : s.name[0]
+  return { letter, alter: ((((midi - NOTE_BASE[letter]) % 12) + 18) % 12) - 6 }
+}
 // A note (F#4), or a degree ('b3'): ^ or ~ in front; then for a note the letter, # or b and
 // the octave; for a degree ' for each octave below, b or # and the digit, 1 to 7, and ' for
 // each octave above. A degree is counted on the major scale of the key's root, whatever the
@@ -2256,7 +2265,7 @@ function notePattern(part, { steps, open = false, fill = null }, st) {
         cur = {
           tick: k * stepTicks,
           ticks: 0,
-          note: { midi, name: midiToName(midi, s.degree ? key.flats : false) },
+          note: { midi, name: midiToName(midi, s.degree ? key.flats : false), spell: spellOf(s, midi, key) },
           label: s.label,
           instrument: part.name,
           ...(sound && { sound }),

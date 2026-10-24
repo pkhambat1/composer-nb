@@ -207,6 +207,14 @@ describe("the key signature", () => {
     // Once in a bar, an accidental holds for the bar
     expect(voice("play piano: F#4--- F#4--- _-------|F#4---------------")).toBe("[V:P1] ^F4 F4 z4 z4 | ^F16 |")
   })
+  it("spells a note as written, and a degree by its place in the scale", () => {
+    expect(voice("play piano: Db4--- C#4---")).toBe("[V:P1] _D4 ^C4 z4 z4 |")
+    // b3, b6 and b7 in C are Eb, Ab and Bb, not D#, G# and A#
+    expect(voice("key C\noctave 4\nplay piano: b3---b6---b7---")).toBe("[V:P1] _E4 _A4 _B4 z4 |")
+    // F# major's seventh is E#, and Gb major's fourth is Cb: both in the signature already
+    expect(voice("key F#\noctave 4\nplay piano: 7---1'---")).toBe("[V:P1] e4 f4 z4 z4 |")
+    expect(voice("key Gb\noctave 4\nplay piano: 4---7---")).toBe("[V:P1] c4 f4 z4 z4 |")
+  })
   it("stays off the percussion staff", () => {
     const lines = voices("key D\nplay {\n  hat: 1 bars x-\n  kick: x--- ---- x-x- ----\n  piano: F#4--- C#4---\n}")
     expect(lines[0]).toMatch(/^\[V:H\] \[K:none\] /)
