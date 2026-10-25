@@ -30,6 +30,7 @@ const allErrors = (src) => parseSource(src).errors.map((e) => e.msg)
 const anyError = (src) => allErrors(src).join("\n")
 const labels = (src) => parseSource(src).chords.map((e) => e.label)
 const notes = (src) => parseSource(src).notes.map((e) => e.note.name)
+const midis = (src) => parseSource(src).notes.map((e) => e.note.midi)
 const hits = (o, lane) => o.drumEvents.filter((e) => e.lane === lane && !e.hidden)
 const durations = (src) => parseSource(src).outputs.map((o) => o.durSec)
 // The drum hits that play, in an order that doesn't depend on which line they came from.
@@ -1991,6 +1992,8 @@ describe("notes", () => {
     expect(notes("key C\noctave 3\nplay bass: 1-'5-''1-1''-")).toEqual(["C3", "G2", "C1", "C5"])
     // letters and degrees can share a line
     expect(notes("key D\noctave 4\nplay piano: 1-F#4-5-")).toEqual(["D4", "F#4", "A4"])
+    // Cb4 sits just below C4, so key Cb's root in octave 4 is the B below middle C
+    expect(midis("key Cb\noctave 4\nplay piano: 1-4-")).toEqual([59, 64])
     expect(firstError("play piano: 13--")).toMatch(/notes don't touch, so put a space between them: 1 3--/)
   })
 

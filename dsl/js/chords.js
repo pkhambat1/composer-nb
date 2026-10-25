@@ -59,6 +59,7 @@ export const MODE_SCALES = {
 const MODE_FIFTHS = { major: 0, ionian: 0, lydian: -1, mixolydian: 1, dorian: 2, minor: 3, aeolian: 3, phrygian: 4, locrian: 5 }
 const LETTER_FIFTHS = { F: -1, C: 0, G: 1, D: 2, A: 3, E: 4, B: 5 }
 const DEGREE = { i: 0, ii: 1, iii: 2, iv: 3, v: 4, vi: 5, vii: 6 }
+const LETTER_PC = { C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, B: 11 }
 const ROMAN_RE = /^([#b]?)(VII|VI|IV|V|III|II|I|vii|vi|iv|v|iii|ii|i)(.*)$/
 
 // "C", "Am", "F#m", "Bb", "D dorian" → the key: its root, mode and scale, the sharps in its
@@ -79,6 +80,8 @@ export function parseKey(str) {
     root,
     mode,
     tonicPc: NOTE_TO_PC[root],
+    // Semitones from C up to the root as its octave counts it: Cb4 is just below C4, so -1
+    tonicSemis: LETTER_PC[letter] + (acc === "#" ? 1 : acc === "b" ? -1 : 0),
     scale: MODE_SCALES[mode],
     sharps,
     flats: sharps < 0,
@@ -121,7 +124,6 @@ export function degreePc(key, degree, acc = "") {
 // or lowered to its pitch. So the 7th of G minor is F#, not Gb, the 3rd of C# is E#, and
 // bVII in A is G.
 const LETTERS = "CDEFGAB"
-const LETTER_PC = { C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, B: 11 }
 export function degreeName(key, degree, acc = "") {
   const letter = LETTERS[(LETTERS.indexOf(key.root[0]) + degree - 1) % 7]
   const alter = ((((degreePc(key, degree, acc) - LETTER_PC[letter]) % 12) + 18) % 12) - 6

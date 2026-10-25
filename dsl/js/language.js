@@ -2242,7 +2242,7 @@ function notePattern(part, { steps, open = false, fill = null }, st) {
   const sharp = { "#": 1, b: -1 }
   const midiOf = (s) =>
     s.degree
-      ? 12 * (octave + 1 + s.shift) + key.tonicPc + degreeSemitones(s.degree, s.acc)
+      ? 12 * (octave + 1 + s.shift) + key.tonicSemis + degreeSemitones(s.degree, s.acc)
       : 12 * ((s.octave ?? octave) + 1) + NOTE_BASE[s.name[0]] + (sharp[s.name[1]] || 0)
   return {
     kind: "pitched",
