@@ -214,6 +214,9 @@ describe("the key signature", () => {
     // F# major's seventh is E#, and Gb major's fourth is Cb: both in the signature already
     expect(voice("key F#\noctave 4\nplay piano: 7---1'---")).toBe("[V:P1] e4 f4 z4 z4 |")
     expect(voice("key Gb\noctave 4\nplay piano: 4---7---")).toBe("[V:P1] c4 f4 z4 z4 |")
+    // a chord's notes as the chord spells them: B# major is B# D## F##, not C E G
+    expect(voice("key C#m\nplay piano: chords VII")).toBe('[V:P1] "B#"[^B,,^^D,^^F,]16 |')
+    expect(voice("key Gb\nplay piano: chords IV")).toBe('[V:P1] "Cb"[CEG]16 |')
   })
   it("stays off the percussion staff", () => {
     const lines = voices("key D\nplay {\n  hat: 1 bars x-\n  kick: x--- ---- x-x- ----\n  piano: F#4--- C#4---\n}")

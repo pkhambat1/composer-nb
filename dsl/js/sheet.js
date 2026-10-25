@@ -266,12 +266,14 @@ function joinLong(pieces, mid) {
   return out
 }
 
-// A chord's note name, as the engine spells it (C#3), as a midi number.
+// A chord's note name, as the engine spells it (C#3, F##3), as a midi number and the
+// spelling the sheet writes it with.
 const BASE = { C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, B: 11 }
-function midiOf(name) {
-  const m = /^([A-G])([#b]?)(-?\d+)$/.exec(name)
+function pitchOf(name) {
+  const m = /^([A-G])(#{0,2}|b{0,2})(-?\d+)$/.exec(name)
   if (!m) return null
-  return 12 * (Number(m[3]) + 1) + BASE[m[1]] + (m[2] === "#" ? 1 : m[2] === "b" ? -1 : 0)
+  const alter = (m[2][0] === "#" ? 1 : -1) * m[2].length
+  return { midi: 12 * (Number(m[3]) + 1) + BASE[m[1]] + alter, spell: { letter: m[1], alter } }
 }
 
 // A pitched instrument's clef, and how far above its sound it's written: guitars and basses
@@ -332,8 +334,8 @@ export function sheetAbc(block, { counts = false, barsPerLine = 4 } = {}) {
     const key = `${e.instrument}#chords`
     if (!pitched.has(key)) pitched.set(key, { inst: e.instrument, hits: new Map() })
     e.chord.noteNames.forEach((name, i) => {
-      const midi = midiOf(name)
-      if (midi != null) put(pitched.get(key).hits, e.tick, { span: e.ticks, midi, symbol: i === 0 ? e.chord.label : null })
+      const p = pitchOf(name)
+      if (p) put(pitched.get(key).hits, e.tick, { span: e.ticks, ...p, symbol: i === 0 ? e.chord.label : null })
     })
   }
   let p = 0

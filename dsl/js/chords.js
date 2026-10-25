@@ -20,6 +20,10 @@ export const NOTE_TO_PC = {
   "A#": 10,
   Bb: 10,
   B: 11,
+  Cb: 11,
+  "B#": 0,
+  Fb: 4,
+  "E#": 5,
 }
 const SHARP_NAMES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"]
 const FLAT_NAMES = ["C", "Db", "D", "Eb", "E", "F", "Gb", "G", "Ab", "A", "Bb", "B"]
@@ -113,6 +117,17 @@ export function degreePc(key, degree, acc = "") {
   return (key.tonicPc + degreeSemitones(degree, acc) + 12) % 12
 }
 
+// A degree's name: the letter of its place in the scale, counted from the key's root, raised
+// or lowered to its pitch. So the 7th of G minor is F#, not Gb, the 3rd of C# is E#, and
+// bVII in A is G.
+const LETTERS = "CDEFGAB"
+const LETTER_PC = { C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, B: 11 }
+export function degreeName(key, degree, acc = "") {
+  const letter = LETTERS[(LETTERS.indexOf(key.root[0]) + degree - 1) % 7]
+  const alter = ((((degreePc(key, degree, acc) - LETTER_PC[letter]) % 12) + 18) % 12) - 6
+  return letter + (alter > 0 ? "#".repeat(alter) : "b".repeat(-alter))
+}
+
 // Case sets the third: V is major and v minor. What follows is the quality, written as it
 // is after a chord's root: V7, ii7, IVmaj7, viidim, viidim7, viim7b5. The degree is counted
 // on the major scale of the root, so bVII in Am is G and III is C#.
@@ -120,13 +135,12 @@ function romanToSymbol(main, key) {
   const m = ROMAN_RE.exec(main)
   if (!m) return null
   const [, acc, numeral, rest] = m
-  const pc = degreePc(key, DEGREE[numeral.toLowerCase()] + 1, acc)
-  const names = acc === "b" || (!acc && key.flats) ? FLAT_NAMES : SHARP_NAMES
+  const root = degreeName(key, DEGREE[numeral.toLowerCase()] + 1, acc)
   let quality
   if (/^(dim|m7b5)/.test(rest)) quality = rest
   else if (numeral === numeral.toUpperCase() || rest.startsWith("sus")) quality = rest
   else quality = rest.startsWith("maj") ? "mMaj" + rest.slice(3) : "m" + rest
-  return names[pc] + quality
+  return root + quality
 }
 
 // A chord token ("Cmaj7", "C/E", "ii7", "bVII") → voicing, or null if it isn't a chord.
@@ -153,8 +167,13 @@ export function buildChord(token, key, octave = 3) {
   const rootMidi = (octave + 1) * 12 + tonicPc
   const bass = (octave + 1) * 12 + bassPc - 12
   const voicing = ch.intervals.map((iv) => rootMidi + Interval.semitones(iv))
-  // The notes are spelt from the symbol, as a musician would: A C# E, not A Db E
-  const names = ch.intervals.map((iv) => Note.transpose(ch.tonic + octave, iv))
+  // The notes are spelt from the symbol, as a musician would: A C# E, not A Db E. B# and Cb
+  // sit across an octave number from the pitch they sound (B#2 is C3), so the octave counts
+  // from the tonic's own spelling.
+  let tonicOctave = octave
+  while (Note.midi(ch.tonic + tonicOctave) > rootMidi) tonicOctave--
+  while (Note.midi(ch.tonic + tonicOctave) < rootMidi) tonicOctave++
+  const names = ch.intervals.map((iv) => Note.transpose(ch.tonic + tonicOctave, iv))
   while (voicing.length > 1 && voicing[voicing.length - 1] - voicing[0] > 24) {
     voicing.pop()
     names.pop()

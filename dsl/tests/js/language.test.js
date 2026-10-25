@@ -2122,10 +2122,17 @@ describe("key", () => {
     expect(labels("key Am\nplay piano: chords III VII")).toBe("C# G#")
     expect(labels("key A mixolydian\nplay piano: chords bVII")).toBe("G")
   })
-  it("spells a flat key's chords with flats, and a sharp key's with sharps", () => {
+  it("names a numeral's root by its letter in the scale", () => {
     expect(labels("key Gm\nplay piano: chords i bVI|bVII")).toBe("Gm Eb F")
     expect(labels("key A\nplay piano: chords ii iii")).toBe("Bm C#m")
     expect(labels("key Bb dorian\nplay piano: chords i IV")).toBe("Bbm Eb")
+    // the 7th of G minor is F#, not Gb, and the 3rd of F# is A#: one letter a degree
+    expect(labels("key Gm\nplay piano: chords viidim7 V7")).toBe("F#dim7 D7")
+    expect(labels("key F#\nplay piano: chords iii viidim|IV")).toBe("A#m E#dim B")
+    expect(labels("key C#m\nplay piano: chords VII")).toBe("B#")
+    expect(labels("key Gb\nplay piano: chords IV")).toBe("Cb")
+    expect(labels("key Cb\nplay piano: chords I IV|V vi")).toBe("Cb Fb Gb Abm")
+    expect(labels("key A\nplay piano: chords bVII bVI")).toBe("G F")
   })
   it("names the modes, and says how a major or minor key is written", () => {
     expect(MODES).toEqual(["ionian", "dorian", "phrygian", "lydian", "mixolydian", "aeolian", "locrian"])
