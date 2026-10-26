@@ -187,6 +187,8 @@ notes minor = 1---2---b3---4---|5---b6---b7---1'---
 play piano: minor
 ```
 
+`of` counts a degree from another note instead of from the key, on that note's major scale: `5 of C3` is `G3` and `b3 of C3` is `Eb3`. A note counted that way goes in brackets to count from it, so the circle of fifths from C3 is `C3--- 5 of C3--- 5 of (5 of C3)--- 5 of (5 of (5 of C3))---`.
+
 A length in front of one note holds it, as a length in front of `rest` is silence: `bass: 3 beats C2, 3 beats G1`. `...G1` holds G1 to the end of the block. A length holds one note, so a figure is drawn and a long note takes a length. A line plays one note at a time. For more, its line takes a block of lines, which play together:
 
 ```
@@ -202,7 +204,7 @@ Chords are written by the bar, with `chords` in front:
 play guitar: chords C - - G|Am - F G|%|F - _ -
 ```
 
-`|` is a bar line, and the chords in a bar split it evenly. `-` holds the chord before for another slot, `_` is silence and `%` repeats the bar before. Chords can be names (`Cmaj7`, `F#m`, `Bb7`, `C/E`) or Roman numerals that follow `key` (`I vi IV V7`).
+`|` is a bar line, and the chords in a bar split it evenly. `-` holds the chord before for another slot, `_` is silence and `%` repeats the bar before. Chords can be names (`Cmaj7`, `F#m`, `Bb7`, `C/E`) or Roman numerals that follow `key` (`I vi IV V7`). `of` counts a numeral from another one's root, so in C, `V7 of V` is `D7`, and a chain takes brackets: `V7 of (V of V)` is `A7`.
 
 ### Drums
 

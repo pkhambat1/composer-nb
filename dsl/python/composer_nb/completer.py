@@ -50,6 +50,10 @@ NUMBER_RE = re.compile(r"^\d+$|\)$")
 # A length's arithmetic, (1+2)*2, as against a group of patterns, (verse chorus)
 SUM_RE = re.compile(r"[\d\s./+*()-]*\d[\d\s./+*()-]*")
 ARITHMETIC_RE = re.compile(r"[\d./+*-]*\d")
+# A degree, or a numeral with what follows it, which of can count from another note or chord:
+# 5 of C3, V7 of V
+DEGREE_RE = re.compile(r"[\^~]?'*[#b]?[1-7]'*")
+NUMERAL_RE = re.compile(r"[#b]?(VII|VI|IV|V|III|II|I|vii|vi|iv|v|iii|ii|i)[A-Za-z0-9#+]*")
 # What makes a { an instrument's block of layers: kick: or piano: in front of it, or
 # steps name =
 STEPS_OPENER_RE = re.compile(r"([a-z]+(?:\.[a-z]+)?)\s*:[^:{}]*$|^\s*steps\s+[A-Za-z_]\w*\s*=[^{}]*$")
@@ -114,14 +118,17 @@ def _pitched(written: List[str], names: Names) -> List[Option]:
     notes = _options(names["notes"], "variable")
     if not written:
         return [("chords ", "keyword")] + notes
-    if written[0] == "chords":  # the word in front is what makes a line a chart
-        return _options(names["chords"], "variable")
     last = written[-1]
+    if written[0] == "chords":  # the word in front is what makes a line a chart
+        of = [("of ", "keyword")] if NUMERAL_RE.fullmatch(last) else []
+        return of + _options(names["chords"], "variable")
+    of = [("of ", "keyword")] if DEGREE_RE.fullmatch(last) else []
     if NUMBER_RE.search(last) or ARITHMETIC_RE.fullmatch(last):
-        return _options([u + " " for u in UNITS], "keyword")  # a length: 3 beats C2
+        # a length, 3 beats C2, or a degree of a note, 3 of C2
+        return _options([u + " " for u in UNITS], "keyword") + of
     if last in UNITS:
         return [("rest", "keyword")] + notes
-    return notes
+    return of + notes
 
 
 def _group_closed(text: str) -> bool:

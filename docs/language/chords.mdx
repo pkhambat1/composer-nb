@@ -23,6 +23,7 @@ play guitar: chords C - - G|Am - F G|%|F - _ -
 | --- | --- |
 | A chord symbol | Starts the chord. |
 | A Roman numeral | Starts the chord on that degree of the [`key`](/language/settings). |
+| A numeral `of` a numeral | Starts the chord on that degree of another chord's root: [`V7 of V`](#counting-from-a-chord). |
 | `-` | Holds the chord. |
 | `_` | Silence. |
 | `%` | Repeats the bar before. It stands alone in its bar. |
@@ -62,6 +63,23 @@ play piano: chords i bVI|bVII V7
 </Cell>
 
 In A minor, this plays `Am F`, `G E7`.
+
+## Counting from a chord
+
+`of` counts a numeral from another chord's root instead of from the key's: `V7 of V` is the `V7` built on the key's `V`, a secondary dominant. The numeral counts on the major scale of that root, so in C, `V7 of V` is `D7` and `ii7 of IV` is `Gm7`. After `of` goes a numeral of the key. Only its root counts, so `V of v` is the same as `V of V`. A bass note goes at the end: `V7 of V/F#`.
+
+To count from a chord that is itself counted with `of`, put it in brackets, as with notes. `V7 of (V of V)` is the `V7` of D, which is `A7`.
+
+<Cell>
+
+```composer-nb
+set key C
+play piano: chords V7 of (V of V)|V7 of V|V7|I
+```
+
+</Cell>
+
+In C, this plays `A7`, `D7`, `G7`, `C`.
 
 ## Voicing
 
