@@ -65,18 +65,24 @@ function drumNote(hits, u) {
 // A pitch as ABC writes it: C is middle C, c the octave above, C, the octave below, and an
 // accidental when the key signature and the bar so far don't give it already. `acc` is the
 // bar's accidentals so far, by letter and octave; `sig` is the key: its signature's marks
-// by letter, and how it spells its black keys.
+// by letter, and how it spells its black keys. A note that says how it is spelt (`spell`:
+// its letter and how far that is raised or lowered) is written that way: Db as Db, and a
+// degree by its place in the scale, b3 in C as Eb.
 const SHARP_SPELL = ["C", "^C", "D", "^D", "E", "F", "^F", "G", "^G", "A", "^A", "B"]
 const FLAT_SPELL = ["C", "_D", "D", "_E", "E", "F", "_G", "G", "_A", "A", "_B", "B"]
-function abcPitch(midi, acc, sig) {
-  const octave = Math.floor(midi / 12) - 1
+function spelling(midi, sig) {
   const pc = ((midi % 12) + 12) % 12
   // A minor key's raised seventh is a sharp whatever the key's spelling: F# in G minor
   const leading = sig.key.mode === "minor" || sig.key.mode === "aeolian"
   const flat = sig.key.flats && !(leading && pc === (sig.key.tonicPc + 11) % 12)
   const spelt = (flat ? FLAT_SPELL : SHARP_SPELL)[pc]
-  const needed = /^[\^_]/.test(spelt) ? spelt[0] : ""
-  const letter = needed ? spelt[1] : spelt
+  const alter = spelt[0] === "^" ? 1 : spelt[0] === "_" ? -1 : 0
+  return { letter: alter ? spelt[1] : spelt, alter }
+}
+function abcPitch(midi, acc, sig, spell = spelling(midi, sig)) {
+  const { letter, alter } = spell
+  const needed = alter > 0 ? "^".repeat(alter) : "_".repeat(-alter)
+  const octave = Math.floor((midi - alter) / 12) - 1
   const at = letter + octave
   const current = acc.has(at) ? acc.get(at) : sig.marks.get(letter) || ""
   let mark = ""
@@ -99,7 +105,7 @@ function pitchedNote(hits, u, tie, acc, cont, sig) {
     const symbol = notes.find((n) => n.symbol)?.symbol
     if (symbol) deco += `"${symbol}"`
   }
-  const heads = notes.map((n) => abcPitch(n.midi, acc, sig))
+  const heads = notes.map((n) => abcPitch(n.midi, acc, sig, n.spell))
   return deco + (heads.length === 1 ? heads[0] : `[${heads.join("")}]`) + dur(u) + (tie ? "-" : "")
 }
 
@@ -260,12 +266,14 @@ function joinLong(pieces, mid) {
   return out
 }
 
-// A chord's note name, as the engine spells it (C#3), as a midi number.
+// A chord's note name, as the engine spells it (C#3, F##3), as a midi number and the
+// spelling the sheet writes it with.
 const BASE = { C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, B: 11 }
-function midiOf(name) {
-  const m = /^([A-G])([#b]?)(-?\d+)$/.exec(name)
+function pitchOf(name) {
+  const m = /^([A-G])(#{0,2}|b{0,2})(-?\d+)$/.exec(name)
   if (!m) return null
-  return 12 * (Number(m[3]) + 1) + BASE[m[1]] + (m[2] === "#" ? 1 : m[2] === "b" ? -1 : 0)
+  const alter = (m[2][0] === "#" ? 1 : -1) * m[2].length
+  return { midi: 12 * (Number(m[3]) + 1) + BASE[m[1]] + alter, spell: { letter: m[1], alter } }
 }
 
 // A pitched instrument's clef, and how far above its sound it's written: guitars and basses
@@ -320,14 +328,14 @@ export function sheetAbc(block, { counts = false, barsPerLine = 4 } = {}) {
   for (const e of block.noteEvents) {
     const key = `${e.instrument}#${e.voice}`
     if (!pitched.has(key)) pitched.set(key, { inst: e.instrument, hits: new Map() })
-    put(pitched.get(key).hits, e.tick, { span: e.ticks, midi: e.note.midi, accent: e.accent, ghost: e.ghost })
+    put(pitched.get(key).hits, e.tick, { span: e.ticks, midi: e.note.midi, spell: e.note.spell, accent: e.accent, ghost: e.ghost })
   }
   for (const e of block.chordEvents || []) {
     const key = `${e.instrument}#chords`
     if (!pitched.has(key)) pitched.set(key, { inst: e.instrument, hits: new Map() })
     e.chord.noteNames.forEach((name, i) => {
-      const midi = midiOf(name)
-      if (midi != null) put(pitched.get(key).hits, e.tick, { span: e.ticks, midi, symbol: i === 0 ? e.chord.label : null })
+      const p = pitchOf(name)
+      if (p) put(pitched.get(key).hits, e.tick, { span: e.ticks, ...p, symbol: i === 0 ? e.chord.label : null })
     })
   }
   let p = 0

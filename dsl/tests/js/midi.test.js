@@ -47,7 +47,7 @@ function events(body) {
 
 describe("MIDI export", () => {
   it("writes a format 1 file at 96 ticks a quarter, with a tempo track and the drums on channel 10", () => {
-    const bytes = file("tempo 100\nplay {\n  kick: x---x---x---x---\n  hat: x-x- x-x- x-x- x-x-\n}")
+    const bytes = file("tempo 100\nplay {\n  kick: 1 bars x---\n  hat: 1 bars x-\n}")
     const [head, tempo, drums] = chunks(bytes)
     expect(head.id).toBe("MThd")
     expect(be16(head.body, 0)).toBe(1) // format
@@ -87,8 +87,8 @@ describe("MIDI export", () => {
     const on = events(chart.body).filter((e) => (e[1] & 0xf0) === 0x90)
     expect(on.length).toBeGreaterThanOrEqual(6)
     expect(on.slice(0, 3).every((e) => e[0] === 0)).toBe(true) // the first chord's notes at once
-    const straight = events(chunks(file("play hat: x-x-"))[2].body).filter((e) => (e[1] & 0xf0) === 0x90)
-    const swung = events(chunks(file("swing 67\nplay hat: x-x-"))[2].body).filter((e) => (e[1] & 0xf0) === 0x90)
+    const straight = events(chunks(file("play hat: 4 steps x-"))[2].body).filter((e) => (e[1] & 0xf0) === 0x90)
+    const swung = events(chunks(file("swing 67\nplay hat: 4 steps x-"))[2].body).filter((e) => (e[1] & 0xf0) === 0x90)
     expect(straight[1][0]).toBe(48 - 12) // the & at 48 ticks, after the first hit's 12-tick note-off
     expect(swung[1][0]).toBe(64 - 12) // at 67% of the beat
   })

@@ -22,25 +22,21 @@ pattern groove = {
   guitar.electric: D---E D-D--
 }
 
-play 3 bars {
-  {
-    snare.rim: ^-
-  } then {
-    bar 1 crash: 1
-    groove
-  }
-}
+play 3 bars ({ snare.rim: ^- } {
+  bar 1 crash: 1
+  groove
+})
 ```
 
 </Cell>
 
-This is *What Happens Now?* by Porcupine Tree. The `play` holds two blocks joined by `then`, so they play in [sequence](/language/overview#blocks): an accented rim as a pickup, and after it the groove with a crash in its first bar. Each line of `groove` repeats at its own length: 7 steps for the kick and rim, 3 for the ride bell, 10 for the guitar. They only meet again after 15 bars, and `play 3 bars` stops it after three.
+This is *What Happens Now?* by Porcupine Tree. The `play` holds two blocks in brackets, so they play [in order](/language/overview#blocks): an accented rim as a pickup, and after it the groove with a crash in its first bar. Each line of `groove` repeats at its own length: 7 steps for the kick and rim, 3 for the ride bell, 10 for the guitar. They only meet again after 15 bars, and `play 3 bars` stops it after three.
 
 ## Why instructions
 
 - **You state the rules, the interpreter writes the bars.** Two lines of different lengths make a polyrhythm that would take pages to write out, and you hear where they meet without working it out.
 - **Every edit is a new take.** Change a step, a length or the time signature, evaluate, and listen.
-- **Parts are values.** A groove is named once and reused under every section, a song is a sequence of names, and a cell is source you can diff, version and generate from Python.
+- **Parts are values.** A groove is named once and reused under every section, a song is its sections in brackets, in order, and a cell is source you can diff, version and generate from Python.
 
 ## Run it
 

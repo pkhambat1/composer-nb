@@ -19,7 +19,7 @@ function DrumBlock({ block, index, muted }) {
   return (
     <div className="dg-block">
       <div className="dg-head">
-        time {block.time} · tempo {block.tempo} · {block.bars} bar{block.bars === 1 ? "" : "s"} · counting{" "}
+        time {block.time} · tempo {block.tempo} · key {block.key} · {block.bars} bar{block.bars === 1 ? "" : "s"} · counting{" "}
         {countingOf(block)}
       </div>
       {Array.from({ length: block.bars }, (_, bar) => (

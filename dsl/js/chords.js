@@ -20,14 +20,24 @@ export const NOTE_TO_PC = {
   "A#": 10,
   Bb: 10,
   B: 11,
+  Cb: 11,
+  "B#": 0,
+  Fb: 4,
+  "E#": 5,
 }
 const SHARP_NAMES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"]
 const FLAT_NAMES = ["C", "Db", "D", "Eb", "E", "F", "Gb", "G", "Ab", "A", "Bb", "B"]
 
-export function midiToName(m) {
+export function midiToName(m, flats = false) {
   const pc = ((m % 12) + 12) % 12
   const oct = Math.floor(m / 12) - 1
-  return SHARP_NAMES[pc] + oct
+  return (flats ? FLAT_NAMES : SHARP_NAMES)[pc] + oct
+}
+
+// Semitones from a root to a degree of its major scale, moved by b or # in front: 3 is 4
+// semitones, b3 is 3. Shared by a chord's numeral and a note written as a degree.
+export function degreeSemitones(degree, acc = "") {
+  return MODE_SCALES.major[degree - 1] + (acc === "#" ? 1 : acc === "b" ? -1 : 0)
 }
 
 // The scales a key can be in: semitones above the tonic. A major key is written C and a
@@ -49,6 +59,7 @@ export const MODE_SCALES = {
 const MODE_FIFTHS = { major: 0, ionian: 0, lydian: -1, mixolydian: 1, dorian: 2, minor: 3, aeolian: 3, phrygian: 4, locrian: 5 }
 const LETTER_FIFTHS = { F: -1, C: 0, G: 1, D: 2, A: 3, E: 4, B: 5 }
 const DEGREE = { i: 0, ii: 1, iii: 2, iv: 3, v: 4, vi: 5, vii: 6 }
+const LETTER_PC = { C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, B: 11 }
 const ROMAN_RE = /^([#b]?)(VII|VI|IV|V|III|II|I|vii|vi|iv|v|iii|ii|i)(.*)$/
 
 // "C", "Am", "F#m", "Bb", "D dorian" → the key: its root, mode and scale, the sharps in its
@@ -69,6 +80,8 @@ export function parseKey(str) {
     root,
     mode,
     tonicPc: NOTE_TO_PC[root],
+    // Semitones from C up to the root as its octave counts it: Cb4 is just below C4, so -1
+    tonicSemis: LETTER_PC[letter] + (acc === "#" ? 1 : acc === "b" ? -1 : 0),
     scale: MODE_SCALES[mode],
     sharps,
     flats: sharps < 0,
@@ -100,20 +113,36 @@ export function isRoman(token) {
   return ROMAN_TOKEN_RE.test(token.split("/")[0])
 }
 
+// A degree, 1 to 7, counted on the major scale of the key's root whatever the key's mode,
+// which is how a scale is described: natural minor is 1 2 b3 4 5 b6 b7. b and # in front
+// move it a semitone. Shared by a chord's numeral and a note written as a degree.
+export function degreePc(key, degree, acc = "") {
+  return (key.tonicPc + degreeSemitones(degree, acc) + 12) % 12
+}
+
+// A degree's name: the letter of its place in the scale, counted from the key's root, raised
+// or lowered to its pitch. So the 7th of G minor is F#, not Gb, the 3rd of C# is E#, and
+// bVII in A is G.
+const LETTERS = "CDEFGAB"
+export function degreeName(key, degree, acc = "") {
+  const letter = LETTERS[(LETTERS.indexOf(key.root[0]) + degree - 1) % 7]
+  const alter = ((((degreePc(key, degree, acc) - LETTER_PC[letter]) % 12) + 18) % 12) - 6
+  return letter + (alter > 0 ? "#".repeat(alter) : "b".repeat(-alter))
+}
+
 // Case sets the third: V is major and v minor. What follows is the quality, written as it
-// is after a chord's root: V7, ii7, IVmaj7, viidim, viidim7, viim7b5.
+// is after a chord's root: V7, ii7, IVmaj7, viidim, viidim7, viim7b5. The degree is counted
+// on the major scale of the root, so bVII in Am is G and III is C#.
 function romanToSymbol(main, key) {
   const m = ROMAN_RE.exec(main)
   if (!m) return null
   const [, acc, numeral, rest] = m
-  const shift = acc === "#" ? 1 : acc === "b" ? -1 : 0
-  const pc = (key.tonicPc + key.scale[DEGREE[numeral.toLowerCase()]] + shift + 12) % 12
-  const names = acc === "b" || (!acc && key.flats) ? FLAT_NAMES : SHARP_NAMES
+  const root = degreeName(key, DEGREE[numeral.toLowerCase()] + 1, acc)
   let quality
   if (/^(dim|m7b5)/.test(rest)) quality = rest
   else if (numeral === numeral.toUpperCase() || rest.startsWith("sus")) quality = rest
   else quality = rest.startsWith("maj") ? "mMaj" + rest.slice(3) : "m" + rest
-  return names[pc] + quality
+  return root + quality
 }
 
 // A chord token ("Cmaj7", "C/E", "ii7", "bVII") → voicing, or null if it isn't a chord.
@@ -140,8 +169,13 @@ export function buildChord(token, key, octave = 3) {
   const rootMidi = (octave + 1) * 12 + tonicPc
   const bass = (octave + 1) * 12 + bassPc - 12
   const voicing = ch.intervals.map((iv) => rootMidi + Interval.semitones(iv))
-  // The notes are spelt from the symbol, as a musician would: A C# E, not A Db E
-  const names = ch.intervals.map((iv) => Note.transpose(ch.tonic + octave, iv))
+  // The notes are spelt from the symbol, as a musician would: A C# E, not A Db E. B# and Cb
+  // sit across an octave number from the pitch they sound (B#2 is C3), so the octave counts
+  // from the tonic's own spelling.
+  let tonicOctave = octave
+  while (Note.midi(ch.tonic + tonicOctave) > rootMidi) tonicOctave--
+  while (Note.midi(ch.tonic + tonicOctave) < rootMidi) tonicOctave++
+  const names = ch.intervals.map((iv) => Note.transpose(ch.tonic + tonicOctave, iv))
   while (voicing.length > 1 && voicing[voicing.length - 1] - voicing[0] > 24) {
     voicing.pop()
     names.pop()
@@ -176,7 +210,7 @@ export function applyCapo(chord, semis) {
   if (!semis) return chord
   chord.notesMidi = chord.notesMidi.map((m) => m + semis)
   chord.bassMidi = chord.bassMidi + semis
-  chord.noteNames = chord.notesMidi.map(midiToName)
+  chord.noteNames = chord.notesMidi.map((m) => midiToName(m))
   chord.bassName = midiToName(chord.bassMidi)
   return chord
 }

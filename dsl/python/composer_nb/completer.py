@@ -24,7 +24,7 @@ SETTINGS = ["time", "tempo", "swing", "key", "capo", "octave", "kit"]
 TYPES = ["steps", "sticking", "notes", "chords", "pattern"]
 KITS = ["rock", "synth"]
 MODES = ["ionian", "dorian", "phrygian", "lydian", "mixolydian", "aeolian", "locrian"]
-UNITS = ["steps", "beats", "bars"]  # what a length on a drum's line is measured in
+UNITS = ["steps", "beats", "bars"]  # what a length on a line is measured in
 
 LANES = [
     lane
@@ -48,9 +48,6 @@ NUMBER_RE = re.compile(r"^\d+$|\)$")
 # A length's arithmetic, (1+2)*2, as against a group of patterns, (verse chorus)
 SUM_RE = re.compile(r"[\d\s./+*()-]*\d[\d\s./+*()-]*")
 ARITHMETIC_RE = re.compile(r"[\d./+*-]*\d")
-# then joins a block or a group to the thing beside it in a row: intro then { ... } then outro.
-# It is reserved, so it is never a name.
-THEN = ("then ", "keyword")
 # What makes a { an instrument's block of layers: kick: or piano: in front of it, or
 # steps name =
 STEPS_OPENER_RE = re.compile(r"([a-z]+(?:\.[a-z]+)?)\s*:[^:{}]*$|^\s*steps\s+[A-Za-z_]\w*\s*=[^{}]*$")
@@ -80,8 +77,7 @@ def _names(defined: str) -> Names:
     """The names given in `defined`, by the type written in front of them."""
     types = {}
     for type_, name in DEF_RE.findall(defined):
-        if name != "then":
-            types[name] = type_  # a name given again means the new thing
+        types[name] = type_  # a name given again means the new thing
     return {t: sorted(n for n, given in types.items() if given == t) for t in TYPES}
 
 
@@ -111,12 +107,19 @@ def _open_blocks(text: str) -> Tuple[List[Tuple[str, Optional[str]]], Optional[s
 
 
 def _pitched(written: List[str], names: Names) -> List[Option]:
-    """What can come next on a pitched instrument's line: notes, or chords and then a chart."""
+    """What can come next on a pitched instrument's line: notes, or chords and then a chart.
+    A line of notes takes lengths: 3 beats C2, 2 beats rest."""
+    notes = _options(names["notes"], "variable")
     if not written:
-        return [("chords ", "keyword")] + _options(names["notes"], "variable")
+        return [("chords ", "keyword")] + notes
     if written[0] == "chords":  # the word in front is what makes a line a chart
         return _options(names["chords"], "variable")
-    return _options(names["notes"], "variable")
+    last = written[-1]
+    if NUMBER_RE.search(last) or ARITHMETIC_RE.fullmatch(last):
+        return _options([u + " " for u in UNITS], "keyword")  # a length: 3 beats C2
+    if last in UNITS:
+        return [("rest", "keyword")] + notes
+    return notes
 
 
 def _group_closed(text: str) -> bool:
@@ -133,16 +136,26 @@ def _group_closed(text: str) -> bool:
     return False
 
 
-def _sequence(words: List[str], patterns: List[Option], parts: List[Option]) -> List[Option]:
-    """What can come next in a row of patterns, after the `words` already written."""
+def _groups(text: str) -> int:
+    """How many groups ( ) are open at the end of `text`. A length's arithmetic, (1+2),
+    closes on its own line, so it nets out."""
+    code = "\n".join(line.split("//")[0] for line in text.split("\n"))
+    return max(0, code.count("(") - code.count(")"))
+
+
+def _sequence(
+    words: List[str], patterns: List[Option], parts: List[Option], grouped: bool = False
+) -> List[Option]:
+    """What can come next where something plays, after the `words` already written. A line
+    plays one thing; in a group ( ) things play in order, so more can follow there."""
     if not words:
         return patterns + parts
     last = words[-1]
     if NUMBER_RE.search(last) or ARITHMETIC_RE.fullmatch(last):
         return [("bars ", "keyword")]  # a length, always plural: 3 bars groove
-    if last in ("then", "bars"):
-        return patterns  # then needs what plays next, and a length what it measures
-    return patterns + [THEN]  # after a name a space is enough, and then is allowed too
+    if last == "bars":
+        return patterns  # a length is followed by what it measures
+    return patterns if grouped else []
 
 
 def _statement(
@@ -151,30 +164,31 @@ def _statement(
     """What can come next on a line that isn't an instrument's. `closed` is what the block
     the last } closed held."""
     inside = (body + head).count("{") > (body + head).count("}")
+    grouped = _groups(body + head) > 0  # in a group, what plays in order goes on
     tail = head.rstrip()
-    # A block or a group in a row is joined to what comes next by then. A kit piece's or an
+    patterns = _options(names["pattern"], "variable")
+    # After a block or a group, more follows only inside a group. A kit piece's or an
     # instrument's block is the whole of its line, so nothing goes beside it.
     if tail.endswith("}"):
-        return [THEN] if closed == "lines" else []
+        return patterns if closed == "lines" and grouped else []
     if tail.endswith(")") and _group_closed(tail):
-        return [THEN]
+        return patterns if grouped else []
     segment = re.split(r"[{}]", head)[-1]
     words = re.sub(r"[()=]", lambda m: " = " if m.group() == "=" else " ", segment).split()
-    joined = head[: len(head) - len(segment)].endswith("}")  # the row goes on after a block
-    patterns = _options(names["pattern"], "variable")
     parts = _options([p + ": " for p in PARTS], "property")
     if not words:
+        if grouped:
+            return patterns + parts  # the next thing in a group, on a line of its own
         settings = _options([s + " " for s in SETTINGS], "keyword")
         types = _options([t + " " for t in TYPES], "keyword")
         if inside:
             return parts + patterns + [("bar ", "keyword"), ("every ", "keyword")] + settings + types
         return settings + types + [("play ", "keyword")]
     first = words[0]
-    if first == "then":
-        # play { ... } then intro: a row goes on after a block, but no line starts with then
-        return _sequence(words, patterns, []) if joined else []
+    if tail.endswith("("):
+        return patterns + parts  # a group starts: names, blocks and lines, in order
     if first == "play":
-        return _sequence(words[1:], patterns, parts)
+        return _sequence(words[1:], patterns, parts, grouped)
     if first == "pattern" and words[2:4] == ["=", "every"]:
         words = words[3:]  # pattern feet = every 3 steps ...: a pattern at its own pace
         first = "every"
@@ -184,7 +198,7 @@ def _statement(
             return []  # still writing the number
         if len(words) == 2:
             return _options([u + " " for u in UNITS], "keyword")
-        return _sequence(words[3:], patterns, parts)
+        return _sequence(words[3:], patterns, parts, grouped)
     if first == "bar":
         # bar 2 ..., bar 3 to 4 ...: a place, then what plays there
         if len(words) < 2:
@@ -192,14 +206,14 @@ def _statement(
         if len(words) == 2:
             return patterns + [("to ", "keyword")] + parts
         if words[2] == "to":
-            return [] if len(words) < 4 else _sequence(words[4:], patterns, parts)
-        return _sequence(words[2:], patterns, parts)
+            return [] if len(words) < 4 else _sequence(words[4:], patterns, parts, grouped)
+        return _sequence(words[2:], patterns, parts, grouped)
     if first in TYPES:
         if len(words) < 3 or words[2] != "=":
             return []  # still writing the name
         # After the =, what the type in front holds: steps pair = ^-x-
         if first == "pattern":
-            return _sequence(words[3:], patterns, parts)
+            return _sequence(words[3:], patterns, parts, grouped)
         return _options(names[first], "variable")
     if first == "time" and len(words) > 1 and "over" not in words:
         return [("over ", "keyword")]
@@ -207,8 +221,8 @@ def _statement(
         return _options(SETTING_VALUES[first], "value")
     if first == "key" and len(words) == 2 and re.fullmatch(r"[A-G][#b]?", words[1]):
         return _options(MODES, "value")  # key D dorian: a root, then its mode
-    if inside and first not in SETTINGS:
-        return _sequence(words, patterns, [])  # patterns to play in order: intro verse
+    if (inside or grouped) and first not in SETTINGS:
+        return _sequence(words, patterns, [], grouped)  # a pattern to play, or a group
     return []
 
 
@@ -265,8 +279,6 @@ def complete(text: str, cursor: int, songs: Optional[Dict[str, Song]] = None):
         options = _pitched(head.split(), names)  # a layer in a pitched instrument's block
     else:
         options = _statement(head, body, names, closed)
-        if head.rstrip().endswith("("):
-            options = [o for o in options if o != THEN]  # a group starts with a pattern
     return fragment, [o for o in options if o[0].startswith(fragment) and o[0] != fragment]
 
 

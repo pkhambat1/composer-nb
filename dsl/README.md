@@ -133,8 +133,8 @@ A name's type goes in front of it, and `=` gives it its value:
 
 | Type      | What it holds                                                                 | Where it goes                                                 |
 | --------- | ----------------------------------------------------------------------------- | ------------------------------------------------------------- |
-| `steps`   | A drum's hits: `steps pair = ^-x-`                                            | On a drum's line: `hat: pair pair`                            |
-| `notes`   | A line of notes: `notes riff = E---F# E-E--`                                  | On a pitched instrument's line: `guitar: riff`                |
+| `steps`   | A drum's hits: `steps pair = ^-x-`                                            | On a drum's line: `hat: pair`                                 |
+| `notes`   | A line of notes or degrees: `notes riff = E---F# E-E--`                       | On a pitched instrument's line: `guitar: riff`                |
 | `chords`  | Bars of chords: `chords verse = Am F\|C G`                                    | After `chords` on an instrument's line: `piano: chords verse` |
 | `pattern` | Lines in braces that play together, over and over: `pattern groove = { ... }` | On a line of its own, or after `play`                         |
 
@@ -146,7 +146,7 @@ A name only holds its type, and only goes where that type goes. Chords on a drum
 | -------- | ---------- | ---------------------------------------------------------------------------- |
 | `time`   | `4 over 4` | Notes in a bar, over which note: `7 over 8`, or felt in groups: `3+4 over 4` |
 | `tempo`  | `120`      | Quarter notes per minute                                                     |
-| `key`    | `C`        | Key for Roman numeral chords and the sheet: `C`, `Am`, `F#m`, `D dorian`     |
+| `key`    | `C`        | Key for degrees, Roman numerals and the sheet: `C`, `Am`, `F#m`, `D dorian`  |
 | `capo`   | `0`        | Capo fret, 0 to 12. Moves a guitar's chords                                  |
 | `octave` | `3`        | Octave for chords, and for notes written without one, 1 to 6                 |
 | `kit`    | `rock`     | Drum sound: `rock` or `synth`                                                |
@@ -172,12 +172,25 @@ pattern groove = {
 play groove
 ```
 
-A note is a capital letter, `A` to `G`, with `#` or `b` after it and an octave when it needs one: `F`, `F#`, `Bb`, `E2`. Without a number it's in the `octave` setting, so `octave 2` above puts the riff on the guitar's low E string. One note is one step, however many characters it takes, and two notes never touch: a space goes between them (`F# E`). `-` means nothing new happens, so the note rings on, and `_` stops it. `^` in front accents a note and `~` softens it. A line plays one note at a time. For more, its line takes a block of lines, which play together:
+A note is a capital letter, `A` to `G`, with `#` or `b` after it and an octave when it needs one: `F`, `F#`, `Bb`, `E2`. Without a number it's in the `octave` setting, so `octave 2` above puts the riff on the guitar's low E string. One note is one step, however many characters it takes, and two notes never touch: a space goes between them (`F# E`). `-` means nothing new happens, so the note rings on, and `_` stops it. `^` in front accents a note and `~` softens it.
+
+A degree goes where a note goes: a digit from `1` to `7`, counted on the major scale of the `key`'s root, with `b` or `#` in front. A scale is written as it's described, so natural minor is `1 2 b3 4 5 b6 b7`, and a name that holds degrees plays in whichever key is set. `1` is the root in the `octave` setting; `'` after the digit is an octave up and `'` before it an octave down:
+
+```
+key A
+octave 3
+
+notes minor = 1---2---b3---4---|5---b6---b7---1'---
+
+play piano: minor
+```
+
+A length in front of one note holds it, as a length in front of `rest` is silence: `bass: 3 beats C2, 3 beats G1`. `...G1` holds G1 to the end of the block. A length holds one note, so a figure is drawn and a long note takes a length. A line plays one note at a time. For more, its line takes a block of lines, which play together:
 
 ```
 play piano: {
   C5-D5-E5-G5-E5-D5-C5---
-  C3---------------
+  1 bars C3
 }
 ```
 
@@ -196,7 +209,7 @@ play guitar: chords C - - G|Am - F G|%|F - _ -
 ```
 pattern beat = {
   kick: x---x---x-x-----
-  snare: ----^-------^---
+  snare: ---- ^---
   snare.ghost: --------------x-
   hat: x-
 }
@@ -222,7 +235,7 @@ A block of steps is steps, so it can be named too: `steps ghosts = { ... }`. Whe
 
 An open hi-hat rings until the next hi-hat hit closes it (a stick on `hat`, or the foot on `hat.pedal`), and replaces a closed hit at the same moment, so `hat: ^-x-` can keep going under `hat.open: ------^-`.
 
-Steps are a picture of time, one character each, a 16th note unless they're inside `every`: `x` hit, `^` accent, `~` ghost (on the snare, use `snare.ghost`), `d` double, `-` nothing. Spaces mean nothing, so group them by beat, and `|` marks the end of a bar (it's checked): `kick: x--- ---- x--- ---- | x--- --x- x--- ----`.
+Steps are a picture of time, one character each, a 16th note unless they're inside `every`: `x` hit, `^` accent, `~` ghost (on the snare, use `snare.ghost`), `d` double, `-` nothing. Spaces mean nothing, so group them by beat, and `|` marks the end of a bar (it's checked): `kick: x--- ---- x--- ---- | x--- --x- x--- ----`. A line that starts with `|` continues the line above. A figure written twice is an error, because a pattern repeats its lines: `hat: x-x- x-x-` is `hat: x-`, and `hat: 1 bars x-` plays it once for a bar.
 
 Beats are the beats a drum hits on in each bar, counted `1 e & a 2 e & a`. A beat on its own is a plain hit, and a step in front says another way to hit it: `snare: 2e ^4` accents the 4, `~3a` is a ghost note and `d3` a double. Beats and steps don't mix on a line.
 
@@ -284,18 +297,18 @@ pattern feet = every 3 steps {
 
 ### Patterns and play
 
-A pattern is lines in braces that play together, over and over: everything in it repeats until the pattern ends. Give it a name, and play it by name. Names in a row play one after another:
+A pattern is lines in braces that play together, over and over: everything in it repeats until the pattern ends. Give it a name, and play it by name. Braces hold what plays together and brackets what plays in order:
 
 ```
 pattern hit = { crash: 1 }
 pattern groove = {
-  kick: x---x---
-  snare: ----x---
+  kick: x---
+  snare: ---- x--- ---- x-x-
 }
-play hit groove groove hit
+play (hit 2 bars groove hit)
 ```
 
-Inside braces, a pattern's name on a line of its own plays next to the lines beside it. A pattern without a name plays wherever a name could, joined to its neighbours by `then`, on the same line as the `}` before it: `play hit then { snare: xxxx } then hit`. Blocks on lines of their own play together, and `} {` on one line is an error.
+Inside braces, a pattern's name on a line of its own plays next to the lines beside it. In brackets, names, blocks and other groups play one after another, separated by spaces or new lines: `play (hit { snare: ---- x--- ---- dddd } hit)`. Two things on one line outside brackets are an error.
 
 ### Repeating and lengths
 
@@ -309,7 +322,7 @@ Putting something in a pattern is the one way to repeat it, and a length is the 
 | `3 bars { ... }`               | A length, always plural, in front of what it measures  |
 | `2 beats rest`                 | On a drum's line, silence for that long                |
 | `6 bars groove`                | `groove` repeats for 6 bars                            |
-| `8 bars (a b)`                 | Brackets group: `a` then `b`, repeated for 8 bars      |
+| `8 bars (a b)`                 | Brackets play `a` and `b` in order, for 8 bars         |
 | `bar 2 { ... }`                | A bar, in front of what plays there and nowhere else   |
 
 Without a length, a pattern lasts until its lines line up again (and long enough to have any bar it names), and a play lasts as long as the longest thing in it. A play can be longer than its lines, and the rest is silent: `play 4 bars { crash: 1 }`.

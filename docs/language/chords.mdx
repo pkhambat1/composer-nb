@@ -29,13 +29,17 @@ play guitar: chords C - - G|Am - F G|%|F - _ -
 
 Each slot must be a whole number of sixteenth notes, so a `4 over 4` bar takes 1, 2, 4, 8 or 16 slots. Rhythm comes from the slots: `_ Am _ Am` plays on the off-beats.
 
+A chart written as the same bars more than once is an error, because a pattern repeats it: `Am F|Am F` and `Am F|%` are `Am F`. Inside a bar, `C C` strikes the chord twice.
+
+A long chart continues on the next line when that line starts with `|`.
+
 ## Chord symbols
 
 A symbol is a root, a quality and an optional bass note: `C`, `Am`, `F#m`, `Bb7`, `Cmaj7`, `G7sus4`, `Em7b5`, `Cadd9`, `C/E`. No quality means major.
 
 ## Roman numerals
 
-Uppercase is a major chord and lowercase a minor one, on that degree of the current [`key`](/language/settings#key). Degrees come from the key's scale: the major scale in a major key, the natural minor in a minor key, and the mode's scale in a mode, so `II` in `E phrygian` is F. A `b` or `#` in front moves the root a semitone. The case gives the third, and a quality follows the numeral as it follows a chord's root: `V7`, `ii7`, `IVmaj7`, `viidim`, `viidim7`, `viim7b5`.
+Uppercase is a major chord and lowercase a minor one, on that degree of the current [`key`](/language/settings#key). Degrees count on the major scale of the key's root, whatever the key's mode, as [degrees in notes](/language/notes#degrees) do. A `b` or `#` in front moves the root a semitone, so `bVII` is a whole step below the root in every key: in `key Am` the natural minor's chords are `i bIII iv v bVI bVII`, and `II` in `E phrygian` is `bII`. The case gives the third, and a quality follows the numeral as it follows a chord's root: `V7`, `ii7`, `IVmaj7`, `viidim`, `viidim7`, `viim7b5`.
 
 <Cell>
 
@@ -47,6 +51,17 @@ play piano: chords I vi|IV V7|bVII IV|ii7 viidim
 </Cell>
 
 In C, this plays `C Am`, `F G7`, `Bb F`, `Dm7 Bdim`.
+
+<Cell>
+
+```composer-nb
+key Am
+play piano: chords i bVI|bVII V7
+```
+
+</Cell>
+
+In A minor, this plays `Am F`, `G E7`.
 
 ## Voicing
 
