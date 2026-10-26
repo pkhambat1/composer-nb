@@ -195,15 +195,15 @@ describe("the MCP App", () => {
     expect(byName.render._meta?.ui).toBeUndefined()
   })
 
-  it("reads as one page that frames the playground's embed view", async () => {
+  it("reads as one page with the player in it, and no way out to the playground", async () => {
     const { resources } = await client.listResources()
     expect(resources.map((r) => r.uri)).toContain("ui://composer-nb/cell")
     const [page] = (await client.readResource({ uri: "ui://composer-nb/cell" })).contents
     expect(page.mimeType).toBe("text/html;profile=mcp-app")
-    expect(page.text).toContain('window.COMPOSER_NB_SITE = "https://example.test"')
-    expect(page.text).toContain("?embed#") // the frame's address, from the bundled view
-    expect(page.text.match(/<\/script>/g)).toHaveLength(2) // the inline bundle closes no tag of its own
-    expect(page._meta.ui.csp.frameDomains).toEqual(["https://example.test"])
+    expect(page.text).not.toContain("Open in the playground")
+    expect(page.text).toContain("cnb-play") // the player's Play button, from the bundled renderer
+    expect(page.text.match(/<\/script>/g)).toHaveLength(1) // the inline bundle closes no tag of its own
+    expect(page._meta.ui.csp.connectDomains).toContain("https://cdn.jsdelivr.net")
   })
 
   it("leaves parse answering in text, with nothing structured to replace it", async () => {

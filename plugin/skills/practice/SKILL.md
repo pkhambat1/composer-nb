@@ -10,7 +10,7 @@ description: Turn a groove, rudiment, riff or chart into a practice routine with
    - A tempo ladder: the same named pattern played again under each new `set tempo`, slowest first. Start where it plays clean, often 60 to 70 percent of the target.
    - A hard part alone first, then in context: the hands, then the feet, then both.
 3. `link` the cell, or `link` with `cells` for a routine of several cells, with a text cell before each one saying what to listen for and when to move on.
-4. Point at the practice controls, under the cell in claude.ai and Claude Desktop, and on the link:
+4. Point at the practice controls on the link:
    - `−` and `+`: play slower or faster than written, 50 to 150 percent in steps of 10.
    - Loop: round and round.
    - Ramp: a step faster each time round, up to 150 percent.

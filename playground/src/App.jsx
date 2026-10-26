@@ -8,16 +8,12 @@ import * as MusicEngine from "composer-nb/engine"
 import { APP_CONSTANTS } from "./shared/constants.js"
 import {
   EMBED,
-  EMBED_RENDERS,
   OPEN,
-  embedAfter,
   embedCell,
   embedTheme,
-  listenForAfter,
   listenForTheme,
   openedCells,
   reportHeight,
-  reportRun,
   shareNotebookUrl,
 } from "./shared/embed.js"
 import { useCellManager } from "./hooks/useCellManager.js"
@@ -100,17 +96,14 @@ export default function App() {
     document.documentElement.dataset.theme = theme
   }, [theme])
 
-  // In a frame: follow the page's theme and the cells above, and tell the page how tall
-  // the cell is.
+  // In a frame: follow the page's theme, and tell the page how tall the cell is.
   const embedRef = React.useRef(null)
   React.useEffect(() => {
     if (!EMBED) return
     const stopTheme = listenForTheme((t) => setSetting("theme", t))
-    const stopAfter = listenForAfter()
     const stopHeight = reportHeight(embedRef.current)
     return () => {
       stopTheme()
-      stopAfter()
       stopHeight()
     }
   }, [setSetting])
@@ -135,7 +128,6 @@ export default function App() {
         setEditingId((e) => (e === id ? null : e))
         return
       }
-      reportRun(c.source)
       // A cell that is playing keeps playing from where it was once its new audio is
       // ready, so a groove can be edited while it runs
       setKernelStatus("busy")
@@ -145,9 +137,7 @@ export default function App() {
       abortRef.current = runId
       try {
         // Settings and names carry on from the music cells above, like variables in Jupyter.
-        // A frame's one cell carries on from the cells its page says are above it.
         let inherited = MusicEngine.initialState()
-        if (EMBED && embedAfter()) inherited = MusicEngine.parseSource(embedAfter(), inherited).state
         for (const prev of cells.slice(0, cells.indexOf(c))) {
           if (prev.type === "music") inherited = MusicEngine.parseSource(prev.source, inherited).state
         }
@@ -320,16 +310,13 @@ export default function App() {
     [playback],
   )
 
-  // A shared link renders its cells as soon as it opens, and so does a frame that asks to,
-  // without playing its cell.
+  // A shared link renders its cells as soon as it opens.
   const runAllRef = React.useRef(queuedRunAll)
   React.useEffect(() => {
     runAllRef.current = queuedRunAll
   }, [queuedRunAll])
-  const firstCellRef = React.useRef(cells[0]?.id)
   React.useEffect(() => {
     if (OPEN) runAllRef.current()
-    else if (EMBED_RENDERS) runCellRef.current(firstCellRef.current)
   }, [])
 
   // Another notebook: whatever plays stops, and the page shows the one asked for
