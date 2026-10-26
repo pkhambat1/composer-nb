@@ -21,6 +21,10 @@ const plural = (n, word) => `${n} ${word}${n === 1 ? "" : "s"}`
 const fence = (code) => "```composer-nb\n" + code + "\n```"
 
 const SOURCE = z.string().describe("The cell: composer-nb source, a line per statement")
+// What parse says of an empty cell, which is one for the user to write in.
+const EMPTY =
+  "An empty cell, for the user to write in. Where the client renders MCP Apps, it is drawn under your reply: the user types the code there and plays it with Play or Shift+Enter, and what they play comes back with their next message. Don't fill it in unless they ask."
+
 const AFTER = z
   .string()
   .optional()
@@ -60,11 +64,12 @@ export function createServer({ site = SITE } = {}) {
     {
       title: "Check a cell and see what it plays",
       description:
-        "Checks a composer-nb cell and says what it plays. Returns the errors with their line numbers (a cell with errors plays nothing), the settings and names in effect at the end, and for each play a grid of every hit and note, bar by bar, with the chords it heard. Where the client renders MCP Apps, the cell is drawn too, for the user to change and play: its code, the audio, the grid or the sheet, the chords. What the user plays there comes back with their next message. Call it on every cell before showing the cell to anyone; fix the errors and call it again.",
+        "Checks a composer-nb cell and says what it plays. Returns the errors with their line numbers (a cell with errors plays nothing), the settings and names in effect at the end, and for each play a grid of every hit and note, bar by bar, with the chords it heard. Where the client renders MCP Apps, the cell is drawn too, for the user to change and play: its code, the audio, the grid or the sheet, the chords. What the user plays there comes back with their next message. When the user wants to write a cell themselves, call it with an empty source: they get an empty cell to type in and play. Call it on every cell before showing the cell to anyone; fix the errors and call it again.",
       inputSchema: { source: SOURCE, after: AFTER },
       _meta: { ui: { resourceUri: CELL_UI } },
     },
     async ({ source, after }) => {
+      if (!source.trim()) return { content: [text(EMPTY)] }
       const { parsed, earlier } = parse(source, after)
       return {
         isError: parsed.errors.length > 0,

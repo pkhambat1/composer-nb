@@ -1,6 +1,6 @@
 ---
 name: write-cells
-description: Write music as composer-nb cells that parse clean and come back as a link that plays. Use whenever the user wants drums, a riff, a bass line, a melody, a chord chart, a scale or an exercise they can hear, read as sheet music or take into a DAW as MIDI, or asks to write, fix or change a composer-nb cell.
+description: Write music as composer-nb cells that parse clean and come back as a link that plays. Use whenever the user wants drums, a riff, a bass line, a melody, a chord chart, a scale or an exercise they can hear, read as sheet music or take into a DAW as MIDI, or asks to write, fix or change a composer-nb cell, or wants an empty cell to write in themselves.
 ---
 
 # Write cells
@@ -19,6 +19,8 @@ If the `parse` tool isn't there, the connector isn't connected: in claude.ai or 
 A cell that uses the settings or names of earlier cells is parsed with their source in `after`. For several cells, call `link` with `cells`: one notebook, with text cells between the music.
 
 In claude.ai and Claude Desktop, `parse` and `link` draw the cell under the reply, where the user can change it and play it again, so don't describe what it already shows. A cell the user changed there comes back with their next message: build on that version.
+
+When the user wants to write the cell themselves ("give me a cell", "I'll write it"), call `parse` with an empty source and don't fill it in. They get an empty cell to type in and play.
 
 ## The standard
 

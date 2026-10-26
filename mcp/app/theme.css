@@ -128,6 +128,11 @@ body {
   resize: none;
   overflow: hidden;
 }
+/* The prompt in an empty cell, which the transparent text would hide */
+.cell-input::placeholder {
+  color: var(--color-text-tertiary, #73726c);
+  font-style: italic;
+}
 .cell-input::selection {
   background: rgba(120, 160, 220, 0.35);
   color: transparent;
