@@ -150,7 +150,7 @@ A setting is `set`, then the setting and its value: `set key Am`. It applies fro
 | `tempo`  | `120`      | Quarter notes per minute                                                     |
 | `key`    | `C`        | Key for degrees, Roman numerals and the sheet: `C`, `Am`, `F#m`, `D dorian`  |
 | `transpose` | `0`     | Semitones every pitched instrument sounds from what's written, -12 to 12     |
-| `octave` | `3`        | Octave for chords, and for notes written without one, 1 to 6                 |
+| `octave` | `3`        | Octave for chords, degrees and notes written without one, 1 to 6             |
 | `kit`    | `rock`     | Drum sound: `rock` or `synth`                                                |
 
 Every number is arithmetic (`set tempo 60*2`, `(1+2) bars groove`), so `*` and `/` only ever multiply and divide. That's why a time is `7 over 8` rather than `7/8`.
