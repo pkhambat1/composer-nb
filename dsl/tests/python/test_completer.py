@@ -58,9 +58,8 @@ def test_top_of_a_cell_offers_set_types_and_play():
     assert texts("%%music\nt") == []  # a setting comes after set
     assert "kick: " not in texts("%%music\n")
     # after set, the settings, and the instruments with more than one sound
-    assert texts("%%music\nset t") == ["time ", "tempo "]
+    assert texts("%%music\nset t") == ["time ", "tempo ", "transpose "]
     assert texts("%%music\nset s") == ["swing "]
-    assert texts("%%music\nset c") == ["capo "]
     assert texts("%%music\nset g") == ["guitar.electric "]
 
 

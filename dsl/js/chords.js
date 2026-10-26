@@ -202,11 +202,10 @@ export function spellLike(chord, midi) {
   return name + (name === "B#" ? octave - 1 : name === "Cb" ? octave + 1 : octave)
 }
 
-// Transpose a chord's sounding pitches up by `semis` (capo fret). The label is left alone
-// so chips and diagrams keep showing the shape you finger, while playback and note names
-// reflect the actual pitches.
-// A capo's notes are named with sharps, as fret positions are counted up.
-export function applyCapo(chord, semis) {
+// Moves a chord's sounding pitches by `semis`, up or down (set transpose). The label is left
+// alone, so the chart, the chips and a guitar's diagrams keep the chord as written, the shape
+// you finger, while playback and note names are the pitches that sound.
+export function applyTranspose(chord, semis) {
   if (!semis) return chord
   chord.notesMidi = chord.notesMidi.map((m) => m + semis)
   chord.bassMidi = chord.bassMidi + semis

@@ -223,7 +223,7 @@ async function renderNow(parsed) {
         if (!isGuitar(ev.instrument)) continue
         const pos = ChordLookup.lookupPosition(ev.chord.label)
         if (!pos?.midi?.length) continue
-        const voicing = pos.midi.map((m) => m + (ev.capo || 0))
+        const voicing = pos.midi.map((m) => m + (ev.transpose || 0))
         ev.chord = {
           ...ev.chord,
           notesMidi: voicing,

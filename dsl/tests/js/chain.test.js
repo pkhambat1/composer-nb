@@ -8,12 +8,12 @@ const labels = (p) => p.chords.map((e) => e.label)
 
 describe("parseChain", () => {
   it("starts from the settings the earlier cells ended on", () => {
-    const p = parseChain(["set tempo 90\nset capo 2\nplay guitar: chords Am", "play guitar: chords G D"])
+    const p = parseChain(["set tempo 90\nset transpose 2\nplay guitar: chords Am", "play guitar: chords G D"])
     expect(p.errors).toEqual([])
     expect(p.blocks[0].tempo).toBe(90)
-    expect(p.chords.map((e) => `${e.instrument} capo ${e.capo}`)).toEqual([
-      "guitar capo 2",
-      "guitar capo 2",
+    expect(p.chords.map((e) => `${e.instrument} transpose ${e.transpose}`)).toEqual([
+      "guitar transpose 2",
+      "guitar transpose 2",
     ])
   })
 
