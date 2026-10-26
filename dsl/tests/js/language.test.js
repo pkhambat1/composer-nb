@@ -2237,6 +2237,40 @@ describe("numerals' qualities", () => {
   })
 })
 
+describe("a numeral's octave", () => {
+  const roots = (src) => {
+    const p = parseCell(src, initialState())
+    expect(p.errors).toEqual([])
+    return p.outputs[0].chords.map((e) => e.chord.notesMidi[0])
+  }
+  const shape = (src) => roots(src).map((m, i, all) => m - all[0])
+  it("counts up from the key's root, as a degree does, so a progression keeps its shape", () => {
+    const iviIVV = "play piano: chords I|vi|IV|V"
+    // in C: C3 A3 F3 G3, and every key the same steps up from its root
+    expect(roots("set key C\n" + iviIVV)).toEqual([48, 57, 53, 55])
+    for (const key of ["D", "E", "Gb", "A", "B", "C#m", "D dorian"]) {
+      expect(shape(`set key ${key}\n` + iviIVV), key).toEqual([0, 9, 5, 7])
+    }
+    expect(roots("set key E\n" + iviIVV)).toEqual([52, 61, 57, 59])
+    // set octave moves it, from the key's root in that octave
+    expect(roots("set key E\nset octave 2\n" + iviIVV)).toEqual([40, 49, 45, 47])
+  })
+  it("keeps the bass an octave below the root, or a bass note under the key's root", () => {
+    const bass = (src) => parseCell(src, initialState()).outputs[0].chords.map((e) => e.chord.bassMidi)
+    expect(bass("set key E\nplay piano: chords I vi|I/G# IV/E")).toEqual([40, 49, 44, 40])
+    // in C as before: F/C has C2 under F3
+    expect(bass("play piano: chords IV/C F/C")).toEqual([36, 36])
+  })
+  it("leaves a chord symbol in the octave from C", () => {
+    expect(roots("set key E\nplay piano: chords E|C#m|A|B")).toEqual([52, 49, 57, 59])
+  })
+  it("counts of from where its root sounds", () => {
+    // V7 of V in A is a 5th above V's E4; a chain steps down by 5ths as it resolves
+    expect(roots("set key A\nplay piano: chords V|V7 of V")).toEqual([64, 71])
+    expect(roots("play piano: chords V7 of (V of V)|V7 of V|V7|I")).toEqual([69, 62, 55, 48])
+  })
+})
+
 describe("the grooves library", () => {
   it("holds cells that parse, in three sections", async () => {
     const { GROOVES, SECTIONS, searchGrooves } = await import("../../js/grooves.js")

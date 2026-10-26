@@ -1120,10 +1120,13 @@ function ofChord(tok, key, octave) {
     root = buildChord(right, key, octave)
     if (!root) return { error: `"${right}" isn't a chord I know` }
   }
-  // The root's own major key, spelt with one sign at most, as a key is
+  // The root's own major key, spelt with one sign at most, as a key is, in the octave where
+  // the root sounds: V7 of V in A counts up from V's E4, so it's B4
   let name = /^[A-G][#b]*/.exec(root.label)[0]
   if (name.length > 2) name = midiToName(60 + root.rootPc, key.flats).replace(/-?\d+$/, "")
-  const chord = buildChord(left + (bass === null ? "" : "/" + bass), parseKey(name), octave)
+  const rootKey = parseKey(name)
+  const rootOctave = Math.floor((root.notesMidi[0] - rootKey.tonicSemis) / 12) - 1
+  const chord = buildChord(left + (bass === null ? "" : "/" + bass), rootKey, rootOctave)
   return chord ? { chord } : { error: `"${left}" isn't a chord I know` }
 }
 
