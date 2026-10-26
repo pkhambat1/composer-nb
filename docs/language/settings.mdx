@@ -1,11 +1,11 @@
 ---
 title: "Settings"
-description: "Global values: time, tempo, kit, key, capo, octave and an instrument's sound."
+description: "set: time, tempo, swing, kit, key, capo, octave and an instrument's sound, from a line down."
 ---
 
 import { Cell } from "/snippets/cell.jsx"
 
-A setting is a name followed by its value, with no `=` or `:`. It applies from its line to the end of the cell, or of the block it is in.
+A setting is `set`, then the setting and its value: `set tempo 90`. It applies from its line to the end of the cell, or of the block it is in. A block's lines play together, so its `time`, `tempo` and `swing` are set above all of them; `key`, `octave`, `capo`, `kit` and a sound can change between its lines.
 
 | Setting | Value | Default | Sets |
 | --- | --- | --- | --- |
@@ -20,17 +20,17 @@ A setting is a name followed by its value, with no `=` or `:`. It applies from i
 
 ## time
 
-The unit is the note value counted: 1, 2, 4, 8 or 16. The count can be a sum, as in `time 3+4 over 8`, which groups the grid without changing the bar. `over` is required because `/` is division: `7/8` is the number 0.875.
+The unit is the note value counted: 1, 2, 4, 8 or 16. The count can be a sum, as in `set time 3+4 over 8`, which groups the grid without changing the bar. `over` is required because `/` is division: `7/8` is the number 0.875.
 
 ## swing
 
-`swing 67` plays the off-beat eighths at two thirds of the beat, a triplet feel; `50` is straight and `75` dotted. Sixteenths move with the eighth they belong to. Only the sound moves: the grid and the sheet stay as written.
+`set swing 67` plays the off-beat eighths at two thirds of the beat, a triplet feel; `50` is straight and `75` dotted. Sixteenths move with the eighth they belong to. Only the sound moves: the grid and the sheet stay as written.
 
 <Cell>
 
 ```composer-nb
-swing 67
-tempo 100
+set swing 67
+set tempo 100
 
 play {
   ride: 1 bars x-
@@ -50,8 +50,8 @@ Roman numerals and degrees count on the major scale of the key's root, whatever 
 <Cell>
 
 ```composer-nb
-key D dorian
-tempo 96
+set key D dorian
+set tempo 96
 
 pattern vamp = {
   piano: chords i IV|i bVII
@@ -80,4 +80,4 @@ The major `IV` under a minor `i` is what makes dorian dorian: `i IV` is Dm G, an
 
 ## Instrument sound
 
-An instrument's name followed by a value, with no colon, sets its sound from that line on. `guitar.electric muted` is palm-muted. With a colon, the same name starts a line. Only `guitar.electric` has more than one sound.
+`set` with an instrument's name and a sound sets that instrument's sound from its line on: `set guitar.electric muted` is palm-muted. Only `guitar.electric` has more than one sound.

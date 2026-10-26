@@ -11,7 +11,7 @@ class Song:
     sits above, so moving cells around or running them out of order doesn't
     change what a song sounds like.
 
-        intro = Song("tempo 75\\nplay guitar: chords Am E7|G D", name="intro")
+        intro = Song("set tempo 75\\nplay guitar: chords Am E7|G D", name="intro")
         verse = Song("play guitar: chords F C|Dm E7", after=intro, name="verse")
     """
 

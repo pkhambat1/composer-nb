@@ -9,7 +9,7 @@ A small language for drums, notes and chords, played right inside Jupyter notebo
 ```
 %%music
 // what happens now: crash once, the groove repeating under it
-time 7 over 8
+set time 7 over 8
 
 pattern groove = 3 bars {
   kick: x--x---
@@ -45,8 +45,8 @@ Give a cell a name, and later cells can start from the settings and names it end
 
 ```
 %%music intro
-tempo 75
-capo 2
+set tempo 75
+set capo 2
 chords riff = Am E7|G D
 play guitar: chords riff
 ```
@@ -56,7 +56,7 @@ play guitar: chords riff
 play guitar: chords F C|Dm E7 riff
 ```
 
-`verse` plays with a capo at fret 2, at 75 bpm, and can use `riff`, wherever it sits in the notebook and whenever you run it. If `intro` hasn't been run yet, you get an error saying so. A cell can still change anything it inherits: `tempo 90` in `verse` speeds up just `verse`.
+`verse` plays with a capo at fret 2, at 75 bpm, and can use `riff`, wherever it sits in the notebook and whenever you run it. If `intro` hasn't been run yet, you get an error saying so. A cell can still change anything it inherits: `set tempo 90` in `verse` speeds up just `verse`.
 
 A cell with no name plays on its own and isn't saved.
 
@@ -67,7 +67,7 @@ A cell with no name plays on its own and isn't saved.
 ```python
 from composer_nb import Song
 
-intro = Song("tempo 75\nplay guitar: chords Am E7|G D", name="intro")
+intro = Song("set tempo 75\nplay guitar: chords Am E7|G D", name="intro")
 verse = Song("play guitar: chords F C|Dm E7", after=intro, name="verse")
 verse  # shows the player
 ```
@@ -76,7 +76,7 @@ Songs are ordinary Python values, so you can generate them with loops and functi
 
 ```python
 blues = "|".join(["A7", "D7", "A7", "A7", "D7", "D7", "A7", "A7", "E7", "D7", "A7", "E7"])
-Song("tempo 120\nplay piano.electric: chords " + blues)
+Song("set tempo 120\nplay piano.electric: chords " + blues)
 ```
 
 ## From JavaScript
@@ -89,8 +89,8 @@ In an Observable notebook:
 import { music } from "npm:composer-nb"
 
 const intro = display(
-  music(`tempo 75
-capo 2
+  music(`set tempo 75
+set capo 2
 chords riff = Am E7|G D
 play guitar: chords riff`),
 )
@@ -103,7 +103,7 @@ music(`play guitar: chords F C|Dm E7 riff`, { after: intro, name: "verse" })
 `after` and `name` work as they do in Python, and `after` takes what an earlier `music` call returned. The source is a string, so other cells can write it. With a tempo slider called `bpm`, this cell plays at the new tempo each time the slider moves:
 
 ```js
-music(`tempo ${bpm}
+music(`set tempo ${bpm}
 play piano.electric: chords Am F|C G`)
 ```
 
@@ -119,7 +119,7 @@ Every line starts by saying what it is:
 
 | Line                | What it is                                                              |
 | ------------------- | ----------------------------------------------------------------------- |
-| `tempo 90`          | A setting: a reserved word and its value                                |
+| `set tempo 90`      | A setting: `set`, then the setting and its value                        |
 | `steps pair = ^-x-` | A name, with its type in front: `steps`, `notes`, `chords` or `pattern` |
 | `kick: x--x---`     | Inside braces, an instrument and what it plays                          |
 | `bar 2 { ... }`     | Inside braces, what plays in one bar of the pattern or play it's in     |
@@ -142,6 +142,8 @@ A name only holds its type, and only goes where that type goes. Chords on a drum
 
 ### Settings
 
+A setting is `set`, then the setting and its value: `set key Am`. It applies from its line down, to the end of the cell or the block it's in.
+
 | Setting  | Default    | Meaning                                                                      |
 | -------- | ---------- | ---------------------------------------------------------------------------- |
 | `time`   | `4 over 4` | Notes in a bar, over which note: `7 over 8`, or felt in groups: `3+4 over 4` |
@@ -151,7 +153,7 @@ A name only holds its type, and only goes where that type goes. Chords on a drum
 | `octave` | `3`        | Octave for chords, and for notes written without one, 1 to 6                 |
 | `kit`    | `rock`     | Drum sound: `rock` or `synth`                                                |
 
-Every number is arithmetic (`tempo 60*2`, `(1+2) bars groove`), so `*` and `/` only ever multiply and divide. That's why a time is `7 over 8` rather than `7/8`.
+Every number is arithmetic (`set tempo 60*2`, `(1+2) bars groove`), so `*` and `/` only ever multiply and divide. That's why a time is `7 over 8` rather than `7/8`.
 
 ### Notes and chords
 
@@ -160,8 +162,8 @@ Every number is arithmetic (`tempo 60*2`, `(1+2) bars groove`), so `*` and `/` o
 Notes are drawn on the steps, a note where a drum has its `x`:
 
 ```
-time 7 over 8
-octave 2
+set time 7 over 8
+set octave 2
 
 pattern groove = {
   kick: x--x---
@@ -172,13 +174,13 @@ pattern groove = {
 play groove
 ```
 
-A note is a capital letter, `A` to `G`, with `#` or `b` after it and an octave when it needs one: `F`, `F#`, `Bb`, `E2`. Without a number it's in the `octave` setting, so `octave 2` above puts the riff on the guitar's low E string. One note is one step, however many characters it takes, and two notes never touch: a space goes between them (`F# E`). `-` means nothing new happens, so the note rings on, and `_` stops it. `^` in front accents a note and `~` softens it.
+A note is a capital letter, `A` to `G`, with `#` or `b` after it and an octave when it needs one: `F`, `F#`, `Bb`, `E2`. Without a number it's in the `octave` setting, so `set octave 2` above puts the riff on the guitar's low E string. One note is one step, however many characters it takes, and two notes never touch: a space goes between them (`F# E`). `-` means nothing new happens, so the note rings on, and `_` stops it. `^` in front accents a note and `~` softens it.
 
 A degree goes where a note goes: a digit from `1` to `7`, counted on the major scale of the `key`'s root, with `b` or `#` in front. A scale is written as it's described, so natural minor is `1 2 b3 4 5 b6 b7`, and a name that holds degrees plays in whichever key is set. `1` is the root in the `octave` setting; `'` after the digit is an octave up and `'` before it an octave down:
 
 ```
-key A
-octave 3
+set key A
+set octave 3
 
 notes minor = 1---2---b3---4---|5---b6---b7---1'---
 
@@ -244,8 +246,8 @@ Beats are the beats a drum hits on in each bar, counted `1 e & a 2 e & a`. A bea
 In a pattern every line repeats, so it plays in every bar. To play something in one bar only, put the bar in front of it:
 
 ```
-time 7 over 8
-tempo 90
+set time 7 over 8
+set tempo 90
 
 pattern groove = {
   kick: x--x---

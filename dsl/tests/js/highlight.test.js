@@ -70,7 +70,7 @@ describe("a cell that is half typed", () => {
 
   it("reads a line that ends in a carriage return as it reads one that doesn't", () => {
     const colours = (src) => highlightMusic(src).map((parts) => parts.map((p) => p.c))
-    const lf = "play {\n  bar 2 {\n    kick: x---\n  }\n}\nkey Am\nsong = { kick: x }"
+    const lf = "play {\n  bar 2 {\n    kick: x---\n  }\n}\nset key Am\nsong = { kick: x }"
     const crlf = lf.replace(/\n/g, "\r\n")
     expect(text(crlf)).toBe(crlf)
     expect(colours(crlf).map((line) => line.filter((c) => c === "tk-error").length)).toEqual(

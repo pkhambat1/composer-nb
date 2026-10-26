@@ -38,6 +38,8 @@ for _name in PITCHED:
     if "." in _name:
         SOUNDS.setdefault(_name.split(".")[0], []).append(_name.split(".")[1])
 SETTING_VALUES = {"kit": KITS}
+# Instruments with more than one sound, set like a setting: set guitar.electric muted
+INSTRUMENT_SOUNDS = {"guitar.electric": ["clean", "muted"]}
 
 MAGIC = "%%music"
 # A name and the type in front of it: steps pair = ^-x-
@@ -179,7 +181,7 @@ def _statement(
     if not words:
         if grouped:
             return patterns + parts  # the next thing in a group, on a line of its own
-        settings = _options([s + " " for s in SETTINGS], "keyword")
+        settings = [("set ", "keyword")]
         types = _options([t + " " for t in TYPES], "keyword")
         if inside:
             return parts + patterns + [("bar ", "keyword"), ("every ", "keyword")] + settings + types
@@ -215,14 +217,27 @@ def _statement(
         if first == "pattern":
             return _sequence(words[3:], patterns, parts, grouped)
         return _options(names[first], "variable")
+    if first == "set":
+        # set tempo 90, set key D dorian, set guitar.electric muted: a setting and its value
+        if len(words) == 1:
+            return _options([s + " " for s in SETTINGS] + [i + " " for i in INSTRUMENT_SOUNDS], "keyword")
+        return _setting(words[1:])
+    if (inside or grouped) and first not in SETTINGS:
+        return _sequence(words, patterns, [], grouped)  # a pattern to play, or a group
+    return []
+
+
+def _setting(words: List[str]) -> List[Option]:
+    """What can come next after set and a setting's name."""
+    first = words[0]
+    if first in INSTRUMENT_SOUNDS and len(words) == 1:
+        return _options(INSTRUMENT_SOUNDS[first], "value")
     if first == "time" and len(words) > 1 and "over" not in words:
         return [("over ", "keyword")]
     if first in SETTING_VALUES and len(words) == 1:
         return _options(SETTING_VALUES[first], "value")
     if first == "key" and len(words) == 2 and re.fullmatch(r"[A-G][#b]?", words[1]):
-        return _options(MODES, "value")  # key D dorian: a root, then its mode
-    if (inside or grouped) and first not in SETTINGS:
-        return _sequence(words, patterns, [], grouped)  # a pattern to play, or a group
+        return _options(MODES, "value")  # set key D dorian: a root, then its mode
     return []
 
 

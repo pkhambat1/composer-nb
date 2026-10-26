@@ -11,7 +11,7 @@ A cell is a program. The interpreter evaluates its statements top to bottom, one
 
 | Statement | Example | Allowed |
 | --- | --- | --- |
-| Setting | `tempo 90` | Anywhere. See [Settings](/language/settings). |
+| Setting | `set tempo 90` | Anywhere. See [Settings](/language/settings). |
 | Declaration | `steps fill = x-x-` | Anywhere. See [Types](#types). |
 | Line | `kick: x--x---` | In a block, or after `play`. |
 | Group | `(intro verse verse)` | In a block, or after `play`. What plays in order goes in brackets. See [Groups](/language/patterns#groups). |
@@ -97,10 +97,10 @@ A length is a number and a unit, written in front of what it measures: `4 bars g
 | `beats` | A quarter note, in every time signature. |
 | `bars` | One bar of the current [`time`](/language/settings#time). |
 
-Any number can be arithmetic: `tempo 60*2`, `every 1/3 beats`.
+Any number can be arithmetic: `set tempo 60*2`, `every 1/3 beats`.
 
 ## Scope
 
-- A setting or declaration applies from its line to the end of the cell, or of the block it is in.
+- A setting or declaration applies from its line to the end of the cell, or of the block it is in. A block's lines play together, so its `time`, `tempo` and `swing` go above all of them.
 - A pattern is evaluated where it is played, with the settings in effect there.
 - The settings and names at the end of a cell carry into other cells. In the playground, a cell starts from the cells above it. In Jupyter, it starts from the cell named by [`after`](/jupyter#cells-that-continue).

@@ -5,8 +5,8 @@ import { Client } from "@modelcontextprotocol/sdk/client/index.js"
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js"
 import { createServer } from "../server.js"
 
-const MUZAK = `time 7 over 8
-tempo 90
+const MUZAK = `set time 7 over 8
+set tempo 90
 
 pattern groove = {
   kick: x--x---
@@ -25,8 +25,8 @@ play {
   groove
 }`
 
-const CHORDS = `tempo 100
-key Am
+const CHORDS = `set tempo 100
+set key Am
 
 play piano: {
   chords i bVI|bIII bVII
@@ -75,7 +75,7 @@ describe("tools", () => {
 
   it("parse reports errors with their lines and the line's text", async () => {
     const r = await call("parse", {
-      source: "tempo 90\n\nplay {\n  kick: x--x---\n  piano: Am F\n}",
+      source: "set tempo 90\n\nplay {\n  kick: x--x---\n  piano: Am F\n}",
     })
     expect(r.isError).toBe(true)
     const t = textOf(r)
@@ -87,7 +87,7 @@ describe("tools", () => {
   it("parse starts from the cells in after", async () => {
     const r = await call("parse", {
       source: "play 1 bars groove",
-      after: "tempo 70\npattern groove = { kick: x--- }",
+      after: "set tempo 70\npattern groove = { kick: x--- }",
     })
     expect(r.isError).toBeFalsy()
     expect(textOf(r)).toContain("tempo 70")
@@ -134,7 +134,7 @@ describe("tools", () => {
 
   it("link opens the playground on the cell", async () => {
     const t = textOf(await call("link", { source: MUZAK }))
-    expect(t).toContain("https://example.test/?open#src=time%207%20over%208")
+    expect(t).toContain("https://example.test/?open#src=set%20time%207%20over%208")
     expect(t).not.toContain("<iframe")
     expect(t).not.toContain("errors")
   })

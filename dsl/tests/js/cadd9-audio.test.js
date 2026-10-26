@@ -14,7 +14,7 @@ describe("Cadd9 audio path", () => {
   })
 
   it("guitar with capo 2: plays D F# A E (transposed)", () => {
-    const { chords } = parseSource("capo 2\nplay guitar: chords Cadd9")
+    const { chords } = parseSource("set capo 2\nplay guitar: chords Cadd9")
     const c = chords[0].chord
     const pcs = c.notesMidi.map((m) => ((m % 12) + 12) % 12).sort((a, b) => a - b)
     expect(pcs).toEqual([2, 4, 6, 9]) // D E F# A

@@ -1,7 +1,7 @@
 /* The music-cell language. A cell is a script, read top to bottom. Every line starts by
    saying what it is:
-     tempo 90                 a setting: a reserved word and its value (time 7 over 8,
-                              key Am, key D dorian). Settings aren't names, so no =.
+     set tempo 90             a setting: set, then the setting and its value (set time
+                              7 over 8, set key D dorian), from its line down.
      steps pair = ^-x-        a name, with its type in front. There are four types:
      notes riff = E---F# E-E--  steps (a drum's hits), notes, chords, and pattern (lines
      chords verse = Am E7|G D   in braces that play together). A name only ever holds
@@ -42,7 +42,7 @@
    way the line has no length of its own, so the other lines decide how long the block
    is. Lengths are always
    plural (1 bars), so bars only ever says how long and bar only ever says which.
-   Every number is arithmetic: (1+2) bars groove, tempo 60*2. So * and / only ever do
+   Every number is arithmetic: (1+2) bars groove, set tempo 60*2. So * and / only ever do
    arithmetic, and a time is two numbers (7 over 8), not a fraction.
    { } is a block: what's in it evaluates to one value, played together. Usually that's a
    pattern; after a drum's colon it's that drum's steps, one layer a line, which repeat
@@ -89,6 +89,7 @@ export const TYPES = ["steps", "sticking", "notes", "chords", "pattern"]
 export const KEYWORDS = [
   ...TYPES,
   "play",
+  "set",
   "bars",
   "beats",
   "bar",
@@ -102,7 +103,7 @@ export const KITS = ["rock", "synth"]
 // The modes a key can be in, by name: key D dorian. Major and minor keys are written C and Am.
 export const MODES = ["ionian", "dorian", "phrygian", "lydian", "mixolydian", "aeolian", "locrian"]
 // Instruments with more than one sound. Naming the instrument and a sound is a setting,
-// like kit: guitar.electric muted. The first sound is the one it has until then.
+// like kit: set guitar.electric muted. The first sound is the one it has until then.
 export const SOUNDS = { "guitar.electric": ["clean", "muted"] }
 const SETTING_EXAMPLE = {
   time: "7 over 8",
@@ -137,7 +138,7 @@ const NOTES_BLOCK =
   "A name holds one line of notes. Notes that play together go in a block on the instrument's line: piano: { ... }"
 
 const LINE_SHAPES =
-  "Each line is a setting (tempo 90), a name with its type (chords verse = Am F, " +
+  "Each line is a setting (set tempo 90), a name with its type (chords verse = Am F, " +
   "pattern groove = { ... }), play, or inside braces an instrument and what it plays " +
   "(kick: x--x---, guitar: F---G---) or patterns to play (intro verse)"
 
@@ -428,8 +429,8 @@ function applySetting(name, value, ln, state, err) {
         ln,
         divided && num
           ? `/ is division, so ${value} is the number ${+num.value.toFixed(4)}, not a time. ` +
-              `Write time ${divided[1].replace(/^\((.*)\)$/, "$1")} over ${divided[2]}`
-          : "time is how many notes over which note: time 7 over 8 is seven eighth notes in a bar",
+              `Write set time ${divided[1].replace(/^\((.*)\)$/, "$1")} over ${divided[2]}`
+          : "time is how many notes over which note: set time 7 over 8 is seven eighth notes in a bar",
       )
       return false
     }
@@ -464,7 +465,7 @@ function applySetting(name, value, ln, state, err) {
   if (name === "swing") {
     const n = whole(50, 75)
     if (n == null) {
-      err(ln, "swing is where the off-beat eighth falls, from 50 (straight) to 75 (dotted): swing 67 is a triplet feel")
+      err(ln, "swing is where the off-beat eighth falls, from 50 (straight) to 75 (dotted): set swing 67 is a triplet feel")
       return false
     }
     state.swing = n
@@ -477,10 +478,10 @@ function applySetting(name, value, ln, state, err) {
       err(
         ln,
         plain
-          ? `A ${plain[2].toLowerCase()} key is written as its chord: key ${plain[1]}${plain[2].toLowerCase() === "minor" ? "m" : ""}`
+          ? `A ${plain[2].toLowerCase()} key is written as its chord: set key ${plain[1]}${plain[2].toLowerCase() === "minor" ? "m" : ""}`
           : mode && MODES.includes(mode[2].toLowerCase())
-            ? `Modes are lowercase: key ${mode[1]} ${mode[2].toLowerCase()}`
-            : `key looks like C, Am, Bb or F#m, or a root and a mode: key D dorian. The modes are ${MODES.join(", ")}`,
+            ? `Modes are lowercase: set key ${mode[1]} ${mode[2].toLowerCase()}`
+            : `key looks like C, Am, Bb or F#m, or a root and a mode: set key D dorian. The modes are ${MODES.join(", ")}`,
       )
       return false
     }
@@ -791,7 +792,7 @@ function classifyDecl({ type, name, value }, { ln, blocks }, err, st) {
   if (!type) {
     if (!patternText(value)) {
       if (SETTINGS.includes(lower)) {
-        err(ln, `${lower} is a setting, not a name, so it takes no =: ${lower} ${value}`)
+        err(ln, `${lower} is a setting, not a name, so it takes no =: set ${lower} ${value}`)
         return null
       }
       if (evalNumber(value)) {
@@ -800,7 +801,7 @@ function classifyDecl({ type, name, value }, { ln, blocks }, err, st) {
         err(
           ln,
           best[1] <= 2
-            ? `"${name}" isn't a setting. Did you mean ${best[0]}?`
+            ? `"${name}" isn't a setting. Did you mean set ${best[0]}?`
             : `"${name}" isn't a setting. Settings: ${SETTINGS.join(", ")}`,
         )
         return null
@@ -918,6 +919,42 @@ function paceTicks(l, st, err) {
   return null
 }
 
+// set tempo 90, set key D dorian, set guitar.electric muted: a setting and its value, from
+// here to the end of the cell or the block it's in. Returns { kind: "setting" } or null after
+// saying what's wrong.
+function readSetting(text, tokens, ln, err) {
+  const raw = tokens[1] || ""
+  const name = raw.toLowerCase()
+  const value = text.replace(/^set\s+/, "").slice(raw.length).trim()
+  if (!raw) {
+    err(ln, "set takes a setting and its value: set tempo 90")
+    return null
+  }
+  if (SETTINGS.includes(name)) {
+    if (value) return { kind: "setting", ln, name, value }
+    err(ln, `set ${name} needs a value after it, e.g. set ${name} ${SETTING_EXAMPLE[name]}`)
+    return null
+  }
+  if (SOUNDS[name]) {
+    if (value) return { kind: "setting", ln, name, value }
+    err(ln, `set ${name} needs a sound after it: ${SOUNDS[name].join(" or ")}`)
+    return null
+  }
+  if (PITCHED.includes(name)) {
+    const choice = Object.entries(SOUNDS).map(([i, s]) => `${i} (${s.join(", ")})`)
+    err(ln, `${name} has one sound. Instruments with more: ${choice.join(", ")}`)
+    return null
+  }
+  const [best, far] = closest(name, [...SETTINGS, ...Object.keys(SOUNDS)])
+  err(
+    ln,
+    far <= 2
+      ? `"${raw}" isn't a setting. Did you mean set ${best}?`
+      : `"${raw}" isn't a setting. Settings: ${SETTINGS.join(", ")}, and an instrument's sound: set guitar.electric muted`,
+  )
+  return null
+}
+
 // Sorts one line (not play) into a setting, a word, a named pattern ("blockdef"), an
 // instrument line ("part"), patterns to play ("sequence"), something in a bar ("placed")
 // or something at its own pace ("paced"). Returns null when the line
@@ -950,6 +987,7 @@ function classify({ ln, text, blocks }, err, st) {
     const first = tokens[0] || ""
     const after = tokens.slice(1).join(" ")
     const noEquals = /^(steps|notes|chords|pattern)\s+([A-Za-z][A-Za-z0-9]*)\s+([^=].*)$/.exec(text)
+    if (first === "set") return readSetting(text, tokens, ln, err)
     if (text.startsWith("|")) {
       err(ln, "A line that starts with | continues the line above it, and there's no line above to continue")
     }
@@ -963,9 +1001,12 @@ function classify({ ln, text, blocks }, err, st) {
       /^[a-z]+$/.test(after) &&
       !st.words[after]
     ) {
-      // guitar.electric muted: an instrument and the sound it plays from here on
+      // guitar.electric muted is a setting, so it starts with set
       const name = first.toLowerCase()
-      if (SOUNDS[name]) return { kind: "setting", ln, name, value: after }
+      if (SOUNDS[name]) {
+        err(ln, `${name} ${after} is a setting, so it starts with set: set ${name} ${after}`)
+        return null
+      }
       const choice = Object.entries(SOUNDS).map(([i, s]) => `${i} (${s.join(", ")})`)
       err(ln, `${name} has one sound. Instruments with more: ${choice.join(", ")}`)
     } else if (PARTS.includes(first.toLowerCase()) && after) {
@@ -975,15 +1016,14 @@ function classify({ ln, text, blocks }, err, st) {
     } else if (first === "notes" && after) {
       err(ln, `Notes go on an instrument's line: guitar: ${spaceNotes(after)}`)
     } else if (SETTINGS.includes(first.toLowerCase())) {
-      // tempo 90: a reserved word and its value
+      // tempo 90 is a setting, so it starts with set
       const name = first.toLowerCase()
-      const value = text.slice(first.length).trim()
-      if (value) return { kind: "setting", ln, name, value }
-      err(ln, `${name} needs a value after it, e.g. ${name} ${SETTING_EXAMPLE[name]}`)
+      const value = text.slice(first.length).trim() || SETTING_EXAMPLE[name]
+      err(ln, `${name} is a setting, so it starts with set: set ${name} ${value}`)
     } else if (after && evalNumber(after) && closest(first.toLowerCase(), SETTINGS)[1] <= 2) {
       err(
         ln,
-        `"${first}" isn't a setting. Did you mean ${closest(first.toLowerCase(), SETTINGS)[0]}?`,
+        `"${first}" isn't a setting. Did you mean set ${closest(first.toLowerCase(), SETTINGS)[0]}?`,
       )
     } else if (
       !sections[first.replace(/^\(+/, "").split("*")[0]] &&
@@ -1009,7 +1049,7 @@ function classify({ ln, text, blocks }, err, st) {
     return null
   }
   if (SETTINGS.includes(name)) {
-    err(ln, `${name} is a setting, not an instrument, so it takes no colon: ${name} ${value}`)
+    err(ln, `${name} is a setting, not an instrument, so it takes no colon: set ${name} ${value}`)
     return null
   }
   if (PARTS.includes(name) || name === "sticking") {
@@ -2551,7 +2591,7 @@ function tile(clip, durSec) {
 function layer(parts, once, repeated, st, bars, err, ctx) {
   const meter = meterOf(st)
   const { barTicks, secPerTick } = meter
-  const read = parts.map((p) => readPart(p, st, barTicks, err)).filter(Boolean)
+  const read = parts.map((p) => readPart(p, p.st ?? st, barTicks, err)).filter(Boolean)
   if (read.length < parts.length) return null
   if (!read.length && !once.length && !repeated.length) return null
   const fixed = read.filter((p) => !p.open)
@@ -2698,16 +2738,34 @@ function layer(parts, once, repeated, st, bars, err, ctx) {
   return { durSec, events, drumEvents, spans }
 }
 
-// Reads a block's lines in order, so each one sees the names given before it. Settings
-// and names are applied to `st`; `named` is called with each pattern that gets a name.
+// What plays in a block: its instruments' lines, patterns, bars and paces.
+const PLAYS = ["part", "sequence", "placed", "paced"]
+// A block's lines play together, so it has one time, tempo and swing: they're set above
+// everything that plays in it. The rest apply line by line.
+const BLOCK_WIDE = { time: "time", tempo: "tempo", swing: "swing" }
+
+// Reads a block's lines in order, so each one sees the settings and names given before it.
+// Settings and names are applied to `st`, and each line that plays keeps the state as it
+// was there, in `l.st`. `named` is called with each pattern that gets a name.
 function readLines(lines, st, err, named) {
   const read = []
+  let playing = null // the first line that plays
   for (const line of lines) {
     const l = classify(line, err, st)
     if (!l) continue
     read.push(l)
-    if (l.kind === "setting") applySetting(l.name, l.value, l.ln, st, err)
-    else if (l.kind === "word") defineWord(l.type, l.name, l.value, l.ln, st, err, l.blocks)
+    if (PLAYS.includes(l.kind)) {
+      l.st = cloneState(st)
+      playing ??= l
+    }
+    if (l.kind === "setting") {
+      if (BLOCK_WIDE[l.name] && playing) {
+        err(
+          l.ln,
+          `set ${l.name} goes above the lines it sets: they play together, so a block has one ${BLOCK_WIDE[l.name]}`,
+        )
+      } else applySetting(l.name, l.value, l.ln, st, err)
+    } else if (l.kind === "word") defineWord(l.type, l.name, l.value, l.ln, st, err, l.blocks)
     else if (l.kind === "blockdef") {
       const sec = defineBlock(l, st, err)
       if (sec && named) named(sec)
@@ -2737,6 +2795,8 @@ const secondLine = (name, where) =>
 function blockClip(lines, state, err, ctx, stack, bars = 0) {
   const st = cloneState(state)
   const read = readLines(lines, st, err)
+  // The block's time, tempo and swing, which are set above all of its lines
+  const head = read.find((l) => l.st)?.st ?? st
   const parts = []
   for (const l of read) {
     if (l.kind !== "part") continue
@@ -2750,7 +2810,7 @@ function blockClip(lines, state, err, ctx, stack, bars = 0) {
   const repeated = []
   for (const l of read) {
     if (l.kind !== "sequence") continue
-    const clip = sequenceClip(l.items, st, err, l.ln, stack)
+    const clip = sequenceClip(l.items, l.st, err, l.ln, stack)
     if (!clip) return null
     // A pattern or a group on a line of its own repeats until what it's in ends.
     repeated.push({ clip, what: loopName(l.items[0]), ln: l.ln })
@@ -2758,18 +2818,18 @@ function blockClip(lines, state, err, ctx, stack, bars = 0) {
   for (const l of read) {
     if (l.kind !== "paced") continue
     // What's after every is a pattern of its own, where a step lasts that long.
-    const ticks = paceTicks(l, st, err)
+    const ticks = paceTicks(l, l.st, err)
     if (!ticks) return null
-    const clip = blockClip([l.line], { ...st, stepTicks: ticks }, err, paceCtx(l.ln), stack)
+    const clip = blockClip([l.line], { ...l.st, stepTicks: ticks }, err, paceCtx(l.ln), stack)
     if (!clip) return null
     repeated.push({ clip, what: "This pattern", ln: l.ln })
   }
   for (const l of read) {
     if (l.kind !== "placed") continue
     // What's in a bar repeats to fill it, and plays once each time through this block.
-    const clip = blockClip(l.lines, st, err, placeCtx(l), stack, l.to - l.from + 1)
+    const clip = blockClip(l.lines, l.st, err, placeCtx(l), stack, l.to - l.from + 1)
     if (!clip) return null
-    const { barTicks, secPerTick } = meterOf(st)
+    const { barTicks, secPerTick } = meterOf(head)
     const at = (l.from - 1) * barTicks * secPerTick
     once.push({ ...shift(clip, at, false), durSec: at + clip.durSec, ln: l.ln, until: l.to })
   }
@@ -2780,7 +2840,7 @@ function blockClip(lines, state, err, ctx, stack, bars = 0) {
     }
     return null
   }
-  return layer(parts, once, repeated, st, bars, err, ctx)
+  return layer(parts, once, repeated, head, bars, err, ctx)
 }
 
 // Plays a pattern, with or without a name, with the settings in effect where it's played.
@@ -2817,30 +2877,30 @@ function checkSection(sec, state, err, owner = sec.anon ? null : sec.name) {
     if (parts.slice(0, i).some((p) => p.name === l.name)) {
       err(l.ln, secondLine(l.name, `in ${where}`))
     }
-    readPart(l, st, meterOf(st).barTicks, err)
+    readPart(l, l.st, meterOf(l.st).barTicks, err)
   })
-  const names = (items, ln) => {
+  const names = (items, ln, at) => {
     for (const it of items) {
-      if (it.items) names(it.items, ln)
-      else if (it.block) checkSection(it.block, st, err, owner)
+      if (it.items) names(it.items, ln, at)
+      else if (it.block) checkSection(it.block, at, err, owner)
       else if (it.name === owner) err(ln, `${owner} plays itself, so it would never end`)
-      else if (!st.sections[it.name]) err(ln, undefinedName(it.name, st))
+      else if (!at.sections[it.name]) err(ln, undefinedName(it.name, at))
     }
   }
   for (const l of read) {
-    if (l.kind === "sequence") names(l.items, l.ln)
+    if (l.kind === "sequence") names(l.items, l.ln, l.st)
     // What's in a bar is a pattern of its own
     else if (l.kind === "placed") {
-      checkSection({ anon: true, ln: l.ln, lines: l.lines, bars: 0 }, st, err, owner)
+      checkSection({ anon: true, ln: l.ln, lines: l.lines, bars: 0 }, l.st, err, owner)
     } else if (l.kind === "paced") {
       // ...and so is what plays at its own pace, where a step lasts that long
-      const ticks = paceTicks(l, st, err)
-      const inner = ticks ? { ...st, stepTicks: ticks } : st
+      const ticks = paceTicks(l, l.st, err)
+      const inner = ticks ? { ...l.st, stepTicks: ticks } : l.st
       checkSection({ anon: true, ln: l.ln, lines: [l.line], bars: 0 }, inner, err, owner)
     }
   }
   // A line that's already been reported as a mistake doesn't need this too.
-  const playable = read.some((l) => ["part", "sequence", "placed", "paced"].includes(l.kind))
+  const playable = read.some((l) => PLAYS.includes(l.kind))
   if (!playable && read.length === sec.lines.length) {
     err(sec.ln, sec.anon ? "This pattern has nothing to play" : `${sec.name} has nothing to play`)
   }
@@ -3247,7 +3307,7 @@ export function parseCell(src, inherited = initialState()) {
     return false
   }
   const noteCapo = (body) => {
-    for (const l of body) if (/^capo\s+[1-9]/.test(l.text)) capoLine ??= l.ln
+    for (const l of body) if (/^set\s+capo\s+[1-9]/.test(l.text)) capoLine ??= l.ln
   }
 
   for (let i = 0; i < lines.length; i++) {
