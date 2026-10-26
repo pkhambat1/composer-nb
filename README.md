@@ -97,7 +97,7 @@ play 6 bars {
 
 ## From an assistant
 
-composer-nb is an [MCP](https://modelcontextprotocol.io) server too, so Claude, Cursor or any assistant that speaks MCP can write a cell, check it against the parser, draw the sheet and hand you a link that plays. In Claude, add a custom connector with the URL `https://composer-nb.vercel.app/mcp`; elsewhere, give that URL to the assistant as a remote MCP server. See [Assistants](https://pkhambat.mintlify.site/assistants) in the docs.
+composer-nb is an [MCP](https://modelcontextprotocol.io) server too, so Claude, Cursor or any assistant that speaks MCP can write a cell, check it against the parser, draw the sheet and hand you a link that plays. In Claude, install the plugin, which brings the connector with skills: add `pkhambat1/composer-nb` as a marketplace (Customize → Plugins → Add → Add marketplace; in Claude Code, `/plugin marketplace add pkhambat1/composer-nb`), then install `composer-nb` (`/plugin install composer-nb@composer-nb`). Or add a custom connector with the URL `https://composer-nb.vercel.app/mcp`; elsewhere, give that URL to the assistant as a remote MCP server. See [Assistants](https://pkhambat.mintlify.site/assistants) in the docs.
 
 ## In Jupyter
 
@@ -118,6 +118,7 @@ Then start a cell with `%%music`. Each `play` gives a player, a waveform, a grid
 | `dsl/`        | The language. `dsl/js/` has the parser, chord builder and audio renderer. `dsl/python/` is the [`composer-nb`](dsl/README.md) Python package, which plays the language in Jupyter notebooks. `dsl/js/music.js` is the `composer-nb` npm package, which plays it in Observable notebooks and web pages. |
 | `playground/` | A notebook-style web app for writing the language and hearing it. It uses `dsl/` as a package, so both always run the same parser.                                                                                                                                                                     |
 | `mcp/`        | The [`composer-nb-mcp`](mcp/README.md) package: the language as an MCP server, for assistants. `api/` serves it on Vercel at `/mcp`, with the sheet and MIDI of a cell at `/api/sheet` and `/api/midi`.                                                                                                |
+| `plugin/`     | The [Claude plugin](plugin/README.md): that server as its connector, and skills. `.claude-plugin/marketplace.json` lists it, so this repository is its marketplace.                                                                                                                                    |
 | `docs/`       | The [docs site](https://pkhambat.mintlify.site): `.mdx` pages and `docs.json`, built by [Mintlify](https://mintlify.com). Also the images in these READMEs.                                                                                                                                            |
 
 ## Working on it
