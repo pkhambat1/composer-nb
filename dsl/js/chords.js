@@ -151,8 +151,13 @@ export function buildChord(token, key, octave = 3) {
   const [main, bassStr, extra] = token.split("/")
   if (extra !== undefined) return null
   let symbol
-  if (ROMAN_RE.test(main)) symbol = romanToSymbol(main, key || parseKey("C"))
-  else if (/^[A-G][#b]?/.test(main)) symbol = main
+  let fromKey = null // a numeral's root, in semitones up from the key's root
+  const numeral = ROMAN_RE.exec(main)
+  if (numeral) {
+    key = key || parseKey("C")
+    symbol = romanToSymbol(main, key)
+    fromKey = degreeSemitones(DEGREE[numeral[2].toLowerCase()] + 1, numeral[1])
+  } else if (/^[A-G][#b]?/.test(main)) symbol = main
   else return null
 
   const ch = Chord.get(symbol.replace(/sus(?![24])/, "sus4"))
@@ -166,8 +171,15 @@ export function buildChord(token, key, octave = 3) {
     bassPc = Note.chroma(bassStr)
   }
 
-  const rootMidi = (octave + 1) * 12 + tonicPc
-  const bass = (octave + 1) * 12 + bassPc - 12
+  // A numeral's root counts up from the key's root in the octave, as a degree does, so a
+  // progression keeps its shape in every key: in E, I vi IV V is E3 C#4 A3 B3, as in C it's
+  // C3 A3 F3 G3. A symbol's root is in the octave counted from C. The bass is an octave
+  // below the root, or a bass note counted up from an octave below the key's root or C.
+  const rootMidi = fromKey === null ? (octave + 1) * 12 + tonicPc : (octave + 1) * 12 + key.tonicSemis + fromKey
+  let bass = rootMidi - 12
+  if (bassStr !== undefined) {
+    bass = fromKey === null ? octave * 12 + bassPc : octave * 12 + key.tonicSemis + ((bassPc - key.tonicPc + 12) % 12)
+  }
   const voicing = ch.intervals.map((iv) => rootMidi + Interval.semitones(iv))
   // The notes are spelt from the symbol, as a musician would: A C# E, not A Db E. B# and Cb
   // sit across an octave number from the pitch they sound (B#2 is C3), so the octave counts
@@ -188,7 +200,7 @@ export function buildChord(token, key, octave = 3) {
     bassMidi: bass,
     notesMidi: voicing,
     noteNames: names.map((n, i) => (Note.midi(n) === voicing[i] ? n : midiToName(voicing[i]))),
-    bassName: (bassStr || ch.tonic) + (octave - 1),
+    bassName: spellLike({ noteNames: [bassStr || ch.tonic] }, bass),
   }
 }
 
