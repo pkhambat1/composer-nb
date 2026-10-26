@@ -18,7 +18,7 @@ If the `parse` tool isn't there, the connector isn't connected: in claude.ai or 
 
 A cell that uses the settings or names of earlier cells is parsed with their source in `after`. For several cells, call `link` with `cells`: one notebook, with text cells between the music.
 
-In claude.ai and Claude Desktop, `parse` and `link` draw the player under the reply, so don't describe what it already shows.
+In claude.ai and Claude Desktop, `parse` and `link` draw the cell under the reply, where the user can change it and play it again, so don't describe what it already shows. A cell the user changed there comes back with their next message: build on that version.
 
 ## The standard
 

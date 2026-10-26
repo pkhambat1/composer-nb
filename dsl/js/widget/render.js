@@ -177,7 +177,8 @@ const views = new Set() // each output's switch, so they change together
 
 // --- Player --------------------------------------------------------------------
 
-function renderPlayer(slot, buffer, filename, onTime) {
+// With `autoplay`, it starts playing as soon as it's drawn, as after a cell's Play button.
+function renderPlayer(slot, buffer, filename, onTime, autoplay) {
   const audioUrl = URL.createObjectURL(bufferToWav(buffer))
   const audio = new Audio(audioUrl)
   const duration = bufferDuration(buffer)
@@ -257,6 +258,7 @@ function renderPlayer(slot, buffer, filename, onTime) {
     audio.currentTime = ((e.clientX - rect.left) / rect.width) * duration
     tick()
   })
+  if (autoplay) audio.play().catch((err) => console.warn("composer-nb: playback failed", err))
 
   return () => {
     cancelAnimationFrame(frame)
@@ -270,7 +272,7 @@ function renderPlayer(slot, buffer, filename, onTime) {
 // --- Cell ----------------------------------------------------------------------
 
 // One play line's output: what it is, its player, drum grid and chords.
-function renderOutput(output, filename, messages) {
+function renderOutput(output, filename, messages, autoplay) {
   const box = h("div", "cnb-output")
   const head = h("div", "cnb-output-head")
   head.append(h("span", "cnb-play-line", output.label))
@@ -339,7 +341,7 @@ function renderOutput(output, filename, messages) {
   queueRender(output, () => disposed)
     .then((buffer) => {
       if (disposed) return
-      disposePlayer = renderPlayer(slot, buffer, filename, setTime)
+      disposePlayer = renderPlayer(slot, buffer, filename, setTime, autoplay)
       for (const msg of output.warnings || []) messages.add(msg)
     })
     .catch((err) => {
@@ -359,9 +361,10 @@ function renderOutput(output, filename, messages) {
 }
 
 // Draws the last of `sources` into `el`, starting from what the earlier ones left.
-// `name` and `after` (the name of the song it continues from) are only shown. Returns a
-// function that stops the audio and frees it.
-export function renderCell(el, { sources, name, after }) {
+// `name` and `after` (the name of the song it continues from) are only shown, and `play`
+// starts the first output once its audio is ready. Returns a function that stops the audio
+// and frees it.
+export function renderCell(el, { sources, name, after, play = false }) {
   const parsed = parseChain(sources)
 
   const root = h("div", "cnb")
@@ -406,6 +409,7 @@ export function renderCell(el, { sources, name, after }) {
       o,
       `${name || "composer-nb"}${parsed.outputs.length > 1 ? "-" + (i + 1) : ""}.wav`,
       messages,
+      play && i === 0,
     ),
   )
   for (const o of outputs) root.append(o.box)

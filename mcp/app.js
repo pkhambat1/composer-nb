@@ -1,6 +1,7 @@
 /* The MCP App: for a host that renders MCP Apps (claude.ai, Claude Desktop), parse and
-   link draw the player inside the conversation: the audio with its Play button, the hits
-   as bricks or as sheet music, the chords. The view is app/main.js, built by Vite into
+   link draw the cell inside the conversation: its code, which the user can change and play
+   again, and the player (the audio with its Play button, the hits as bricks or as sheet
+   music, the chords). The view is app/main.js, built by Vite into
    app/dist/app.js (npm run build:app -w mcp) and put inline in one HTML page here, which
    the host loads in a sandboxed frame. A host that doesn't render UI reads the tools' text
    as before: the page is only fetched by a host that asks for it. */
@@ -58,7 +59,7 @@ export function registerCellApp(server, { site }) {
     CELL_UI,
     {
       description:
-        "The player for a cell inside the conversation: its audio, the hits as bricks or as sheet music, and the chords.",
+        "A cell inside the conversation: its code, which the user can change and play again, its audio, the hits as bricks or as sheet music, and the chords.",
       mimeType: RESOURCE_MIME_TYPE,
     },
     async () => ({
