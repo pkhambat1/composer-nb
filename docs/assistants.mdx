@@ -11,7 +11,22 @@ The connection is an [MCP](https://modelcontextprotocol.io) server. Once it is c
 
 The assistant writes the cell, calls `parse`, and if the parser says `line 5: The snare line is 6 steps long, which doesn't fit 12 steps a whole number of times`, it fixes the cell before you see it. Then it calls `render` for the sheet and `link` for the link.
 
+## Install the plugin
+
+In Claude, the composer-nb plugin brings the connector and four skills: `write-cells` (parse every cell, fix it, hand over the link), `groove`, `practice` and `theory`.
+
+**Claude.ai and Claude Desktop.** Customize → Plugins → Add → Add marketplace, with the repository `pkhambat1/composer-nb`. Select composer-nb, then Add. Then add its connector on the plugin's Connectors tab. The server has no sign-in.
+
+**Claude Code.**
+
+```text
+/plugin marketplace add pkhambat1/composer-nb
+/plugin install composer-nb@composer-nb
+```
+
 ## Connect it
+
+For the connector alone, or another assistant.
 
 **Claude.ai and Claude Desktop.** Settings → Connectors → Add custom connector, with the URL:
 

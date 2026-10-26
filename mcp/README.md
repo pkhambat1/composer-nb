@@ -2,7 +2,22 @@
 
 The [composer-nb](https://github.com/pkhambat1/composer-nb) language as an [MCP](https://modelcontextprotocol.io) server: an assistant writes drums, notes and chords as a text cell, checks it against the parser, draws the sheet music, writes a MIDI file and hands over a link that plays.
 
+## Install the plugin
+
+In Claude, the [plugin](../plugin/README.md) brings this server as its connector, with skills for writing cells, grooves, practice routines and theory.
+
+**Claude.ai and Claude Desktop:** Customize → Plugins → Add → Add marketplace, with the repository `pkhambat1/composer-nb`. Select composer-nb, then Add, and add its connector on the plugin's Connectors tab.
+
+**Claude Code:**
+
+```text
+/plugin marketplace add pkhambat1/composer-nb
+/plugin install composer-nb@composer-nb
+```
+
 ## Connect it
+
+For the server alone, or another assistant.
 
 **Claude.ai and Claude Desktop:** Settings → Connectors → Add custom connector, with the URL `https://composer-nb.vercel.app/mcp`.
 

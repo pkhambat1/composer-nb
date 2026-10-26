@@ -1,0 +1,14 @@
+{
+  "name": "composer-nb",
+  "description": "composer-nb for Claude: the hosted connector and skills for writing music as cells that play.",
+  "owner": {
+    "name": "Pezanne Khambatta",
+    "url": "https://github.com/pkhambat1"
+  },
+  "plugins": [
+    {
+      "name": "composer-nb",
+      "source": "./plugin"
+    }
+  ]
+}

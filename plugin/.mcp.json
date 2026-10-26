@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "composer-nb": {
+      "type": "http",
+      "url": "https://composer-nb.vercel.app/mcp"
+    }
+  }
+}
