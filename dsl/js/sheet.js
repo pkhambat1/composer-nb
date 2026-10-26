@@ -102,7 +102,9 @@ function pitchedNote(hits, u, tie, acc, cont, sig) {
   if (!cont) {
     if (notes.some((n) => n.accent)) deco += "!>!"
     if (notes.every((n) => n.ghost)) deco += GHOST
-    const symbol = notes.find((n) => n.symbol)?.symbol
+    // abcjs keeps what follows a / only when it's a bass note, so C6/9 would print as C6:
+    // its 6/9 goes on the staff with a fraction slash, which abcjs leaves alone
+    const symbol = notes.find((n) => n.symbol)?.symbol?.replace("6/9", "6\u20449")
     if (symbol) deco += `"${symbol}"`
   }
   const heads = notes.map((n) => abcPitch(n.midi, acc, sig, n.spell))

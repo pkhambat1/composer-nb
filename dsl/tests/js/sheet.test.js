@@ -217,6 +217,9 @@ describe("the key signature", () => {
     // a chord's notes as the chord spells them: B# major is B# D## F##, not C E G
     expect(voice("set key C#m\nplay piano: chords VII")).toBe('[V:P1] "B#"[^B,^^D^^F]16 |')
     expect(voice("set key Gb\nplay piano: chords IV")).toBe('[V:P1] "Cb"[CEG]16 |')
+    // a 6/9 keeps its 9: abcjs drops what follows a / unless it's a bass note
+    expect(voice("play piano: chords C6/9")).toMatch(/^\[V:P1\] "C6\u20449"/)
+    expect(voice("play piano: chords Cm6/9/E")).toMatch(/^\[V:P1\] "Cm6\u20449\/E"/)
   })
   it("stays off the percussion staff", () => {
     const lines = voices("set key D\nplay {\n  hat: 1 bars x-\n  kick: x--- ---- x-x- ----\n  piano: F#4--- C#4---\n}")
