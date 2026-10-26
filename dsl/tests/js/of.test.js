@@ -80,6 +80,8 @@ describe("of in charts", () => {
     expect(chords("set key C\nplay piano: chords V7 of V|V7 I")).toEqual(["D7", "G7", "C"])
     expect(chords("set key C\nplay piano: chords ii7 of IV V of bVII")).toEqual(["Gm7", "F"])
     expect(chords("set key F\nplay piano: chords V7 of ii|ii V7 I -")).toEqual(["D7", "Gm", "C7", "F"])
+    // a numeral takes what it takes in a chart
+    expect(chords("set key Cm\nplay piano: chords V7alt of iv V7 of bVI")).toEqual(["C7alt", "Eb7"])
   })
 
   it("takes only the chord's root", () => {

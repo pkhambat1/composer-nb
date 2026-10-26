@@ -1083,6 +1083,8 @@ function classify({ ln, text, blocks }, err, st) {
 // V7 of V (V7@V): a numeral counted on the major scale of the root of the chord after of, so
 // in C it's D7, the V7 of G. A chain takes brackets: V7 of (V of V). The chord after of gives
 // only its root, and a bass note goes at the end: V7 of V/F#. Returns { chord } or { error }.
+// Each side is a numeral, with whatever a chart takes after one (V7alt).
+const numeral = (t) => /^[#b]?[IViv]/.test(t)
 function ofChord(tok, key, octave) {
   const at = tok.indexOf("@")
   const slash = tok.lastIndexOf("/")
@@ -1090,7 +1092,7 @@ function ofChord(tok, key, octave) {
   const main = bass === null ? tok : tok.slice(0, slash)
   const left = main.slice(0, at)
   const right = main.slice(at + 1)
-  if (!isRoman(left)) {
+  if (!numeral(left)) {
     return { error: "In a chart, of takes a numeral in front of it, counted from the chord after it: V7 of V" }
   }
   if (right.startsWith("(")) return { error: "The ( after of closes on its line: V7 of (V of V)" }
@@ -1098,12 +1100,12 @@ function ofChord(tok, key, octave) {
   if (right.startsWith("‹")) {
     if (!right.endsWith("›")) return { error: "A chain of of's takes brackets: V7 of (V of V)" }
     const inner = right.slice(1, -1)
-    const r = inner.includes("@") ? ofChord(inner, key, octave) : isRoman(inner) ? { chord: buildChord(inner, key, octave) } : null
+    const r = inner.includes("@") ? ofChord(inner, key, octave) : numeral(inner) ? { chord: buildChord(inner, key, octave) } : null
     if (!r || r.error || !r.chord) return r?.error ? r : { error: "After of, a chart takes a numeral to count from: V7 of V" }
     root = r.chord
   } else {
     if (right.includes("@")) return { error: "A chain of of's takes brackets: V7 of (V of V)" }
-    if (!isRoman(right)) {
+    if (!numeral(right)) {
       return {
         error: buildChord(right, key, octave)
           ? "After of, a chart takes a numeral, not a chord name: V7 of V"
