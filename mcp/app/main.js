@@ -71,7 +71,13 @@ function run(i, play) {
   const cell = cells[i]
   const chain = cells.slice(0, i + 1).map((c) => c.ta.value)
   cell.stop?.()
-  cell.stop = renderCell(cell.host, { sources: chain, name: "", after: "", play })
+  // An empty cell is one to write in: no player until it has code
+  if (cell.ta.value.trim()) {
+    cell.stop = renderCell(cell.host, { sources: chain, name: "", after: "", play })
+  } else {
+    cell.stop = null
+    cell.host.replaceChildren()
+  }
   cell.errorLines = new Set(
     parseChain(chain)
       .errors.map((e) => e.line)
@@ -115,6 +121,7 @@ function addCell(source) {
   const ta = h("textarea", "cell-input")
   ta.value = source
   ta.spellcheck = false
+  ta.placeholder = "A groove, a riff or a chord chart. Shift+Enter plays it."
   ta.setAttribute("aria-label", "The cell's code")
   const play = h("button", "cell-play", "Play")
   play.type = "button"

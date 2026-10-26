@@ -2,7 +2,7 @@
    the language reference boiled down, so a model writes a cell that parses the first time,
    and knows to check it with `parse` before handing it over. */
 
-export const INSTRUCTIONS = `composer-nb is a small, typed language for music: drums, notes and chords, written as text cells. Call parse on every cell before you show it to anyone: it returns the errors with line numbers (a cell with errors plays nothing), what is set and named, and a grid of every hit. Fix the errors and parse again. Then link gives a link that opens the playground on the cell, ready to play, with practice controls; render draws the sheet music or writes a MIDI file; library finds a groove to start from; reference has the full rules.
+export const INSTRUCTIONS = `composer-nb is a small, typed language for music: drums, notes and chords, written as text cells. Call parse on every cell before you show it to anyone: it returns the errors with line numbers (a cell with errors plays nothing), what is set and named, and a grid of every hit. Fix the errors and parse again. When the user wants to write a cell themselves, call parse with an empty source: they get an empty cell to type in and play. Then link gives a link that opens the playground on the cell, ready to play, with practice controls; render draws the sheet music or writes a MIDI file; library finds a groove to start from; reference has the full rules.
 
 HOW A CELL READS. Every line says what it is:
   set tempo 90              a setting: set, then the setting and its value (time, tempo, swing, key, transpose, octave, kit)

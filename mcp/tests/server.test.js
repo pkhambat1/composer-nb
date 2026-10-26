@@ -84,6 +84,12 @@ describe("tools", () => {
     expect(t).toContain("piano: Am F")
   })
 
+  it("parse takes an empty source as a cell for the user to write in", async () => {
+    const r = await call("parse", { source: "  \n" })
+    expect(r.isError).toBeFalsy()
+    expect(textOf(r)).toMatch(/^An empty cell, for the user to write in\./)
+  })
+
   it("parse starts from the cells in after", async () => {
     const r = await call("parse", {
       source: "play 1 bars groove",
