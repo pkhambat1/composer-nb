@@ -60,7 +60,7 @@ export function createServer({ site = SITE } = {}) {
     {
       title: "Check a cell and see what it plays",
       description:
-        "Checks a composer-nb cell and says what it plays. Returns the errors with their line numbers (a cell with errors plays nothing), the settings and names in effect at the end, and for each play a grid of every hit and note, bar by bar, with the chords it heard. Where the client renders MCP Apps, the player is drawn too: the audio, the grid or the sheet, the chords. Call it on every cell before showing the cell to anyone; fix the errors and call it again.",
+        "Checks a composer-nb cell and says what it plays. Returns the errors with their line numbers (a cell with errors plays nothing), the settings and names in effect at the end, and for each play a grid of every hit and note, bar by bar, with the chords it heard. Where the client renders MCP Apps, the cell is drawn too, for the user to change and play: its code, the audio, the grid or the sheet, the chords. What the user plays there comes back with their next message. Call it on every cell before showing the cell to anyone; fix the errors and call it again.",
       inputSchema: { source: SOURCE, after: AFTER },
       _meta: { ui: { resourceUri: CELL_UI } },
     },
@@ -137,7 +137,7 @@ export function createServer({ site = SITE } = {}) {
     {
       title: "A link that plays a cell",
       description:
-        "A link that opens the playground on a cell, ready to play, with practice controls (tempo, loop, count-in, mute a part), sheet music, and WAV and MIDI downloads: send it, and it opens on a phone. Give cells instead of source for a link to a whole notebook of text and music cells. Where the client renders MCP Apps, the player is drawn under the link as well.",
+        "A link that opens the playground on a cell, ready to play, with practice controls (tempo, loop, count-in, mute a part), sheet music, and WAV and MIDI downloads: send it, and it opens on a phone. Give cells instead of source for a link to a whole notebook of text and music cells. Where the client renders MCP Apps, the cell is drawn under the link as well, for the user to change and play.",
       _meta: { ui: { resourceUri: CELL_UI } },
       inputSchema: {
         source: SOURCE.optional(),
