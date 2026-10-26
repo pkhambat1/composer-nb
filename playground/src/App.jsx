@@ -35,7 +35,14 @@ const ChordBrowserPanel = React.lazy(() => import("./components/ChordBrowser.jsx
 // App
 // ============================================================================
 
-export default function App() {
+// `host` is set when another page holds the playground's cells itself, as the MCP App does
+// inside Claude: { cells: [{ type, source }], after, theme, onRun }. Then, as in a frame,
+// there are only the cells: `after` is the source they continue from, `theme` follows the
+// page's, the music cells render as they open, and `onRun` hears every cell as it runs.
+export default function App({ host = null } = {}) {
+  const single = EMBED || !!host // only cells, with nothing around them
+  const hostRef = React.useRef(host)
+  hostRef.current = host
   const [sideTab, setSideTab] = React.useState("notebook")
   const [chordsOpened, setChordsOpened] = React.useState(false)
   const openTab = React.useCallback((tab) => {
@@ -47,11 +54,12 @@ export default function App() {
   const [runCounter, setRunCounter] = React.useState(0)
   const abortRef = React.useRef(null)
   // The notebook the page opens with: a shared link's cells, the one that was open, or the
-  // starters as the first one. In a frame there's just the one cell, kept nowhere.
+  // starters as the first one. In a frame there's just the one cell, and in a host page its
+  // cells, kept nowhere.
   const [opening] = React.useState(() =>
-    EMBED ? null : openingNotebook(APP_CONSTANTS.STARTER_CELLS, openedCells()),
+    single ? null : openingNotebook(APP_CONSTANTS.STARTER_CELLS, openedCells()),
   )
-  const cm = useCellManager(EMBED ? [embedCell()] : opening.cells)
+  const cm = useCellManager(host ? host.cells : EMBED ? [embedCell()] : opening.cells)
   const {
     cells,
     selectedId,
@@ -84,10 +92,13 @@ export default function App() {
     onKept: (nb) => setSavedAs(nb.title),
   })
 
-  // In a frame the page's theme rules; otherwise the choices are kept on this device
+  // In a frame or a host page the page's theme rules; otherwise the choices are kept on this
+  // device
   const [settings, setSetting] = useTheme(
-    EMBED ? { ...APP_CONSTANTS.THEME_DEFAULTS, theme: embedTheme() } : APP_CONSTANTS.THEME_DEFAULTS,
-    { remember: !EMBED },
+    single
+      ? { ...APP_CONSTANTS.THEME_DEFAULTS, theme: host ? host.theme : embedTheme() }
+      : APP_CONSTANTS.THEME_DEFAULTS,
+    { remember: !single },
   )
   const theme = settings.theme || "light"
   const accent = APP_CONSTANTS.THEME_DEFAULTS.accent
@@ -107,6 +118,10 @@ export default function App() {
       stopHeight()
     }
   }, [setSetting])
+  const hostTheme = host?.theme
+  React.useEffect(() => {
+    if (hostTheme) setSetting("theme", hostTheme)
+  }, [hostTheme, setSetting])
 
   const armAudio = React.useCallback(async () => {
     try {
@@ -128,6 +143,7 @@ export default function App() {
         setEditingId((e) => (e === id ? null : e))
         return
       }
+      hostRef.current?.onRun?.(cells.map(({ type, source }) => ({ type, source })))
       // A cell that is playing keeps playing from where it was once its new audio is
       // ready, so a groove can be edited while it runs
       setKernelStatus("busy")
@@ -136,8 +152,11 @@ export default function App() {
       const runId = Symbol()
       abortRef.current = runId
       try {
-        // Settings and names carry on from the music cells above, like variables in Jupyter.
+        // Settings and names carry on from the music cells above, like variables in Jupyter,
+        // and in a host page from the source the page says comes before them.
         let inherited = MusicEngine.initialState()
+        const after = hostRef.current?.after
+        if (after) inherited = MusicEngine.parseSource(after, inherited).state
         for (const prev of cells.slice(0, cells.indexOf(c))) {
           if (prev.type === "music") inherited = MusicEngine.parseSource(prev.source, inherited).state
         }
@@ -310,13 +329,22 @@ export default function App() {
     [playback],
   )
 
-  // A shared link renders its cells as soon as it opens.
+  // A shared link renders its cells as soon as it opens, and plays them; a host page's
+  // cells render as they open, and wait for Play.
   const runAllRef = React.useRef(queuedRunAll)
   React.useEffect(() => {
     runAllRef.current = queuedRunAll
   }, [queuedRunAll])
+  const renderAll = React.useCallback(() => {
+    for (const c of cells) if (c.type === "music") queuedRunCell(c.id)
+  }, [cells, queuedRunCell])
+  const renderAllRef = React.useRef(renderAll)
+  React.useEffect(() => {
+    renderAllRef.current = renderAll
+  }, [renderAll])
   React.useEffect(() => {
     if (OPEN) runAllRef.current()
+    else if (hostRef.current) renderAllRef.current()
   }, [])
 
   // Another notebook: whatever plays stops, and the page shows the one asked for
@@ -384,7 +412,7 @@ export default function App() {
     undoDelete,
     setSelectedId,
     setEditingId,
-    single: EMBED,
+    single,
   })
 
   const cellList = (
@@ -423,13 +451,14 @@ export default function App() {
           registerPlayer={playback.registerPlayer}
           unregisterPlayer={playback.unregisterPlayer}
           armAudio={armAudio}
+          share={!host}
         />
       ))}
     </div>
   )
 
-  // One cell and nothing else: see shared/embed.js
-  if (EMBED) {
+  // Cells and nothing else: see shared/embed.js
+  if (single) {
     return (
       <div className="embed-root" ref={embedRef}>
         {cellList}

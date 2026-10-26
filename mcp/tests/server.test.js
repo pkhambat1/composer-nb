@@ -201,9 +201,10 @@ describe("the MCP App", () => {
     const [page] = (await client.readResource({ uri: "ui://composer-nb/cell" })).contents
     expect(page.mimeType).toBe("text/html;profile=mcp-app")
     expect(page.text).not.toContain("Open in the playground")
-    expect(page.text).toContain("cnb-play") // the player's Play button, from the bundled renderer
+    expect(page.text).toContain("play-btn") // the player's Play button, from the bundled playground
     expect(page.text.match(/<\/script>/g)).toHaveLength(1) // the inline bundle closes no tag of its own
     expect(page._meta.ui.csp.connectDomains).toContain("https://cdn.jsdelivr.net")
+    expect(page._meta.ui.csp.resourceDomains).toContain("https://fonts.gstatic.com")
   })
 
   it("leaves parse answering in text, with nothing structured to replace it", async () => {

@@ -1,9 +1,9 @@
 /* The MCP App: for a host that renders MCP Apps (claude.ai, Claude Desktop), parse and
-   link draw the cell inside the conversation: its code, which the user can change and play
-   again, and the player (the audio with its Play button, the hits as bricks or as sheet
-   music, the chords). The view is app/main.js, built by Vite into
-   app/dist/app.js (npm run build:app -w mcp) and put inline in one HTML page here, which
-   the host loads in a sandboxed frame. A host that doesn't render UI reads the tools' text
+   link draw the cells inside the conversation as the playground's own: the code, which the
+   user can change and play again, the player and its practice controls. The view is
+   app/main.js, the playground's App bundled by Vite into app/dist/app.js (npm run
+   build:app -w mcp) and put inline in one HTML page here, which the host loads in a
+   sandboxed frame. A host that doesn't render UI reads the tools' text
    as before: the page is only fetched by a host that asks for it. */
 import { readFile } from "node:fs/promises"
 import { RESOURCE_MIME_TYPE, registerAppResource } from "@modelcontextprotocol/ext-apps/server"
@@ -16,6 +16,11 @@ export const SOUND_HOSTS = [
   "https://gleitz.github.io",
   "https://tonejs.github.io",
 ]
+
+// The playground's fonts, IBM Plex, from Google Fonts: the stylesheet, then the files.
+export const FONT_HOSTS = ["https://fonts.googleapis.com", "https://fonts.gstatic.com"]
+const FONTS =
+  "https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Serif:wght@400;600&display=swap"
 
 let scriptLoading = null
 function script() {
@@ -39,6 +44,7 @@ export async function cellHtml() {
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="color-scheme" content="light dark">
 <title>composer-nb</title>
+<link rel="stylesheet" href="${FONTS}">
 </head>
 <body>
 <div id="status">Loading the player…</div>
@@ -57,7 +63,7 @@ export function registerCellApp(server) {
     CELL_UI,
     {
       description:
-        "A cell inside the conversation: its code, which the user can change and play again, its audio, the hits as bricks or as sheet music, and the chords.",
+        "The cells inside the conversation, as the playground draws them: the code, which the user can change and play again, the player and its practice controls, the hits as bricks or as sheet music, and the chords.",
       mimeType: RESOURCE_MIME_TYPE,
     },
     async () => ({
@@ -66,7 +72,12 @@ export function registerCellApp(server) {
           uri: CELL_UI,
           mimeType: RESOURCE_MIME_TYPE,
           text: await cellHtml(),
-          _meta: { ui: { csp: { connectDomains: SOUND_HOSTS }, prefersBorder: true } },
+          _meta: {
+            ui: {
+              csp: { connectDomains: SOUND_HOSTS, resourceDomains: FONT_HOSTS },
+              prefersBorder: true,
+            },
+          },
         },
       ],
     }),

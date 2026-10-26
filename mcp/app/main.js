@@ -1,22 +1,22 @@
-/* The MCP App: the cell, drawn inside a conversation by a host that renders MCP Apps
+/* The MCP App: the cells, drawn inside a conversation by a host that renders MCP Apps
    (claude.ai, Claude Desktop). The host hands over the tool's input, the cell's source and
-   the cells it continues from, and each cell shows as the playground shows it: the code in
-   an editor, and under it the player the library draws in a notebook (the audio, the hits
-   as bricks or as sheet music, the chords). The code can be changed here and played again
-   with Play or Shift+Enter: the cell is parsed and rendered in this page, with nothing
-   asked of the server. What was played is passed back as context for Claude's next turn.
+   what it continues from, or a notebook's cells, and they show as the playground's own:
+   its App, bundled into this page, holding just the cells (playground/src/App.jsx, the
+   `host` prop). So the editor, the player, the practice controls, the grid, the sheet and
+   the chord diagrams are the website's. The cells are parsed and rendered in this page,
+   with nothing asked of the server, and what the user plays is passed back as context for
+   Claude's next turn.
 
    Outside a host, ?src=<cell> draws the cell straight away, for a look in a browser. */
+import { createElement } from "react"
+import { createRoot } from "react-dom/client"
 import { App } from "@modelcontextprotocol/ext-apps"
-import { renderCell } from "../../dsl/js/widget/render.js"
-import { parseChain } from "../../dsl/js/music-engine.js"
-import { highlightMusic } from "../../dsl/js/highlight.js"
-import { editKey } from "../../dsl/js/editing.js"
-import widgetCss from "../../dsl/js/widget/widget.css?inline"
+import Playground from "../../playground/src/App.jsx"
+import playgroundCss from "../../playground/src/styles/app.css?inline"
 import themeCss from "./theme.css?inline"
 
 const style = document.createElement("style")
-style.textContent = widgetCss + "\n" + themeCss
+style.textContent = playgroundCss + "\n" + themeCss
 document.head.append(style)
 
 const $ = (id) => document.getElementById(id)
@@ -25,157 +25,66 @@ const status = (text) => {
   $("status").hidden = !text
 }
 
-function h(tag, className, text) {
-  const node = document.createElement(tag)
-  if (className) node.className = className
-  if (text != null) node.textContent = text
-  return node
-}
-
 let app = null // the host, once connected
-let cells = [] // the music cells drawn, in order
-let shown = null // what is drawn now, so the result's repeat of the input doesn't redraw
+let root = null
+let theme = "light"
+let shown = null // what is drawn now: { key, cells, after }, so a repeat of the input doesn't redraw
 let edited = false // whether anything played differs from what Claude wrote
-
-function clear() {
-  for (const cell of cells) {
-    cell.stop?.()
-    cell.watch.disconnect()
-  }
-  cells = []
-  $("cells").replaceChildren()
-}
-
-// The code layer under the textarea, painted token by token, with the lines the last run
-// reported tinted until the code changes.
-function paint(cell) {
-  const { code, ta, errorLines } = cell
-  code.replaceChildren()
-  highlightMusic(ta.value).forEach((parts, i) => {
-    if (i) code.append("\n")
-    const line = errorLines.has(i + 1) ? h("span", "cell-error-line") : code
-    for (const p of parts) line.append(p.c ? h("span", p.c, p.s) : p.s)
-    if (line !== code) code.append(line)
-  })
-  code.append("\n")
-  ta.style.height = "auto"
-  ta.style.height = ta.scrollHeight + 2 + "px"
-}
-
-// Parses and renders cell i after the cells above it, and plays it when asked.
-function run(i, play) {
-  const cell = cells[i]
-  const chain = cells.slice(0, i + 1).map((c) => c.ta.value)
-  cell.stop?.()
-  // An empty cell is one to write in: no player until it has code
-  if (cell.ta.value.trim()) {
-    cell.stop = renderCell(cell.host, { sources: chain, name: "", after: "", play })
-  } else {
-    cell.stop = null
-    cell.host.replaceChildren()
-  }
-  cell.errorLines = new Set(
-    parseChain(chain)
-      .errors.map((e) => e.line)
-      .filter(Boolean),
-  )
-  cell.played = cell.ta.value
-  paint(cell)
-  if (cell.played !== cell.source) edited = true
-  if (edited) tellClaude()
-}
 
 // What the user played, for Claude to read with their next message. Nothing is sent
 // until then, and each update replaces the last.
-function tellClaude() {
+function tellClaude(cells) {
   if (!app?.getHostCapabilities()?.updateModelContext) return
+  const music = cells.filter((c) => c.type === "music")
   const fence = (s) => "```composer-nb\n" + s + "\n```"
   const text =
-    cells.length === 1
-      ? `In the composer-nb player, the user changed the cell and played it. It now reads:\n\n${fence(cells[0].played)}`
-      : `In the composer-nb player, the user changed the cells and played them. They now read, in order:\n\n${cells.map((c) => fence(c.played)).join("\n\n")}`
+    music.length === 1
+      ? `In the composer-nb player, the user changed the cell and played it. It now reads:\n\n${fence(music[0].source)}`
+      : `In the composer-nb player, the user changed the cells and played them. They now read, in order:\n\n${music.map((c) => fence(c.source)).join("\n\n")}`
   app.updateModelContext({ content: [{ type: "text", text }] }).catch(() => {})
 }
 
-// A cell: its code in an editor, with Play at the top as in the playground, and its player.
-function addCell(source) {
-  const i = cells.length
-  const box = h("div", "cell")
-  const editor = h("div", "cell-editor")
-  const code = h("pre", "cell-code")
-  code.setAttribute("aria-hidden", "true")
-  const ta = h("textarea", "cell-input")
-  ta.value = source
-  ta.spellcheck = false
-  ta.placeholder = "A groove, a riff or a chord chart. Shift+Enter plays it."
-  ta.setAttribute("aria-label", "The cell's code")
-  const play = h("button", "cell-play", "Play")
-  play.type = "button"
-  play.title = "Play this cell (Shift+Enter)"
-  editor.append(code, ta, play)
-  const host = h("div", "cnb-host")
-  box.append(editor, host)
-  $("cells").append(box)
-
-  const cell = { source, played: source, ta, code, host, errorLines: new Set() }
-  cells.push(cell)
-  const changed = (value) => {
-    if (value != null) ta.value = value
-    cell.errorLines = new Set()
-    paint(cell)
-  }
-  ta.addEventListener("input", () => changed())
-  ta.addEventListener("keydown", (e) => {
-    if (e.key === "Enter" && e.shiftKey && !e.metaKey && !e.ctrlKey && !e.altKey) {
-      e.preventDefault()
-      run(i, true)
-    } else if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
-      e.preventDefault()
-      run(i, false)
-    } else editKey(e, ta, changed)
-  })
-  play.addEventListener("click", () => run(i, true))
-  // Wrapped lines move when the width changes, and so does the height the code needs
-  let width = 0
-  cell.watch = new ResizeObserver(() => {
-    if (editor.clientWidth === width) return
-    width = editor.clientWidth
-    paint(cell)
-  })
-  cell.watch.observe(editor)
+function onRun(cells) {
+  if (cells.some((c, i) => c.source !== shown.cells[i]?.source)) edited = true
+  if (edited) tellClaude(cells)
 }
 
-const isMusic = (c) => c && c.type !== "text" && typeof c.source === "string"
-
-// One cell per music cell, each continuing from the cells before it.
-function draw(sources) {
-  const key = JSON.stringify(sources)
-  if (key === shown) return
-  shown = key
-  clear()
-  for (const source of sources) addCell(source)
-  cells.forEach((_, i) => run(i, false))
+function render() {
+  root ??= createRoot($("cells"))
+  const { key, cells, after } = shown
+  root.render(createElement(Playground, { key, host: { cells, after, theme, onRun } }))
   status("")
 }
 
+// The cells to draw, and the source they continue from.
+function draw(cells, after = "") {
+  const key = JSON.stringify([cells, after])
+  if (key === shown?.key) return
+  shown = { key, cells, after }
+  edited = false
+  render()
+}
+
 // The tool's arguments: parse and link take a cell (and what it continues from), link
-// takes a notebook of cells instead.
+// takes a notebook of text and music cells instead.
 function show(args) {
   if (!args) return
   if (Array.isArray(args.cells) && args.cells.length) {
-    const music = args.cells.filter(isMusic)
-    if (music.length) draw(music.map((c) => c.source))
+    const cells = args.cells
+      .filter((c) => c && typeof c.source === "string")
+      .map((c) => ({ type: c.type === "text" ? "text" : "music", source: c.source }))
+    if (cells.length) draw(cells)
     return
   }
   if (typeof args.source !== "string") return
-  const sources =
-    typeof args.after === "string" && args.after.trim() ? [args.after, args.source] : [args.source]
-  draw(sources)
+  draw([{ type: "music", source: args.source }], typeof args.after === "string" ? args.after : "")
 }
 
 function applyTheme(context) {
-  const theme = context?.theme
-  if (theme === "dark" || theme === "light") document.documentElement.dataset.theme = theme
+  const next = context?.theme
+  if (next !== "dark" && next !== "light") return
+  theme = next
+  if (shown) render()
 }
 
 // The handshake with the host, which then sends the tool's input and result.
@@ -196,5 +105,7 @@ async function connect() {
 }
 
 const query = new URLSearchParams(window.location.search)
-if (query.has("src")) show({ source: query.get("src"), after: query.get("after") || undefined })
-else connect()
+if (query.has("src")) {
+  if (query.get("theme") === "dark") theme = "dark"
+  show({ source: query.get("src"), after: query.get("after") || undefined })
+} else connect()
