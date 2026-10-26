@@ -9,7 +9,7 @@
      .tk-error
    Whitespace is kept exactly, so the layer lines up with the textarea under it. */
 import { KEYWORDS, LANES, PARTS, PITCHED, SETTINGS, SOUNDS, TYPES, UNITS } from "./language.js"
-import { isRoman, parseKey } from "./chords.js"
+import { chordParts, isRoman, parseKey } from "./chords.js"
 
 const ROMAN_RE = /^([#b])?(VII|VI|IV|V|III|II|I|vii|vi|iv|v|iii|ii|i)(.*)$/
 const STEPS_RE = /^[-x^~d]+$/
@@ -21,6 +21,8 @@ const NOTE = "[\\^~]?(?:[A-G][#b]?[0-8]?|'*[#b]?[1-7]'*)"
 const NOTES_RE = new RegExp(`^(?:-|_|${NOTE})+$`)
 const NOTE_AT = new RegExp(`-|_|${NOTE}`, "g")
 const NAME_RE = /^[A-Za-z][A-Za-z0-9]*$/
+// A name of your own: a lowercase letter, then letters and digits (riff, partA)
+const OWN_NAME = /^[a-z][A-Za-z0-9]+$/
 // What a length's arithmetic is made of: (1+2)*2 bars
 const SUM_RE = /^[\d\s./+*()-]*\d[\d\s./+*()-]*$/
 const TRACK_RE = /^[A-Za-z][A-Za-z0-9]*(?:\.[A-Za-z0-9]+)?\s*:/
@@ -31,8 +33,8 @@ function chordToken(token) {
   const parts = []
   let core = token
   let tail = []
-  if (core.includes("/")) {
-    const [main, bass] = core.split("/")
+  if (chordParts(core).length > 1) {
+    const [main, bass] = chordParts(core)
     core = main
     tail = [part("tk-slash", "/"), part("tk-bass", bass)]
   }
@@ -48,11 +50,15 @@ function chordToken(token) {
     parts.push(part("tk-root tk-root-abs", am[1]))
     rest = am[2] || ""
   }
+  // A 6/9 is written 6/9 or m6/9, and only that way
+  if (/69|6add9/.test(rest) || (rest.includes("6/9") && !/^m?6\/9$/.test(rest))) {
+    return parts.concat(part("tk-error", rest), tail)
+  }
   let i = 0
   while (i < rest.length) {
     const r = rest.slice(i)
     const q = /^(maj|min|sus2|sus4|sus|dim|aug|m|M|\+)/.exec(r)
-    const e = q ? null : /^(add9|b5|#5|b9|#9|#11|b13|13|11|9|7|6|2|4)/.exec(r)
+    const e = q ? null : /^(add9|6\/9|b5|#5|b9|#9|#11|b13|13|11|9|7|6|2|4)/.exec(r)
     const m = q || e
     if (!m) {
       parts.push(part("tk-error", rest.slice(i)))
@@ -98,11 +104,11 @@ function valueToken(t, kind) {
     if (/^[RL-]+$/.test(t)) {
       return [...t].map((ch) => (ch === "-" ? part("tk-rest", ch) : part("tk-step", ch)))
     }
-    return [part(/^[a-z][a-z0-9]+$/.test(t) ? "tk-word" : "tk-error", t)]
+    return [part(OWN_NAME.test(t) ? "tk-word" : "tk-error", t)]
   }
   if (kind === "notes") {
     if (NOTES_RE.test(t)) return noteRun(t)
-    const name = /^[a-z][a-z0-9]+$/.test(t) && !isRoman(t) && !TYPES.includes(t)
+    const name = OWN_NAME.test(t) && !isRoman(t) && !TYPES.includes(t)
     return [part(name ? "tk-word" : "tk-error", t)]
   }
   if (t === "-" || t === "_" || t === "rest") return [part("tk-rest", t)]
@@ -110,7 +116,7 @@ function valueToken(t, kind) {
     if (STEPS_RE.test(t)) return stepRun(t)
     if (BEAT_RE.test(t)) return [part("tk-beat", t)]
   }
-  if (/^[a-z][a-z0-9]+$/.test(t) && !isRoman(t)) return [part("tk-word", t)]
+  if (OWN_NAME.test(t) && !isRoman(t)) return [part("tk-word", t)]
   if (kind === "drum") return [part("tk-error", t)]
   return chordToken(t)
 }
@@ -418,7 +424,9 @@ function line(code, depth = 0) {
     // steps pair = ^-x-, chords verse = Am F, pattern groove = 3 bars { ... }: the type,
     // the name, and a value of that type
     const [, gap, name, before, , afterEq, value] = typed
-    const taken = SETTINGS.includes(name) || PARTS.includes(name) || KEYWORDS.includes(name)
+    // taken, or not a name: Bridge, a single letter, a numeral
+    const taken =
+      SETTINGS.includes(name) || PARTS.includes(name) || KEYWORDS.includes(name) || !OWN_NAME.test(name) || /^(i|ii|iii|iv|v|vi|vii)$/.test(name)
     out.push(part("tk-directive-key", word), part(null, gap))
     out.push(part(taken ? "tk-error" : "tk-word", name), part(null, before))
     out.push(part("tk-punct", "="), part(null, afterEq))

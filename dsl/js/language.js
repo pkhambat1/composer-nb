@@ -130,6 +130,8 @@ const STEPS = {
   d: { double: true },
 }
 const ROMAN = ["i", "ii", "iii", "iv", "v", "vi", "vii"]
+// A token that reads as a name: a lowercase letter, then letters and digits (riff, partA)
+const NAME_LIKE = /^[a-z][A-Za-z0-9]+$/
 const TAKEN = new Set([...SETTINGS, ...DRUMS, ...PARTS, ...KEYWORDS])
 // A block written inside a line: {#1} on the line, and the block in the line's `blocks`.
 const BLOCK_KEY = /^\{#\d+\}$/
@@ -281,6 +283,20 @@ function nameProblem(name, value) {
     return `${name} already means something, so pick another name`
   if (/^d\d+[ea]?$/.test(name)) return `${name} is a double on a beat, so pick another name`
   return null
+}
+
+// The rule for a name of any type: a lowercase letter, then letters and digits, with a capital
+// for each new word (partA, countIn); at least two characters, since single letters are
+// steps; not a numeral; and not a name already in scope, carried in from a cell above or
+// not, with other capitals (partA, then parta). The message, or null.
+function nameRule(type, name, st) {
+  if (!/^[a-z]/.test(name)) return `Names start with a lowercase letter: ${type} ${name[0].toLowerCase()}${name.slice(1)}`
+  if (name.length < 2) return "Names need at least two characters, because single letters are steps"
+  if (ROMAN.includes(name)) return `${name} is a chord, so pick another name`
+  const twin = [...Object.keys(st.words), ...Object.keys(st.sections)].find(
+    (n) => n !== name && n.toLowerCase() === name.toLowerCase(),
+  )
+  return twin ? `${name} differs from ${twin} only in its capitals, so pick another name or write ${twin}` : null
 }
 
 // ---------------------------------------------------------------------------
@@ -544,21 +560,8 @@ function dimMarkProblem(tok) {
 // steps name = ^-x-, chords name = Am E7|G D: steps or chords to hand to an instrument.
 // What's written has to be the type that's declared.
 function defineWord(type, name, value, ln, state, err, blocks = null) {
-  const problem = nameProblem(name, value)
+  const problem = nameProblem(name, value) || nameRule(type, name, state)
   if (problem) return err(ln, problem)
-  if (name !== name.toLowerCase()) {
-    return err(
-      ln,
-      `Names for steps, notes and chords are lowercase: ${type} ${name.toLowerCase()} = ${value}`,
-    )
-  }
-  if (name.length < 2) {
-    return err(
-      ln,
-      "Names for steps, notes and chords need at least two letters, because single letters are steps",
-    )
-  }
-  if (ROMAN.includes(name)) return err(ln, `${name} is a chord, so pick another name`)
   if (type === "sticking") {
     // sticking para = RLRR LRLL: a hand for each step
     const tokens = []
@@ -650,7 +653,7 @@ function defineWord(type, name, value, ln, state, err, blocks = null) {
       type === "steps" ? isStepRun(t) || t === "|" : CHORD_MARKS.includes(t) || buildChord(t, key)
     ) {
       tokens.push(t)
-    } else if (/^[a-z][a-z0-9]+$/.test(t) && !isRoman(t) && !/^[-xd]+$/.test(t)) {
+    } else if (NAME_LIKE.test(t) && !isRoman(t) && !/^[-xd]+$/.test(t)) {
       return err(ln, `"${t}" isn't defined above. Name it first: ${type} ${t} = ...`)
     } else if (type === "chords" && t.includes("@")) {
       const of = ofChord(t, key, state.octave)
@@ -765,7 +768,7 @@ function shapeOf(value, st, blocks = null) {
 // Names a pattern (pattern name = { ... }) in `st`, the state of the block it's written
 // in. Returns the pattern, or null if the name or length is a mistake.
 function defineBlock(l, st, err) {
-  const problem = nameProblem(l.name, "{")
+  const problem = nameProblem(l.name, "{") || nameRule("pattern", l.name, st)
   if (problem) {
     err(l.ln, problem)
     return null
@@ -1087,8 +1090,10 @@ function classify({ ln, text, blocks }, err, st) {
 const numeral = (t) => /^[#b]?[IViv]/.test(t)
 function ofChord(tok, key, octave) {
   const at = tok.indexOf("@")
+  // the last / is a bass's unless it's a 6/9's own: V7 of V/F#, V of I6/9
   const slash = tok.lastIndexOf("/")
-  const bass = slash > Math.max(at, tok.lastIndexOf("›")) ? tok.slice(slash + 1) : null
+  const own = tok.slice(slash - 1, slash + 2) === "6/9"
+  const bass = slash > Math.max(at, tok.lastIndexOf("›")) && !own ? tok.slice(slash + 1) : null
   const main = bass === null ? tok : tok.slice(0, slash)
   const left = main.slice(0, at)
   const right = main.slice(at + 1)
@@ -1141,7 +1146,7 @@ function chordSlot(tok, part, st, key, err) {
     applyTranspose(of.chord, st.transpose)
     return { chord: of.chord }
   }
-  if (/^[a-z][a-z0-9]+$/.test(tok) && !isRoman(tok)) {
+  if (NAME_LIKE.test(tok) && !isRoman(tok)) {
     err(
       part.ln,
       st.sections[tok]
@@ -1763,7 +1768,7 @@ function stepPattern(part, tokens, st, err, open = false, fill = null) {
   const addRun = (tok, viaWord) => {
     const where = viaWord ? ` (in ${viaWord})` : ""
     if (!isStepRun(tok)) {
-      if (/^[a-z][a-z0-9]+$/.test(tok)) {
+      if (NAME_LIKE.test(tok)) {
         err(
           part.ln,
           st.sections[tok]
@@ -1963,7 +1968,7 @@ function stepLayerRun(line, st, err, part) {
       return fail(`${tok} is ${w.type}, so it can't be a layer of steps`)
     } else if (st.sections[tok]) {
       return fail(`${tok} is a pattern, so it can't be a layer of steps`)
-    } else if (/^[a-z][a-z0-9]+$/.test(tok)) {
+    } else if (NAME_LIKE.test(tok)) {
       return fail(`"${tok}" isn't defined above. Name it first: steps ${tok} = ^-x-`)
     } else return fail(`"${tok}" isn't a step. ${STEP_HELP}`)
   }
@@ -2323,7 +2328,7 @@ function notNotes(tok, st, inst, chart) {
   if (st.sections[tok]) {
     return `${tok} is a pattern, so it goes on a line of its own, not on an instrument's line`
   }
-  if (/^[a-z][a-z0-9]+$/.test(tok) && !isRoman(tok)) {
+  if (NAME_LIKE.test(tok) && !isRoman(tok)) {
     return `"${tok}" isn't defined above. Name it first: notes ${tok} = F---G---`
   }
   if (buildChord(tok, parseKey(st.key))) {
@@ -2998,6 +3003,10 @@ function undefinedName(name, st) {
     return word.type === "steps"
       ? `${name} is steps, so it goes on a drum's line: hat: ${name}`
       : `${name} is ${word.type}, so it goes on an instrument's line: piano: ${word.type === "chords" ? "chords " : ""}${name}`
+  }
+  // Bridge can't have been named, so the message is the rule, not how to name it
+  if (!/^[a-z]/.test(name)) {
+    return `"${name}" can't be a name, since names start with a lowercase letter: ${name[0].toLowerCase()}${name.slice(1)}`
   }
   const names = Object.keys(st.sections)
   return names.length

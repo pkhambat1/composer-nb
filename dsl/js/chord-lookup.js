@@ -1,5 +1,6 @@
 /* Guitar chord positions from @tombatossals/chords-db (bundled, lazy-loaded chunk). */
 import { Chord, Interval, Note } from "tonal"
+import { chordParts, tonalName } from "./chords.js"
 
 let db = null
 const positionCache = new Map()
@@ -144,8 +145,8 @@ function pcsOfPosition(p) {
 // slash chord's bass included.
 function chordPcsForLabel(label) {
   if (!label) return null
-  const [head, bass] = label.split("/")
-  const ch = Chord.get(head)
+  const [head, bass] = chordParts(label)
+  const ch = Chord.get(tonalName(head))
   if (ch.empty || !ch.intervals?.length || ch.tonic == null) return null
   const tonicPc = Note.chroma(ch.tonic)
   if (tonicPc == null || isNaN(tonicPc)) return null
@@ -306,13 +307,11 @@ function symbolToSuffix(symbol) {
 }
 
 function resolveKeySuffix(label) {
-  const parts = label.split("/")
-  const head = parts[0]
-  const slash = parts[1]
+  const [head, slash] = chordParts(label)
 
-  const ch = Chord.get(head)
+  const ch = Chord.get(tonalName(head))
   if (!ch.empty && ch.tonic) {
-    let suffix = symbolToSuffix(head)
+    let suffix = symbolToSuffix(tonalName(head))
     if (!suffix) return null
     if (slash) {
       // The database's slash shapes are triads over a bass, "/E" for a major triad and
@@ -360,12 +359,10 @@ export function lookupPosition(label) {
   let pos = positionFromEntry(entry, chordPcs)
 
   if (!pos) {
-    const ch = Chord.get(label.split("/")[0])
+    const [head, bass] = chordParts(label)
+    const ch = Chord.get(tonalName(head))
     for (const alias of ch.aliases || []) {
-      const tryLabel =
-        label.includes("/") && !alias.includes("/")
-          ? alias + label.slice(label.indexOf("/"))
-          : alias
+      const tryLabel = bass !== undefined && !alias.includes("/") ? alias + "/" + bass : alias
       const alt = resolveKeySuffix(tryLabel)
       if (!alt) continue
       const altKey = KEY_ALIASES[alt.key] || alt.key
@@ -384,7 +381,7 @@ export function lookupPosition(label) {
 
 function soundsRootAndThird(pos, label, chordPcs) {
   const pcs = pcsOfPosition(pos)
-  const root = Note.chroma(Chord.get(label.split("/")[0]).tonic)
+  const root = Note.chroma(Chord.get(tonalName(chordParts(label)[0])).tonic)
   return pcs.has(root) && (chordPcs.third == null || pcs.has(chordPcs.third))
 }
 
@@ -394,7 +391,7 @@ export function lookupBySymbol(symbol) {
 
 function isBrowserChordLabel(label) {
   if (!/^[A-G][#b]?/.test(label)) return false
-  const parts = label.split("/")
+  const parts = chordParts(label)
   if (parts.length > 2) return false
   if (parts.length === 2) {
     const bass = parts[1]
@@ -407,16 +404,16 @@ function isBrowserChordLabel(label) {
 
 // The database's names that the language spells another way: a minor-major seventh is
 // mMaj7 (tonal reads mmaj7 as nothing), an augmented ninth is 9#5, and a major seventh
-// flat five is M7b5.
-const LIBRARY_SUFFIX = { mmaj7: "mMaj7", mmaj9: "mMaj9", aug9: "9#5", maj7b5: "M7b5" }
+// flat five is M7b5, and a 6/9 is written as on a lead sheet.
+const LIBRARY_SUFFIX = { mmaj7: "mMaj7", mmaj9: "mMaj9", aug9: "9#5", maj7b5: "M7b5", "69": "6/9", m69: "m6/9" }
 
 // A slash chord's bass, spelt as the chord's own note when it is one (E/G#, not E/Ab), and
 // otherwise by its interval above the root: F/Eb (the flat seventh), not the database's F/D#.
 const BASS_INTERVAL = ["1P", "2m", "2M", "3m", "3M", "4P", "4A", "5P", "6m", "6M", "7m", "7M"]
 function spellBass(label) {
-  const [head, bass] = label.split("/")
+  const [head, bass] = chordParts(label)
   if (!bass) return label
-  const ch = Chord.get(head)
+  const ch = Chord.get(tonalName(head))
   const own = ch.notes.find((n) => Note.chroma(n) === Note.chroma(bass))
   if (own) return `${head}/${own}`
   const step = (Note.chroma(bass) - Note.chroma(ch.tonic) + 12) % 12
@@ -437,7 +434,7 @@ export function buildCatalog() {
       if (!entry?.suffix) continue
       const label = spellBass(labelFromKeySuffix(key, LIBRARY_SUFFIX[entry.suffix] ?? entry.suffix))
       if (seen.has(label) || !isBrowserChordLabel(label)) continue
-      if (Chord.get(label.split("/")[0]).empty) continue
+      if (Chord.get(tonalName(chordParts(label)[0])).empty) continue
       const position = lookupPosition(label)
       if (!position || maxAbsoluteFret(position) > 12) continue
       seen.add(label)

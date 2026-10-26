@@ -138,7 +138,7 @@ A name's type goes in front of it, and `=` gives it its value:
 | `chords`  | Bars of chords: `chords verse = Am F\|C G`                                    | After `chords` on an instrument's line: `piano: chords verse` |
 | `pattern` | Lines in braces that play together, over and over: `pattern groove = { ... }` | On a line of its own, or after `play`                         |
 
-A name only holds its type, and only goes where that type goes. Chords on a drum's line, or steps where a pattern belongs, is an error that names both types. A name without a type is an error too, and the message shows the line to write.
+A name of any type starts with a lowercase letter and takes a capital for each new word: `riff`, `partA`, `countIn`. It's at least two characters and never a numeral, and two names that differ only in their capitals are an error. A name only holds its type, and only goes where that type goes. Chords on a drum's line, or steps where a pattern belongs, is an error that names both types. A name without a type is an error too, and the message shows the line to write.
 
 ### Settings
 
@@ -204,7 +204,7 @@ Chords are written by the bar, with `chords` in front:
 play guitar: chords C - - G|Am - F G|%|F - _ -
 ```
 
-`|` is a bar line, and the chords in a bar split it evenly. `-` holds the chord before for another slot, `_` is silence and `%` repeats the bar before. Chords can be names (`Cmaj7`, `F#m`, `Bb7`, `C/E`) or Roman numerals that follow `key` (`I vi IV V7`). `of` counts a numeral from another one's root, so in C, `V7 of V` is `D7`, and a chain takes brackets: `V7 of (V of V)` is `A7`.
+`|` is a bar line, and the chords in a bar split it evenly. `-` holds the chord before for another slot, `_` is silence and `%` repeats the bar before. Chords can be names (`Cmaj7`, `F#m`, `Bb7`, `C6/9`, `C/E`) or Roman numerals that follow `key` (`I vi IV V7`). `of` counts a numeral from another one's root, so in C, `V7 of V` is `D7`, and a chain takes brackets: `V7 of (V of V)` is `A7`.
 
 ### Drums
 

@@ -64,7 +64,7 @@ describe("transpose needs something with pitch", () => {
     expect(firstError("set transpose 2\nplay kick: x---")).toBe(
       "transpose moves notes and chords, and only drums play here. Give an instrument some: piano: chords C G",
     )
-    expect(firstError("pattern v = {\n  set transpose 2\n  kick: x---\n}\nplay v")).toMatch(/only drums play here/)
+    expect(firstError("pattern vv = {\n  set transpose 2\n  kick: x---\n}\nplay vv")).toMatch(/only drums play here/)
   })
 
   it("is fine with any pitched instrument, or at 0", () => {

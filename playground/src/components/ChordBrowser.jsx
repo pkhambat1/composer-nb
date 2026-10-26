@@ -2,11 +2,12 @@
 import React from "react"
 import { Chord, Note } from "tonal"
 import * as ChordLookup from "composer-nb/chord-lookup"
+import { chordParts, tonalName } from "composer-nb/chords"
 import ChordDiagram from "./ChordDiagram.jsx"
 
 function chordStubFromLabel(label) {
-  const head = label.split("/")[0]
-  const ch = Chord.get(head)
+  const head = chordParts(label)[0]
+  const ch = Chord.get(tonalName(head))
   if (!ch.empty && ch.tonic) {
     const pc = Note.chroma(ch.tonic)
     return {

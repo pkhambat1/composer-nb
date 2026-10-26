@@ -46,7 +46,7 @@ describe("drum sheet music", () => {
     expect(abc).toContain("%%score F\n")
     expect(abc).not.toContain("V:H")
     expect(abc).toContain("V:F clef=perc stem=down\n[V:F] F4 z4 F2F2 z4 |")
-    expect(sheet("pattern p = { kick: x }\nplay 1 bars p").abc).not.toBe("")
+    expect(sheet("pattern pp = { kick: x }\nplay 1 bars pp").abc).not.toBe("")
   })
 
   it("writes the time and tempo, and beams an added-up meter by its groups", () => {
@@ -124,7 +124,7 @@ describe("drum sheet music", () => {
   })
 
   it("writes every bar of the block", () => {
-    expect(voices("pattern g = { kick: x--- }\nplay 2 bars g")).toEqual([
+    expect(voices("pattern gg = { kick: x--- }\nplay 2 bars gg")).toEqual([
       "[V:F] F4 F4 F4 F4 | F4 F4 F4 F4 |",
     ])
   })
