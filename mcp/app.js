@@ -28,8 +28,8 @@ function script() {
   return scriptLoading
 }
 
-// The page the host renders, with the playground's address in it for the link it shows.
-export async function cellHtml(site) {
+// The page the host renders.
+export async function cellHtml() {
   // Inline JS must not close its own tag; "<\/" is the same string to JavaScript.
   const js = (await script()).replace(/<\/script/gi, "<\\/script")
   return `<!doctype html>
@@ -43,8 +43,6 @@ export async function cellHtml(site) {
 <body>
 <div id="status">Loading the player…</div>
 <div id="cells"></div>
-<p id="foot" hidden><a id="open" target="_blank" rel="noopener">Open in the playground</a></p>
-<script>window.COMPOSER_NB_SITE = ${JSON.stringify(site)}</script>
 <script type="module">${js}</script>
 </body>
 </html>
@@ -52,7 +50,7 @@ export async function cellHtml(site) {
 }
 
 // Registers the page as the resource parse and link name in their _meta.ui.resourceUri.
-export function registerCellApp(server, { site }) {
+export function registerCellApp(server) {
   registerAppResource(
     server,
     "The cell, played",
@@ -67,7 +65,7 @@ export function registerCellApp(server, { site }) {
         {
           uri: CELL_UI,
           mimeType: RESOURCE_MIME_TYPE,
-          text: await cellHtml(site),
+          text: await cellHtml(),
           _meta: { ui: { csp: { connectDomains: SOUND_HOSTS }, prefersBorder: true } },
         },
       ],

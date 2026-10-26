@@ -245,15 +245,3 @@ body {
   color: var(--color-text-tertiary, #73726c);
   font-size: var(--font-text-sm-size, 14px);
 }
-#foot {
-  margin: 8px 0 0;
-  font-size: var(--font-text-xs-size, 12px);
-}
-#foot a {
-  color: var(--color-text-info, #3266ad);
-  text-decoration: none;
-  font-weight: var(--font-weight-medium, 500);
-}
-#foot a:hover {
-  text-decoration: underline;
-}

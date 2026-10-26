@@ -12,11 +12,8 @@ import { renderCell } from "../../dsl/js/widget/render.js"
 import { parseChain } from "../../dsl/js/music-engine.js"
 import { highlightMusic } from "../../dsl/js/highlight.js"
 import { editKey } from "../../dsl/js/editing.js"
-import { notebookUrl, openUrl } from "../../dsl/js/links.js"
 import widgetCss from "../../dsl/js/widget/widget.css?inline"
 import themeCss from "./theme.css?inline"
-
-const SITE = window.COMPOSER_NB_SITE || "https://composer-nb.vercel.app"
 
 const style = document.createElement("style")
 style.textContent = widgetCss + "\n" + themeCss
@@ -37,7 +34,6 @@ function h(tag, className, text) {
 
 let app = null // the host, once connected
 let cells = [] // the music cells drawn, in order
-let notebook = null // a notebook's cells, text and music, when link was given one
 let shown = null // what is drawn now, so the result's repeat of the input doesn't redraw
 let edited = false // whether anything played differs from what Claude wrote
 
@@ -85,18 +81,8 @@ function run(i, play) {
   )
   cell.played = cell.ta.value
   paint(cell)
-  relink()
   if (cell.played !== cell.source) edited = true
   if (edited) tellClaude()
-}
-
-// The link under the cells opens the playground on what was last played.
-function relink() {
-  if (notebook) {
-    let m = 0
-    const nb = notebook.map((c) => (isMusic(c) ? { ...c, source: cells[m++].played } : c))
-    $("open").href = notebookUrl(SITE, nb)
-  } else $("open").href = openUrl(SITE, cells[cells.length - 1].played)
 }
 
 // What the user played, for Claude to read with their next message. Nothing is sent
@@ -162,15 +148,13 @@ function addCell(source) {
 const isMusic = (c) => c && c.type !== "text" && typeof c.source === "string"
 
 // One cell per music cell, each continuing from the cells before it.
-function draw(sources, nb = null) {
+function draw(sources) {
   const key = JSON.stringify(sources)
   if (key === shown) return
   shown = key
   clear()
-  notebook = nb
   for (const source of sources) addCell(source)
   cells.forEach((_, i) => run(i, false))
-  $("foot").hidden = false
   status("")
 }
 
@@ -180,11 +164,7 @@ function show(args) {
   if (!args) return
   if (Array.isArray(args.cells) && args.cells.length) {
     const music = args.cells.filter(isMusic)
-    if (music.length)
-      draw(
-        music.map((c) => c.source),
-        args.cells,
-      )
+    if (music.length) draw(music.map((c) => c.source))
     return
   }
   if (typeof args.source !== "string") return
