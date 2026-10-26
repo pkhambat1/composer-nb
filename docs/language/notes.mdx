@@ -50,8 +50,8 @@ A degree is a digit from `1` to `7` where a note goes, counted on the major scal
 <Cell>
 
 ```composer-nb
-key C
-octave 4
+set key C
+set octave 4
 
 notes major = 1---2---3---4---|5---6---7---1'---
 notes minor = 1---2---b3---4---|5---b6---b7---1'---
@@ -59,7 +59,7 @@ notes minor = 1---2---b3---4---|5---b6---b7---1'---
 play piano: major
 play piano: minor
 
-key F#
+set key F#
 play piano: major
 ```
 
@@ -74,7 +74,7 @@ Commas split a line into parts, as on a kit piece's line. A [length](/language/o
 <Cell>
 
 ```composer-nb
-time 3 over 4
+set time 3 over 4
 
 pattern waltz = {
   bass: 3 beats C2, 3 beats G1
@@ -107,8 +107,8 @@ A line plays one note at a time. For notes that sound together, give the instrum
 <Cell>
 
 ```composer-nb
-key C
-octave 4
+set key C
+set octave 4
 
 play piano: {
   chords vi IV|I V

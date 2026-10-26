@@ -10,9 +10,9 @@ export const GROOVES = [
     byline: "**Porcupine Tree** · *In Absentia* (2002) · drums by Gavin Harrison",
     body: "A groove in seven. The kick, snare and hi-hat repeat in every bar, and `bar 2` adds the lift at the end of every second bar: a burst of ghost notes, an open hi-hat, and the foot closing it.",
     link: "https://www.youtube.com/watch?v=4ulgVOBpNWA",
-    source: `time 7 over 8
-tempo 90
-swing 50
+    source: `set time 7 over 8
+set tempo 90
+set swing 50
 
 pattern groove = {
   kick: x--x---
@@ -37,9 +37,9 @@ play {
     byline: "**Porcupine Tree** · *The Incident* (2009) · drums by Gavin Harrison",
     body: "Nine eighths to the bar. The hi-hat alternates open and closed on every eighth, while the kick plays a figure of eighteen sixteenths and the snare one of nine, so they only line up again every two bars. The ghost notes at the top of the figure end in `...rest`: they play once each time through, and the other lines decide how long the pattern is.",
     link: "https://www.youtube.com/results?search_query=Porcupine+Tree+Circle+of+Manias",
-    source: `time 9 over 8
-tempo 100
-swing 50
+    source: `set time 9 over 8
+set tempo 100
+set swing 50
 
 pattern manias = {
   hat.open: x---
@@ -55,13 +55,13 @@ play 4 bars manias`,
     section: "Transcriptions",
     title: "What Happens Now?",
     byline: "**Porcupine Tree** · *Nil Recurring* (2007) · drums by Gavin Harrison",
-    body: "Lines of different lengths in one pattern. The kick and snare repeat every 7 steps, the ride bell every 3 and the guitar riff every 10, so they drift against each other and only all meet again on a bar line after 15 bars. The play opens with a two-step pickup, an accented rim hit, and the groove starts after it: the two blocks are in brackets, so they play one after the other. The crash plays once, in the groove's first bar, and `play 3 bars` stops it after three bars, pickup included. `octave 2` puts the riff right at the bottom of the guitar's range.",
+    body: "Lines of different lengths in one pattern. The kick and snare repeat every 7 steps, the ride bell every 3 and the guitar riff every 10, so they drift against each other and only all meet again on a bar line after 15 bars. The play opens with a two-step pickup, an accented rim hit, and the groove starts after it: the two blocks are in brackets, so they play one after the other. The crash plays once, in the groove's first bar, and `play 3 bars` stops it after three bars, pickup included. `set octave 2` puts the riff right at the bottom of the guitar's range.",
     link: "https://www.youtube.com/watch?v=v0Iv4SYJW-k",
-    source: `time 7 over 8
-tempo 110
-swing 50
-octave 2
-guitar.electric muted
+    source: `set time 7 over 8
+set tempo 110
+set swing 50
+set octave 2
+set guitar.electric muted
 
 pattern groove = {
   kick: x--x---
@@ -81,9 +81,9 @@ play 3 bars ({ snare.rim: ^- } {
     byline: "An independence exercise from **Gavin Harrison**",
     body: "The hands play paradiddles on the snare, accenting each PA with ghost notes in between. The feet play the same paradiddle three times slower: `every 3 steps` makes each of their steps last three 16ths. The kick is the right foot, and the hi-hat pedal is the left.",
     link: "https://www.youtube.com/watch?v=XEWmzQ_fJmw",
-    source: `time 3 over 4
-tempo 100
-swing 50
+    source: `set time 3 over 4
+set tempo 100
+set swing 50
 
 steps pa = ^---
 steps radiddle = -xxx
@@ -109,9 +109,9 @@ play {
     byline: "**Polyrhythmics** · live studio session at KNKX",
     body: "Twelve steps to the bar. The ride bell plays a 12-step pattern and the kick a 6-step one, the snare hits on the a of 1 and the e of 3, and ghost notes fill every other step.",
     link: "https://www.youtube.com/watch?v=YZPtPMCDEs4",
-    source: `time 3 over 4
-tempo 82.5
-swing 50
+    source: `set time 3 over 4
+set tempo 82.5
+set swing 50
 
 pattern groove = {
   ride.bell: x-x-x-xx-x-x
@@ -128,9 +128,9 @@ play 2 bars groove`,
     byline: "A polyrhythm exercise",
     body: "Three lines of different lengths in one pattern. The floor tom hits every 3 steps, the kick every 4 and the snare every 5. They drift apart, and only land together again after 60 steps: three bars of 5 over 4, which is where the pattern ends.",
     link: null,
-    source: `time 5 over 4
-tempo 120
-swing 50
+    source: `set time 5 over 4
+set tempo 120
+set swing 50
 
 pattern groove = {
   kick: x---
@@ -144,13 +144,13 @@ play groove`,
     section: "Harmony",
     title: "ii–V–I",
     byline: "The cadence jazz is built on",
-    body: "Dm7 to G7 to Cmaj7: the ii sets up the V, and the V resolves home. Written as numerals, so `key` moves it: change `key C` to `key F` and the whole thing follows. The bass walks a quarter note a step, `swing 67` puts the ride's off-beats late, and `octave 4` keeps the piano's voicings around middle C.",
+    body: "Dm7 to G7 to Cmaj7: the ii sets up the V, and the V resolves home. Written as numerals, so `key` moves it: change `set key C` to `set key F` and the whole thing follows. The bass walks a quarter note a step, `set swing 67` puts the ride's off-beats late, and `set octave 4` keeps the piano's voicings around middle C.",
     link: null,
-    source: `time 4 over 4
-tempo 132
-swing 67
-key C
-octave 4
+    source: `set time 4 over 4
+set tempo 132
+set swing 67
+set key C
+set octave 4
 
 pattern turnaround = {
   piano: chords ii7 V7|Imaj7 -
@@ -167,13 +167,13 @@ play turnaround`,
     section: "Harmony",
     title: "Dorian vamp",
     byline: "D dorian: minor with a major sixth",
-    body: "D to D on the white keys, so the B is natural. Against D major that is a flat third and a flat seventh with the sixth left natural, and numerals and degrees count from D major: `i7 IV` is Dm7 G, `bVII` is C, and the melody's `6` is the B that makes dorian. `key D dorian` gives the sheet its signature, which has no sharps.",
+    body: "D to D on the white keys, so the B is natural. Against D major that is a flat third and a flat seventh with the sixth left natural, and numerals and degrees count from D major: `i7 IV` is Dm7 G, `bVII` is C, and the melody's `6` is the B that makes dorian. `set key D dorian` gives the sheet its signature, which has no sharps.",
     link: null,
-    source: `time 4 over 4
-tempo 100
-swing 50
-key D dorian
-octave 4
+    source: `set time 4 over 4
+set tempo 100
+set swing 50
+set key D dorian
+set octave 4
 
 pattern vamp = {
   piano: {
@@ -194,12 +194,12 @@ play vamp`,
     byline: "A mixolydian: major with a flat seventh",
     body: "The G is natural in A, so the seventh degree is a G chord, not G#. I to bVII to IV and back (A, G, D, A) is the rock vamp, and the melody lands on that G, its `b7`. Numerals and degrees count from A major, so the flat is written, as it is said.",
     link: null,
-    source: `time 4 over 4
-tempo 112
-swing 50
-key A mixolydian
-octave 4
-guitar.electric clean
+    source: `set time 4 over 4
+set tempo 112
+set swing 50
+set key A mixolydian
+set octave 4
+set guitar.electric clean
 
 pattern vamp = {
   guitar.electric: chords I - bVII -|IV - I -
@@ -218,11 +218,11 @@ play vamp`,
     byline: "F lydian: major with a raised fourth",
     body: "F to F on the white keys puts a B natural where F major has a Bb. Two chords a whole step apart, F and G, and a melody that lands on the B, the `#4`: the floating, film-score sound. The `pad` holds each chord for a bar, written `I|II`, and the bass holds each root for a bar.",
     link: null,
-    source: `time 4 over 4
-tempo 72
-swing 50
-key F lydian
-octave 4
+    source: `set time 4 over 4
+set tempo 72
+set swing 50
+set key F lydian
+set octave 4
 
 pattern float = {
   pad: chords I|II
@@ -236,14 +236,14 @@ play float`,
     section: "Harmony",
     title: "12-bar blues",
     byline: "Twelve bars, three chords, all dominant sevenths",
-    body: "I7 for four bars, IV7 for two, back to I7 for two, then V7 IV7 I7 V7 to turn around. `%` repeats the bar before, and `swing 67` makes the ride shuffle. Change `key A` to `key E` and the chart moves.",
+    body: "I7 for four bars, IV7 for two, back to I7 for two, then V7 IV7 I7 V7 to turn around. `%` repeats the bar before, and `set swing 67` makes the ride shuffle. Change `set key A` to `set key E` and the chart moves.",
     link: null,
-    source: `time 4 over 4
-tempo 120
-swing 67
-key A
-octave 3
-guitar.electric clean
+    source: `set time 4 over 4
+set tempo 120
+set swing 67
+set key A
+set octave 3
+set guitar.electric clean
 
 pattern blues = {
   guitar.electric: chords I7|%|%|%|IV7|%|I7|%|V7|IV7|I7|V7
@@ -258,13 +258,13 @@ play blues`,
     section: "Harmony",
     title: "Harmonic minor cadence",
     byline: "A minor, with the leading tone raised",
-    body: "A minor's own V chord is Em, and it pulls nowhere. Raise its third to G# and E7 leans into Am: the harmonic-minor cadence. `V7` in `key Am` spells it for you, and the melody's `7`, the raised seventh, is the G# that gets its sharp on the sheet.",
+    body: "A minor's own V chord is Em, and it pulls nowhere. Raise its third to G# and E7 leans into Am: the harmonic-minor cadence. `V7` in `set key Am` spells it for you, and the melody's `7`, the raised seventh, is the G# that gets its sharp on the sheet.",
     link: null,
-    source: `time 4 over 4
-tempo 90
-swing 50
-key Am
-octave 4
+    source: `set time 4 over 4
+set tempo 90
+set swing 50
+set key Am
+set octave 4
 
 pattern cadence = {
   piano: {
@@ -285,12 +285,12 @@ play cadence`,
     byline: "E phrygian, palm muted",
     body: "Phrygian is minor with a flat second: the F a half step above the E, the riff's `b2`. The riff stays on the low string and the kick doubles every eighth.",
     link: null,
-    source: `time 4 over 4
-tempo 140
-swing 50
-key E phrygian
-octave 2
-guitar.electric muted
+    source: `set time 4 over 4
+set tempo 140
+set swing 50
+set key E phrygian
+set octave 2
+set guitar.electric muted
 
 pattern riff = {
   guitar.electric: 1-1-b2-1- 1-1-b3-b2-|1-1-b2-1- 5-4-b3-b2-
@@ -307,12 +307,12 @@ play 2 bars riff`,
     byline: "G lydian, in Gavin Harrison's territory",
     body: "A bar of 4+4+4+3 sixteenths. The ride bell plays every three against the groups, the backbeat sits on 2 and 4 with ghost notes between, the feet mark the quarters, and `bar 2` opens the hi-hat. The riff is G lydian: the C#, its `#4`, on the and of 1, and the pad's I to II, a pair of major chords only lydian has.",
     link: null,
-    source: `time 4+4+4+3 over 16
-tempo 112
-swing 50
-key G lydian
-octave 2
-guitar.electric muted
+    source: `set time 4+4+4+3 over 16
+set tempo 112
+set swing 50
+set key G lydian
+set octave 2
+set guitar.electric muted
 
 pattern groove = {
   ride.bell: x--
@@ -344,9 +344,9 @@ play 4 bars {
     byline: "RLRL",
     body: "Alternate hands, every stroke the same. Slow it down with the tempo stepper, loop it, and let Ramp bring it back up a step at a time.",
     link: null,
-    source: `time 4 over 4
-tempo 100
-swing 50
+    source: `set time 4 over 4
+set tempo 100
+set swing 50
 
 pattern roll = {
   snare: x
@@ -361,9 +361,9 @@ play 2 bars roll`,
     byline: "RRLL",
     body: "Two strokes a hand. The second of each pair should be as full as the first: that's the whole exercise.",
     link: null,
-    source: `time 4 over 4
-tempo 90
-swing 50
+    source: `set time 4 over 4
+set tempo 90
+set swing 50
 
 pattern roll = {
   snare: x
@@ -378,9 +378,9 @@ play 2 bars roll`,
     byline: "RLRR LRLL",
     body: "Right left right right, left right left left, with the accent on the first of each four. The hands swap lead every group, which is the point of it.",
     link: null,
-    source: `time 4 over 4
-tempo 100
-swing 50
+    source: `set time 4 over 4
+set tempo 100
+set swing 50
 
 pattern paradiddle = {
   snare: ^xxx
@@ -395,9 +395,9 @@ play 2 bars paradiddle`,
     byline: "RLRLRR LRLRLL",
     body: "Six strokes a group, so it sits in 3 over 4: two singles, then the diddle. Accent the first of each six.",
     link: null,
-    source: `time 3 over 4
-tempo 100
-swing 50
+    source: `set time 3 over 4
+set tempo 100
+set swing 50
 
 pattern paradiddle = {
   snare: ^xxxxx
@@ -412,9 +412,9 @@ play 2 bars paradiddle`,
     byline: "RLRRLL",
     body: "A paradiddle with a second diddle on the end, six strokes a group. The lead hand stays the same, so it loops without swapping.",
     link: null,
-    source: `time 3 over 4
-tempo 100
-swing 50
+    source: `set time 3 over 4
+set tempo 100
+set swing 50
 
 pattern pdd = {
   snare: ^xxxxx
@@ -429,9 +429,9 @@ play 2 bars pdd`,
     byline: "RRLLR LLRRL",
     body: "Two doubles and a single: a `d` is a double stroke, two strokes of the same hand in one step, so the sticking names the hand of each double. The accent lands on the fifth stroke.",
     link: null,
-    source: `time 4 over 4
-tempo 80
-swing 50
+    source: `set time 4 over 4
+set tempo 80
+set swing 50
 
 pattern five = {
   snare: dd^-

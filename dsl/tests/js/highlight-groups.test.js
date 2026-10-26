@@ -36,7 +36,7 @@ describe("lines that have no mistake", () => {
     "play {\n  every 2 steps (a b)\n}",
     // a group over several lines, with blocks and lines of their own in it
     "play (\n  { piano: C4--- }\n  piano: D4---\n  verse\n)",
-    "play (chorus { key Am\n  bridge\n} chorus)",
+    "play (chorus { set key Am\n  bridge\n} chorus)",
     // then is a name like any other
     "pattern then = { kick: x- }",
   ]

@@ -5,14 +5,14 @@
 export const INSTRUCTIONS = `composer-nb is a small, typed language for music: drums, notes and chords, written as text cells. Call parse on every cell before you show it to anyone: it returns the errors with line numbers (a cell with errors plays nothing), what is set and named, and a grid of every hit. Fix the errors and parse again. Then link gives a link that opens the playground on the cell, ready to play, with practice controls; render draws the sheet music or writes a MIDI file; library finds a groove to start from; reference has the full rules.
 
 HOW A CELL READS. Every line says what it is:
-  tempo 90                  a setting: a reserved word and its value, no = (time, tempo, swing, key, capo, octave, kit)
+  set tempo 90              a setting: set, then the setting and its value (time, tempo, swing, key, capo, octave, kit)
   steps pair = ^-x-         a name, its type in front, = its value. Types: steps, sticking, notes, chords, pattern
   kick: x--x---             inside braces: a kit piece or instrument, a colon, what it plays
   play { ... }              plays what follows it. Nothing sounds outside a play
   // a comment
 Blank lines and indentation mean nothing. A line that starts with | continues the line above, at a bar line. Settings and names carry on into later cells (pass earlier cells as after).
 
-SETTINGS  time 7 over 8 (never 7/8: / divides) · tempo 20 to 400 · swing 50 (straight) to 75, 67 is a triplet feel · key C, Am, Bb, F#m, or a mode: D dorian, G mixolydian · capo 0 to 12 (moves a guitar's chords) · octave 1 to 6, default 3 · kit rock or synth · guitar.electric muted (its sound from there on)
+SETTINGS, each after set: set time 7 over 8 (never 7/8: / divides) · set tempo 20 to 400 · set swing 50 (straight) to 75, 67 is a triplet feel · set key C, Am, Bb, F#m, or a mode: D dorian, G mixolydian · set capo 0 to 12 (moves a guitar's chords) · set octave 1 to 6, default 3 · set kit rock or synth · set guitar.electric muted (its sound from there on). A setting applies from its line to the end of the cell or block. A block's lines play together, so its time, tempo and swing go above all of them; key, octave, capo, kit and a sound can change between its lines, so an instrument can have its own octave: set octave 4 above guitar: and set octave 2 above bass:.
 
 KIT PIECES, one line each: kick, snare, snare.ghost (the snare's ghost notes), snare.rim (rimshot), snare.cross (cross-stick), hat (closed hi-hat), hat.open, hat.pedal (the foot), ride, ride.bell, crash, tom.high, tom.low, tom.floor.
 INSTRUMENTS: piano, piano.electric, organ, pad, bass, guitar, guitar.electric.
@@ -32,7 +32,7 @@ NOTES, what an instrument plays, drawn on the same steps: guitar: E---F# E-E-- .
     chords vi IV|I V
     6-------4-------|6---5---4---3---
   }
-CHORDS: the word chords, then bars: piano: chords Am F|C G. The chords in a bar split it evenly (Am - F G is four slots); - holds, _ is silence, % repeats the bar before. A chart written as the same bars twice is an error (Am F|Am F and Am F|% are Am F); a long chart continues on a line starting with |. Symbols: C, Am, F#m, Bb7, Cmaj7, G7sus4, Em7b5, Cadd9, C/E. Roman numerals: uppercase major and lowercase minor, counted on the major scale of the key's root as degrees are, with b or # in front: in key C, I vi IV V7 · ii7 · viidim · bVII; in key Am the natural minor's chords are i bIII iv v bVI bVII. A quality follows the numeral as it follows a chord's root: V7, IVmaj7, viim7b5. Guitars play real fretboard shapes.
+CHORDS: the word chords, then bars: piano: chords Am F|C G. The chords in a bar split it evenly (Am - F G is four slots); - holds, _ is silence, % repeats the bar before. A chart written as the same bars twice is an error (Am F|Am F and Am F|% are Am F); a long chart continues on a line starting with |. Symbols: C, Am, F#m, Bb7, Cmaj7, G7sus4, Em7b5, Cadd9, C/E. Roman numerals: uppercase major and lowercase minor, counted on the major scale of the key's root as degrees are, with b or # in front: under set key C, I vi IV V7 · ii7 · viidim · bVII; under set key Am the natural minor's chords are i bIII iv v bVI bVII. A quality follows the numeral as it follows a chord's root: V7, IVmaj7, viim7b5. Guitars play real fretboard shapes.
 
 PATTERNS: pattern groove = { lines }. The lines start together and every line repeats until the pattern ends, which is when they all line up again (lines of 4 and 6 steps meet after 12), or a length in front: pattern groove = 4 bars { ... }. Whatever repeats must fit a whole number of times; otherwise the error names the shortest length that works.
   bar 2 { ... } inside a pattern or play: what plays in bar 2 only, every time through. It adds and overrides, never removes. bar 3 to 4 { ... } covers a run. One line needs no braces: bar 2 hat.pedal: 4.
@@ -40,10 +40,10 @@ PATTERNS: pattern groove = { lines }. The lines start together and every line re
   Braces hold what plays together and brackets what plays in order. A pattern's name on a line of its own plays under the lines beside it. ( ) is the one way to put things in order: play (intro verse verse chorus) · play (intro 4 bars (verse chorus) outro) · play ({ kick: x--- } { snare: x--- }). A group may run over several lines. A length in front of a name or group repeats it for that long. Two things on one line outside brackets are an error.
 PLAY: play groove · play 4 bars groove · play guitar: chords Am F|C G · play { crash: 1 / groove } on separate lines: a play's own lines play once, and a pattern or a group on a line of its own repeats to fill it. Without a length a play lasts as long as its longest line. Each play is one output; several play one after another.
 
-COMMON MISTAKES: piano: Am F (chords is missing in front) · time 7/8 · a kit piece's line at the top level (it goes inside play { } or a pattern) · snare: ~x (ghost notes go on snare.ghost: x) · F#E (a space between notes) · 1 bar (lengths are plural: 1 bars) · hat.close (hat is the closed one) · hat: x-x- x-x- (a figure written twice: hat: x-) · 3 beats C2-E2- (a length holds one note) · a 6-step line in a pattern whose other lines are 16 (it must fit; the error says where they line up) · play inside braces (play goes at the top) · a name used above its line · play intro verse (in order takes brackets: play (intro verse)).
+COMMON MISTAKES: piano: Am F (chords is missing in front) · tempo 90 (a setting starts with set: set tempo 90) · set time 7/8 · a kit piece's line at the top level (it goes inside play { } or a pattern) · snare: ~x (ghost notes go on snare.ghost: x) · F#E (a space between notes) · 1 bar (lengths are plural: 1 bars) · hat.close (hat is the closed one) · hat: x-x- x-x- (a figure written twice: hat: x-) · 3 beats C2-E2- (a length holds one note) · a 6-step line in a pattern whose other lines are 16 (it must fit; the error says where they line up) · play inside braces (play goes at the top) · a name used above its line · play intro verse (in order takes brackets: play (intro verse)).
 
 A GOOD FIRST CELL:
-tempo 100
+set tempo 100
 
 pattern beat = {
   hat: x-

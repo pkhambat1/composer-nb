@@ -45,8 +45,8 @@ export function titleOf(cells, fallback = "Untitled") {
   const music = cells.find((c) => c.type === "music" && c.source.trim())
   if (music) {
     const name = /^\s*pattern\s+([A-Za-z][A-Za-z0-9]*)/m.exec(music.source)?.[1]
-    const time = /^\s*time\s+(\S.*?)\s*$/m.exec(music.source)?.[1]
-    const key = /^\s*key\s+(\S.*?)\s*$/m.exec(music.source)?.[1]
+    const time = /^\s*set\s+time\s+(\S.*?)\s*$/m.exec(music.source)?.[1]
+    const key = /^\s*set\s+key\s+(\S.*?)\s*$/m.exec(music.source)?.[1]
     const parts = [name, time || key].filter(Boolean)
     if (parts.length) return parts.join(" · ")
   }

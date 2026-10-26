@@ -8,7 +8,7 @@ const labels = (p) => p.chords.map((e) => e.label)
 
 describe("parseChain", () => {
   it("starts from the settings the earlier cells ended on", () => {
-    const p = parseChain(["tempo 90\ncapo 2\nplay guitar: chords Am", "play guitar: chords G D"])
+    const p = parseChain(["set tempo 90\nset capo 2\nplay guitar: chords Am", "play guitar: chords G D"])
     expect(p.errors).toEqual([])
     expect(p.blocks[0].tempo).toBe(90)
     expect(p.chords.map((e) => `${e.instrument} capo ${e.capo}`)).toEqual([
@@ -40,13 +40,13 @@ describe("parseChain", () => {
 
   it("lets the last cell change what it inherits", () => {
     expect(
-      parseChain(["tempo 120\nplay piano: chords C", "tempo 80\nplay piano: chords F"]).blocks[0]
+      parseChain(["set tempo 120\nplay piano: chords C", "set tempo 80\nplay piano: chords F"]).blocks[0]
         .tempo,
     ).toBe(80)
   })
 
   it("matches parseSource for a single cell", () => {
-    const src = "key A\nplay piano: chords I V"
+    const src = "set key A\nplay piano: chords I V"
     expect(labels(parseChain([src]))).toEqual(labels(parseSource(src)))
   })
 })

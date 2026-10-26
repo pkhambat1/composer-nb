@@ -351,6 +351,34 @@ function braces(text, st = { depth: 0, took: false }) {
   return out
 }
 
+// A setting after set: tempo 90, time 7 over 8, key D dorian (the key is one value), or
+// guitar.electric muted (an instrument and its sound). `bare` marks one written without set.
+function setting(text, bare = false) {
+  const word = /^[A-Za-z][A-Za-z0-9.]*/.exec(text)?.[0] || ""
+  const after = text.slice(word.length)
+  const name = part(bare ? "tk-error" : "tk-directive-key", word)
+  const sound = SOUNDS[word] && /^(\s+)([a-z]+)(\s*)$/.exec(after)
+  if (sound) {
+    const ok = SOUNDS[word].includes(sound[2])
+    return [name, part(null, sound[1]), part(ok ? "tk-directive-val" : "tk-error", sound[2]), part(null, sound[3])]
+  }
+  if (word === "key" && /^\s/.test(after)) {
+    const m = /^(\s+)([\s\S]*?)(\s*)$/.exec(after)
+    return [name, part(null, m[1]), part(parseKey(m[2]) ? "tk-directive-val" : "tk-error", m[2]), part(null, m[3])]
+  }
+  if (SETTINGS.includes(word)) {
+    return [
+      name,
+      ...pieces(after, /(\s+)/).map((p) =>
+        /^\s+$/.test(p)
+          ? part(null, p)
+          : part(p === "over" ? "tk-directive-key" : p === "=" || p === ":" ? "tk-error" : "tk-directive-val", p),
+      ),
+    ]
+  }
+  return text ? [part("tk-error", text)] : []
+}
+
 // One line of code, without its comment. `depth` is how many groups ( ) are open where it
 // starts, from the lines above.
 function line(code, depth = 0) {
@@ -413,34 +441,13 @@ function line(code, depth = 0) {
     out.push(...len.parts)
     if (len.rest.startsWith("{")) out.push(...braces(len.rest, st))
     else if (len.rest) out.push(...playable(len.rest, st))
-  } else if (soundSetting) {
-    // guitar.electric muted: an instrument and its sound, a setting like kit
-    const [, inst, gap, sound, end] = soundSetting
-    out.push(part("tk-directive-key", inst), part(null, gap))
-    out.push(part(SOUNDS[inst].includes(sound) ? "tk-directive-val" : "tk-error", sound))
-    out.push(part(null, end))
-  } else if (word === "key" && /^\s/.test(after)) {
-    // key Am, key D dorian: the key, as one value
-    const m = /^(\s+)([\s\S]*?)(\s*)$/.exec(after)
-    out.push(part("tk-directive-key", word), part(null, m[1]))
-    out.push(part(parseKey(m[2]) ? "tk-directive-val" : "tk-error", m[2]), part(null, m[3]))
-  } else if (SETTINGS.includes(word) && /^\s/.test(after)) {
-    // tempo 90, time 7 over 8
-    out.push(part("tk-directive-key", word))
-    for (const p of pieces(after, /(\s+)/)) {
-      out.push(
-        /^\s+$/.test(p)
-          ? part(null, p)
-          : part(
-              p === "over"
-                ? "tk-directive-key"
-                : p === "=" || p === ":"
-                  ? "tk-error"
-                  : "tk-directive-val",
-              p,
-            ),
-      )
-    }
+  } else if (word === "set" && /^(\s|$)/.test(after)) {
+    // set tempo 90, set key D dorian, set guitar.electric muted: set, then a setting
+    const space = /^\s*/.exec(after)[0]
+    out.push(part("tk-directive-key", word), part(null, space), ...setting(after.slice(space.length)))
+  } else if (soundSetting || (SETTINGS.includes(word) && /^\s/.test(after))) {
+    // tempo 90 with no set in front: a mistake, which the parser explains
+    out.push(...setting(body, true))
   } else if (word && /^\s*=/.test(after)) {
     // verse = Am E7|G D: a name without its type in front
     const m = /^(\s*)(=)(\s*)([\s\S]*)$/.exec(after)

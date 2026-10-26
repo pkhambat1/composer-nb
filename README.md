@@ -22,7 +22,7 @@ Everything in a pattern repeats until the pattern ends. Give lines different len
 
 ```
 // what happens now: crash once, the groove repeating under it
-time 7 over 8
+set time 7 over 8
 
 pattern groove = 3 bars {
   kick: x--x---
@@ -44,11 +44,11 @@ A play is a timeline: its own lines play once, so the crash hits once while the 
 
 ## Notes go on the same steps
 
-A guitar, piano or bass gets a line like a drum's, with a note where the drum has its `x`. `-` lets the note ring, `_` stops it, and a space goes between two notes that would otherwise touch (`F# E`). This riff is ten steps against the drums' seven and three, so it drifts too, and with no lengths written the pattern lasts until all four lines meet. `octave 2` puts it on the guitar's low E string:
+A guitar, piano or bass gets a line like a drum's, with a note where the drum has its `x`. `-` lets the note ring, `_` stops it, and a space goes between two notes that would otherwise touch (`F# E`). This riff is ten steps against the drums' seven and three, so it drifts too, and with no lengths written the pattern lasts until all four lines meet. `set octave 2` puts it on the guitar's low E string:
 
 ```
-time 7 over 8
-octave 2
+set time 7 over 8
+set octave 2
 
 pattern groove = {
   kick: x--x---
@@ -70,8 +70,8 @@ Chords are written by the bar, on their instrument's line with `chords` in front
 A drum's line is a picture of time (`x--x---`), or the beats it hits on (`2e 4`). Either way it repeats in every bar. For something that happens in one bar only, like a lift at the end of a groove, put the bar in front of it. And instead of counting out a long run of `-`, put a length in front of `rest`:
 
 ```
-time 7 over 8
-tempo 90
+set time 7 over 8
+set tempo 90
 
 pattern groove = {
   kick: x--x---

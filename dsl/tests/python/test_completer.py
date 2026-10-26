@@ -50,19 +50,23 @@ def test_tom_is_only_its_three_drums():
     assert texts(cell + "fl") == []
 
 
-def test_top_of_a_cell_offers_settings_types_and_play():
-    assert texts("%%music\nt") == ["time ", "tempo "]
+def test_top_of_a_cell_offers_set_types_and_play():
     assert texts("%%music\np") == ["pattern ", "play "]
-    # no sound: the instrument is the line's name
-    assert texts("%%music\ns") == ["swing ", "steps ", "sticking "]
+    assert texts("%%music\ns") == ["set ", "steps ", "sticking "]
     assert texts("%%music\nn") == ["notes "]
-    assert texts("%%music\nc") == ["capo ", "chords "]
+    assert texts("%%music\nc") == ["chords "]
+    assert texts("%%music\nt") == []  # a setting comes after set
     assert "kick: " not in texts("%%music\n")
+    # after set, the settings, and the instruments with more than one sound
+    assert texts("%%music\nset t") == ["time ", "tempo "]
+    assert texts("%%music\nset s") == ["swing "]
+    assert texts("%%music\nset c") == ["capo "]
+    assert texts("%%music\nset g") == ["guitar.electric "]
 
 
 def test_inside_braces_offers_instruments_and_patterns():
     cell = "%%music\npattern groove = { kick: x--x }\nplay {\n  "
-    assert {"kick: ", "ride.bell: ", "piano: ", "groove", "tempo ", "steps "} <= set(texts(cell))
+    assert {"kick: ", "ride.bell: ", "piano: ", "groove", "set ", "steps "} <= set(texts(cell))
     assert "chords: " not in texts(cell)  # chords go on their instrument's line
     assert texts(cell + "ri") == ["ride: ", "ride.bell: "]
     assert texts(cell + "gu") == ["guitar: ", "guitar.electric: "]
@@ -73,13 +77,14 @@ def test_inside_braces_offers_instruments_and_patterns():
 
 
 def test_settings_offer_their_values():
-    assert texts("%%music\nkit ") == completer.KITS
-    assert texts("%%music\nkit s") == ["synth"]
-    assert texts("%%music\ntime 7 ") == ["over "]
-    assert texts("%%music\ntempo ") == []
-    assert texts("%%music\nkey D ") == completer.MODES
-    assert texts("%%music\nkey F# m") == ["mixolydian"]
-    assert texts("%%music\nkey ") == []
+    assert texts("%%music\nset kit ") == completer.KITS
+    assert texts("%%music\nset kit s") == ["synth"]
+    assert texts("%%music\nset time 7 ") == ["over "]
+    assert texts("%%music\nset tempo ") == []
+    assert texts("%%music\nset key D ") == completer.MODES
+    assert texts("%%music\nset key F# m") == ["mixolydian"]
+    assert texts("%%music\nset key ") == []
+    assert texts("%%music\nset guitar.electric ") == ["clean", "muted"]
 
 
 def test_instrument_lines_offer_names_of_their_type():
@@ -250,7 +255,7 @@ def test_comments_offer_nothing():
 
 
 def test_magic_line_offers_after_and_saved_songs():
-    songs = {"intro": Song("tempo 75", name="intro")}
+    songs = {"intro": Song("set tempo 75", name="intro")}
     assert complete("%%mus", 5) is None
     assert texts("%%music verse ", songs) == ["after "]
     assert texts("%%music verse after ", songs) == ["intro"]
@@ -285,7 +290,7 @@ def test_ipython_completes_music_cells(shell):
         ("sn", "snare.rim: "),
         ("sn", "snare: "),
     ]
-    shell.run_cell_magic("music", "intro", "tempo 75")
+    shell.run_cell_magic("music", "intro", "set tempo 75")
     assert kernel_completions(shell, "%%music verse after in") == [("in", "intro")]
 
 
@@ -294,7 +299,7 @@ def test_ipython_keeps_python_names_out_of_music_cells(shell):
     assert kernel_completions(shell, "%%music\np") == [("p", "pattern "), ("p", "play ")]
 
 
-@pytest.mark.parametrize("cell", ["%%music\ntempo ", "%%music\nplay {\n  kick: x--- ", "%%music\n// i"])
+@pytest.mark.parametrize("cell", ["%%music\nset tempo ", "%%music\nplay {\n  kick: x--- ", "%%music\n// i"])
 def test_ipython_offers_nothing_where_music_has_nothing(shell, cell):
     assert kernel_completions(shell, cell) == []
 
