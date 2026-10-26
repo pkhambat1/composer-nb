@@ -17,6 +17,12 @@ describe("parseChain", () => {
     ])
   })
 
+  it("won't take a name that differs from one carried in only in its capitals", () => {
+    expect(parseChain(["pattern partA = { kick: x }", "pattern parta = { snare: x }"]).errors[0]?.msg).toBe(
+      "parta differs from partA only in its capitals, so pick another name or write partA",
+    )
+  })
+
   it("carries named chords, notes and patterns as well as settings", () => {
     expect(labels(parseChain(["chords intro = Am E7|G D", "play piano: chords intro"]))).toEqual([
       "Am",
@@ -24,7 +30,7 @@ describe("parseChain", () => {
       "G",
       "D",
     ])
-    expect(labels(parseChain(["pattern v = {\n  piano: chords F C\n}", "play (v v)"]))).toEqual([
+    expect(labels(parseChain(["pattern vv = {\n  piano: chords F C\n}", "play (vv vv)"]))).toEqual([
       "F",
       "C",
       "F",

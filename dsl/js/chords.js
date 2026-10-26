@@ -107,11 +107,24 @@ export function abcKey(key) {
 // Strict check: a numeral plus chord-suffix characters only, so words like "intro" or
 // "vibe" aren't mistaken for i and vi chords.
 const ROMAN_TOKEN_RE =
-  /^[#b]?(VII|VI|IV|V|III|II|I|vii|vi|iv|v|iii|ii|i)(?:maj|min|sus|add|dim|aug|M|m|b|#|\+|\d)*$/
+  /^[#b]?(VII|VI|IV|V|III|II|I|vii|vi|iv|v|iii|ii|i)(?:6\/9|maj|min|sus|add|dim|aug|M|m|b|#|\+|\d)*$/
 
 export function isRoman(token) {
-  return ROMAN_TOKEN_RE.test(token.split("/")[0])
+  return ROMAN_TOKEN_RE.test(chordParts(token)[0])
 }
+
+// A chord's name split into the chord and its bass, as split("/") would, except that a 6/9
+// chord is written as on a lead sheet, C6/9 or Cm6/9, so the / in it is the chord's own:
+// C6/9/E is C6/9 over E. More than one bass gives a third part, which no chord has.
+export function chordParts(token) {
+  const at = token.indexOf("6/9")
+  const cut = at < 0 ? 0 : at + 3
+  const [rest, ...more] = token.slice(cut).split("/")
+  return [token.slice(0, cut) + rest, ...more]
+}
+
+// The name tonal knows a chord by: it has a minor 6/9 as m69, not m6/9.
+export const tonalName = (head) => head.replace(/m6\/9$/, "m69")
 
 // A degree, 1 to 7, counted on the major scale of the key's root whatever the key's mode,
 // which is how a scale is described: natural minor is 1 2 b3 4 5 b6 b7. b and # in front
@@ -148,14 +161,18 @@ function romanToSymbol(main, key) {
 // A chord token ("Cmaj7", "C/E", "ii7", "bVII") → voicing, or null if it isn't a chord.
 export function buildChord(token, key, octave = 3) {
   if (!token) return null
-  const [main, bassStr, extra] = token.split("/")
+  const [main, bassStr, extra] = chordParts(token)
   if (extra !== undefined) return null
   let symbol
   if (ROMAN_RE.test(main)) symbol = romanToSymbol(main, key || parseKey("C"))
   else if (/^[A-G][#b]?/.test(main)) symbol = main
   else return null
+  // A 6/9 has one spelling, 6/9 or m6/9, never 69, 6add9 or maj6/9, which tonal also reads
+  const quality = symbol.replace(/^[A-G][#b]*/, "")
+  const sixNine = /^m?6\/9$/.test(quality)
+  if (/69|6add9/.test(quality) || (quality.includes("6/9") && !sixNine)) return null
 
-  const ch = Chord.get(symbol.replace(/sus(?![24])/, "sus4"))
+  const ch = Chord.get(tonalName(symbol.replace(/sus(?![24])/, "sus4")))
   if (ch.empty || !ch.intervals.length || !ch.tonic) return null
   const tonicPc = Note.chroma(ch.tonic)
   if (tonicPc == null || isNaN(tonicPc)) return null
@@ -183,7 +200,7 @@ export function buildChord(token, key, octave = 3) {
 
   return {
     input: token,
-    label: ch.symbol + (bassStr ? "/" + bassStr : ""),
+    label: (sixNine ? symbol : ch.symbol) + (bassStr ? "/" + bassStr : ""),
     rootPc: tonicPc,
     bassMidi: bass,
     notesMidi: voicing,
