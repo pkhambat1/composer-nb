@@ -3,12 +3,9 @@
    the same ones.
 
    Embed mode: the playground as a single cell in a frame, which is how the docs site shows
-   an example you can edit and play (/?embed#src=...&theme=dark), and how the MCP App shows
-   a cell inside Claude. The frame tells its parent how tall it is, so the parent can size
-   it (composer-nb:height), follows the parent's theme when the parent says it changed
-   (composer-nb:theme), and tells the parent the source of each run (composer-nb:ran).
-   &after=... is the source of the cells the cell continues from, which the parent can
-   change later (composer-nb:after), and &run=1 renders the cell as the frame opens.
+   an example you can edit and play (/?embed#src=...&theme=dark). The frame tells its parent
+   how tall it is, so the parent can size it (composer-nb:height), and follows the parent's
+   theme when the parent says it changed (composer-nb:theme).
 
    Open mode: the whole playground opened on shared content, which starts playing as soon
    as it loads when the browser allows it (/?open#src=... or /?open#nb=...). The Share
@@ -35,13 +32,6 @@ export function leaveLink() {
 export function embedCell() {
   return { type: "music", source: hash.get("src") || "" }
 }
-
-// Whether the frame renders its cell as soon as it opens, without playing it.
-export const EMBED_RENDERS = EMBED && hash.get("run") === "1"
-
-// The source of the cells the frame's cell continues from, for their settings and names.
-let after = hash.get("after") || ""
-export const embedAfter = () => after
 
 export function embedTheme() {
   const theme = hash.get("theme")
@@ -89,19 +79,4 @@ export function listenForTheme(onTheme) {
   }
   window.addEventListener("message", onMessage)
   return () => window.removeEventListener("message", onMessage)
-}
-
-// Takes a new source for the cells above when the parent page says it changed.
-export function listenForAfter() {
-  const onMessage = (e) => {
-    if (e.source !== window.parent || e.data?.type !== "composer-nb:after") return
-    if (typeof e.data.after === "string") after = e.data.after
-  }
-  window.addEventListener("message", onMessage)
-  return () => window.removeEventListener("message", onMessage)
-}
-
-// Tells the parent page what the cell is each time it runs, so the page can pass it on.
-export function reportRun(source) {
-  if (EMBED) window.parent.postMessage({ type: "composer-nb:ran", source }, "*")
 }

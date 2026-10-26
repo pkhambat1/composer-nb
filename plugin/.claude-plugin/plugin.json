@@ -1,6 +1,6 @@
 {
   "name": "composer-nb",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "description": "Drums, notes and chords written as composer-nb cells that Claude checks against the parser and hands back as a link that plays: grooves, practice routines and theory you can hear.",
   "author": {
     "name": "Pezanne Khambatta",

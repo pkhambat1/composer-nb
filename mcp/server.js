@@ -242,7 +242,7 @@ export function createServer({ site = SITE } = {}) {
     },
   )
 
-  registerCellApp(server, { site })
+  registerCellApp(server)
 
   for (const page of REFERENCE) {
     server.registerResource(
