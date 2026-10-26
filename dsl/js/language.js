@@ -52,7 +52,7 @@
    What's set or named inside braces stays inside. // starts a comment. Blank lines and
    indentation mean nothing. Settings and names carry on into later cells.
    Pure (no audio), so the notebook can also use it to pass state from cell to cell. */
-import { applyCapo, buildChord, degreeSemitones, isRoman, midiToName, parseKey } from "./chords.js"
+import { applyTranspose, buildChord, degreeSemitones, isRoman, midiToName, parseKey } from "./chords.js"
 
 export const TPQ = 96 // ticks per quarter note: fine enough for 1/32 notes and triplets
 export const DRUMS = ["crash", "ride", "hat", "tom", "snare", "kick"]
@@ -83,7 +83,7 @@ export const PITCHED = [
   "bass",
 ]
 export const PARTS = [...PITCHED, ...LANES]
-export const SETTINGS = ["time", "tempo", "swing", "key", "capo", "octave", "kit"]
+export const SETTINGS = ["time", "tempo", "swing", "key", "transpose", "octave", "kit"]
 // The types a name can have. Its type goes in front of it: steps pair = ^-x-
 export const TYPES = ["steps", "sticking", "notes", "chords", "pattern"]
 export const KEYWORDS = [
@@ -110,7 +110,7 @@ const SETTING_EXAMPLE = {
   tempo: "90",
   swing: "60",
   key: "Am",
-  capo: "2",
+  transpose: "2",
   octave: "3",
   kit: "rock",
 }
@@ -150,7 +150,7 @@ export function initialState() {
     swing: 50, // where the off-beat eighth falls, as a percentage of the beat: 50 is straight
     stepTicks: TPQ / 4, // a step is a 16th note, unless every says otherwise
     key: "C",
-    capo: 0,
+    transpose: 0, // semitones that what's pitched sounds from what's written
     octave: 3,
     kit: "rock",
     sounds: {}, // instrument → its sound, for instruments set to one other than the first
@@ -189,7 +189,7 @@ const DESCRIBE = {
   time: (s) => "time " + timeLabel(s),
   tempo: (s) => "tempo " + s.tempo,
   key: (s) => "key " + s.key,
-  capo: (s) => "capo " + s.capo,
+  transpose: (s) => "transpose " + s.transpose,
   octave: (s) => "octave " + s.octave,
   kit: (s) => "kit " + s.kit,
 }
@@ -488,13 +488,16 @@ function applySetting(name, value, ln, state, err) {
     state.key = value.trim().replace(/\s+/g, " ")
     return true
   }
-  if (name === "capo") {
-    const n = whole(0, 12)
+  if (name === "transpose") {
+    // Every pitched instrument sounds that many semitones from what's written: the chart
+    // and the notes stay as written, so a guitar's C shape under set transpose 4 is a capo
+    // at the 4th fret. Drums have no pitch, so it leaves them alone.
+    const n = whole(-12, 12)
     if (n == null) {
-      err(ln, "capo is a fret number from 0 to 12")
+      err(ln, "transpose is a number of semitones from -12 to 12: set transpose 2 sounds a whole step up")
       return false
     }
-    state.capo = n
+    state.transpose = n
     return true
   }
   if (name === "octave") {
@@ -1072,9 +1075,6 @@ function classify({ ln, text, blocks }, err, st) {
 // plays once.
 // ---------------------------------------------------------------------------
 
-// A capo moves a guitar's chord shapes up the neck, whichever guitar it is.
-const isGuitar = (name) => name.split(".")[0] === "guitar"
-
 function chordSlot(tok, part, st, key, err) {
   if (tok === "-") return { hold: true }
   if (tok === "_") return { rest: true }
@@ -1102,7 +1102,7 @@ function chordSlot(tok, part, st, key, err) {
     )
     return null
   }
-  if (isGuitar(part.name)) applyCapo(chord, st.capo)
+  applyTranspose(chord, st.transpose)
   return { chord }
 }
 
@@ -1182,7 +1182,7 @@ function chordPattern(part, tokens, st, barTicks, err) {
     err(part.ln, "This line starts with - but there's no chord to hold yet")
     return null
   }
-  const capo = isGuitar(part.name) ? st.capo : 0
+  const transpose = st.transpose
   const sound = st.sounds[part.name]
   return {
     kind: "pitched",
@@ -1209,7 +1209,7 @@ function chordPattern(part, tokens, st, barTicks, err) {
             label: s.chord.label,
             instrument: part.name,
             ...(sound && { sound }),
-            capo,
+            transpose,
             repeat: b >= bars.length,
             line: part.ln,
           }
@@ -2280,10 +2280,13 @@ function notePattern(part, { steps, open = false, fill = null }, st) {
   const key = parseKey(st.key)
   const sound = st.sounds[part.name]
   const sharp = { "#": 1, b: -1 }
-  const midiOf = (s) =>
+  // What's written, and what sounds: set transpose moves the sound, not the writing
+  const written = (s) =>
     s.degree
       ? 12 * (octave + 1 + s.shift) + key.tonicSemis + degreeSemitones(s.degree, s.acc)
       : 12 * ((s.octave ?? octave) + 1) + NOTE_BASE[s.name[0]] + (sharp[s.name[1]] || 0)
+  const transpose = st.transpose
+  const midiOf = (s) => written(s) + transpose
   return {
     kind: "pitched",
     open,
@@ -2305,7 +2308,13 @@ function notePattern(part, { steps, open = false, fill = null }, st) {
         cur = {
           tick: k * stepTicks,
           ticks: 0,
-          note: { midi, name: midiToName(midi, s.degree ? key.flats : false), spell: spellOf(s, midi, key) },
+          note: {
+            midi,
+            name: midiToName(midi, s.degree ? key.flats : false),
+            // a transposed note is spelt from the key, since only its sound moved
+            ...(!transpose && { spell: spellOf(s, midi, key) }),
+          },
+          ...(transpose && { transpose }),
           label: s.label,
           instrument: part.name,
           ...(sound && { sound }),
@@ -3177,7 +3186,7 @@ export function parseCell(src, inherited = initialState()) {
   const state = cloneState(inherited)
   const setHere = new Map() // setting name → the line in this cell that set it
   const outputs = []
-  let capoLine = null
+  let transposeLine = null
 
   const raws = String(src || "").split("\n")
   const lines = raws.map((raw, i) => ({ ln: i + 1, text: raw.replace(/\/\/.*$/, "").trim() }))
@@ -3306,8 +3315,8 @@ export function parseCell(src, inherited = initialState()) {
     )
     return false
   }
-  const noteCapo = (body) => {
-    for (const l of body) if (/^set\s+capo\s+[1-9]/.test(l.text)) capoLine ??= l.ln
+  const noteTranspose = (body) => {
+    for (const l of body) if (/^set\s+transpose\s+-?[1-9]/.test(l.text)) transposeLine ??= l.ln
   }
 
   for (let i = 0; i < lines.length; i++) {
@@ -3401,7 +3410,7 @@ export function parseCell(src, inherited = initialState()) {
         arg = line.body
         if (!arg.length) ok = false
       }
-      noteCapo(arg)
+      noteTranspose(arg)
       const out = ok ? blockClip(arg, state, err, outputCtx(ln), [], bars) : null
       if (out) checkStickings(out, err)
       if (out && out.durSec > MAX_SECONDS) {
@@ -3443,8 +3452,8 @@ export function parseCell(src, inherited = initialState()) {
         i = read.end
         const line = read.body[0]
         if (!line) continue // its braces were a mistake, already reported
-        noteCapo(read.body)
-        for (const b of Object.values(line.blocks || {})) noteCapo(b.lines)
+        noteTranspose(read.body)
+        for (const b of Object.values(line.blocks || {})) noteTranspose(b.lines)
         const after = /^\{#\d+\}\s+(\S+)\s+bars$/.exec(line.text)
         if (after) {
           err(
@@ -3502,7 +3511,7 @@ export function parseCell(src, inherited = initialState()) {
     if (l.kind === "setting") {
       if (applySetting(l.name, l.value, ln, state, err)) {
         setHere.set(l.name, ln)
-        if (l.name === "capo" && state.capo > 0) capoLine ??= ln
+        if (l.name === "transpose" && state.transpose) transposeLine ??= ln
       }
     } else if (l.kind === "part") {
       // Nothing floats at the top: what plays is inside a pattern or a play.
@@ -3510,11 +3519,14 @@ export function parseCell(src, inherited = initialState()) {
     } else err(ln, `Nothing plays this line. Write play ${text}`)
   }
 
-  // A capo only moves a guitar's chords, so a capo in a cell where no guitar plays chords
-  // is a mistake. One inherited from a cell above is fine.
-  const guitar = outputs.some((o) => o.chords.some((e) => isGuitar(e.instrument)))
-  if (capoLine != null && outputs.length && !guitar) {
-    err(capoLine, "capo only moves a guitar's chords. Give a guitar some: guitar: chords Am F|C G")
+  // transpose only moves what has pitch, so one in a cell where only drums play is a
+  // mistake. One inherited from a cell above is fine.
+  const pitched = outputs.some((o) => o.notes.length || o.chords.length)
+  if (transposeLine != null && outputs.length && !pitched) {
+    err(
+      transposeLine,
+      "transpose moves notes and chords, and only drums play here. Give an instrument some: piano: chords C G",
+    )
   }
 
   const start = initialState()

@@ -39,14 +39,15 @@
       }
     },
     "setting": {
-      "match": "^\\s*(time|tempo|key|capo|octave|kit)\\b",
+      "match": "^\\s*(set)\\s+(time|tempo|swing|key|transpose|octave|kit|guitar\\.electric)\\b",
       "captures": {
-        "1": { "name": "keyword.other.setting.composer-nb" }
+        "1": { "name": "keyword.control.composer-nb" },
+        "2": { "name": "keyword.other.setting.composer-nb" }
       }
     },
     "keyword": {
       "name": "keyword.control.composer-nb",
-      "match": "\\b(play|bar|bars|beats|steps|chords|to|every|rest|over|then)\\b"
+      "match": "\\b(play|set|bar|bars|beats|steps|chords|to|every|rest|over)\\b"
     },
     "value": {
       "name": "constant.language.composer-nb",

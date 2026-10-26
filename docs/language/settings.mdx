@@ -1,11 +1,11 @@
 ---
 title: "Settings"
-description: "set: time, tempo, swing, kit, key, capo, octave and an instrument's sound, from a line down."
+description: "set: time, tempo, swing, kit, key, transpose, octave and an instrument's sound, from a line down."
 ---
 
 import { Cell } from "/snippets/cell.jsx"
 
-A setting is `set`, then the setting and its value: `set tempo 90`. It applies from its line to the end of the cell, or of the block it is in. A block's lines play together, so its `time`, `tempo` and `swing` are set above all of them; `key`, `octave`, `capo`, `kit` and a sound can change between its lines.
+A setting is `set`, then the setting and its value: `set tempo 90`. It applies from its line to the end of the cell, or of the block it is in. A block's lines play together, so its `time`, `tempo` and `swing` are set above all of them; `key`, `transpose`, `octave`, `kit` and a sound can change between its lines.
 
 | Setting | Value | Default | Sets |
 | --- | --- | --- | --- |
@@ -14,7 +14,7 @@ A setting is `set`, then the setting and its value: `set tempo 90`. It applies f
 | `swing` | 50 to 75 | `50` | Where the off-beat eighth falls, as a percentage of the beat. |
 | `kit` | `rock` or `synth` | `rock` | The drum kit. |
 | `key` | `C`, `Am`, `Bb`, `F#m`, or a root and a mode: `D dorian` | `C` | The key: the root that [Roman numerals](/language/chords#roman-numerals) and [degrees](/language/notes#degrees) count from, and the sheet's key signature. |
-| `capo` | 0 to 12 | `0` | The fret a guitar's chords are played from. |
+| `transpose` | -12 to 12 | `0` | Semitones that every pitched instrument sounds from what's written. |
 | `octave` | 1 to 6 | `3` | The octave of a note without a number, of degree 1, and of a chord's root. |
 | `guitar.electric` | `clean` or `muted` | `clean` | The electric guitar's sound. |
 
@@ -72,9 +72,9 @@ The major `IV` under a minor `i` is what makes dorian dorian: `i IV` is Dm G, an
 
 `rock` is a recorded kit, loaded from the network on first use. `synth` is synthesized and works offline.
 
-## capo and octave
+## transpose and octave
 
-`capo` raises a guitar's chords by that many frets. Their names and diagrams keep the shape you finger. It does not move notes, since a note's name is its pitch.
+`transpose` moves the sound of every pitched instrument by that many semitones, up or down: its notes, its degrees and its chords. What's written stays: a chart keeps its chord names and a guitar its diagrams, so a guitar's shapes under `set transpose 4` are a capo at the 4th fret. Drums have no pitch, and it leaves them alone. Like any setting it applies from its line down, so a block can transpose one instrument and not another.
 
 `octave` counts from C: `C4` is middle C, and the note below it is `B3`.
 

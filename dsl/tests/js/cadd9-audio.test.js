@@ -5,7 +5,7 @@ vi.mock("tone", () => ({}))
 const { parseSource } = await import("../../js/music-engine.js")
 
 describe("Cadd9 audio path", () => {
-  it("guitar, no capo: plays C E G D", () => {
+  it("guitar: plays C E G D", () => {
     const { chords } = parseSource("play guitar: chords Cadd9")
     const c = chords[0].chord
     const pcs = c.notesMidi.map((m) => ((m % 12) + 12) % 12).sort((a, b) => a - b)
@@ -13,8 +13,8 @@ describe("Cadd9 audio path", () => {
     expect(c.notesMidi).toContain(62) // explicit D4
   })
 
-  it("guitar with capo 2: plays D F# A E (transposed)", () => {
-    const { chords } = parseSource("set capo 2\nplay guitar: chords Cadd9")
+  it("guitar, transposed 2: plays D F# A E", () => {
+    const { chords } = parseSource("set transpose 2\nplay guitar: chords Cadd9")
     const c = chords[0].chord
     const pcs = c.notesMidi.map((m) => ((m % 12) + 12) % 12).sort((a, b) => a - b)
     expect(pcs).toEqual([2, 4, 6, 9]) // D E F# A

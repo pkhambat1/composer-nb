@@ -23,7 +23,7 @@ export function settingsOf(state) {
     tempo: state.tempo,
     swing: state.swing,
     key: state.key,
-    capo: state.capo,
+    transpose: state.transpose,
     octave: state.octave,
     kit: state.kit,
   }

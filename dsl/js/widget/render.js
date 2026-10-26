@@ -43,11 +43,11 @@ function describeBlock(b) {
   return `time ${b.time} · tempo ${b.tempo} · key ${b.key} · ${bars}`
 }
 
-// The pitched instruments that play, e.g. "guitar, capo 2 · bass".
+// The pitched instruments that play, e.g. "guitar, transpose 2 · bass".
 function describeSounds(output) {
   const seen = new Map()
-  for (const e of output.events) seen.set(e.instrument, e.capo || seen.get(e.instrument))
-  return [...seen].map(([inst, capo]) => (capo ? `${inst}, capo ${capo}` : inst)).join(" · ")
+  for (const e of output.events) seen.set(e.instrument, e.transpose || seen.get(e.instrument))
+  return [...seen].map(([inst, t]) => (t ? `${inst}, transpose ${t}` : inst)).join(" · ")
 }
 
 // --- Grid: each block's drums and notes drawn once, bar by bar, counted 1 e & a ---

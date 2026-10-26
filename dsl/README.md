@@ -46,7 +46,7 @@ Give a cell a name, and later cells can start from the settings and names it end
 ```
 %%music intro
 set tempo 75
-set capo 2
+set transpose 2
 chords riff = Am E7|G D
 play guitar: chords riff
 ```
@@ -56,7 +56,7 @@ play guitar: chords riff
 play guitar: chords F C|Dm E7 riff
 ```
 
-`verse` plays with a capo at fret 2, at 75 bpm, and can use `riff`, wherever it sits in the notebook and whenever you run it. If `intro` hasn't been run yet, you get an error saying so. A cell can still change anything it inherits: `set tempo 90` in `verse` speeds up just `verse`.
+`verse` plays two semitones up, as a capo at fret 2 would, at 75 bpm, and can use `riff`, wherever it sits in the notebook and whenever you run it. If `intro` hasn't been run yet, you get an error saying so. A cell can still change anything it inherits: `set tempo 90` in `verse` speeds up just `verse`.
 
 A cell with no name plays on its own and isn't saved.
 
@@ -90,7 +90,7 @@ import { music } from "npm:composer-nb"
 
 const intro = display(
   music(`set tempo 75
-set capo 2
+set transpose 2
 chords riff = Am E7|G D
 play guitar: chords riff`),
 )
@@ -149,7 +149,7 @@ A setting is `set`, then the setting and its value: `set key Am`. It applies fro
 | `time`   | `4 over 4` | Notes in a bar, over which note: `7 over 8`, or felt in groups: `3+4 over 4` |
 | `tempo`  | `120`      | Quarter notes per minute                                                     |
 | `key`    | `C`        | Key for degrees, Roman numerals and the sheet: `C`, `Am`, `F#m`, `D dorian`  |
-| `capo`   | `0`        | Capo fret, 0 to 12. Moves a guitar's chords                                  |
+| `transpose` | `0`     | Semitones every pitched instrument sounds from what's written, -12 to 12     |
 | `octave` | `3`        | Octave for chords, and for notes written without one, 1 to 6                 |
 | `kit`    | `rock`     | Drum sound: `rock` or `synth`                                                |
 

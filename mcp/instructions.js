@@ -5,14 +5,14 @@
 export const INSTRUCTIONS = `composer-nb is a small, typed language for music: drums, notes and chords, written as text cells. Call parse on every cell before you show it to anyone: it returns the errors with line numbers (a cell with errors plays nothing), what is set and named, and a grid of every hit. Fix the errors and parse again. Then link gives a link that opens the playground on the cell, ready to play, with practice controls; render draws the sheet music or writes a MIDI file; library finds a groove to start from; reference has the full rules.
 
 HOW A CELL READS. Every line says what it is:
-  set tempo 90              a setting: set, then the setting and its value (time, tempo, swing, key, capo, octave, kit)
+  set tempo 90              a setting: set, then the setting and its value (time, tempo, swing, key, transpose, octave, kit)
   steps pair = ^-x-         a name, its type in front, = its value. Types: steps, sticking, notes, chords, pattern
   kick: x--x---             inside braces: a kit piece or instrument, a colon, what it plays
   play { ... }              plays what follows it. Nothing sounds outside a play
   // a comment
 Blank lines and indentation mean nothing. A line that starts with | continues the line above, at a bar line. Settings and names carry on into later cells (pass earlier cells as after).
 
-SETTINGS, each after set: set time 7 over 8 (never 7/8: / divides) · set tempo 20 to 400 · set swing 50 (straight) to 75, 67 is a triplet feel · set key C, Am, Bb, F#m, or a mode: D dorian, G mixolydian · set capo 0 to 12 (moves a guitar's chords) · set octave 1 to 6, default 3 · set kit rock or synth · set guitar.electric muted (its sound from there on). A setting applies from its line to the end of the cell or block. A block's lines play together, so its time, tempo and swing go above all of them; key, octave, capo, kit and a sound can change between its lines, so an instrument can have its own octave: set octave 4 above guitar: and set octave 2 above bass:.
+SETTINGS, each after set: set time 7 over 8 (never 7/8: / divides) · set tempo 20 to 400 · set swing 50 (straight) to 75, 67 is a triplet feel · set key C, Am, Bb, F#m, or a mode: D dorian, G mixolydian · set transpose -12 to 12 (semitones every pitched instrument sounds from what's written; a chart keeps its names, so a guitar's shapes under set transpose 4 are a capo at the 4th fret; drums stay put) · set octave 1 to 6, default 3 · set kit rock or synth · set guitar.electric muted (its sound from there on). A setting applies from its line to the end of the cell or block. A block's lines play together, so its time, tempo and swing go above all of them; key, octave, transpose, kit and a sound can change between its lines, so an instrument can have its own octave: set octave 4 above guitar: and set octave 2 above bass:.
 
 KIT PIECES, one line each: kick, snare, snare.ghost (the snare's ghost notes), snare.rim (rimshot), snare.cross (cross-stick), hat (closed hi-hat), hat.open, hat.pedal (the foot), ride, ride.bell, crash, tom.high, tom.low, tom.floor.
 INSTRUMENTS: piano, piano.electric, organ, pad, bass, guitar, guitar.electric.

@@ -411,12 +411,12 @@ describe("numbers", () => {
     expect(durations("set tempo 60*2\nplay kick: 1")).toEqual([2])
     expect(durations("set tempo 240/4\nplay kick: 1")).toEqual([4])
     expect(durations("set tempo 30+30*3\nplay kick: 1")).toEqual([2]) // the usual order of operations
-    expect(parseSource("set capo 1+1\nplay guitar: chords C").chords[0].capo).toBe(2)
+    expect(parseSource("set transpose 1+1\nplay guitar: chords C").chords[0].transpose).toBe(2)
   })
 
   it("explains numbers that don't work", () => {
     expect(firstError("set tempo fast")).toMatch(/tempo is quarter notes per minute/)
-    expect(firstError("set capo 2.5")).toMatch(/capo is a fret number/)
+    expect(firstError("set transpose 2.5")).toMatch(/transpose is a number of semitones/)
   })
 })
 
