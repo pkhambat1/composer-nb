@@ -3004,6 +3004,10 @@ function undefinedName(name, st) {
       ? `${name} is steps, so it goes on a drum's line: hat: ${name}`
       : `${name} is ${word.type}, so it goes on an instrument's line: piano: ${word.type === "chords" ? "chords " : ""}${name}`
   }
+  // Bridge can't have been named, so the message is the rule, not how to name it
+  if (!/^[a-z]/.test(name)) {
+    return `"${name}" can't be a name, since names start with a lowercase letter: ${name[0].toLowerCase()}${name.slice(1)}`
+  }
   const names = Object.keys(st.sections)
   return names.length
     ? `"${name}" isn't defined. Patterns so far: ${names.join(", ")}`

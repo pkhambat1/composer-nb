@@ -705,6 +705,11 @@ describe("names", () => {
     )
     // the same name, written the same way, is given again
     expect(firstError("notes riffB = C4---\nnotes riffB = D4---")).toBeUndefined()
+    // a play that names one with a capital gets the rule, not a name it can't write
+    expect(allErrors("pattern Bridge = { kick: x--- }\nplay Bridge")).toEqual([
+      "Names start with a lowercase letter: pattern bridge",
+      '"Bridge" can\'t be a name, since names start with a lowercase letter: bridge',
+    ])
   })
 
   it("are coloured as names when they follow the rule, and as mistakes when they don't", () => {
