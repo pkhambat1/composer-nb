@@ -33,7 +33,7 @@ A note is a capital `A` to `G`, then an optional `#` or `b`, then an optional oc
 
 | Step | Plays |
 | --- | --- |
-| A note or a [degree](#degrees) | Starts the note. It sounds until the next note or `_`. |
+| A note, a [degree](#degrees) or a [degree of a note](#counting-from-a-note) | Starts the note. It sounds until the next note or `_`. |
 | `^` or `~` before a note | The note accented, or soft. |
 | `-` | Nothing new. A sounding note carries on. |
 | `_` | Stops the note: one step of silence. |
@@ -66,6 +66,23 @@ play piano: major
 </Cell>
 
 A name holds degrees, not pitches, so it is read under whichever key plays it: the last play is F# major. Letters and degrees can share a line, as a chart holds `I vi|F G`. On a kit piece's line a number is a beat, so `kick: 1 3` hits beats 1 and 3 and `bass: 1 3` plays two degrees: the line's name says which.
+
+## Counting from a note
+
+`of` counts a degree from another note instead of from the key: `5 of C3` is the 5th of C3, which is `G3`. The degree counts on the major scale of that note, in any key or mode, so `b3 of C3` is `Eb3`. On the left of `of` goes a degree, with `'` marks for octaves as usual: `5' of C3` is `G4`. On the right goes a note, or a degree of the key: under `set key D`, `5 of 1` is the 5th of D. `^` or `~` goes in front of the whole note: `^5 of C3`.
+
+To count from a note that is itself counted with `of`, put that note in brackets. Here is the circle of fifths, counted up from C3:
+
+<Cell>
+
+```composer-nb
+set octave 3
+play piano: C3--- 5 of C3--- 5 of (5 of C3)--- 5 of (5 of (5 of C3))---
+```
+
+</Cell>
+
+This plays C3, G3, D4 and A4. Without the brackets, `5 of 5 of C3` is an error. A note counted with `of` is still one note, so `-`, `_` and lengths work on it the same way.
 
 ## Lengths
 

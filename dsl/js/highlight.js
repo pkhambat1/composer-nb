@@ -178,6 +178,7 @@ function values(text, kind) {
   lastKind = kind
   const mistakes = kind === "drum" ? beside(words) : new Set()
   const timed = kind === "drum" || kind === "notes" // lines that take lengths and ...
+  const ofs = (kind === "notes" || kind === "chord") && words.includes("of")
   let k = -1 // which word this is
   return all.flatMap((p) => {
     if (/^\s+$/.test(p)) return [part(null, p)]
@@ -185,6 +186,14 @@ function values(text, kind) {
     if (mistakes.has(k)) return [part("tk-error", p)]
     if (chart && k === 0) return [part("tk-directive-key", p)]
     if (p === ",") return [part("tk-punct", p)]
+    // 5 of C3, V7 of V: of counts from what comes after it, and a chain of of's takes
+    // brackets, 5 of (5 of C3), so an of straight after another one is a mistake
+    if (ofs && p === "of") {
+      const chained = words[k - 2] === "of" && !words[k - 1].startsWith("(")
+      const alone = k === (chart ? 1 : 0) || k === words.length - 1
+      return [part(chained || alone ? "tk-error" : "tk-directive-key", p)]
+    }
+    if (ofs && /[()]/.test(p)) return ofBrackets(p, kind)
     if (timed) {
       // ...rest, ...x-, ...G1: the rest of the block, then what fills it
       if (p.startsWith("...")) {
@@ -209,6 +218,15 @@ function values(text, kind) {
       if (["bar", "beat", "step"].includes(p)) return [part("tk-error", p)]
     }
     return valueToken(p, kind)
+  })
+}
+
+// (5, C3)---, V)/F#: the brackets of a chain of of's, and what's inside and after them.
+function ofBrackets(p, kind) {
+  return pieces(p, /([()])/).flatMap((s) => {
+    if (s === "(" || s === ")") return [part("tk-punct", s)]
+    if (kind === "chord" && s.startsWith("/")) return [part("tk-slash", "/"), part("tk-bass", s.slice(1))]
+    return valueToken(s, kind)
   })
 }
 

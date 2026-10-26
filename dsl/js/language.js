@@ -90,6 +90,7 @@ export const KEYWORDS = [
   ...TYPES,
   "play",
   "set",
+  "of",
   "bars",
   "beats",
   "bar",
@@ -651,6 +652,10 @@ function defineWord(type, name, value, ln, state, err, blocks = null) {
       tokens.push(t)
     } else if (/^[a-z][a-z0-9]+$/.test(t) && !isRoman(t) && !/^[-xd]+$/.test(t)) {
       return err(ln, `"${t}" isn't defined above. Name it first: ${type} ${t} = ...`)
+    } else if (type === "chords" && t.includes("@")) {
+      const of = ofChord(t, key, state.octave)
+      if (of.error) return err(ln, of.error)
+      tokens.push(t)
     } else if (drawsNotes(t)) {
       return err(
         ln,
@@ -1075,12 +1080,61 @@ function classify({ ln, text, blocks }, err, st) {
 // plays once.
 // ---------------------------------------------------------------------------
 
+// V7 of V (V7@V): a numeral counted on the major scale of the root of the chord after of, so
+// in C it's D7, the V7 of G. A chain takes brackets: V7 of (V of V). The chord after of gives
+// only its root, and a bass note goes at the end: V7 of V/F#. Returns { chord } or { error }.
+function ofChord(tok, key, octave) {
+  const at = tok.indexOf("@")
+  const slash = tok.lastIndexOf("/")
+  const bass = slash > Math.max(at, tok.lastIndexOf("›")) ? tok.slice(slash + 1) : null
+  const main = bass === null ? tok : tok.slice(0, slash)
+  const left = main.slice(0, at)
+  const right = main.slice(at + 1)
+  if (!isRoman(left)) {
+    return { error: "In a chart, of takes a numeral in front of it, counted from the chord after it: V7 of V" }
+  }
+  if (right.startsWith("(")) return { error: "The ( after of closes on its line: V7 of (V of V)" }
+  let root
+  if (right.startsWith("‹")) {
+    if (!right.endsWith("›")) return { error: "A chain of of's takes brackets: V7 of (V of V)" }
+    const inner = right.slice(1, -1)
+    const r = inner.includes("@") ? ofChord(inner, key, octave) : isRoman(inner) ? { chord: buildChord(inner, key, octave) } : null
+    if (!r || r.error || !r.chord) return r?.error ? r : { error: "After of, a chart takes a numeral to count from: V7 of V" }
+    root = r.chord
+  } else {
+    if (right.includes("@")) return { error: "A chain of of's takes brackets: V7 of (V of V)" }
+    if (!isRoman(right)) {
+      return {
+        error: buildChord(right, key, octave)
+          ? "After of, a chart takes a numeral, not a chord name: V7 of V"
+          : "After of, a chart takes a numeral to count from: V7 of V",
+      }
+    }
+    root = buildChord(right, key, octave)
+    if (!root) return { error: `"${right}" isn't a chord I know` }
+  }
+  // The root's own major key, spelt with one sign at most, as a key is
+  let name = /^[A-G][#b]*/.exec(root.label)[0]
+  if (name.length > 2) name = midiToName(60 + root.rootPc, key.flats).replace(/-?\d+$/, "")
+  const chord = buildChord(left + (bass === null ? "" : "/" + bass), parseKey(name), octave)
+  return chord ? { chord } : { error: `"${left}" isn't a chord I know` }
+}
+
 function chordSlot(tok, part, st, key, err) {
   if (tok === "-") return { hold: true }
   if (tok === "_") return { rest: true }
   if (tok === "%") {
     err(part.ln, "% stands for a whole bar, so it goes between bar lines on its own: Am F|%")
     return null
+  }
+  if (tok.includes("@")) {
+    const of = ofChord(tok, key, st.octave)
+    if (of.error) {
+      err(part.ln, of.error)
+      return null
+    }
+    applyTranspose(of.chord, st.transpose)
+    return { chord: of.chord }
   }
   if (/^[a-z][a-z0-9]+$/.test(tok) && !isRoman(tok)) {
     err(
@@ -1922,8 +1976,20 @@ const LETTERS = "CDEFGAB"
 // letter note is spelt as written, so Db stays Db. A degree takes the letter of its place in
 // the scale, counted from the key's root, so b3 in C is Eb and 7 in F# is E#.
 function spellOf(s, midi, key) {
-  const letter = s.degree ? LETTERS[(LETTERS.indexOf(key.root[0]) + s.degree - 1) % 7] : s.name[0]
+  const letter = letterOf(s, key)
   return { letter, alter: ((((midi - NOTE_BASE[letter]) % 12) + 18) % 12) - 6 }
+}
+// A note's letter: as written, or for a degree the letter of its place in the scale it
+// counts on, the key's or, after of, its root's: 3 of D is an F.
+function letterOf(s, key) {
+  if (!s.degree) return s.name[0]
+  const from = s.of ? letterOf(s.of, key) : key.root[0]
+  return LETTERS[(LETTERS.indexOf(from) + s.degree - 1) % 7]
+}
+// A note as its letter, accidental and octave: 5 of C3 is G3, 3 of (5 of D3) is C#4.
+function spelledName(s, midi, key) {
+  const { letter, alter } = spellOf(s, midi, key)
+  return letter + (alter > 0 ? "#".repeat(alter) : "b".repeat(-alter)) + (Math.floor((midi - alter) / 12) - 1)
 }
 // A note (F#4), or a degree ('b3'): ^ or ~ in front; then for a note the letter, # or b and
 // the octave; for a degree ' for each octave below, b or # and the digit, 1 to 7, and ' for
@@ -1933,10 +1999,74 @@ const NOTE_AT = /([\^~])?(?:([A-G])([#b])?(\d)?|('*)([#b])?([1-7])('*))/y
 const NOTE_HELP =
   "Notes are A to G, with # or b after them and an octave when it's needed (F, F#, Bb, E2), or degrees of the key, 1 to 7 (1, b3, 5, 1')"
 
+// X of Y, joined into one token as a cell is read, so that a notes line takes it as one note
+// and a chart as one chord: 5 of C3 is 5@C3, and a chain's brackets become ‹ ›, so
+// 5 of (5 of C3) is 5@‹5@C3› and is never read as a group. An of with nothing after it
+// (5 of) is joined too, to be told what goes there; ofShown says one back as written. A name
+// or a part (notes of = ...) isn't joined, to be told that of is taken. @, ‹ or › typed in a
+// cell becomes a look-alike first, so only of makes them, and 5@C3 isn't a note.
+function joinOf(text) {
+  let s = text.replace(/@/g, "＠").replace(/‹/g, "〈").replace(/›/g, "〉")
+  s = s.replace(/([^\s:=])\s+of(?:\s+(?=[^\s:=])|\s*$)/g, "$1@")
+  for (let at = s.indexOf("@("); at >= 0; at = s.indexOf("@(")) {
+    let depth = 0
+    let close = -1
+    for (let i = at + 1; i < s.length && close < 0; i++) {
+      if (s[i] === "(") depth++
+      else if (s[i] === ")" && --depth === 0) close = i
+    }
+    if (close < 0) break
+    s = s.slice(0, at + 1) + "‹" + s.slice(at + 2, close) + "›" + s.slice(close + 1)
+  }
+  return s
+}
+const ofShown = (msg) => msg.replace(/@‹/g, " of (").replace(/›/g, ")").replace(/@/g, " of ")
+
+// One note at `i` in `run`: a note by name, a degree, or a degree of another note, counted on
+// that note's major scale (5@C3, b3@‹5@C3›: 5 of C3, b3 of (5 of C3)), with ^ or ~ in front.
+// Returns { step, end }, or null when there isn't one, or when a chain of of's has no
+// brackets (5@5@C3).
+function noteAt(run, i) {
+  NOTE_AT.lastIndex = i
+  const m = NOTE_AT.exec(run)
+  if (!m || m[4] === "9") return null
+  const mods = { accent: m[1] === "^", ghost: m[1] === "~" }
+  const end = NOTE_AT.lastIndex
+  const step = m[2]
+    ? { name: m[2] + (m[3] || ""), octave: m[4] ? Number(m[4]) : null, label: m[2] + (m[3] || "") + (m[4] || "") }
+    : { degree: Number(m[7]), acc: m[6] || "", shift: m[8].length - m[5].length, label: m[5] + (m[6] || "") + m[7] + m[8] }
+  if (run[end] !== "@") return { step: { ...step, ...mods }, end }
+  if (!step.degree) return null
+  let root
+  let rootEnd
+  if (run[end + 1] === "‹") {
+    let depth = 0
+    let close = -1
+    for (let j = end + 1; j < run.length && close < 0; j++) {
+      if (run[j] === "‹") depth++
+      else if (run[j] === "›" && --depth === 0) close = j
+    }
+    if (close < 0) return null
+    const text = run.slice(end + 2, close)
+    const inner = noteAt(text, 0)
+    if (!inner || inner.end !== text.length) return null
+    root = inner.step
+    rootEnd = close + 1
+  } else {
+    const plain = noteAt(run, end + 1)
+    if (!plain || plain.step.of) return null
+    root = plain.step
+    rootEnd = plain.end
+  }
+  if (root.accent || root.ghost) return null
+  return { step: { ...step, of: root, label: step.label + run.slice(end, rootEnd), ...mods }, end: rootEnd }
+}
+
 // A run of notes (E---F#, 1---b3---) → its steps: one for each note, - or _, however many
 // characters a note takes. A step is null for -, { cut } for _, or the note, with whether
 // ^ or ~ is in front of it: a note by name ({ name, octave }) or a degree ({ degree, acc,
-// shift }, where shift is octaves up). null when it isn't a run of notes.
+// shift }, where shift is octaves up), which may count from another note (`of`). null when
+// it isn't a run of notes.
 function noteSteps(run) {
   const steps = []
   for (let i = 0; i < run.length; ) {
@@ -1945,27 +2075,10 @@ function noteSteps(run) {
       i++
       continue
     }
-    NOTE_AT.lastIndex = i
-    const m = NOTE_AT.exec(run)
-    if (!m || m[4] === "9") return null
-    const mods = { accent: m[1] === "^", ghost: m[1] === "~" }
-    if (m[2]) {
-      steps.push({
-        name: m[2] + (m[3] || ""),
-        octave: m[4] ? Number(m[4]) : null,
-        label: m[2] + (m[3] || "") + (m[4] || ""),
-        ...mods,
-      })
-    } else {
-      steps.push({
-        degree: Number(m[7]),
-        acc: m[6] || "",
-        shift: m[8].length - m[5].length,
-        label: m[5] + (m[6] || "") + m[7] + m[8],
-        ...mods,
-      })
-    }
-    i = NOTE_AT.lastIndex
+    const n = noteAt(run, i)
+    if (!n) return null
+    steps.push(n.step)
+    i = n.end
   }
   return steps.length ? steps : null
 }
@@ -2179,6 +2292,15 @@ function noteRunPeriod(run) {
 
 // Why `tok` isn't notes, on `inst`'s line. `chart` is the line to write if these are chords.
 function notNotes(tok, st, inst, chart) {
+  if (tok.includes("@")) {
+    const at = tok.indexOf("@")
+    if (!/^[\^~]?'*[#b]?[1-7]'*$/.test(tok.slice(0, at))) {
+      return "of takes a degree in front of it, counted on the major scale of the note after it: 5 of C3"
+    }
+    if (tok[at + 1] === "(") return "The ( after of closes on its line: 5 of (5 of C3)"
+    if (tok[at + 1] !== "‹" && tok.indexOf("@", at + 1) > 0) return "A chain of of's takes brackets: 5 of (5 of C3)"
+    return "After of goes the note to count from: 5 of C3, or a degree of the key: 5 of 1"
+  }
   if (/^[-_^~A-G#b\d]+$/.test(tok) && /[A-G][#b]?9/.test(tok)) {
     return `"${tok}": octaves run from 0 to 8`
   }
@@ -2282,9 +2404,11 @@ function notePattern(part, { steps, open = false, fill = null }, st) {
   const sharp = { "#": 1, b: -1 }
   // What's written, and what sounds: set transpose moves the sound, not the writing
   const written = (s) =>
-    s.degree
-      ? 12 * (octave + 1 + s.shift) + key.tonicSemis + degreeSemitones(s.degree, s.acc)
-      : 12 * ((s.octave ?? octave) + 1) + NOTE_BASE[s.name[0]] + (sharp[s.name[1]] || 0)
+    s.of
+      ? written(s.of) + 12 * s.shift + degreeSemitones(s.degree, s.acc)
+      : s.degree
+        ? 12 * (octave + 1 + s.shift) + key.tonicSemis + degreeSemitones(s.degree, s.acc)
+        : 12 * ((s.octave ?? octave) + 1) + NOTE_BASE[s.name[0]] + (sharp[s.name[1]] || 0)
   const transpose = st.transpose
   const midiOf = (s) => written(s) + transpose
   return {
@@ -2315,7 +2439,8 @@ function notePattern(part, { steps, open = false, fill = null }, st) {
             ...(!transpose && { spell: spellOf(s, midi, key) }),
           },
           ...(transpose && { transpose }),
-          label: s.label,
+          // a note counted from another (5 of C3) is shown as the note it is, G3
+          label: s.of ? spelledName(s, written(s), key) : s.label,
           instrument: part.name,
           ...(sound && { sound }),
           voice: 0,
@@ -3180,7 +3305,8 @@ function gridBlocks(spans, drumEvents, noteEvents, chordEvents = []) {
 // output.
 export function parseCell(src, inherited = initialState()) {
   const errors = []
-  const err = (line, msg) => {
+  const err = (line, said) => {
+    const msg = ofShown(said)
     if (!errors.some((e) => e.line === line && e.msg === msg)) errors.push({ line, msg })
   }
   const state = cloneState(inherited)
@@ -3202,6 +3328,7 @@ export function parseCell(src, inherited = initialState()) {
     above.text = `${above.text.replace(/\|\s*$/, "")} ${lines[i].text}`
     lines[i].text = ""
   }
+  for (const l of lines) l.text = joinOf(l.text)
 
   // Skips to the } that closes a block opened on line `at`, counting the blocks inside it.
   const skipBlock = (at) => {
