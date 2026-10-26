@@ -324,6 +324,7 @@ export default function MusicOutput({
   sheetCounts,
   onSetSheetCounts,
   runCount,
+  share = true, // the Share menu, which a host page that holds the cells leaves out
 }) {
   const waveMountRef = React.useRef(null)
   const wsRef = React.useRef(null)
@@ -724,7 +725,7 @@ export default function MusicOutput({
                 <span>Count-in</span>
               </button>
               <MuteMenu parsed={parsed} muted={muted} onChange={setMuted} />
-              <ShareMenu source={cell.source} />
+              {share && <ShareMenu source={cell.source} />}
               <button className="icon-btn" onClick={onExport} title="Download as WAV">
                 <svg width="12" height="12" viewBox="0 0 12 12">
                   <path
