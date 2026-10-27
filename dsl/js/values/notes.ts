@@ -3,6 +3,7 @@
    and _ stops it. Parts with lengths hold one note (3 beats C2), and ... holds one to the
    end. A block holds layers that sound together, each a voice of its own. */
 import { buildChord, degreeSemitones, isRoman, midiToName } from "../chords.js"
+import { misplaced } from "../check.ts"
 import { BLOCK_KEY, CHORDS_BLOCK } from "../declare.ts"
 import { TRACK_RE } from "../lines.ts"
 import { keyOf, withInLayers } from "../settings.ts"
@@ -442,7 +443,7 @@ export function notNotes(tok: string, st: State, inst: string, chart: string): s
     return `"${tok}": notes are capital letters, A to G: ${inst}: F---G---`
   }
   if (st.sections[tok]) {
-    return `${tok} is a pattern, so it goes on a line of its own, not on an instrument's line`
+    return misplaced(tok, "pattern", { line: "pitched", part: inst, text: "", chart: false })!
   }
   if (NAME_LIKE.test(tok) && !isRoman(tok)) {
     return `"${tok}" isn't defined above. Name it first: notes ${tok} = F---G---`
@@ -502,15 +503,16 @@ function noteVoice(line: Line, part: PitchedPart, st: State, err: Report): Voice
         `A block is everything ${part.name} plays, so nothing goes beside it: ${part.name}: { ... }`,
       )
     } else if (!w) add(tok)
-    else if (w.type === "steps") {
-      fail(`${tok} is steps, so it goes on a drum's line, not on ${part.name}'s`)
-    } else if (w.type === "chords") {
-      fail(
-        chart
-          ? `${tok} is chords, so chords goes in front of it: ${part.name}: chords ${line.text}`
-          : `${tok} is chords, and the rest of this line is notes. A line plays one or the other`,
-      )
-    } else for (const t of w.tokens) t === "|" ? barLine() : add(t, tok)
+    else {
+      const problem = misplaced(tok, w.type, {
+        line: "pitched",
+        part: part.name,
+        text: line.text,
+        chart,
+      })
+      if (problem) fail(problem)
+      else for (const t of w.tokens) t === "|" ? barLine() : add(t, tok)
+    }
   }
   if (ok && !steps.length && !parts.fill) {
     fail(`${part.name} has nothing to play`)

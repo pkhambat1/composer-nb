@@ -3,6 +3,7 @@
    (2 beats rest, ...x-), or hits spread over steps (3 in 8), or a block of layers that
    repeat until they line up. Also stickings: which hand plays each step. */
 import { buildChord } from "../chords.js"
+import { misplaced } from "../check.ts"
 import { blockBeside } from "../eval.ts"
 import { BLOCK_KEY } from "../declare.ts"
 import { TRACK_RE } from "../lines.ts"
@@ -197,9 +198,9 @@ function readBeats(
         fail(`${beat} is on this line twice`)
       } else hits.push({ tick: Math.round(q * TPQ), mods, tok })
     } else if (word) {
-      fail(`${tok} is ${word.type}, which don't go in a list of beats`)
+      fail(misplaced(tok, word.type, { line: "drum", beats: true })!)
     } else if (st.sections[tok]) {
-      fail(`${tok} is a pattern, so it goes on a line of its own, not on an instrument's line`)
+      fail(misplaced(tok, "pattern", { line: "drum", beats: true })!)
     } else {
       fail(`"${tok}" isn't a beat. Beats look like 1, 2&, 3e or 4a, or ^4 with a step in front`)
     }
@@ -318,7 +319,7 @@ export function stickingPattern(part: DrumPart, st: State, err: Report): DrumCli
       err(
         part.ln,
         w
-          ? `${tok} is ${w.type}, so it can't go in a sticking`
+          ? misplaced(tok, w.type, { line: "sticking" })!
           : `"${tok}" isn't a sticking. ${STICKING_HELP}`,
       )
       ok = false
@@ -635,7 +636,7 @@ export function stepPattern(
         err(
           part.ln,
           st.sections[tok]
-            ? `${tok} is a pattern, so it goes on a line of its own, not on an instrument's line`
+            ? misplaced(tok, "pattern", { line: "drum", part: part.name })!
             : `"${tok}" isn't defined above. Name it first: steps ${tok} = ^-x-`,
         )
       } else if (noteSteps(tok)?.some((s: { cut?: boolean } | null) => s && !s.cut)) {
@@ -677,13 +678,9 @@ export function stepPattern(
       addRun(tok)
       continue
     }
-    if (w.type !== "steps") {
-      err(
-        part.ln,
-        w.type === "sticking"
-          ? `${tok} is a sticking, so it goes on the sticking line: sticking: ${tok}`
-          : `${tok} is ${w.type}, so it goes on a line like piano: ${w.type === "chords" ? "chords " : ""}${tok}, not on a drum's`,
-      )
+    const problem = misplaced(tok, w.type, { line: "drum", part: part.name })
+    if (problem) {
+      err(part.ln, problem)
       ok = false
       continue
     }
@@ -846,9 +843,9 @@ function stepLayerRun(
       if (!check(tok, "")) return null
       run += tok
     } else if (w) {
-      return fail(`${tok} is ${w.type}, so it can't be a layer of steps`)
+      return fail(misplaced(tok, w.type, { line: "drum", layer: true })!)
     } else if (st.sections[tok]) {
-      return fail(`${tok} is a pattern, so it can't be a layer of steps`)
+      return fail(misplaced(tok, "pattern", { line: "drum", layer: true })!)
     } else if (NAME_LIKE.test(tok)) {
       return fail(`"${tok}" isn't defined above. Name it first: steps ${tok} = ^-x-`)
     } else return fail(`"${tok}" isn't a step. ${STEP_HELP}`)

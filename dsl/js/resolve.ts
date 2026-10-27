@@ -6,6 +6,7 @@
    they're written. (Settings are different: a pattern plays with the settings where it's
    played.) */
 import { buildChord, parseKey } from "./chords.js"
+import { misplaced } from "./check.ts"
 import { message } from "./diagnostics.ts"
 import type { Section, State, Word } from "./state.ts"
 import { noteSteps } from "./values/notes.ts"
@@ -175,9 +176,7 @@ function nameRule(type: string, name: string, st: State): string | null {
 export function undefinedName(name: string, st: State): string {
   const word = st.words[name]
   if (word) {
-    return word.type === "steps"
-      ? `${name} is steps, so it goes on a drum's line: hat: ${name}`
-      : `${name} is ${word.type}, so it goes on an instrument's line: piano: ${word.type === "chords" ? "chords " : ""}${name}`
+    return misplaced(name, word.type, { line: "own" })!
   }
   // Bridge can't have been named, so the message is the rule, not how to name it
   if (!/^[a-z]/.test(name)) {
