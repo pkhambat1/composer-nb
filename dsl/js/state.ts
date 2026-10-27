@@ -32,6 +32,7 @@ export type Section = {
   bars: number
   has: boolean // whether a length was written in front
   above?: boolean // it came from a cell above, so this cell can define it again
+  names?: { words: Record<string, Word>; sections: Record<string, Section> } // where it was written
 }
 
 export type State = Timing & {

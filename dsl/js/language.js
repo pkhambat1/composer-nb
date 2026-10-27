@@ -59,16 +59,13 @@
    Pure (no audio), so the notebook can also use it to pass state from cell to cell. */
 import { buildChord, isRoman, parseKey } from "./chords.js"
 import {
-  DRUMS,
   KITS,
-  LANES,
   MODES,
   PARTS,
   PITCHED,
   SETTING_EXAMPLE,
   SETTINGS,
   SOUNDS,
-  SPLIT,
   TYPES,
 } from "./vocab.ts"
 import {
@@ -90,6 +87,14 @@ import {
 } from "./time.ts"
 import { message } from "./diagnostics.ts"
 import { cloneState, describe, initialState } from "./state.ts"
+import {
+  closest,
+  NAME_LIKE,
+  nameProblem,
+  Scope,
+  undefinedName,
+  unknownInstrument,
+} from "./resolve.ts"
 import { CHORD_MARKS, chartRepeat, dimMarkProblem, ofChord } from "./values/chart.ts"
 import {
   BEAT_RE,
@@ -128,6 +133,7 @@ export { initialState } from "./state.ts"
 // imports them from here.
 export {
   DRUMS,
+  KEYWORDS,
   KITS,
   LANES,
   MODES,
@@ -140,27 +146,8 @@ export {
   UNITS,
   VARIATIONS,
 } from "./vocab.ts"
-export const KEYWORDS = [
-  ...TYPES,
-  "play",
-  "set",
-  "with",
-  "of",
-  "bars",
-  "beats",
-  "bar",
-  "to",
-  "every",
-  "rest",
-  "over",
-  "in",
-]
 
 const MAX_SECONDS = 600
-const ROMAN = ["i", "ii", "iii", "iv", "v", "vi", "vii"]
-// A token that reads as a name: a lowercase letter, then letters and digits (riff, partA)
-export const NAME_LIKE = /^[a-z][A-Za-z0-9]+$/
-const TAKEN = new Set([...SETTINGS, ...DRUMS, ...PARTS, ...KEYWORDS])
 // A block written inside a line: {#1} on the line, and the block in the line's `blocks`.
 export const BLOCK_KEY = /^\{#\d+\}$/
 export const CHORDS_BLOCK =
@@ -172,95 +159,6 @@ const LINE_SHAPES =
   "Each line is a setting (set tempo 90), a name with its type (chords verse = Am F, " +
   "pattern groove = { ... }), play, or inside braces an instrument and what it plays " +
   "(kick: x--x---, guitar: F---G---) or patterns to play (intro verse)"
-
-function editDistance(a, b) {
-  const d = Array.from({ length: a.length + 1 }, (_, i) => [i])
-  for (let j = 1; j <= b.length; j++) d[0][j] = j
-  for (let i = 1; i <= a.length; i++) {
-    for (let j = 1; j <= b.length; j++) {
-      d[i][j] = Math.min(
-        d[i - 1][j] + 1,
-        d[i][j - 1] + 1,
-        d[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1),
-      )
-    }
-  }
-  return d[a.length][b.length]
-}
-
-const closest = (name, names) =>
-  names.map((n) => [n, editDistance(name, n)]).sort((a, b) => a[1] - b[1])[0]
-
-// For `name: value` where name isn't an instrument.
-function unknownInstrument(name) {
-  // The closed hi-hat is the plain one, which is what most people reach for first
-  if (/^hat\.(close|closed|shut)$/.test(name)) {
-    return "The closed hi-hat is hat on its own; hat.open is the open one, and hat.pedal the foot"
-  }
-  if (SPLIT.includes(name)) {
-    const lanes = LANES.filter((l) => l.startsWith(name + "."))
-    return `"${name}" isn't a drum. The ${name}s are ${lanes.slice(0, -1).join(", ")} and ${lanes.at(-1)}`
-  }
-  if (name.includes(".")) {
-    const drum = name.split(".")[0]
-    if (PITCHED.includes(drum)) {
-      const sounds = PITCHED.filter((p) => p.startsWith(drum + "."))
-      return sounds.length
-        ? `"${name}" isn't an instrument. ${drum}'s other sound is ${sounds.join(", ")}`
-        : `"${name}" isn't an instrument. ${drum} has one sound: ${drum}: F---G---`
-    }
-    const close = LANES.find((l) => l.includes(".") && editDistance(name, l) <= 2)
-    if (close) return `"${name}" isn't a drum. Did you mean ${close}?`
-    if (SPLIT.includes(drum)) {
-      const lanes = LANES.filter((l) => l.startsWith(drum + "."))
-      return `"${name}" isn't a drum. The ${drum}s are ${lanes.slice(0, -1).join(", ")} and ${lanes.at(-1)}`
-    }
-    const second = LANES.filter((l) => l.includes(".") && !SPLIT.includes(l.split(".")[0]))
-    return `"${name}" isn't a drum. Drums with a second sound: ${second.join(", ")}`
-  }
-  const best = closest(name, PARTS)
-  if (best[1] <= 2) return `"${name}" isn't an instrument. Did you mean ${best[0]}?`
-  return `"${name}" isn't an instrument. Instruments: ${PARTS.join(", ")}`
-}
-
-// Why `name` can't be defined, or null if it can.
-function nameProblem(name, value) {
-  const n = name.toLowerCase()
-  if (PARTS.includes(n)) {
-    const pitched = PITCHED.includes(n)
-    // guitar = Am F: a chart, which has chords in front of it on the instrument's line
-    const chart =
-      pitched && tokenize(value).some((t) => !noteSteps(t) && buildChord(t, parseKey("C")))
-    const plays = value.startsWith("{")
-      ? pitched
-        ? "F---G---"
-        : "x--x---"
-      : (chart ? "chords " : "") + value
-    return `${n} is an instrument, so it takes a colon: ${n}: ${plays}`
-  }
-  if (TAKEN.has(n) || /^x\d+$/.test(name))
-    return `${name} already means something, so pick another name`
-  if (/^d\d+[ea]?$/.test(name)) return `${name} is a double on a beat, so pick another name`
-  return null
-}
-
-// The rule for a name of any type: a lowercase letter, then letters and digits, with a capital
-// for each new word (partA, countIn); at least two characters, since single letters are
-// steps; not a numeral; and not a name already in scope, carried in from a cell above or
-// not, with other capitals (partA, then parta). The message, or null.
-function nameRule(type, name, st) {
-  if (!/^[a-z]/.test(name)) return `Names start with a lowercase letter: ${type} ${name[0].toLowerCase()}${name.slice(1)}`
-  if (name.length < 2) return "Names need at least two characters, because single letters are steps"
-  if (ROMAN.includes(name)) return `${name} is a chord, so pick another name`
-  // A name is defined once in a cell: not again, and not inside a block when it's defined
-  // outside it. A name from a cell above can be defined again here.
-  const same = st.words[name] || st.sections[name]
-  if (same && !same.above) return message("name.defined", { name, line: same.line ?? same.ln })
-  const twin = [...Object.keys(st.words), ...Object.keys(st.sections)].find(
-    (n) => n !== name && n.toLowerCase() === name.toLowerCase(),
-  )
-  return twin ? `${name} differs from ${twin} only in its capitals, so pick another name or write ${twin}` : null
-}
 
 // pattern groove 3 bars {: a pattern without its =.
 function patternHint(text) {
@@ -442,7 +340,7 @@ function applySetting(name, value, ln, state, err, verb = "set") {
 // steps name = ^-x-, chords name = Am E7|G D: steps or chords to hand to an instrument.
 // What's written has to be the type that's declared.
 function defineWord(type, name, value, ln, state, err, blocks = null) {
-  const problem = nameProblem(name, value) || nameRule(type, name, state)
+  const problem = new Scope(state).problem(type, name, value)
   if (problem) return err(ln, problem)
   if (type === "sticking") {
     // sticking para = RLRR LRLL: a hand for each step
@@ -455,8 +353,7 @@ function defineWord(type, name, value, ln, state, err, blocks = null) {
       else return err(ln, `"${t}" isn't a sticking. ${STICKING_HELP}`)
     }
     if (!tokens.length) return err(ln, `sticking ${name} = needs something after the =`)
-    delete state.sections[name]
-    state.words[name] = { type, tokens, line: ln }
+    new Scope(state).defineWord(name, { type, tokens, line: ln })
     return
   }
   if (type === "notes") {
@@ -487,8 +384,7 @@ function defineWord(type, name, value, ln, state, err, blocks = null) {
       } else return err(ln, notNotes(t, state, "guitar", `chords ${name} = ${value}`))
     }
     if (!tokens.length) return err(ln, `notes ${name} = needs something after the =`)
-    delete state.sections[name]
-    state.words[name] = { type, tokens, line: ln }
+    new Scope(state).defineWord(name, { type, tokens, line: ln })
     return
   }
   // Steps can be written with lengths (2 beats rest, dd), which come back as steps
@@ -512,9 +408,8 @@ function defineWord(type, name, value, ln, state, err, blocks = null) {
     // steps backbeat = 2 4: beats, as steps
     const run = beatsAsSteps({ name, art: "hit", ln, blocks }, written, state, err)
     if (run == null) return
-    delete state.sections[name]
     // A list of beats is a bar long by type, so it's never a repeat of a shorter figure
-    state.words[name] = { type, tokens: [run], line: ln, beats: true }
+    new Scope(state).defineWord(name, { type, tokens: [run], line: ln, beats: true })
     return
   }
   const key = keyOf(state)
@@ -567,8 +462,7 @@ function defineWord(type, name, value, ln, state, err, blocks = null) {
   if (again) {
     return err(ln, `${name} repeats ${again}. Write chords ${name} = ${again}: a pattern repeats it`)
   }
-  delete state.sections[name]
-  state.words[name] = { type, tokens, line: ln }
+  new Scope(state).defineWord(name, { type, tokens, line: ln })
 }
 
 // ---------------------------------------------------------------------------
@@ -654,15 +548,14 @@ function shapeOf(value, st, blocks = null) {
 // Names a pattern (pattern name = { ... }) in `st`, the state of the block it's written
 // in. Returns the pattern, or null if the name or length is a mistake.
 function defineBlock(l, st, err) {
-  const problem = nameProblem(l.name, "{") || nameRule("pattern", l.name, st)
+  const problem = new Scope(st).problem("pattern", l.name, "{")
   if (problem) {
     err(l.ln, problem)
     return null
   }
   const sec = namedBlock(l.name, l.value, l.ln, l.blocks)
   if (sec.has && !checkBars(sec.bars, l.ln, err)) return null
-  delete st.words[l.name]
-  st.sections[l.name] = sec
+  new Scope(st).definePattern(sec)
   return sec
 }
 
@@ -1439,24 +1332,7 @@ function sectionClip(sec, state, err, ln, stack) {
     err(ln, `${sec.name} plays itself, so it would never end`)
     return null
   }
-  return blockClip(sec.lines, state, err, blockCtx(sec.name, ln), [...stack, sec.name], sec.bars)
-}
-
-function undefinedName(name, st) {
-  const word = st.words[name]
-  if (word) {
-    return word.type === "steps"
-      ? `${name} is steps, so it goes on a drum's line: hat: ${name}`
-      : `${name} is ${word.type}, so it goes on an instrument's line: piano: ${word.type === "chords" ? "chords " : ""}${name}`
-  }
-  // Bridge can't have been named, so the message is the rule, not how to name it
-  if (!/^[a-z]/.test(name)) {
-    return `"${name}" can't be a name, since names start with a lowercase letter: ${name[0].toLowerCase()}${name.slice(1)}`
-  }
-  const names = Object.keys(st.sections)
-  return names.length
-    ? `"${name}" isn't defined. Patterns so far: ${names.join(", ")}`
-    : `"${name}" isn't defined. Name it first: pattern ${name} = { ... }`
+  return blockClip(sec.lines, Scope.playing(sec, state), err, blockCtx(sec.name, ln), [...stack, sec.name], sec.bars)
 }
 
 // Checks a pattern when it's defined, so its mistakes show even if it's never played.
@@ -1793,10 +1669,7 @@ export function parseCell(src, inherited = initialState()) {
     const msg = ofShown(said)
     if (!errors.some((e) => e.line === line && e.msg === msg)) errors.push({ line, msg })
   }
-  const state = cloneState(inherited)
-  // Names from the cells above are marked so: this cell can define them again
-  for (const n in state.words) state.words[n] = { ...state.words[n], above: true }
-  for (const n in state.sections) state.sections[n] = { ...state.sections[n], above: true }
+  const state = Scope.forCell(inherited, cloneState)
   const setHere = new Map() // setting name → the line in this cell that set it
   const outputs = []
   let transposeLine = null

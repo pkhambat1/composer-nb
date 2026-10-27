@@ -3,7 +3,8 @@
    and _ stops it. Parts with lengths hold one note (3 beats C2), and ... holds one to the
    end. A block holds layers that sound together, each a voice of its own. */
 import { buildChord, degreeSemitones, isRoman, midiToName } from "../chords.js"
-import { BLOCK_KEY, CHORDS_BLOCK, keyOf, NAME_LIKE, TRACK_RE, withInLayers } from "../language.js"
+import { BLOCK_KEY, CHORDS_BLOCK, keyOf, TRACK_RE, withInLayers } from "../language.js"
+import { NAME_LIKE } from "../resolve.ts"
 import type { Line, LineBlock, State } from "../state.ts"
 import { lcm, lengthAt, MAX_BARS, meterOf, nearWhole, sayTicks, TPQ, type Report } from "../time.ts"
 import { UNITS } from "../vocab.ts"

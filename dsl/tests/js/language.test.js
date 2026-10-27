@@ -678,6 +678,14 @@ describe("names", () => {
     expect(allErrors("play {\n  steps fig = x---\n  snare: fig\n}\nplay {\n  steps fig = --x-\n  snare: fig\n}")).toEqual([])
   })
 
+  it("in a pattern mean the ones above it, even after a later cell defines them again", () => {
+    const above = parseSource("steps fig = x---\npattern groove = {\n  snare: fig\n}").state
+    const below = parseSource("steps fig = --x-\nplay groove", above)
+    expect(below.errors).toEqual([])
+    // groove keeps the fig it was written with: the snare on the first step, not the third
+    expect(below.drumEvents.map((e) => e.tick)).toEqual([0])
+  })
+
   it("from a cell above can be defined again in a cell below", () => {
     const above = parseSource("steps fig = x---").state
     expect(parseSource("steps fig = --x-\nplay snare: fig", above).errors).toEqual([])
