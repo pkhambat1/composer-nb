@@ -26,7 +26,8 @@ play {
 }`
 
 const CHORDS = `set tempo 100
-set key Am
+set key A
+set mode minor
 
 play piano: {
   chords i bVI|bIII bVII
@@ -101,7 +102,8 @@ describe("tools", () => {
 
   it("parse hears the chords, with their notes the first time", async () => {
     const t = textOf(await call("parse", { source: CHORDS }))
-    expect(t).toContain("key Am")
+    expect(t).toContain("key A minor")
+    expect(t).toContain("Settings at the end: time 4 over 4 · tempo 100 · swing 50 · key A · mode minor")
     expect(t).toMatch(/chords bar 1: Am \(A C E\) · F \(F A C\)/)
     expect(t).toMatch(/piano\s+E5/)
   })

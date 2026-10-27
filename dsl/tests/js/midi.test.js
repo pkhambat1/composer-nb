@@ -104,7 +104,7 @@ describe("the key signature", () => {
       return bytes.slice(at, at + 5)
     }
     expect(meta("set key D\nplay kick: x---")).toEqual([0xff, 0x59, 0x02, 2, 0])
-    expect(meta("set key Gm\nplay kick: x---")).toEqual([0xff, 0x59, 0x02, 0xfe, 1])
-    expect(meta("set key D dorian\nplay kick: x---")).toEqual([0xff, 0x59, 0x02, 0, 0])
+    expect(meta("set key G\nset mode minor\nplay kick: x---")).toEqual([0xff, 0x59, 0x02, 0xfe, 1])
+    expect(meta("set key D\nset mode dorian\nplay kick: x---")).toEqual([0xff, 0x59, 0x02, 0, 0])
   })
 })

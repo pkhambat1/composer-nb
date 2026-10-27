@@ -20,10 +20,10 @@ VARIATIONS = {
 SPLIT = ["tom"]  # drums that are only their variations: tom is three drums
 # Instruments that play notes and chords, each on a line of its own like a drum
 PITCHED = ["guitar", "guitar.electric", "piano", "piano.electric", "organ", "pad", "bass"]
-SETTINGS = ["time", "tempo", "swing", "key", "transpose", "octave", "kit"]
+SETTINGS = ["time", "tempo", "swing", "key", "mode", "transpose", "octave", "kit"]
 TYPES = ["steps", "sticking", "notes", "chords", "pattern"]
 KITS = ["rock", "synth"]
-MODES = ["ionian", "dorian", "phrygian", "lydian", "mixolydian", "aeolian", "locrian"]
+MODES = ["major", "minor", "dorian", "phrygian", "lydian", "mixolydian", "locrian"]
 UNITS = ["steps", "beats", "bars"]  # what a length on a line is measured in
 
 LANES = [
@@ -37,7 +37,7 @@ SOUNDS = dict(VARIATIONS)
 for _name in PITCHED:
     if "." in _name:
         SOUNDS.setdefault(_name.split(".")[0], []).append(_name.split(".")[1])
-SETTING_VALUES = {"kit": KITS}
+SETTING_VALUES = {"kit": KITS, "mode": MODES}
 # Instruments with more than one sound, set like a setting: set guitar.electric muted
 INSTRUMENT_SOUNDS = {"guitar.electric": ["clean", "muted"]}
 
@@ -57,6 +57,8 @@ NUMERAL_RE = re.compile(r"[#b]?(VII|VI|IV|V|III|II|I|vii|vi|iv|v|iii|ii|i)[A-Za-
 # What makes a { an instrument's block of layers: kick: or piano: in front of it, or
 # steps name =
 STEPS_OPENER_RE = re.compile(r"([a-z]+(?:\.[a-z]+)?)\s*:[^:{}]*$|^\s*steps\s+[A-Za-z_]\w*\s*=[^{}]*$")
+# A with and its settings, in front of its block
+WITH_RE = re.compile(r"\s*with\b[^{}]*")
 
 Option = Tuple[str, str]  # the text to insert and its kind, which picks the icon
 Names = Dict[str, List[str]]  # the names of each type
@@ -89,8 +91,8 @@ def _names(defined: str) -> Names:
 
 def _open_blocks(text: str) -> Tuple[List[Tuple[str, Optional[str]]], Optional[str]]:
     """The blocks still open at the end of `text`: what each holds (a drum's "steps", a
-    pitched instrument's "layers", or "lines"), and the name it's the value of, if any.
-    Also what the block the last } closed held."""
+    pitched instrument's "layers", a with's "statements" at the top of a cell, or "lines"),
+    and the name it's the value of, if any. Also what the block the last } closed held."""
     open_blocks: List[Tuple[str, Optional[str]]] = []
     closed = None
     for line in text.split("\n"):
@@ -99,12 +101,14 @@ def _open_blocks(text: str) -> Tuple[List[Tuple[str, Optional[str]]], Optional[s
             if c == "{":
                 opener = STEPS_OPENER_RE.search(code[:i])
                 holds = "lines"
-                if open_blocks and open_blocks[-1][0] != "lines":
+                if open_blocks and open_blocks[-1][0] in ("steps", "layers"):
                     holds = open_blocks[-1][0]
                 elif opener and (opener.group(1) is None or opener.group(1) in LANES):
                     holds = "steps"
                 elif opener and opener.group(1) in PITCHED:
                     holds = "layers"
+                elif WITH_RE.fullmatch(code[:i]) and all(h == "statements" for h, _ in open_blocks):
+                    holds = "statements"  # a with at the top holds statements, as a cell does
                 named = DEF_RE.match(code[:i])
                 open_blocks.append((holds, named and named.group(2)))
             elif c == "}":
@@ -172,7 +176,9 @@ def _statement(
 ) -> List[Option]:
     """What can come next on a line that isn't an instrument's. `closed` is what the block
     the last } closed held."""
-    inside = (body + head).count("{") > (body + head).count("}")
+    # At the top of a cell or of a with there, statements; in any other block, lines
+    blocks, _ = _open_blocks(body + head)
+    inside = not all(h == "statements" for h, _ in blocks)
     grouped = _groups(body + head) > 0  # in a group, what plays in order goes on
     tail = head.rstrip()
     patterns = _options(names["pattern"], "variable")
@@ -187,15 +193,17 @@ def _statement(
     parts = _options([p + ": " for p in PARTS], "property")
     if not words:
         if grouped:
-            return patterns + parts  # the next thing in a group, on a line of its own
-        settings = [("set ", "keyword")]
+            return patterns + parts + [("with ", "keyword")]  # the next thing in a group
         types = _options([t + " " for t in TYPES], "keyword")
         if inside:
-            return parts + patterns + [("bar ", "keyword"), ("every ", "keyword")] + settings + types
-        return settings + types + [("play ", "keyword")]
+            # in braces, settings go on a with: with octave 2 { ... }
+            return parts + patterns + [("bar ", "keyword"), ("every ", "keyword"), ("with ", "keyword")] + types
+        # set only at the top of the cell: in a with, settings go on a with
+        settings = [] if blocks else [("set ", "keyword")]
+        return settings + types + [("play ", "keyword"), ("with ", "keyword")]
     first = words[0]
     if tail.endswith("("):
-        return patterns + parts  # a group starts: names, blocks and lines, in order
+        return patterns + parts + [("with ", "keyword")]  # a group starts: what plays in order
     if first == "play":
         return _sequence(words[1:], patterns, parts, grouped)
     if first == "pattern" and words[2:4] == ["=", "every"]:
@@ -225,10 +233,18 @@ def _statement(
             return _sequence(words[3:], patterns, parts, grouped)
         return _options(names[first], "variable")
     if first == "set":
-        # set tempo 90, set key D dorian, set guitar.electric muted: a setting and its value
+        # set tempo 90, set key E, set guitar.electric muted: a setting and its value
         if len(words) == 1:
             return _options([s + " " for s in SETTINGS] + [i + " " for i in INSTRUMENT_SOUNDS], "keyword")
         return _setting(words[1:])
+    if first == "with":
+        # with key E, mode minor { ... }: settings with commas between them, then a block
+        setting = segment.split(",")[-1].split()
+        if setting[:1] == ["with"]:
+            setting = setting[1:]
+        if not setting:
+            return _options([s + " " for s in SETTINGS] + [i + " " for i in INSTRUMENT_SOUNDS], "keyword")
+        return _setting(setting)
     if (inside or grouped) and first not in SETTINGS:
         return _sequence(words, patterns, [], grouped)  # a pattern to play, or a group
     return []
@@ -243,8 +259,6 @@ def _setting(words: List[str]) -> List[Option]:
         return [("over ", "keyword")]
     if first in SETTING_VALUES and len(words) == 1:
         return _options(SETTING_VALUES[first], "value")
-    if first == "key" and len(words) == 2 and re.fullmatch(r"[A-G][#b]?", words[1]):
-        return _options(MODES, "value")  # set key D dorian: a root, then its mode
     return []
 
 

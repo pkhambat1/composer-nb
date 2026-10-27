@@ -73,7 +73,7 @@ const FLAT_SPELL = ["C", "_D", "D", "_E", "E", "F", "_G", "G", "_A", "A", "_B", 
 function spelling(midi, sig) {
   const pc = ((midi % 12) + 12) % 12
   // A minor key's raised seventh is a sharp whatever the key's spelling: F# in G minor
-  const leading = sig.key.mode === "minor" || sig.key.mode === "aeolian"
+  const leading = sig.key.mode === "minor"
   const flat = sig.key.flats && !(leading && pc === (sig.key.tonicPc + 11) % 12)
   const spelt = (flat ? FLAT_SPELL : SHARP_SPELL)[pc]
   const alter = spelt[0] === "^" ? 1 : spelt[0] === "_" ? -1 : 0
@@ -354,7 +354,7 @@ export function sheetAbc(block, { counts = false, barsPerLine = 4 } = {}) {
   // The middle of a bar of an even number of equal beats, in sixteenths: 4 over 4, 6 over 8
   const even = groups.length % 2 === 0 && groups.every((g) => g === groups[0])
   const mid = even ? block.barTicks / 2 / 24 : null
-  const key = parseKey(block.key) || parseKey("C")
+  const key = parseKey(block.key, block.mode) || parseKey("C")
   const sig = { key, marks: keySignature(key) }
   const lines = []
   for (const v of voices) {

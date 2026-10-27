@@ -96,8 +96,8 @@ export function midiFile(outputs) {
       const count = s.groups.reduce((a, b) => a + b, 0)
       meta.push({ tick, order: order++, bytes: [0xff, 0x58, 0x04, count, Math.log2(s.unit), 24, 8] })
       // The key signature: sharps (or flats, as a negative count) and whether it's minor
-      const key = parseKey(s.key) || parseKey("C")
-      const minor = key.mode === "minor" || key.mode === "aeolian" ? 1 : 0
+      const key = parseKey(s.key, s.mode) || parseKey("C")
+      const minor = key.mode === "minor" ? 1 : 0
       meta.push({ tick, order: order++, bytes: [0xff, 0x59, 0x02, key.sharps & 0xff, minor] })
     }
     for (const e of output.drumEvents) {

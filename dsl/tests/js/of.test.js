@@ -30,7 +30,7 @@ describe("of in notes", () => {
   it("counts a degree on the major scale of the note after it", () => {
     expect(names("play piano: 5 of C3--- b3 of C3--- 3 of D3--- 5' of C3---")).toEqual(["G3", "D#3", "F#3", "G4"])
     // whatever the key: of counts from its own note
-    expect(names("set key Eb dorian\nplay piano: 5 of C3---")).toEqual(["G3"])
+    expect(names("set key Eb\nset mode dorian\nplay piano: 5 of C3---")).toEqual(["G3"])
   })
 
   it("counts from a degree of the key", () => {
@@ -81,7 +81,7 @@ describe("of in charts", () => {
     expect(chords("set key C\nplay piano: chords ii7 of IV V of bVII")).toEqual(["Gm7", "F"])
     expect(chords("set key F\nplay piano: chords V7 of ii|ii V7 I -")).toEqual(["D7", "Gm", "C7", "F"])
     // a numeral takes what it takes in a chart
-    expect(chords("set key Cm\nplay piano: chords V7alt of iv V7 of bVI")).toEqual(["C7alt", "Eb7"])
+    expect(chords("set key C\nset mode minor\nplay piano: chords V7alt of iv V7 of bVI")).toEqual(["C7alt", "Eb7"])
   })
 
   it("takes only the chord's root", () => {

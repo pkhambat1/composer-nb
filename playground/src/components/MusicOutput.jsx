@@ -194,7 +194,7 @@ function CellDetails({
   }
   const meta = parsed.blocks
     .filter((b) => !drawn(b))
-    .map((b) => `time ${b.time} · tempo ${b.tempo} · key ${b.key} · ${b.bars} bar${b.bars === 1 ? "" : "s"}`)
+    .map((b) => `time ${b.time} · tempo ${b.tempo} · key ${b.key} ${b.mode} · ${b.bars} bar${b.bars === 1 ? "" : "s"}`)
   if (parsed.outputs.length > 1) meta.unshift(`${parsed.outputs.length} plays, one after another`)
   if (parsed.fromAbove.length) meta.push(`from cells above: ${parsed.fromAbove.join(", ")}`)
   return (

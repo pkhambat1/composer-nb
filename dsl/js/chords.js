@@ -40,46 +40,41 @@ export function degreeSemitones(degree, acc = "") {
   return MODE_SCALES.major[degree - 1] + (acc === "#" ? 1 : acc === "b" ? -1 : 0)
 }
 
-// The scales a key can be in: semitones above the tonic. A major key is written C and a
-// minor one Am; the modes are written by name, D dorian, and ionian and aeolian are the
-// modal names of major and minor.
+// The modes a key can be in: semitones above the tonic. major and minor are the two common
+// ones, and the other five go by their modal names. A key is its root, and its mode a
+// setting of its own (set key E, set mode minor).
 export const MODE_SCALES = {
   major: [0, 2, 4, 5, 7, 9, 11],
   minor: [0, 2, 3, 5, 7, 8, 10],
-  ionian: [0, 2, 4, 5, 7, 9, 11],
   dorian: [0, 2, 3, 5, 7, 9, 10],
   phrygian: [0, 1, 3, 5, 7, 8, 10],
   lydian: [0, 2, 4, 6, 7, 9, 11],
   mixolydian: [0, 2, 4, 5, 7, 9, 10],
-  aeolian: [0, 2, 3, 5, 7, 8, 10],
   locrian: [0, 1, 3, 5, 6, 8, 10],
 }
 // How far round the circle of fifths a mode's tonic sits from the major key with the same
 // notes: D dorian has C major's notes, two fifths down from D.
-const MODE_FIFTHS = { major: 0, ionian: 0, lydian: -1, mixolydian: 1, dorian: 2, minor: 3, aeolian: 3, phrygian: 4, locrian: 5 }
+const MODE_FIFTHS = { major: 0, lydian: -1, mixolydian: 1, dorian: 2, minor: 3, phrygian: 4, locrian: 5 }
 const LETTER_FIFTHS = { F: -1, C: 0, G: 1, D: 2, A: 3, E: 4, B: 5 }
 const DEGREE = { i: 0, ii: 1, iii: 2, iv: 3, v: 4, vi: 5, vii: 6 }
 const LETTER_PC = { C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, B: 11 }
 const ROMAN_RE = /^([#b]?)(VII|VI|IV|V|III|II|I|vii|vi|iv|v|iii|ii|i)(.*)$/
 
-// "C", "Am", "F#m", "Bb", "D dorian" → the key: its root, mode and scale, the sharps in its
-// signature (negative for flats) and whether its black keys are spelt with flats. null when
-// it isn't a key.
-export function parseKey(str) {
-  const m = /^([A-G])([#b]?)(?:(m)|\s+([a-z]+))?$/.exec(String(str || "").trim())
-  if (!m) return null
-  const [, letter, acc, minor, word] = m
-  const mode = minor ? "minor" : word || "major"
-  if (!MODE_SCALES[mode] || word === "major" || word === "minor") return null
-  const root = letter + acc
+// A root ("E", "F#", "Bb") in a mode ("minor") → the key: its root, mode and scale, the
+// sharps in its signature (negative for flats) and whether its black keys are spelt with
+// flats. null when the root isn't a note or the mode isn't one.
+export function parseKey(root, mode = "major") {
+  const m = /^([A-G])([#b]?)$/.exec(String(root || "").trim())
+  if (!m || !MODE_SCALES[mode]) return null
+  const [, letter, acc] = m
   let sharps = LETTER_FIFTHS[letter] + (acc === "#" ? 7 : acc === "b" ? -7 : 0) - MODE_FIFTHS[mode]
   if (sharps > 7) sharps -= 12
   if (sharps < -7) sharps += 12
   return {
-    name: root + (minor ? "m" : word ? " " + word : ""),
-    root,
+    name: `${letter + acc} ${mode}`,
+    root: letter + acc,
     mode,
-    tonicPc: NOTE_TO_PC[root],
+    tonicPc: NOTE_TO_PC[letter + acc],
     // Semitones from C up to the root as its octave counts it: Cb4 is just below C4, so -1
     tonicSemis: LETTER_PC[letter] + (acc === "#" ? 1 : acc === "b" ? -1 : 0),
     scale: MODE_SCALES[mode],
@@ -100,7 +95,7 @@ export function keySignature(key) {
 
 // The key as ABC writes it in its K: field: D, Am, D dor.
 export function abcKey(key) {
-  const short = { dorian: " dor", phrygian: " phr", lydian: " lyd", mixolydian: " mix", locrian: " loc", minor: "m", aeolian: "m" }
+  const short = { dorian: " dor", phrygian: " phr", lydian: " lyd", mixolydian: " mix", locrian: " loc", minor: "m" }
   return key.root + (short[key.mode] || "")
 }
 
