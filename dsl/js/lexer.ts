@@ -56,10 +56,25 @@ export class Lexer {
     return this.#take("text", end - this.#at)
   }
 
-  // Whether the line break here ends a statement.
+  // Whether the line break here ends a statement. Inside ( ) it doesn't. Nor does it when the
+  // next line starts with |, passing over lines that are only a comment, unless the line
+  // above is blank or opens or closes a brace.
   #breaks(): boolean {
     if (this.#parens[this.#parens.length - 1] > 0) return false
-    const rest = this.#src.slice(this.#at + 1)
+    const src = this.#src
+    let end = this.#at
+    let above = ""
+    for (;;) {
+      const start = src.lastIndexOf("\n", end - 1) + 1
+      const raw = src.slice(start, end)
+      above = raw.replace(/\/\/.*$/, "").trim()
+      if (above || !raw.trim() || start === 0) break
+      end = start - 1
+    }
+    if (!above || /^[{}]|[{}]$/.test(above)) return true
+    const comment = /^[ \t]*\/\/[^\n]*\n/
+    let rest = src.slice(this.#at + 1)
+    while (comment.test(rest)) rest = rest.replace(comment, "")
     return !/^[ \t]*\|/.test(rest)
   }
 

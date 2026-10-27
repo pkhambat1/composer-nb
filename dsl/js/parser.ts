@@ -4,7 +4,17 @@
    its }. A statement's kind comes from how it starts. What comes after its head stays
    text, which language.js still reads. */
 import { Lexer } from "./lexer.ts"
-import type { Block, Cell, ParseError, Span, Statement, Text, Token, Value } from "./syntax.ts"
+import type {
+  Block,
+  Cell,
+  Node,
+  ParseError,
+  Span,
+  Statement,
+  Text,
+  Token,
+  Value,
+} from "./syntax.ts"
 import { TYPES } from "./vocab.ts"
 
 const NAME = "[A-Za-z][A-Za-z0-9]*"
@@ -74,12 +84,12 @@ export class Parser {
       }
     }
     const value = trimmed(parts)
-    return value.span ? classify(value, value.span) : null
+    return value.span ? { ...classify(value, value.span), parts: value.parts } : null
   }
 }
 
 // A statement's kind, from how its first text starts. Its head is taken off what it holds.
-function classify(value: Value, span: Span): Statement {
+function classify(value: Value, span: Span): Node {
   const first = value.parts[0]
   const text = first?.kind === "text" ? first.text : ""
   const word = /^[a-z]+(?=\s|$)/.exec(text)?.[0] as keyof typeof HEADS | undefined
