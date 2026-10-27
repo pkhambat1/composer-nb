@@ -59,8 +59,6 @@
    Pure (no audio), so the notebook can also use it to pass state from cell to cell. */
 import { buildChord, isRoman, parseKey } from "./chords.js"
 import {
-  KITS,
-  MODES,
   PARTS,
   PITCHED,
   SETTING_EXAMPLE,
@@ -82,11 +80,19 @@ import {
   numbers,
   sayTicks,
   singularLength,
-  sumTerms,
   swingWarp,
 } from "./time.ts"
-import { message } from "./diagnostics.ts"
 import { cloneState, describe, initialState } from "./state.ts"
+import {
+  applySetting,
+  keyOf,
+  pacing,
+  readSetting,
+  readWithHeader,
+  setInBlock,
+  WITH_HELP,
+  withState,
+} from "./settings.ts"
 import {
   closest,
   NAME_LIKE,
@@ -192,150 +198,6 @@ function checkBars(bars, ln, err) {
 
 // The key and mode as one name, for headers: E minor, C major.
 export const keyName = (s) => `${s.key} ${s.mode}`
-
-// The key a state is in, as the chords and the sheet read it.
-export const keyOf = (st) => parseKey(st.key, st.mode)
-
-// A key is a note, and the mode a setting of its own. Why `value` isn't a key, as the line
-// to write after `verb` (set, or with in a with's header).
-function keyProblem(value, verb) {
-  const both = /^([A-G][#b]?)(?:(m)|\s*([A-Za-z]+))$/.exec(value)
-  const mode = both && (both[2] ? "minor" : both[3].toLowerCase())
-  if (both && MODES.includes(mode)) return message("key.withMode", { verb, root: both[1], mode })
-  if (both) return message("key.notAMode", { verb, root: both[1] })
-  return message("key.notANote", { verb })
-}
-
-// A with in an instrument's block, among its layers: it goes around the line instead.
-export const withInLayers = (name) => message("with.inLayers", { name })
-
-// Applies a setting to `state`. `verb` is how it was written, set or with, for messages.
-// Returns whether it was one.
-function applySetting(name, value, ln, state, err, verb = "set") {
-  const num = evalNumber(value)
-  const whole = (lo, hi) =>
-    num && nearWhole(num.value) && num.value >= lo && num.value <= hi ? Math.round(num.value) : null
-  if (name === "time") {
-    // A time is two numbers, how many over which note: 7 over 8. It isn't a division,
-    // so / has no business in it.
-    const m = /^(.+?)\s+over\s+(.+)$/.exec(value)
-    const count = m && evalNumber(m[1])
-    const unit = m && evalNumber(m[2])
-    if (!count || !unit) {
-      const divided = /^(.*\S)\s*\/\s*(\d+)$/.exec(value)
-      err(
-        ln,
-        divided && num
-          ? message("time.division", {
-              verb,
-              value,
-              n: num.value,
-              count: divided[1].replace(/^\((.*)\)$/, "$1"),
-              unit: divided[2],
-            })
-          : message("time.shape", { verb }),
-      )
-      return false
-    }
-    const groups = sumTerms(count)
-    if (!groups) {
-      err(ln, message("time.count"))
-      return false
-    }
-    if (![1, 2, 4, 8, 16].includes(unit.value)) {
-      err(ln, message("time.unit"))
-      return false
-    }
-    if (count.value / unit.value > 8) {
-      err(ln, message("time.tooLong"))
-      return false
-    }
-    state.groups = groups
-    state.unit = unit.value
-    return true
-  }
-  if (name === "tempo") {
-    if (!num || !(num.value >= 20 && num.value <= 400)) {
-      err(ln, message("tempo.range"))
-      return false
-    }
-    state.tempo = num.value
-    return true
-  }
-  if (name === "swing") {
-    const n = whole(50, 75)
-    if (n == null) {
-      err(ln, message("swing.range", { verb }))
-      return false
-    }
-    state.swing = n
-    return true
-  }
-  if (name === "key") {
-    // The root that degrees and numerals count from. The mode is its own setting, so
-    // setting one keeps the other.
-    if (!parseKey(value)) {
-      err(ln, keyProblem(value.trim(), verb))
-      return false
-    }
-    state.key = value.trim()
-    return true
-  }
-  if (name === "mode") {
-    // How the key is written: its signature, and how accidentals are spelt. It changes no
-    // pitch, since degrees and numerals count on the major scale of the root.
-    if (!MODES.includes(value)) {
-      err(
-        ln,
-        MODES.includes(value.toLowerCase())
-          ? message("mode.lowercase", { verb, mode: value.toLowerCase() })
-          : message("mode.unknown"),
-      )
-      return false
-    }
-    state.mode = value
-    return true
-  }
-  if (name === "transpose") {
-    // Every pitched instrument sounds that many semitones from what's written: the chart
-    // and the notes stay as written, so a guitar's C shape under set transpose 4 is a capo
-    // at the 4th fret. Drums have no pitch, so it leaves them alone.
-    const n = whole(-12, 12)
-    if (n == null) {
-      err(ln, message("transpose.range", { verb }))
-      return false
-    }
-    state.transpose = n
-    return true
-  }
-  if (name === "octave") {
-    const n = whole(1, 6)
-    if (n == null) {
-      err(ln, message("octave.range"))
-      return false
-    }
-    state.octave = n
-    return true
-  }
-  if (name === "kit") {
-    if (!KITS.includes(value)) {
-      err(ln, message("kit.unknown"))
-      return false
-    }
-    state.kit = value
-    return true
-  }
-  if (SOUNDS[name]) {
-    if (!SOUNDS[name].includes(value)) {
-      err(ln, message("sound.unknown", { name }))
-      return false
-    }
-    if (value === SOUNDS[name][0]) delete state.sounds[name]
-    else state.sounds[name] = value
-    return true
-  }
-  return false
-}
 
 // steps name = ^-x-, chords name = Am E7|G D: steps or chords to hand to an instrument.
 // What's written has to be the type that's declared.
@@ -713,99 +575,6 @@ function paceTicks(l, st, err) {
   err(l.ln, `A step can't last ${l.shown.slice(6)}. Try every 3 steps, or every 1/3 beats`)
   return null
 }
-
-// set tempo 90, set key D, set guitar.electric muted: a setting and its value, from here to
-// the end of the cell and into later cells. Returns { kind: "setting" } or null after saying
-// what's wrong.
-function readSetting(text, tokens, ln, err) {
-  const raw = tokens[1] || ""
-  if (!raw) {
-    err(ln, message("set.empty"))
-    return null
-  }
-  const s = settingWords(raw, text.replace(/^set\s+/, "").slice(raw.length).trim(), ln, err, "set")
-  return s && { kind: "setting", ln, ...s }
-}
-
-// A setting's name and its value, as written after `verb`: set, or with in a with's header.
-// Returns { name, value }, or null after saying what's wrong.
-function settingWords(raw, value, ln, err, verb) {
-  const name = raw.toLowerCase()
-  if (SETTINGS.includes(name)) {
-    if (value) return { name, value }
-    err(ln, message("set.needsValue", { verb, name }))
-    return null
-  }
-  if (SOUNDS[name]) {
-    if (value) return { name, value }
-    err(ln, message("set.needsSound", { verb, name }))
-    return null
-  }
-  if (PITCHED.includes(name)) {
-    err(ln, message("set.oneSound", { name }))
-    return null
-  }
-  const [best, far] = closest(name, [...SETTINGS, ...Object.keys(SOUNDS)])
-  err(
-    ln,
-    far <= 2
-      ? message("set.unknownNear", { raw, verb, best })
-      : message("set.unknown", { raw, verb }),
-  )
-  return null
-}
-
-// The settings in a with's header (key E, mode minor), each a setting and its value, with
-// commas between them. Returns [{ name, value }], or null after saying what's wrong.
-const WITH_HELP = "with takes the settings its block plays with, then the block: with octave 2 { ... }"
-function readWithHeader(head, ln, err) {
-  if (!head.trim()) {
-    err(ln, WITH_HELP)
-    return null
-  }
-  const pieces = head.split(",").map((p) => p.trim())
-  const out = []
-  for (const [k, piece] of pieces.entries()) {
-    if (!piece) {
-      err(ln, "A comma goes between two settings: with key E, mode minor { ... }")
-      return null
-    }
-    const words = piece.split(/\s+/)
-    if (words[0] === "set") {
-      const fixed = pieces.map((p) => p.replace(/^set\s+/, "")).join(", ")
-      err(ln, `A with's settings have no set in front: with ${fixed} { ... }`)
-      return null
-    }
-    // with key E mode minor: two settings, without the comma between them
-    const next = words.findIndex((w, i) => i > 0 && (SETTINGS.includes(w) || SOUNDS[w]))
-    if (next > 0) {
-      const fixed = [...pieces.slice(0, k), words.slice(0, next).join(" ") + ", " + words.slice(next).join(" "), ...pieces.slice(k + 1)]
-      err(ln, `Settings in a with are separated by commas: with ${fixed.join(", ")} { ... }`)
-      return null
-    }
-    const s = settingWords(words[0], piece.slice(words[0].length).trim(), ln, err, "with")
-    if (!s) return null
-    if (out.some((o) => o.name === s.name)) {
-      err(ln, `${s.name} is in this with twice. A with sets each setting once`)
-      return null
-    }
-    out.push(s)
-  }
-  return out
-}
-
-// The state inside a with: `state` with the header's settings applied, or null after saying
-// what's wrong.
-function withState(settings, state, ln, err) {
-  const st = cloneState(state)
-  for (const s of settings) if (!applySetting(s.name, s.value, ln, st, err, "with")) return null
-  return st
-}
-
-// What a with's time, tempo and swing set: the block plays at its own pace, so it can't
-// sound together with other lines. Returns the first of them, or undefined.
-const OWN_PACE = ["time", "tempo", "swing"]
-const pacing = (settings) => settings.find((s) => OWN_PACE.includes(s.name))
 
 // Sorts one line (not play) into a setting, a word, a named pattern ("blockdef"), an
 // instrument line ("part"), patterns to play ("sequence"), something in a bar ("placed")
@@ -1221,7 +990,6 @@ function layer(parts, once, repeated, st, bars, err, ctx) {
 const PLAYS = ["part", "sequence", "placed", "paced"]
 
 // Inside a block, settings go on a with, which holds the lines they're for.
-const setInBlock = (l) => `Inside a block, settings go on a with: with ${l.name} ${l.value} { ... }`
 
 // Reads a block's lines in order, so each one sees the names given before it. Names are
 // defined in `st`, and each line that plays keeps the state as it was there, in `l.st`.

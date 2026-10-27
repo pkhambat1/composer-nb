@@ -4,7 +4,7 @@
    chord's root (V7 of V). */
 import { applyTranspose, buildChord, isRoman, midiToName, parseKey } from "../chords.js"
 import { message } from "../diagnostics.ts"
-import { keyOf } from "../language.js"
+import { keyOf } from "../settings.ts"
 import { NAME_LIKE } from "../resolve.ts"
 import type { State } from "../state.ts"
 import { drawsNotes, spaceNotes } from "./notes.ts"
