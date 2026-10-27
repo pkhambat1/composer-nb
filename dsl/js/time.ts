@@ -5,6 +5,8 @@
 import { message } from "./diagnostics.ts"
 
 export const TPQ = 96 // ticks per quarter note: fine enough for 1/32 notes and triplets
+// The longest a length can be, and a block's layers can take to line up again
+export const MAX_BARS = 64
 
 // The part of a cell's state that says how its time goes. Callers pass the whole state.
 export type Timing = {
