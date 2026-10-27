@@ -29,7 +29,7 @@ play piano: dorian
 The raised 6 makes the IV major: G in D dorian, where natural minor has Gm.
 
 ```composer-nb
-set key D dorian
+set mode dorian
 play piano: chords i - IV -|i - iv -
 ```
 

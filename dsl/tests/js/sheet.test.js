@@ -195,10 +195,10 @@ describe("the key signature", () => {
   it("comes from the key: a major key, a minor key, a mode", () => {
     expect(keyLine("play piano: C4---")).toBe("K:C")
     expect(keyLine("set key D\nplay piano: C4---")).toBe("K:D")
-    expect(keyLine("set key F#m\nplay piano: C4---")).toBe("K:F#m")
-    expect(keyLine("set key D dorian\nplay piano: C4---")).toBe("K:D dor")
-    expect(keyLine("set key G mixolydian\nplay piano: C4---")).toBe("K:G mix")
-    expect(keyLine("set key A aeolian\nplay piano: C4---")).toBe("K:Am")
+    expect(keyLine("set key F#\nset mode minor\nplay piano: C4---")).toBe("K:F#m")
+    expect(keyLine("set key D\nset mode dorian\nplay piano: C4---")).toBe("K:D dor")
+    expect(keyLine("set key G\nset mode mixolydian\nplay piano: C4---")).toBe("K:G mix")
+    expect(keyLine("set key A\nset mode minor\nplay piano: C4---")).toBe("K:Am")
   })
   it("leaves out the accidentals the signature has, and writes the naturals it needs", () => {
     expect(voice("set key D\nplay piano: F#4--- C#4---")).toBe("[V:P1] F4 C4 z4 z4 |")
@@ -215,7 +215,7 @@ describe("the key signature", () => {
     expect(voice("set key F#\nset octave 4\nplay piano: 7---1'---")).toBe("[V:P1] e4 f4 z4 z4 |")
     expect(voice("set key Gb\nset octave 4\nplay piano: 4---7---")).toBe("[V:P1] c4 f4 z4 z4 |")
     // a chord's notes as the chord spells them: B# major is B# D## F##, not C E G
-    expect(voice("set key C#m\nplay piano: chords VII")).toBe('[V:P1] "B#"[^B,^^D^^F]16 |')
+    expect(voice("set key C#\nset mode minor\nplay piano: chords VII")).toBe('[V:P1] "B#"[^B,^^D^^F]16 |')
     expect(voice("set key Gb\nplay piano: chords IV")).toBe('[V:P1] "Cb"[CEG]16 |')
     // a 6/9 keeps its 9: abcjs drops what follows a / unless it's a bass note
     expect(voice("play piano: chords C6/9")).toMatch(/^\[V:P1\] "C6\u20449"/)
@@ -230,7 +230,7 @@ describe("the key signature", () => {
   })
   it("spells a flat key's black keys with flats, but a minor key's leading tone sharp", () => {
     expect(voice("set key Bb\nplay piano: Eb4--- Db4---")).toBe("[V:P1] E4 _D4 z4 z4 |")
-    expect(voice("set key Gm\nplay piano: F#4--- Eb4---")).toBe("[V:P1] ^F4 E4 z4 z4 |")
+    expect(voice("set key G\nset mode minor\nplay piano: F#4--- Eb4---")).toBe("[V:P1] ^F4 E4 z4 z4 |")
   })
 })
 

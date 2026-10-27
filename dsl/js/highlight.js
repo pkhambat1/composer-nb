@@ -8,7 +8,7 @@
      .tk-note (a note on a pitched line),
      .tk-error
    Whitespace is kept exactly, so the layer lines up with the textarea under it. */
-import { KEYWORDS, LANES, PARTS, PITCHED, SETTINGS, SOUNDS, TYPES, UNITS } from "./language.js"
+import { KEYWORDS, LANES, MODES, PARTS, PITCHED, SETTINGS, SOUNDS, TYPES, UNITS } from "./language.js"
 import { chordParts, isRoman, parseKey } from "./chords.js"
 
 const ROMAN_RE = /^([#b])?(VII|VI|IV|V|III|II|I|vii|vi|iv|v|iii|ii|i)(.*)$/
@@ -292,6 +292,9 @@ function names(text, st = { depth: 0, took: false }) {
     } else if (p === "{") {
       // a block takes the rest of its line, and what's after it
       return [...out, ...braces(text.slice(here), st)]
+    } else if (p === "with" && !wasNumber) {
+      // with key E { ... }: a block with its settings, which takes the rest of the line too
+      return [...out, part("tk-directive-key", p), ...withHead(text.slice(at), st)]
     } else if (p === "}") out.push(part("tk-punct", p))
     else if (p === "bars") out.push(part("tk-directive-key", p))
     // a length is always plural: 1 bars
@@ -367,15 +370,15 @@ function braces(text, st = { depth: 0, took: false }) {
     if (inner[i] === "{") depth++
     else if (inner[i] === "}" && depth-- === 0) close = i
   }
-  if (close < 0) return out.concat(inner.trim() ? line(inner) : [part(null, inner)])
+  if (close < 0) return out.concat(inner.trim() ? line(inner, 0, true) : [part(null, inner)])
   const body = inner.slice(0, close)
-  out.push(...(body.trim() ? line(body) : [part(null, body)]), part("tk-punct", "}"))
+  out.push(...(body.trim() ? line(body, 0, true) : [part(null, body)]), part("tk-punct", "}"))
   // ({ ... } outro): what follows a block on its line, in a group or as a mistake
   out.push(...names(inner.slice(close + 1), st))
   return out
 }
 
-// A setting after set: tempo 90, time 7 over 8, key D dorian (the key is one value), or
+// A setting after set or with: tempo 90, time 7 over 8, key E, mode minor, or
 // guitar.electric muted (an instrument and its sound). `bare` marks one written without set.
 function setting(text, bare = false) {
   const word = /^[A-Za-z][A-Za-z0-9.]*/.exec(text)?.[0] || ""
@@ -386,9 +389,11 @@ function setting(text, bare = false) {
     const ok = SOUNDS[word].includes(sound[2])
     return [name, part(null, sound[1]), part(ok ? "tk-directive-val" : "tk-error", sound[2]), part(null, sound[3])]
   }
-  if (word === "key" && /^\s/.test(after)) {
+  if ((word === "key" || word === "mode") && /^\s/.test(after)) {
+    // a key is a note, and a mode one of the modes
     const m = /^(\s+)([\s\S]*?)(\s*)$/.exec(after)
-    return [name, part(null, m[1]), part(parseKey(m[2]) ? "tk-directive-val" : "tk-error", m[2]), part(null, m[3])]
+    const ok = word === "key" ? parseKey(m[2]) : MODES.includes(m[2])
+    return [name, part(null, m[1]), part(ok ? "tk-directive-val" : "tk-error", m[2]), part(null, m[3])]
   }
   if (SETTINGS.includes(word)) {
     return [
@@ -403,9 +408,27 @@ function setting(text, bare = false) {
   return text ? [part("tk-error", text)] : []
 }
 
+// What follows with: its settings, with commas between them, then its block.
+function withHead(text, st) {
+  const brace = text.indexOf("{")
+  const head = brace < 0 ? text : text.slice(0, brace)
+  const out = []
+  for (const p of pieces(head, /(,)/)) {
+    if (p === ",") {
+      out.push(part("tk-punct", p))
+      continue
+    }
+    const lead = /^\s*/.exec(p)[0]
+    const body = p.slice(lead.length).replace(/\s+$/, "")
+    out.push(part(null, lead), ...(body ? setting(body) : []), part(null, p.slice(lead.length + body.length)))
+  }
+  return brace < 0 ? out : [...out, ...braces(text.slice(brace), st)]
+}
+
 // One line of code, without its comment. `depth` is how many groups ( ) are open where it
-// starts, from the lines above.
-function line(code, depth = 0) {
+// starts, from the lines above, and `inside` whether it's inside braces, where a setting
+// goes on a with rather than after set.
+function line(code, depth = 0, inside = false) {
   const st = { depth, took: false }
   const lead = /^\s*/.exec(code)[0]
   const body = code.slice(lead.length)
@@ -468,9 +491,12 @@ function line(code, depth = 0) {
     if (len.rest.startsWith("{")) out.push(...braces(len.rest, st))
     else if (len.rest) out.push(...playable(len.rest, st))
   } else if (word === "set" && /^(\s|$)/.test(after)) {
-    // set tempo 90, set key D dorian, set guitar.electric muted: set, then a setting
+    // set tempo 90, set key E, set guitar.electric muted: set, then a setting. Only at the top
     const space = /^\s*/.exec(after)[0]
-    out.push(part("tk-directive-key", word), part(null, space), ...setting(after.slice(space.length)))
+    out.push(part(inside ? "tk-error" : "tk-directive-key", word), part(null, space), ...setting(after.slice(space.length)))
+  } else if (word === "with" && /^(\s|\{|$)/.test(after)) {
+    // with key E, mode minor { ... }: settings for its block only
+    out.push(part("tk-directive-key", word), ...withHead(after, st))
   } else if (soundSetting || (SETTINGS.includes(word) && /^\s/.test(after))) {
     // tempo 90 with no set in front: a mistake, which the parser explains
     out.push(...setting(body, true))
@@ -523,7 +549,7 @@ export function highlightMusic(src) {
       // |C G: the line above goes on, so it's coloured as that line's value
       parts = [part(null, lead), ...values(code.slice(lead.length), continues)]
     } else if (holds === "steps" || holds === "pitched") parts = layerLine(code, holds)
-    else parts = line(code, groups)
+    else parts = line(code, groups, open.length > 0)
     if (code.trim()) continues = lastKind
     else if (!text.trim()) continues = null
     for (let i = 0; i < code.length; i++) {

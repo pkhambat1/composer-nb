@@ -167,12 +167,13 @@ play turnaround`,
     section: "Harmony",
     title: "Dorian vamp",
     byline: "D dorian: minor with a major sixth",
-    body: "D to D on the white keys, so the B is natural. Against D major that is a flat third and a flat seventh with the sixth left natural, and numerals and degrees count from D major: `i7 IV` is Dm7 G, `bVII` is C, and the melody's `6` is the B that makes dorian. `set key D dorian` gives the sheet its signature, which has no sharps.",
+    body: "D to D on the white keys, so the B is natural. Against D major that is a flat third and a flat seventh with the sixth left natural, and numerals and degrees count from D major: `i7 IV` is Dm7 G, `bVII` is C, and the melody's `6` is the B that makes dorian. `set mode dorian` gives the sheet its signature, which has no sharps.",
     link: null,
     source: `set time 4 over 4
 set tempo 100
 set swing 50
-set key D dorian
+set key D
+set mode dorian
 set octave 4
 
 pattern vamp = {
@@ -197,7 +198,8 @@ play vamp`,
     source: `set time 4 over 4
 set tempo 112
 set swing 50
-set key A mixolydian
+set key A
+set mode mixolydian
 set octave 4
 set guitar.electric clean
 
@@ -221,7 +223,8 @@ play vamp`,
     source: `set time 4 over 4
 set tempo 72
 set swing 50
-set key F lydian
+set key F
+set mode lydian
 set octave 4
 
 pattern float = {
@@ -258,12 +261,13 @@ play blues`,
     section: "Harmony",
     title: "Harmonic minor cadence",
     byline: "A minor, with the leading tone raised",
-    body: "A minor's own V chord is Em, and it pulls nowhere. Raise its third to G# and E7 leans into Am: the harmonic-minor cadence. `V7` in `set key Am` spells it for you, and the melody's `7`, the raised seventh, is the G# that gets its sharp on the sheet.",
+    body: "A minor's own V chord is Em, and it pulls nowhere. Raise its third to G# and E7 leans into Am: the harmonic-minor cadence. `V7` in `set key A` spells it for you, and the melody's `7`, the raised seventh, is the G# that `set mode minor` marks with a sharp on the sheet.",
     link: null,
     source: `set time 4 over 4
 set tempo 90
 set swing 50
-set key Am
+set key A
+set mode minor
 set octave 4
 
 pattern cadence = {
@@ -288,7 +292,8 @@ play cadence`,
     source: `set time 4 over 4
 set tempo 140
 set swing 50
-set key E phrygian
+set key E
+set mode phrygian
 set octave 2
 set guitar.electric muted
 
@@ -310,7 +315,8 @@ play 2 bars riff`,
     source: `set time 4+4+4+3 over 16
 set tempo 112
 set swing 50
-set key G lydian
+set key G
+set mode lydian
 set octave 2
 set guitar.electric muted
 

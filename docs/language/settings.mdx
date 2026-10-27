@@ -1,11 +1,11 @@
 ---
 title: "Settings"
-description: "set: time, tempo, swing, kit, key, transpose, octave and an instrument's sound, from a line down."
+description: "set and with: time, tempo, swing, kit, key, mode, transpose, octave and an instrument's sound."
 ---
 
 import { Cell } from "/snippets/cell.jsx"
 
-A setting is `set`, then the setting and its value: `set tempo 90`. It applies from its line to the end of the cell, or of the block it is in. A block's lines play together, so its `time`, `tempo` and `swing` are set above all of them; `key`, `transpose`, `octave`, `kit` and a sound can change between its lines.
+A setting is `set`, then the setting and its value: `set tempo 90`. It applies from its line to the end of the cell, and carries into later cells. `set` goes only at the top of a cell, outside every block. Inside a block, settings go on a [`with`](#with), which gives them to its own block and nothing else.
 
 | Setting | Value | Default | Sets |
 | --- | --- | --- | --- |
@@ -13,7 +13,8 @@ A setting is `set`, then the setting and its value: `set tempo 90`. It applies f
 | `tempo` | 20 to 400 | `120` | Quarter notes per minute. |
 | `swing` | 50 to 75 | `50` | Where the off-beat eighth falls, as a percentage of the beat. |
 | `kit` | `rock` or `synth` | `rock` | The drum kit. |
-| `key` | `C`, `Am`, `Bb`, `F#m`, or a root and a mode: `D dorian` | `C` | The key: the root that [Roman numerals](/language/chords#roman-numerals) and [degrees](/language/notes#degrees) count from, and the sheet's key signature. |
+| `key` | A note: `A` to `G`, then an optional `#` or `b` | `C` | The root that [Roman numerals](/language/chords#roman-numerals) and [degrees](/language/notes#degrees) count from. |
+| `mode` | `major`, `minor`, `dorian`, `phrygian`, `lydian`, `mixolydian` or `locrian` | `major` | How the key is written: the sheet's key signature and spelling. |
 | `transpose` | -12 to 12 | `0` | Semitones that every pitched instrument sounds from what's written. |
 | `octave` | 1 to 6 | `3` | The octave of a note without a number, of degree 1, and of a chord's root. |
 | `guitar.electric` | `clean` or `muted` | `clean` | The electric guitar's sound. |
@@ -41,16 +42,17 @@ play {
 
 </Cell>
 
-## key
+## key and mode
 
-A major key is its letter, a minor key its letter and `m`, and a mode its root and the mode's name: `D dorian`, `E phrygian`, `F lydian`, `G mixolydian`, `B locrian`, with `ionian` and `aeolian` as the modal names of major and minor.
+`key` is a note and `mode` is a setting of its own, so `set key E` then `set mode minor` is E minor. Each keeps the other: after `set mode minor`, a later `set key G` is G minor.
 
-Roman numerals and degrees count on the major scale of the key's root, whatever the key's mode, and `b` or `#` in front moves them a semitone. That is how a scale is described against major: natural minor is `1 2 b3 4 5 b6 b7`, and its chords are `i bIII iv v bVI bVII`. The minor or the mode sets the sheet's key signature: `D dorian` has none, `A mixolydian` two sharps.
+Roman numerals and degrees count on the major scale of the key's root, whatever the mode, and `b` or `#` in front moves them a semitone. That is how a scale is described against major: natural minor is `1 2 b3 4 5 b6 b7`, and its chords are `i bIII iv v bVI bVII`. So the mode changes no pitch. It sets how the music is written: the sheet's key signature (D dorian has none, A mixolydian two sharps), how accidentals are spelt, and minor's raised 7th, which gets a sharp.
 
 <Cell>
 
 ```composer-nb
-set key D dorian
+set key D
+set mode dorian
 set tempo 96
 
 pattern vamp = {
@@ -74,10 +76,67 @@ The major `IV` under a minor `i` is what makes dorian dorian: `i IV` is Dm G, an
 
 ## transpose and octave
 
-`transpose` moves the sound of every pitched instrument by that many semitones, up or down: its notes, its degrees and its chords. What's written stays: a chart keeps its chord names and a guitar its diagrams, so a guitar's shapes under `set transpose 4` are a capo at the 4th fret. Drums have no pitch, and it leaves them alone. Like any setting it applies from its line down, so a block can transpose one instrument and not another.
+`transpose` moves the sound of every pitched instrument by that many semitones, up or down: its notes, its degrees and its chords. What's written stays: a chart keeps its chord names and a guitar its diagrams, so a guitar's shapes under `set transpose 4` are a capo at the 4th fret. Drums have no pitch, and it leaves them alone. On a [`with`](#with), it transposes one instrument and not another.
 
 `octave` counts from C: `C4` is middle C, and the note below it is `B3`. Degree 1 and a numeral's root are the key's root in that octave, and the other degrees and numerals count up from there, so under `set key A`, `1` is A3 and `5` is E4.
 
 ## Instrument sound
 
 `set` with an instrument's name and a sound sets that instrument's sound from its line on: `set guitar.electric muted` is palm-muted. Only `guitar.electric` has more than one sound.
+
+## with
+
+`with`, then settings with commas between them, then a block: `with key E, mode minor { ... }`. The settings apply to the block only, and what was set before comes back at its `}`. A `with` takes any setting `set` takes, each once, and at least one. Names declared inside a `with` stay inside it, as names in any block do, and nothing in it carries into later cells.
+
+A `with`'s block holds what could stand where the `with` is:
+
+| Where | The block holds | Plays |
+| --- | --- | --- |
+| At the top of a cell | Statements: declarations, `play` and other `with`s. | Each `play` in it, with the settings. |
+| In a `play`, a pattern, `bar` or `every` | Lines, groups, `bar`, `every` and other `with`s. | As a block on a line of its own: together with the other lines, repeating until what it's in ends. |
+| In a [group](/language/patterns#groups) | The same. | As one part in order. |
+
+An instrument's block of layers and a named value hold values, not lines, so a `with` goes around the line instead: `with octave 5 { piano: { ... } }`.
+
+<Cell>
+
+```composer-nb
+set tempo 96
+chords verse = i bIII|bVII iv
+
+with key E, mode minor {
+  play {
+    piano: chords verse
+    with octave 2 { bass: 1---5--- }
+  }
+}
+
+chords prog = I vi|IV V
+play (
+  with key E { piano: chords prog }
+  with key G { piano: chords prog }
+)
+```
+
+</Cell>
+
+The bass plays an octave below the chart, and its figure repeats under it. A pattern is evaluated where it is played, so `prog` plays in E and then in G.
+
+`time`, `tempo` and `swing` go on a `with` around a whole play, or on a part that plays in order. Lines that sound together share one moment, and so one tempo: a `with tempo` beside other lines in a play or a pattern is an error, and so is a pattern that changes the tempo played with other lines. A `with` that holds everything a pattern plays can set its tempo, and the pattern then plays at it wherever it plays in order: `pattern tag = with time 6 over 4 { ... }`.
+
+<Cell>
+
+```composer-nb
+pattern beat = {
+  hat: x-
+  kick: 1 3
+  snare: 2 4
+}
+
+play (
+  with tempo 90 { 2 bars beat }
+  with tempo 120 { 2 bars beat }
+)
+```
+
+</Cell>

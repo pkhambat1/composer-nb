@@ -40,8 +40,8 @@ describe("transpose", () => {
     expect(drums("set transpose 5\n" + cell)).toBe(drums(cell))
   })
 
-  it("applies from its line down, so a block can transpose one instrument", () => {
-    const p = parseSource("play {\n  set transpose 4\n  guitar: chords C\n  set transpose 0\n  bass: C2---\n}")
+  it("goes on a with in a block, so a block can transpose one instrument", () => {
+    const p = parseSource("play {\n  with transpose 4 { guitar: chords C }\n  bass: C2---\n}")
     expect(pitchClasses(p.chords[0].chord)).toEqual([4, 8, 11])
     expect(p.notes[0].note.name).toBe("C2")
   })
@@ -64,7 +64,8 @@ describe("transpose needs something with pitch", () => {
     expect(firstError("set transpose 2\nplay kick: x---")).toBe(
       "transpose moves notes and chords, and only drums play here. Give an instrument some: piano: chords C G",
     )
-    expect(firstError("pattern vv = {\n  set transpose 2\n  kick: x---\n}\nplay vv")).toMatch(/only drums play here/)
+    expect(firstError("pattern vv = {\n  with transpose 2 { kick: x--- }\n}\nplay vv")).toMatch(/only drums play here/)
+    expect(firstError("with transpose 2 {\n  play kick: x---\n}")).toMatch(/only drums play here/)
   })
 
   it("is fine with any pitched instrument, or at 0", () => {
