@@ -4,11 +4,11 @@ import * as Tone from "tone"
 import * as ChordLookup from "./chord-lookup.js"
 import * as Drums from "./drums.js"
 import { midiToName, spellLike } from "./chords.js"
-import { TPQ, initialState, parseCell } from "./language.js"
+import { TPQ, initialState, parseCell } from "./language.ts"
 import { midiFile } from "./midi.js"
 
 export { midiToName, parseKey, buildChord } from "./chords.js"
-export { initialState } from "./language.js"
+export { initialState } from "./language.ts"
 
 // Parses one music cell. `inherited` is the state (settings and words) left by the cells
 // above it; the result's `state` is what this cell hands on to the cells below.

@@ -5,7 +5,7 @@
    tests/python/test_completer.py.) */
 import { describe, it, expect } from "vitest"
 import { readFileSync } from "node:fs"
-import { KEYWORDS } from "../../js/language.js"
+import { KEYWORDS } from "../../js/language.ts"
 import { KITS, PARTS, SETTINGS, SOUNDS, TYPES } from "../../js/vocab.ts"
 
 const grammar = JSON.parse(

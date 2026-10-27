@@ -2,7 +2,7 @@
    yet. Until it is, it has to read every real cell the way language.js does: the same
    names declared, the same plays, the same brace mistakes. */
 import { describe, it, expect } from "vitest"
-import { parseCell } from "../../js/language.js"
+import { parseCell } from "../../js/language.ts"
 import { Lexer } from "../../js/lexer.ts"
 import { Parser } from "../../js/parser.ts"
 import { GROUPS, realCells } from "./real-cells.js"

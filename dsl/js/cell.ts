@@ -1,101 +1,55 @@
-/* The music-cell language. A cell is a script, read top to bottom. Every line starts by
-   saying what it is:
-     set tempo 90             a setting: set, then the setting and its value (set time
-                              7 over 8, set key D, set mode dorian), from its line to the
-                              end of the cell and into later cells. Only at the top.
-     with octave 2 { }        settings for a block only, restored at its }: with key E,
-                              mode minor { ... }. At the top it holds statements; inside a
-                              play or a pattern it is a block, played with those settings.
-     steps pair = ^-x-        a name, with its type in front. There are four types:
-     notes riff = E---F# E-E--  steps (a drum's hits), notes, chords, and pattern (lines
-     chords verse = Am E7|G D   in braces that play together). A name only ever holds
-     pattern groove = { }       its type, and only goes where that type goes.
-     kick: x--x---            inside braces, an instrument and what it plays. The colon
-     guitar: E---F# E-E--     only ever means this. A drum takes steps (or beats: 1 2& 3).
-     piano: chords Am F|C G   A pitched instrument takes notes, drawn on the same steps
-                              with the note where a drum has its x (two notes never
-                              touch: F# E), or a chart of chords with chords in front.
-                              A note is a letter (E2) or a degree of the key, counted
-                              on the major scale of its root (1 2 b3, 1' an octave up).
-                              Lines play together, so two drums on
-                              one step is two lines. Each instrument has one line in a
-                              block; to layer it, its line takes a block of its own.
-     play { }                 plays what's after it, a pattern or one line, and gives one
-                              output with a player and a drum grid. Nothing plays unless
-                              it's inside a play.
-     bar 2 { }                what plays in bar 2 of what it's in, and nowhere else. One
-                              line needs no braces (bar 2 crash: 1), and bar 3 to 4 { }
-                              takes a run of bars.
-     every 3 steps { }        what plays at that pace: inside, one step lasts 3 steps. A step
-                              is a 16th note otherwise. every 1/3 beats { } is triplets.
-   A pattern is a loop: everything in it repeats until the pattern ends, and without a
-   length it lasts until its lines line up again. A play is a timeline: its own lines play
-   once, and a pattern on a line of its own repeats until the play ends. Braces hold what
-   plays together and brackets what plays in order: (intro { snare: ---- dddd } 2 bars verse)
-   plays them one after another, and two things on one line outside brackets are a
-   mistake. A length goes in front of what it measures,
-   and a pattern given a length repeats for that long: pattern groove = 3 bars {,
-   play 6 bars groove. Anything that repeats has to fit what it's in a whole number of
-   times, and a value written as the same figure twice is a mistake (x-x- is x-), since
-   the pattern repeats it. A line that starts with | continues the line above.
-   On a drum's line a length measures rest or steps, in steps, beats or bars, and on a
-   pitched instrument's it holds one note; commas separate the line's parts:
-   2 beats rest, dd, 1 beats rest · 3 beats C2, 1 beats rest. The length ... is
-   what's left of the block the line is in: -xx, ...rest plays those hits once each time
-   through and then nothing, -xx, ...x- plays them and then x- to the end, and either
-   way the line has no length of its own, so the other lines decide how long the block
-   is. Lengths are always
-   plural (1 bars), so bars only ever says how long and bar only ever says which.
-   Every number is arithmetic: (1+2) bars groove, set tempo 60*2. So * and / only ever do
-   arithmetic, and a time is two numbers (7 over 8), not a fraction.
-   { } is a block: what's in it evaluates to one value, played together. Usually that's a
-   pattern; after a drum's colon it's that drum's steps, one layer a line, which repeat
-   until they line up again, and after a pitched instrument's colon it's what that
-   instrument plays at once. In a block, where two lines hit the same drum at the same
-   moment, the lower line wins, and a rest never does.
-   What's named inside braces stays inside, and a with's settings stay inside its block.
-   // starts a comment. Blank lines and indentation mean nothing. Settings set at the top,
-   and names, carry on into later cells.
-   Pure (no audio), so the notebook can also use it to pass state from cell to cell. */
-import { SETTINGS } from "./vocab.ts"
-import { TPQ, fmt, lengthPrefix, singularLength } from "./time.ts"
-import { checkBars, classifyDecl, defineBlock, defineWord, patternHint, readDecl } from "./declare.ts"
-import { classify, EVERY_RE, PLACE_RE, TYPED_RE } from "./lines.ts"
-import { checkStickings, outputCtx } from "./clips.ts"
+/* A cell, read and played: parseCell. It reads the cell's lines in order: settings at the
+   top, names, withs and plays. Each play is evaluated into a clip (eval.ts), and the clips
+   are put back to back into one timeline, with the blocks the grid and the sheet draw. */
+import {
+  checkStickings,
+  outputCtx,
+  type HitEvent,
+  type SoundEvent,
+  type Span,
+  type Timed,
+} from "./clips.ts"
+import {
+  checkBars,
+  classifyDecl,
+  defineBlock,
+  defineWord,
+  patternHint,
+  readDecl,
+} from "./declare.ts"
 import { blockClip, checkSection } from "./eval.ts"
-import { openParens } from "./sequence.ts"
-import { MAX_SECONDS } from "./time.ts"
-import { cloneState, describe, initialState } from "./state.ts"
-import { applySetting, readWithHeader, setInBlock, WITH_HELP, withState } from "./settings.ts"
+import { classify, EVERY_RE, PLACE_RE, TYPED_RE } from "./lines.ts"
 import { Scope } from "./resolve.ts"
+import { openParens } from "./sequence.ts"
+import { applySetting, readWithHeader, setInBlock, WITH_HELP, withState } from "./settings.ts"
+import { cloneState, describe, initialState, type Line, type State } from "./state.ts"
+import { fmt, lengthPrefix, MAX_SECONDS, singularLength, TPQ } from "./time.ts"
 import { joinOf, ofShown } from "./values/notes.ts"
+import { SETTINGS } from "./vocab.ts"
 
-// Time, ticks and lengths are in time.ts; these are re-exported for code that imports them
-// from here.
-export { TPQ, barQuarters, lastCount, timeLabel } from "./time.ts"
-export { initialState } from "./state.ts"
-export { keyName } from "./settings.ts"
-// The language's words are listed once, in vocab.ts. These are re-exported for code that
-// imports them from here.
-export {
-  DRUMS,
-  KEYWORDS,
-  KITS,
-  LANES,
-  MODES,
-  PARTS,
-  PITCHED,
-  SETTINGS,
-  SOUNDS,
-  SPLIT,
-  TYPES,
-  UNITS,
-  VARIATIONS,
-} from "./vocab.ts"
+// A block read from the cell's lines: its lines, the index of its last line, what follows
+// its closing }, and whether a line in it was left out as a mistake
+type ReadBlock = { body: Line[]; end: number; tail: string; dropped: boolean }
+// What one play plays
+type Output = {
+  line: number
+  label: string
+  durSec: number
+  totalSec: number
+  events: SoundEvent[]
+  chords: SoundEvent[]
+  notes: SoundEvent[]
+  drumEvents: HitEvent[]
+  blocks: ReturnType<typeof gridBlocks>
+}
 
 // Grid cells per quarter note: the coarsest that still shows every hit, and where every
 // note stops.
-function gridResolution(drumEvents, noteEvents, barTicks) {
+function gridResolution(
+  drumEvents: HitEvent[],
+  noteEvents: SoundEvent[],
+  barTicks: number,
+): number {
   const ticks = [
     ...drumEvents.filter((e) => !e.hidden).map((e) => e.tick),
     ...noteEvents.flatMap((e) => [e.tick, e.tick + e.ticks]),
@@ -109,8 +63,13 @@ function gridResolution(drumEvents, noteEvents, barTicks) {
 
 // Joins neighbouring spans in the same meter, then gives each its drum hits, notes and
 // chords as ticks from its start — the shape the grid and the sheet draw.
-function gridBlocks(spans, drumEvents, noteEvents, chordEvents = []) {
-  const merged = []
+function gridBlocks(
+  spans: Span[],
+  drumEvents: HitEvent[],
+  noteEvents: SoundEvent[],
+  chordEvents: SoundEvent[] = [],
+) {
+  const merged: Span[] = []
   for (const s of [...spans].sort((a, b) => a.startSec - b.startSec)) {
     const last = merged[merged.length - 1]
     if (
@@ -128,13 +87,13 @@ function gridBlocks(spans, drumEvents, noteEvents, chordEvents = []) {
     const inside = drumEvents
       .filter((e) => e.secStart >= s.startSec - 1e-9 && e.secStart < s.startSec + s.durSec - 1e-9)
       .map((e) => ({ ...e, tick: Math.round((e.secStart - s.startSec) / s.secPerTick) }))
-    const within = (events) =>
+    const within = (events: SoundEvent[]) =>
       events
         .filter((e) => e.secStart >= s.startSec - 1e-9 && e.secStart < s.startSec + s.durSec - 1e-9)
         .map((e) => ({
           ...e,
           tick: Math.round((e.secStart - s.startSec) / s.secPerTick),
-          ticks: Math.round(e.secDur / s.secPerTick),
+          ticks: Math.round(e.secDur! / s.secPerTick),
         }))
     const notes = within(noteEvents)
     const barSec = s.barTicks * s.secPerTick
@@ -158,19 +117,22 @@ function gridBlocks(spans, drumEvents, noteEvents, chordEvents = []) {
 // Parses one music cell. `inherited` is the state left by the cells above (settings and
 // definitions); the result's `state` is what this cell passes on. Each play gives one
 // output.
-export function parseCell(src, inherited = initialState()) {
-  const errors = []
-  const err = (line, said) => {
+export function parseCell(src: unknown, inherited: State = initialState()) {
+  const errors: { line: number; msg: string }[] = []
+  const err = (line: number, said: string) => {
     const msg = ofShown(said)
     if (!errors.some((e) => e.line === line && e.msg === msg)) errors.push({ line, msg })
   }
   const state = Scope.forCell(inherited, cloneState)
   const setHere = new Map() // setting name → the line in this cell that set it
-  const outputs = []
-  let transposeLine = null
+  const outputs: Output[] = []
+  let transposeLine: number | null = null
 
   const raws = String(src || "").split("\n")
-  const lines = raws.map((raw, i) => ({ ln: i + 1, text: raw.replace(/\/\/.*$/, "").trim() }))
+  const lines: Line[] = raws.map((raw, i) => ({
+    ln: i + 1,
+    text: raw.replace(/\/\/.*$/, "").trim(),
+  }))
   // A line that starts with | continues the value of the line above it, at a bar line:
   // notes flats = A3-Ab3-G3-Gb3-, then |F3-E3-Eb3-D3- on the next line. A comment-only line
   // between them is passed over; a blank line, an opening or closing brace end what's above.
@@ -188,7 +150,7 @@ export function parseCell(src, inherited = initialState()) {
   let anonCount = 0
   // A with that transposes, in a block or around one: the line it's on, for the check that
   // something pitched plays
-  const noteTranspose = (body) => {
+  const noteTranspose = (body: Line[]) => {
     for (const l of body) {
       if (/\bwith\b[^{]*\btranspose\s+-?\(?[1-9]/.test(l.text)) transposeLine ??= l.ln
       for (const b of Object.values(l.blocks || {})) noteTranspose(b.lines)
@@ -197,9 +159,9 @@ export function parseCell(src, inherited = initialState()) {
 
   // Reads the statements in `lines`, the cell's or a with's at the top of it, into `state`.
   // `inWith` is whether they're a with's, whose settings go on the with.
-  const run = (lines, state, inWith) => {
+  const run = (lines: Line[], state: State, inWith: boolean): void => {
     // Skips to the } that closes a block opened on line `at`, counting the blocks inside it.
-    const skipBlock = (at) => {
+    const skipBlock = (at: number) => {
       let depth = 0
       for (let i = at; i < lines.length; i++) {
         for (const c of lines[i].text) {
@@ -211,7 +173,7 @@ export function parseCell(src, inherited = initialState()) {
     }
     // For a line that's a mistake: if it opened a block, skip the block's lines too, so
     // one mistake gives one message.
-    const skipIfOpen = (i) => (/\{$/.test(lines[i].text) ? skipBlock(i) : i)
+    const skipIfOpen = (i: number) => (/\{$/.test(lines[i].text) ? skipBlock(i) : i)
     // Reads a { ... } block that starts with `rest` (the text after the {) on line `at`.
     // Returns its lines, the index of its last line, what follows the closing }, and whether
     // a line was left out as a mistake.
@@ -219,18 +181,18 @@ export function parseCell(src, inherited = initialState()) {
     // on its line it becomes {#1}, and the line keeps the block in `blocks`.
     // With `oneLine`, reads a single line instead (the rest of a play), through the line
     // where its last block closes.
-    const readBlock = (at, rest, what, oneLine = false) => {
-      const body = []
+    const readBlock = (at: number, rest: string, what: string, oneLine = false): ReadBlock => {
+      const body: Line[] = []
       let i = at
       let text = rest
-      let cur = null // the line being read: { ln, text, blocks }
+      let cur: Line | null = null // the line being read: { ln, text, blocks }
       let dropped = false // whether a line was left out as a mistake
       const flush = () => {
         const t = cur ? cur.text.replace(/^\s+|\s+$/g, "") : ""
         if (t && /^play(\s|$)/.test(t)) {
-          err(cur.ln, "play goes at the top, not inside braces")
+          err(cur!.ln, "play goes at the top, not inside braces")
           dropped = true
-        } else if (t) body.push({ ...cur, text: t })
+        } else if (t) body.push({ ...cur!, text: t })
         cur = null
       }
       for (;;) {
@@ -267,7 +229,11 @@ export function parseCell(src, inherited = initialState()) {
         // A block inside this one
         const head = cur.text.trim()
         // What to call it if it isn't closed: the name it's given, when that's what this is
-        const inner = readBlock(i, text.trim(), oneLine && what && what !== "play" ? what : "This {")
+        const inner = readBlock(
+          i,
+          text.trim(),
+          oneLine && what && what !== "play" ? what : "This {",
+        )
         if (inner.end >= lines.length) {
           flush()
           return { body, end: inner.end, tail: "", dropped }
@@ -298,7 +264,7 @@ export function parseCell(src, inherited = initialState()) {
       }
     }
     // Nothing follows a closing brace. `front(n)` is the right way to write a length there.
-    const checkTail = (tail, ln, front) => {
+    const checkTail = (tail: string, ln: number, front: (n: string) => string) => {
       if (!tail) return true
       const after = /^(\S+)\s+bars$/.exec(tail)
       err(
@@ -350,7 +316,7 @@ export function parseCell(src, inherited = initialState()) {
           err(ln, WITH_HELP)
           continue
         }
-        let end = null // the line and column of the } that closes it
+        let end: { j: number; c: number } | null = null // the line and column of the } that closes it
         for (let j = i, depth = 0; j < lines.length && !end; j++) {
           const t = lines[j].text
           for (let c = j === i ? open : 0; c < t.length && !end; c++) {
@@ -405,9 +371,9 @@ export function parseCell(src, inherited = initialState()) {
           )
           continue
         }
-        let arg = [{ ln, text: rest }]
+        let arg: Line[] = [{ ln, text: rest }]
         let label = text
-        const lengthAfter = (tail) => /^\S+\s+bars$/.test(tail)
+        const lengthAfter = (tail: string) => /^\S+\s+bars$/.test(tail)
         if (rest.startsWith("{")) {
           const block = readBlock(i, rest.slice(1).trim(), "play")
           if (block.end > i) label = text.replace(/\{.*$/, "{ … }")
@@ -422,7 +388,8 @@ export function parseCell(src, inherited = initialState()) {
               `What plays in order goes in brackets: play ({ ... } ${block.tail.replace(/\{.*$/, "{ ... }")})`,
             )
             ok = false
-            if (/\{/.test(block.tail)) block.end = readBlock(block.end, block.tail, "play", true).end
+            if (/\{/.test(block.tail))
+              block.end = readBlock(block.end, block.tail, "play", true).end
           } else if (
             !checkTail(block.tail, lines[block.end]?.ln ?? ln, (n) => `play ${n} bars { ... }`)
           ) {
@@ -435,7 +402,12 @@ export function parseCell(src, inherited = initialState()) {
           const line = readBlock(i, rest, "play", true)
           if (line.end > i) {
             const size = bars ? `${fmt(bars)} bars ` : ""
-            label = `play ${size}${line.body[0]?.text.replace(/\{#\d+\}/g, "{ … }").replace(/\s+/g, " ").trim() ?? ""}`
+            label = `play ${size}${
+              line.body[0]?.text
+                .replace(/\{#\d+\}/g, "{ … }")
+                .replace(/\s+/g, " ")
+                .trim() ?? ""
+            }`
           }
           i = line.end
           arg = line.body
@@ -453,14 +425,14 @@ export function parseCell(src, inherited = initialState()) {
             durSec: out.durSec,
             totalSec: out.durSec,
             events: out.events,
-            chords: out.events.filter((e) => e.chord),
-            notes: out.events.filter((e) => e.note),
+            chords: out.events.filter((e) => "chord" in e),
+            notes: out.events.filter((e) => "note" in e),
             drumEvents: out.drumEvents,
             blocks: gridBlocks(
               out.spans,
               out.drumEvents,
-              out.events.filter((e) => e.note),
-              out.events.filter((e) => e.chord),
+              out.events.filter((e) => "note" in e),
+              out.events.filter((e) => "chord" in e),
             ),
           })
         }
@@ -469,7 +441,7 @@ export function parseCell(src, inherited = initialState()) {
 
       // steps pair = ^-x-, chords verse = Am F, pattern groove = 3 bars { ... }: a name.
       // Read here because a pattern's braces can run over several lines.
-      let decl = readDecl(text)
+      let decl: ReturnType<typeof readDecl> = readDecl(text)
       // pattern groove { without its =: said once, and still named, so nothing else breaks
       const noEquals = !decl && /^pattern\s+([A-Za-z][A-Za-z0-9]*)\s+(.+)$/.exec(text)
       if (noEquals) {
@@ -477,7 +449,7 @@ export function parseCell(src, inherited = initialState()) {
         decl = { type: "pattern", name: noEquals[1], value: noEquals[2].trim() }
       }
       if (decl) {
-        let blocks = null
+        let blocks: Line["blocks"] = null
         if (decl.value.includes("{") || openParens(decl.value) > 0) {
           const read = readBlock(i, decl.value, decl.name, true)
           i = read.end
@@ -549,7 +521,6 @@ export function parseCell(src, inherited = initialState()) {
         err(ln, `An instrument's line goes inside braces: in a pattern, or play { ${text} }`)
       } else err(ln, `Nothing plays this line. Write play ${text}`)
     }
-
   }
   run(lines, state, false)
 
@@ -579,11 +550,11 @@ export function parseCell(src, inherited = initialState()) {
   // event's tick counts from the start of the block it plays in, as the blocks' own events
   // do; a pattern's events count from the pattern, wherever it falls in the block.
   let t = 0
-  const events = []
-  const drumEvents = []
-  const blocks = []
+  const events: SoundEvent[] = []
+  const drumEvents: HitEvent[] = []
+  const blocks: Output["blocks"] = []
   for (const o of outputs) {
-    const place = (e) => {
+    const place = <E extends Timed & { tick: number }>(e: E): E => {
       const b = o.blocks.find(
         (b) => e.secStart >= b.startSec - 1e-9 && e.secStart < b.startSec + b.durSec - 1e-9,
       )
@@ -604,8 +575,8 @@ export function parseCell(src, inherited = initialState()) {
     outputs,
     blocks,
     events,
-    chords: events.filter((e) => e.chord),
-    notes: events.filter((e) => e.note),
+    chords: events.filter((e) => "chord" in e),
+    notes: events.filter((e) => "note" in e),
     drumEvents,
     totalSec: t,
     errors,
