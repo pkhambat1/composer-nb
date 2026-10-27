@@ -3042,8 +3042,9 @@ const setInBlock = (l) => `Inside a block, settings go on a with: with ${l.name}
 
 // Reads a block's lines in order, so each one sees the names given before it. Names are
 // defined in `st`, and each line that plays keeps the state as it was there, in `l.st`.
-// `named` is called with each pattern that gets a name. A block's lines play together, so a
-// with on a line of its own can't set its own time, tempo or swing.
+// `named` is called with each pattern that gets a name. A block's lines play together, so
+// a with on a line of its own that sets its own time, tempo or swing has to be the only
+// line that plays.
 function readLines(lines, st, err, named) {
   const read = []
   for (const line of lines) {
@@ -3051,15 +3052,6 @@ function readLines(lines, st, err, named) {
     if (!l) continue
     read.push(l)
     if (PLAYS.includes(l.kind)) l.st = cloneState(st)
-    const own = l.kind === "sequence" && l.items[0].with && pacing(l.items[0].with)
-    if (own) {
-      err(
-        l.ln,
-        `The lines of a play or a pattern play together, so they share one ${own.name}. Put the with around the whole play, ` +
-          `with ${own.name} ${own.value} { play ... }, or on a part that plays in order: ( with ${own.name} ${own.value} { ... } )`,
-      )
-      read.pop()
-    }
     if (l.kind === "setting") err(l.ln, setInBlock(l))
     else if (l.kind === "word") defineWord(l.type, l.name, l.value, l.ln, st, err, l.blocks)
     else if (l.kind === "blockdef") {
@@ -3067,7 +3059,17 @@ function readLines(lines, st, err, named) {
       if (sec && named) named(sec)
     }
   }
-  return read
+  if (read.filter((l) => PLAYS.includes(l.kind)).length < 2) return read
+  return read.filter((l) => {
+    const own = l.kind === "sequence" && l.items[0].with && pacing(l.items[0].with)
+    if (!own) return true
+    err(
+      l.ln,
+      `The lines of a play or a pattern play together, so they share one ${own.name}. Put the with around the whole play, ` +
+        `with ${own.name} ${own.value} { play ... }, or on a part that plays in order: ( with ${own.name} ${own.value} { ... } )`,
+    )
+    return false
+  })
 }
 
 // What something that repeats is called when it doesn't fit.

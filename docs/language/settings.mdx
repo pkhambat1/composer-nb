@@ -122,7 +122,7 @@ play (
 
 The bass plays an octave below the chart, and its figure repeats under it. A pattern is evaluated where it is played, so `prog` plays in E and then in G.
 
-`time`, `tempo` and `swing` go on a `with` around a whole play, or on a part that plays in order. Lines that sound together share one moment, and so one tempo: a `with tempo` on a line of its own in a play or a pattern is an error, and so is a pattern that changes the tempo played with other lines.
+`time`, `tempo` and `swing` go on a `with` around a whole play, or on a part that plays in order. Lines that sound together share one moment, and so one tempo: a `with tempo` beside other lines in a play or a pattern is an error, and so is a pattern that changes the tempo played with other lines. A `with` that holds everything a pattern plays can set its tempo, and the pattern then plays at it wherever it plays in order: `pattern tag = with time 6 over 4 { ... }`.
 
 <Cell>
 

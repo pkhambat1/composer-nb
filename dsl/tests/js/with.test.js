@@ -142,6 +142,13 @@ describe("with", () => {
 
   it("sets time, tempo and swing around a whole play, or on a part in order", () => {
     expect(clean("with tempo 60 {\n  play kick: x---\n}").outputs[0].durSec).toBe(1)
+    // or around everything a play or a pattern plays, with nothing beside it
+    expect(clean("play with tempo 60 { kick: x--- }").outputs[0].durSec).toBe(1)
+    const tag = clean("pattern tag = with time 6 over 4 {\n  piano: chords I\n  hat: x---\n}\nplay (tag piano: chords V)")
+    expect(tag.outputs[0].blocks.map((b) => [b.time, b.bars])).toEqual([
+      ["6 over 4", 1],
+      ["4 over 4", 1],
+    ])
     const p = clean("play (\n  with tempo 60 { kick: x--- }\n  kick: x---\n)")
     expect(p.outputs[0].durSec).toBe(1.5)
     expect(p.outputs[0].blocks.map((b) => b.tempo)).toEqual([60, 120])
@@ -157,7 +164,6 @@ describe("with", () => {
       "with tempo 60 { play ... }, or on a part that plays in order: ( with tempo 60 { ... } )"
     expect(firstError("play {\n  kick: x---\n  with tempo 60 { snare: ---- x--- }\n}")).toBe(rule)
     expect(firstError("pattern pp = {\n  kick: x---\n  with tempo 60 { snare: ---- x--- }\n}\nplay pp")).toBe(rule)
-    expect(firstError("play with tempo 60 { kick: x--- }")).toBe(rule)
     expect(firstError("play {\n  with swing 67 { ride: x- }\n  kick: 1 3\n}")).toMatch(/so they share one swing/)
     // nor can a group that changes it, played with other lines
     expect(firstError("pattern slow = (with tempo 60 { kick: x--- })\nplay {\n  slow\n  snare: ---- x---\n}")).toBe(
