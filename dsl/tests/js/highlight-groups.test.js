@@ -36,7 +36,7 @@ describe("lines that have no mistake", () => {
     "play {\n  every 2 steps (a b)\n}",
     // a group over several lines, with blocks and lines of their own in it
     "play (\n  { piano: C4--- }\n  piano: D4---\n  verse\n)",
-    "play (chorus { set key Am\n  bridge\n} chorus)",
+    "play (chorus with key A, mode minor {\n  bridge\n} chorus)",
     // then is a name like any other
     "pattern then = { kick: x- }",
   ]
@@ -154,5 +154,43 @@ describe("whitespace", () => {
           .join("\n"),
       ).toBe(src)
     }
+  })
+})
+
+describe("settings, and with", () => {
+  const colours = (src) => parts(src).filter((p) => p.s.trim()).map((p) => [p.s, p.c])
+  it("paints with, its settings and its block", () => {
+    expect(colours("with key E, mode minor {")).toEqual([
+      ["with", "tk-directive-key"],
+      ["key", "tk-directive-key"],
+      ["E", "tk-directive-val"],
+      [",", "tk-punct"],
+      ["mode", "tk-directive-key"],
+      ["minor", "tk-directive-val"],
+      ["{", "tk-punct"],
+    ])
+    const clean = [
+      "with key E, mode minor {\n  play {\n    piano: chords verse\n    with octave 2 { bass: 1---5--- }\n  }\n}",
+      "play (\n  with key E { piano: chords prog }\n  with key G { piano: chords prog }\n)",
+      "play (with key E { piano: chords prog } with key G { piano: chords prog })",
+      "play {\n  bar 2 with octave 5 { piano: 1--- }\n}",
+      "with tempo 60*2, time 7 over 8, guitar.electric muted {\n  play kick: x\n}",
+    ]
+    for (const src of clean) expect(marked(src), src).toEqual([])
+  })
+
+  it("paints a key that isn't a note, and a mode that isn't one, as mistakes", () => {
+    expect(marked("set key E\nset mode minor\nset mode lydian")).toEqual([])
+    expect(marked("set key Em")).toEqual(["Em"])
+    expect(marked("set key D dorian")).toEqual(["D dorian"])
+    expect(marked("set mode aeolian")).toEqual(["aeolian"])
+    expect(marked("with mode ionian { play kick: x }")).toEqual(["ionian"])
+  })
+
+  it("paints set inside braces, where settings go on a with", () => {
+    expect(painted("set octave 2", "set")).toEqual(["tk-directive-key"])
+    expect(painted("play {\n  set octave 2\n  bass: 1---\n}", "set")).toEqual(["tk-error"])
+    expect(painted("with key E {\n  set mode minor\n}", "set")).toEqual(["tk-error"])
+    expect(painted("play { set octave 2 }", "set")).toEqual(["tk-error"])
   })
 })

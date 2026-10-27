@@ -42,7 +42,8 @@ A dorian groove: a named bass line in degrees, a chart by numeral continued on a
 
 ```composer-nb
 set tempo 96
-set key D dorian
+set key D
+set mode dorian
 
 notes riff = 3 beats 1, b3-4-|5---b7---6---4---
 
@@ -54,11 +55,11 @@ pattern groove = {
 
 pattern verse = {
   groove
-  set octave 2
-  bass: riff
-  set octave 4
-  piano: chords i|IV|i|bVII
-  | i|IV|bVII|IV
+  with octave 2 { bass: riff }
+  with octave 4 {
+    piano: chords i|IV|i|bVII
+    | i|IV|bVII|IV
+  }
 }
 
 play (2 bars groove 8 bars verse)

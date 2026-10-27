@@ -50,8 +50,9 @@ def test_tom_is_only_its_three_drums():
     assert texts(cell + "fl") == []
 
 
-def test_top_of_a_cell_offers_set_types_and_play():
+def test_top_of_a_cell_offers_set_types_play_and_with():
     assert texts("%%music\np") == ["pattern ", "play "]
+    assert texts("%%music\nw") == ["with "]
     assert texts("%%music\ns") == ["set ", "steps ", "sticking "]
     assert texts("%%music\nn") == ["notes "]
     assert texts("%%music\nc") == ["chords "]
@@ -65,7 +66,8 @@ def test_top_of_a_cell_offers_set_types_and_play():
 
 def test_inside_braces_offers_instruments_and_patterns():
     cell = "%%music\npattern groove = { kick: x--x }\nplay {\n  "
-    assert {"kick: ", "ride.bell: ", "piano: ", "groove", "set ", "steps "} <= set(texts(cell))
+    assert {"kick: ", "ride.bell: ", "piano: ", "groove", "with ", "steps "} <= set(texts(cell))
+    assert "set " not in texts(cell)  # inside braces, settings go on a with
     assert "chords: " not in texts(cell)  # chords go on their instrument's line
     assert texts(cell + "ri") == ["ride: ", "ride.bell: "]
     assert texts(cell + "gu") == ["guitar: ", "guitar.electric: "]
@@ -80,9 +82,10 @@ def test_settings_offer_their_values():
     assert texts("%%music\nset kit s") == ["synth"]
     assert texts("%%music\nset time 7 ") == ["over "]
     assert texts("%%music\nset tempo ") == []
-    assert texts("%%music\nset key D ") == completer.MODES
-    assert texts("%%music\nset key F# m") == ["mixolydian"]
+    assert texts("%%music\nset mode ") == completer.MODES
+    assert texts("%%music\nset mode m") == ["major", "minor", "mixolydian"]
     assert texts("%%music\nset key ") == []
+    assert texts("%%music\nset key D ") == []  # a key is a note, and its mode a setting of its own
     assert texts("%%music\nset guitar.electric ") == ["clean", "muted"]
 
 
@@ -181,10 +184,10 @@ def test_a_line_plays_one_thing_and_a_group_plays_them_in_order():
     assert texts(cell + "play {\n  (groove ") == ["groove"]
     assert texts(cell + "play {\n  bar 2 (groove ") == ["groove"]
     assert texts(cell + "play {\n  every 2 steps (groove ") == ["groove"]
-    # a group starts with what plays: names, blocks and lines
-    assert texts(cell + "play (") == ["groove", *[p + ": " for p in completer.PARTS]]
+    # a group starts with what plays: names, blocks, lines and withs
+    assert texts(cell + "play (") == ["groove", *[p + ": " for p in completer.PARTS], "with "]
     # a group over several lines goes on with each line
-    assert texts(cell + "play (\n  groove\n  ") == ["groove", *[p + ": " for p in completer.PARTS]]
+    assert texts(cell + "play (\n  groove\n  ") == ["groove", *[p + ": " for p in completer.PARTS], "with "]
     assert texts(cell + "play (\n  groove ") == ["groove"]
 
 
@@ -317,3 +320,20 @@ def test_ipython_still_completes_the_magic_name(shell):
 
 def test_python_cells_are_left_alone(shell):
     assert ("pri", "print") in kernel_completions(shell, "pri")
+
+
+def test_with_offers_settings_then_their_values():
+    assert texts("%%music\nwith ") == texts("%%music\nset ")
+    assert texts("%%music\nwith key E, ") == texts("%%music\nset ")
+    assert texts("%%music\nwith key E, mode ") == completer.MODES
+    assert texts("%%music\nwith octave 2, k") == ["key ", "kit "]
+    assert texts("%%music\nplay {\n  with mode d") == ["dorian"]
+
+
+def test_a_with_at_the_top_holds_statements_without_set():
+    cell = "%%music\nwith key E {\n  "
+    assert {"play ", "with ", "chords "} <= set(texts(cell))
+    assert "set " not in texts(cell)
+    assert "kick: " not in texts(cell)
+    # a play inside it holds lines, as any play does
+    assert "kick: " in texts(cell + "play {\n    ")

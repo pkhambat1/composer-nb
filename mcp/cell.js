@@ -23,6 +23,7 @@ export function settingsOf(state) {
     tempo: state.tempo,
     swing: state.swing,
     key: state.key,
+    mode: state.mode,
     transpose: state.transpose,
     octave: state.octave,
     kit: state.kit,
@@ -105,7 +106,7 @@ const plural = (n, word) => `${n} ${word}${n === 1 ? "" : "s"}`
 const secs = (s) => `${Math.round(s * 10) / 10} s`
 
 function blockHead(b) {
-  return `time ${b.time} · tempo ${b.tempo} · key ${b.key} · ${plural(b.bars, "bar")} · counting ${countingOf(b)}`
+  return `time ${b.time} · tempo ${b.tempo} · key ${b.key} ${b.mode} · ${plural(b.bars, "bar")} · counting ${countingOf(b)}`
 }
 
 // What came of parsing `source`: a report in text, for the assistant to read.

@@ -42,7 +42,7 @@ A 6/9 chord is written as on a lead sheet, `C6/9` or `Cm6/9`. Its `/` is part of
 
 ## Roman numerals
 
-Uppercase is a major chord and lowercase a minor one, on that degree of the current [`key`](/language/settings#key). Degrees count on the major scale of the key's root, whatever the key's mode, as [degrees in notes](/language/notes#degrees) do. A `b` or `#` in front moves the root a semitone, so `bVII` is a whole step below the root in every key: under `set key Am` the natural minor's chords are `i bIII iv v bVI bVII`, and `II` in `E phrygian` is `bII`. The case gives the third, and a quality follows the numeral as it follows a chord's root: `V7`, `ii7`, `IVmaj7`, `viidim`, `viidim7`, `viim7b5`.
+Uppercase is a major chord and lowercase a minor one, on that degree of the current [`key`](/language/settings#key-and-mode). Degrees count on the major scale of the key's root, whatever the key's mode, as [degrees in notes](/language/notes#degrees) do. A `b` or `#` in front moves the root a semitone, so `bVII` is a whole step below the root in every key: in A minor the natural minor's chords are `i bIII iv v bVI bVII`, and `II` in E phrygian is `bII`. The case gives the third, and a quality follows the numeral as it follows a chord's root: `V7`, `ii7`, `IVmaj7`, `viidim`, `viidim7`, `viim7b5`.
 
 <Cell>
 
@@ -58,7 +58,8 @@ In C, this plays `C Am`, `F G7`, `Bb F`, `Dm7 Bdim`.
 <Cell>
 
 ```composer-nb
-set key Am
+set key A
+set mode minor
 play piano: chords i bVI|bVII V7
 ```
 

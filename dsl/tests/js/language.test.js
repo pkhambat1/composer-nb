@@ -402,7 +402,7 @@ describe("nothing floats", () => {
   it("needs something after play", () => {
     expect(firstError("play")).toMatch(/play needs something after it/)
     expect(firstError("play { }")).toMatch(/nothing in its braces/)
-    expect(firstError("play {\n  set tempo 90\n}")).toMatch(/Nothing to play in this play/)
+    expect(firstError("play {\n  steps pair = x-\n}")).toMatch(/Nothing to play in this play/)
   })
 })
 
@@ -593,18 +593,15 @@ describe("patterns", () => {
     ])
   })
 
-  it("keep what's set inside braces inside", () => {
-    expect(
-      durations("pattern aa = { piano: chords C }\n" + play("set tempo 60", "aa") + "\nplay aa"),
-    ).toEqual([4, 2])
+  it("keep what a with sets to its block", () => {
+    expect(durations("pattern aa = { piano: chords C }\nwith tempo 60 { play aa }\nplay aa")).toEqual([4, 2])
   })
 
   it("use the settings in effect where they're played", () => {
     expect(durations("pattern aa = { piano: chords C }\nplay aa\nset tempo 60\nplay aa")).toEqual([2, 4])
+    // a part that plays in order can have its own tempo, and a pattern can hold one
     expect(
-      durations(
-        "pattern slow = {\n  set tempo 60\n  piano: chords C\n}\nplay piano: chords G\nplay slow",
-      ),
+      durations("pattern slow = (with tempo 60 { piano: chords C })\nplay piano: chords G\nplay slow"),
     ).toEqual([2, 4])
   })
 
@@ -616,7 +613,7 @@ describe("patterns", () => {
 
   it("draw a new grid where the time changes", () => {
     const p = parseSource(
-      "pattern aa = { kick: 1 }\npattern bb = {\n  set time 7 over 8\n  kick: 1\n}\nplay (aa bb)",
+      "pattern aa = { kick: 1 }\npattern bb = { kick: 1 }\nplay (aa with time 7 over 8 { bb })",
     )
     expect(p.outputs[0].blocks.map((b) => [b.time, b.bars])).toEqual([
       ["4 over 4", 1],
@@ -648,7 +645,7 @@ describe("patterns", () => {
       /"bb" isn't defined/,
     )
     expect(firstError("pattern aa = {\n  kick: 1\n  aa\n}")).toMatch(/a plays itself/)
-    expect(firstError("pattern aa = {\n  set tempo 90\n}")).toMatch(/a has nothing to play/)
+    expect(firstError("pattern aa = {\n  steps pair = x-\n}")).toMatch(/a has nothing to play/)
     expect(firstError("pattern aa = { kick: 1 }\npattern bb = { aa nope }")).toMatch(
       /"nope" isn't defined/,
     )
@@ -864,7 +861,7 @@ describe("what repeats has to fit", () => {
     )
     // A pattern at its own tempo is measured against the tempo of what it's in.
     const own = (tempo) =>
-      `pattern own = {\n  set tempo ${tempo}\n  kick: x---\n}\nplay {\n  1 bars own\n}`
+      `pattern own = (with tempo ${tempo} { kick: x--- })\nplay {\n  1 bars own\n}`
     expect(hits(parseSource(own(240)).outputs[0], "kick")).toHaveLength(8)
     expect(firstError(own(100))).toMatch(
       /own sets its own tempo, and doesn't fit 1 bar a whole number of times/,
@@ -933,8 +930,8 @@ describe("blocks without a name", () => {
     ).toEqual(sound("pattern hh = 2 bars {\n  kick: x-\n  snare: ----x---\n}\nplay hh"))
   })
 
-  it("keep what's set inside them to themselves", () => {
-    const p = parseSource("play {\n  {\n    set tempo 60\n    kick: x\n  }\n}\nplay kick: x")
+  it("keep a with's settings to themselves", () => {
+    const p = parseSource("play (\n  with tempo 60 {\n    kick: x\n  }\n)\nplay kick: x")
     expect(p.errors).toEqual([])
     expect(p.outputs.map((o) => o.durSec)).toEqual([0.25, 0.125])
   })
@@ -947,7 +944,7 @@ describe("blocks without a name", () => {
     expect(firstError("play {\n  {\n  }\n  kick: x\n}")).toMatch(
       /These braces have nothing in them/,
     )
-    expect(firstError("play {\n  { set tempo 90 }\n}")).toMatch(/Nothing to play in this pattern/)
+    expect(firstError("play {\n  { steps pair = x- }\n}")).toMatch(/Nothing to play in this pattern/)
     expect(anyError("play {\n  piano: chords { Am }\n}")).toMatch(
       /Chords play one at a time, so they can't be layered in a block/,
     )
@@ -1066,40 +1063,44 @@ describe("settings", () => {
   })
 
   it("carry on into the cells below, and say so", () => {
-    const above = parseSource("set tempo 90\nset key Am").state
+    const above = parseSource("set tempo 90\nset key A\nset mode minor").state
     const p = parseSource("play piano: chords i V", above)
     expect(p.chords.map((e) => e.label)).toEqual(["Am", "E"])
-    expect(p.fromAbove).toEqual(["tempo 90", "key Am"])
+    expect(p.fromAbove).toEqual(["tempo 90", "key A", "mode minor"])
   })
 
-  it("apply from their line down, so a block's lines can each have their own", () => {
+  it("go on a with inside a block, so a block's lines can each have their own", () => {
     const by = (src) =>
       Object.fromEntries(parseSource(src).notes.map((e) => [e.instrument, e.note.name]))
-    expect(by("play {\n  set octave 4\n  piano: 1---\n  set octave 2\n  bass: 1---\n}")).toEqual({
+    expect(by("play {\n  with octave 4 { piano: 1--- }\n  with octave 2 { bass: 1--- }\n}")).toEqual({
       piano: "C4",
       bass: "C2",
     })
-    expect(by("pattern aa = {\n  set key C\n  piano: 1---\n  set key E\n  bass: 1---\n}\nplay aa")).toEqual({
+    expect(by("pattern aa = {\n  piano: 1---\n  with key E { bass: 1--- }\n}\nplay aa")).toEqual({
       piano: "C3",
       bass: "E3",
     })
-    // a pattern plays with the settings where it's played, not ones set below it
-    expect(by("pattern up = { piano: 1--- }\nplay {\n  up\n  set key E\n  bass: 1---\n}")).toEqual({
+    // a pattern plays with the settings where it's played
+    expect(by("pattern up = { piano: 1--- }\nplay {\n  up\n  with key E { bass: 1--- }\n}")).toEqual({
       piano: "C3",
       bass: "E3",
     })
     // the header shows the key the block starts in
-    const b = parseSource("play {\n  set key G\n  piano: 1---\n  set key E\n  bass: 1---\n}").outputs[0].blocks[0]
+    const b = parseSource("play {\n  with key G { piano: 1--- }\n  with key E { bass: 1--- }\n}").outputs[0].blocks[0]
     expect(b.key).toBe("G")
   })
 
-  it("set a block's time, tempo and swing above its lines, which play together", () => {
+  it("are set only at the top: inside a block, they go on a with", () => {
     expect(firstError("play {\n  kick: x---\n  set tempo 60\n}")).toBe(
-      "set tempo goes above the lines it sets: they play together, so a block has one tempo",
+      "Inside a block, settings go on a with: with tempo 60 { ... }",
     )
-    expect(firstError("pattern pp = {\n  hat: x-\n  set time 3 over 4\n}\nplay pp")).toMatch(/so a block has one time/)
-    expect(firstError("play {\n  hat: x-\n  set swing 67\n}")).toMatch(/so a block has one swing/)
-    expect(durations("play {\n  set tempo 60\n  kick: 1\n}")).toEqual([4])
+    expect(firstError("pattern pp = {\n  set octave 2\n  bass: 1---\n}\nplay pp")).toBe(
+      "Inside a block, settings go on a with: with octave 2 { ... }",
+    )
+    expect(firstError("with key E {\n  set mode minor\n  play piano: 1---\n}")).toBe(
+      "Inside a block, settings go on a with: with mode minor { ... }",
+    )
+    expect(durations("set tempo 60\nplay kick: 1")).toEqual([4])
   })
 })
 
@@ -1818,7 +1819,7 @@ describe("chords", () => {
       "Dm7",
       "Bdim",
     ])
-    expect(labels("set key Am\nplay piano: chords V v")).toEqual(["E", "Em"])
+    expect(labels("set key A\nset mode minor\nplay piano: chords V v")).toEqual(["E", "Em"])
   })
 
   it("keep / in a chord's name, since its two sides aren't numbers", () => {
@@ -2054,7 +2055,7 @@ describe("notes", () => {
     expect(notes("set key A\nset octave 4\nplay piano: 1-2-b3-4-5-b6-7-1'-")).toEqual([
       "A4", "B4", "C5", "D5", "E5", "F5", "G#5", "A5",
     ])
-    expect(notes("set key Am\nset octave 4\nplay piano: b3-")).toEqual(notes("set key A\nset octave 4\nplay piano: b3-"))
+    expect(notes("set key A\nset mode minor\nset octave 4\nplay piano: b3-")).toEqual(notes("set key A\nset octave 4\nplay piano: b3-"))
     // ' after a degree is an octave up, before it an octave down
     expect(notes("set key C\nset octave 3\nplay bass: 1-'5-''1-1''-")).toEqual(["C3", "G2", "C1", "C5"])
     // letters and degrees can share a line
@@ -2176,49 +2177,75 @@ describe("key", () => {
     expect(p.errors).toEqual([])
     return p.outputs[0].chords.map((e) => e.chord.label).join(" ")
   }
-  it("reads a major key as its letter, a minor key with m, and a mode by name", () => {
+  it("reads numerals in each key and mode", () => {
     expect(labels("set key Bb\nplay piano: chords I IV V vi")).toBe("Bb Eb F Gm")
-    expect(labels("set key F#m\nplay piano: chords i iv V7 bVI")).toBe("F#m Bm C#7 D")
-    expect(labels("set key D dorian\nplay piano: chords i ii|bIII IV|v vidim|bVII")).toBe("Dm Em F G Am Bdim C")
-    expect(labels("set key G mixolydian\nplay piano: chords I bVII|IV v")).toBe("G F C Dm")
-    expect(labels("set key E phrygian\nplay piano: chords i bII|bIII")).toBe("Em F G")
-    expect(labels("set key F lydian\nplay piano: chords I II")).toBe("F G")
-    expect(labels("set key B locrian\nplay piano: chords idim bII")).toBe("Bdim C")
-    expect(labels("set key A aeolian\nplay piano: chords i bVII")).toBe("Am G")
+    expect(labels("set key F#\nset mode minor\nplay piano: chords i iv V7 bVI")).toBe("F#m Bm C#7 D")
+    expect(labels("set key D\nset mode dorian\nplay piano: chords i ii|bIII IV|v vidim|bVII")).toBe("Dm Em F G Am Bdim C")
+    expect(labels("set key G\nset mode mixolydian\nplay piano: chords I bVII|IV v")).toBe("G F C Dm")
+    expect(labels("set key E\nset mode phrygian\nplay piano: chords i bII|bIII")).toBe("Em F G")
+    expect(labels("set key F\nset mode lydian\nplay piano: chords I II")).toBe("F G")
+    expect(labels("set key B\nset mode locrian\nplay piano: chords idim bII")).toBe("Bdim C")
+    expect(labels("set key A\nset mode minor\nplay piano: chords i bVII")).toBe("Am G")
   })
   it("counts numerals on the major scale of the key's root, whatever its mode", () => {
     // as a scale is described against major: natural minor's chords are i bIII iv v bVI bVII
-    expect(labels("set key Am\nplay piano: chords i bIII|iv v|bVI bVII")).toBe("Am C Dm Em F G")
-    expect(labels("set key Am\nplay piano: chords III VII")).toBe("C# G#")
-    expect(labels("set key A mixolydian\nplay piano: chords bVII")).toBe("G")
+    expect(labels("set key A\nset mode minor\nplay piano: chords i bIII|iv v|bVI bVII")).toBe("Am C Dm Em F G")
+    expect(labels("set key A\nset mode minor\nplay piano: chords III VII")).toBe("C# G#")
+    expect(labels("set key A\nset mode mixolydian\nplay piano: chords bVII")).toBe("G")
   })
   it("names a numeral's root by its letter in the scale", () => {
-    expect(labels("set key Gm\nplay piano: chords i bVI|bVII")).toBe("Gm Eb F")
+    expect(labels("set key G\nset mode minor\nplay piano: chords i bVI|bVII")).toBe("Gm Eb F")
     expect(labels("set key A\nplay piano: chords ii iii")).toBe("Bm C#m")
-    expect(labels("set key Bb dorian\nplay piano: chords i IV")).toBe("Bbm Eb")
+    expect(labels("set key Bb\nset mode dorian\nplay piano: chords i IV")).toBe("Bbm Eb")
     // the 7th of G minor is F#, not Gb, and the 3rd of F# is A#: one letter a degree
-    expect(labels("set key Gm\nplay piano: chords viidim7 V7")).toBe("F#dim7 D7")
+    expect(labels("set key G\nset mode minor\nplay piano: chords viidim7 V7")).toBe("F#dim7 D7")
     expect(labels("set key F#\nplay piano: chords iii viidim|IV")).toBe("A#m E#dim B")
-    expect(labels("set key C#m\nplay piano: chords VII")).toBe("B#")
+    expect(labels("set key C#\nset mode minor\nplay piano: chords VII")).toBe("B#")
     expect(labels("set key Gb\nplay piano: chords IV")).toBe("Cb")
     expect(labels("set key Cb\nplay piano: chords I IV|V vi")).toBe("Cb Fb Gb Abm")
     expect(labels("set key A\nplay piano: chords bVII bVI")).toBe("G F")
   })
-  it("names the modes, and says how a major or minor key is written", () => {
-    expect(MODES).toEqual(["ionian", "dorian", "phrygian", "lydian", "mixolydian", "aeolian", "locrian"])
+  it("is a note, and its mode a setting of its own", () => {
+    expect(MODES).toEqual(["major", "minor", "dorian", "phrygian", "lydian", "mixolydian", "locrian"])
     const errs = (src) => parseCell(src, initialState()).errors.map((e) => e.msg)
-    expect(errs("set key A minor")).toEqual(["A minor key is written as its chord: set key Am"])
-    expect(errs("set key C major")).toEqual(["A major key is written as its chord: set key C"])
-    expect(errs("set key D Dorian")).toEqual(["Modes are lowercase: set key D dorian"])
-    expect(errs("set key H dorian")[0]).toContain("set key D dorian. The modes are ionian, dorian")
-    expect(errs("set key D blues")[0]).toContain("The modes are")
+    expect(errs("set key Em")).toEqual(["A key is a note: set key E, then set mode minor"])
+    expect(errs("set key Ebm")).toEqual(["A key is a note: set key Eb, then set mode minor"])
+    expect(errs("set key A minor")).toEqual(["A key is a note: set key A, then set mode minor"])
+    expect(errs("set key C major")).toEqual(["A key is a note: set key C, then set mode major"])
+    expect(errs("set key D dorian")).toEqual(["A key is a note: set key D, then set mode dorian"])
+    expect(errs("set key D Dorian")).toEqual(["A key is a note: set key D, then set mode dorian"])
+    expect(errs("set key D blues")[0]).toBe(
+      "A key is a note: set key D. Its mode is a setting of its own, one of major, minor, dorian, phrygian, lydian, mixolydian, locrian",
+    )
+    expect(errs("set key H")).toEqual(["A key is a note, A to G with # or b after it: set key E, set key Bb"])
+    expect(errs("set key e")).toEqual(["A key is a note, A to G with # or b after it: set key E, set key Bb"])
+    expect(errs("with key Em { play piano: 1--- }")).toEqual(["A key is a note: with key E, mode minor { ... }"])
+  })
+  it("has a mode of major, minor or one of the five others, each with one name", () => {
+    const errs = (src) => parseCell(src, initialState()).errors.map((e) => e.msg)
+    const list = "mode is one of: major, minor, dorian, phrygian, lydian, mixolydian, locrian"
+    expect(errs("set mode ionian")).toEqual([list])
+    expect(errs("set mode aeolian")).toEqual([list])
+    expect(errs("set mode m")).toEqual([list])
+    expect(errs("set mode Minor")).toEqual(["Modes are lowercase: set mode minor"])
+    expect(errs("set mode")).toEqual(["set mode needs a value after it, e.g. set mode minor"])
+    for (const mode of MODES) expect(errs(`set mode ${mode}`), mode).toEqual([])
+  })
+  it("and its mode are independent, and both carry into later cells", () => {
+    const p = parseCell("set mode minor\nset key G", initialState())
+    expect([p.state.key, p.state.mode]).toEqual(["G", "minor"])
+    const q = parseCell("set key D\nset mode dorian\nset key E", initialState())
+    expect([q.state.key, q.state.mode]).toEqual(["E", "dorian"])
+    const r = parseCell("set mode major", q.state)
+    expect([r.state.key, r.state.mode]).toEqual(["E", "major"])
+    expect(parseCell("play kick: x---", p.state).fromAbove).toEqual(["key G", "mode minor"])
   })
   it("goes with each block, for the sheet's key signature", () => {
-    const p = parseCell("set key D dorian\nplay kick: x---", initialState())
-    expect(p.outputs[0].blocks[0].key).toBe("D dorian")
+    const p = parseCell("set key D\nset mode dorian\nplay kick: x---", initialState())
+    expect([p.outputs[0].blocks[0].key, p.outputs[0].blocks[0].mode]).toEqual(["D", "dorian"])
     expect(p.fromAbove).toEqual([])
     const after = parseCell("play kick: x---", p.state)
-    expect(after.fromAbove).toEqual(["key D dorian"])
+    expect(after.fromAbove).toEqual(["key D", "mode dorian"])
   })
 })
 
@@ -2253,7 +2280,7 @@ describe("a numeral's octave", () => {
     const iviIVV = "play piano: chords I|vi|IV|V"
     // in C: C3 A3 F3 G3, and every key the same steps up from its root
     expect(roots("set key C\n" + iviIVV)).toEqual([48, 57, 53, 55])
-    for (const key of ["D", "E", "Gb", "A", "B", "C#m", "D dorian"]) {
+    for (const key of ["D", "E", "Gb", "A", "B", "C#\nset mode minor", "D\nset mode dorian"]) {
       expect(shape(`set key ${key}\n` + iviIVV), key).toEqual([0, 9, 5, 7])
     }
     expect(roots("set key E\n" + iviIVV)).toEqual([52, 61, 57, 59])

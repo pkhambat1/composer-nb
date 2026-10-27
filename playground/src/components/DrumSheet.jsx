@@ -32,7 +32,7 @@ function SheetBlock({ block, index, counts, setTimings }) {
   return (
     <div className="ds-block">
       <div className="dg-head">
-        time {block.time} · tempo {block.tempo} · key {block.key} · {block.bars} bar{block.bars === 1 ? "" : "s"}
+        time {block.time} · tempo {block.tempo} · key {block.key} {block.mode} · {block.bars} bar{block.bars === 1 ? "" : "s"}
       </div>
       <div ref={mountRef} className="ds-staff" />
     </div>
