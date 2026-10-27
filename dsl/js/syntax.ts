@@ -42,7 +42,7 @@ export type PlaceNode = { kind: "place"; span: Span; value: Value }
 export type PaceNode = { kind: "pace"; span: Span; value: Value }
 export type TrackNode = { kind: "track"; span: Span; part: string; value: Value }
 export type LineNode = { kind: "line"; span: Span; value: Value }
-export type Statement =
+export type Node =
   | SetNode
   | DeclNode
   | PlayNode
@@ -51,6 +51,8 @@ export type Statement =
   | PaceNode
   | TrackNode
   | LineNode
+// A statement keeps everything it holds, its head too, as `parts`.
+export type Statement = Node & { parts: (Text | Block)[] }
 
 // A mistake in how the cell is put together, found while parsing
 export type ParseError = { code: "brace.unclosed" | "brace.stray"; span: Span }
