@@ -3,6 +3,7 @@
    (Am7, C6/9/E), a numeral counted from the key's root (V7, bVII), or a numeral of another
    chord's root (V7 of V). */
 import { applyTranspose, buildChord, isRoman, midiToName, parseKey } from "../chords.js"
+import { misplaced } from "../check.ts"
 import { message } from "../diagnostics.ts"
 import { keyOf } from "../settings.ts"
 import { NAME_LIKE } from "../resolve.ts"
@@ -124,7 +125,7 @@ function chordSlot(tok: string, part: Part, st: State, key: Key, err: Report): S
     err(
       part.ln,
       st.sections[tok]
-        ? `${tok} is a pattern, so it goes on a line of its own, not on an instrument's line`
+        ? misplaced(tok, "pattern", { line: "chart" })!
         : `"${tok}" isn't defined above. Name it first: chords ${tok} = Am F|C G`,
     )
     return null
@@ -174,13 +175,9 @@ export function chordPattern(
   let ok = true
   for (const t of tokens) {
     const w = st.words[t]
-    if (w && w.type !== "chords") {
-      err(
-        part.ln,
-        w.type === "steps"
-          ? `${t} is steps, so it goes on a drum's line, not among chords`
-          : `${t} is notes, and the rest of this line is chords. A line plays one or the other`,
-      )
+    const problem = w && misplaced(t, w.type, { line: "chart" })
+    if (problem) {
+      err(part.ln, problem)
       ok = false
     } else if (w) expanded.push("|", ...w.tokens, "|")
     else expanded.push(t)

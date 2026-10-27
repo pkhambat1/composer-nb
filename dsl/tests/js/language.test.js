@@ -1083,6 +1083,17 @@ describe("patterns repeat, and a play's own lines play once", () => {
   })
 })
 
+describe("a name of one type where another goes", () => {
+  it("is sent to the line its type goes on, from the one table that says which", () => {
+    const sticking = "sticking para = RLRR\n"
+    const goes = "para is a sticking, so it goes on the sticking line: sticking: para"
+    expect(firstError(sticking + play("piano: para"))).toBe(goes)
+    expect(firstError(sticking + play("piano: chords para"))).toBe(goes)
+    expect(firstError(sticking + play("kick: para"))).toBe(goes)
+    expect(firstError(sticking + "play para")).toBe(goes)
+  })
+})
+
 describe("events", () => {
   it("count their ticks from the start of their block, as the block's own events do", () => {
     const p = parseSource("pattern aa = {\n  kick: x---\n}\npattern bb = {\n  snare: x---\n}\nplay (aa bb)")
