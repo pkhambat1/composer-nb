@@ -14,10 +14,11 @@
     "test": "npm test --workspaces --if-present",
     "lint": "eslint . --max-warnings 0",
     "lint:fix": "eslint . --fix",
+    "typecheck": "npm run typecheck -w dsl",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "docs": "cd docs && npx mint dev",
-    "mcp": "node mcp/bin.js"
+    "mcp": "node --conditions=composer-nb-source mcp/bin.js"
   },
   "devDependencies": {
     "@eslint/js": "^9.13.0",
@@ -26,6 +27,8 @@
     "eslint-plugin-react": "^7.37.5",
     "eslint-plugin-react-hooks": "^5.0.0",
     "globals": "^15.11.0",
-    "prettier": "^3.8.1"
+    "prettier": "^3.8.1",
+    "typescript": "~5.8.3",
+    "typescript-eslint": "^8.72.1"
   }
 }

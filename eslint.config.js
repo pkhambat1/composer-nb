@@ -3,6 +3,7 @@ import globals from "globals"
 import react from "eslint-plugin-react"
 import reactHooks from "eslint-plugin-react-hooks"
 import stylistic from "@stylistic/eslint-plugin"
+import tseslint from "typescript-eslint"
 
 const sharedStylistic = {
   semi: "off",
@@ -12,7 +13,17 @@ const sharedStylistic = {
 
 /** @type {import('eslint').Linter.Config[]} */
 export default [
-  { ignores: ["**/node_modules", "**/dist", ".git", ".claude", "dsl/python", "mcp/reference.js"] },
+  {
+    ignores: [
+      "**/node_modules",
+      "**/dist",
+      "dsl/lib",
+      ".git",
+      ".claude",
+      "dsl/python",
+      "mcp/reference.js",
+    ],
+  },
   {
     files: ["**/*.config.js"],
     languageOptions: {
@@ -88,6 +99,28 @@ export default [
         { argsIgnorePattern: "^_", varsIgnorePattern: "^_", caughtErrorsIgnorePattern: "^_" },
       ],
       "no-empty": ["error", { allowEmptyCatch: true }],
+    },
+  },
+  {
+    // The engine's TypeScript modules. tsc checks their types (npm run typecheck); this
+    // checks the rest, as for the JavaScript beside them.
+    files: ["dsl/js/**/*.ts"],
+    languageOptions: {
+      parser: tseslint.parser,
+      ecmaVersion: 2022,
+      sourceType: "module",
+      globals: globals.browser,
+    },
+    plugins: { "@typescript-eslint": tseslint.plugin, "@stylistic": stylistic },
+    rules: {
+      ...js.configs.recommended.rules,
+      ...tseslint.configs.eslintRecommended.rules,
+      ...sharedStylistic,
+      "no-unused-vars": "off",
+      "@typescript-eslint/no-unused-vars": [
+        "error",
+        { argsIgnorePattern: "^_", varsIgnorePattern: "^_", caughtErrorsIgnorePattern: "^_" },
+      ],
     },
   },
 ]

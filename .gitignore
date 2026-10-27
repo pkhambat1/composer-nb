@@ -26,3 +26,6 @@ dist-ssr
 
 # Python
 .venv
+
+# The engine compiled from dsl/js by tsc (npm run build:lib -w dsl)
+dsl/lib

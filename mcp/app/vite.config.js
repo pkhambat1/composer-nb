@@ -1,6 +1,6 @@
 import { createRequire } from "node:module"
 import { fileURLToPath } from "node:url"
-import { defineConfig } from "vite"
+import { defaultClientConditions, defineConfig } from "vite"
 import react from "@vitejs/plugin-react"
 
 // The MCP App's script: main.js and everything it uses (the playground's App, React,
@@ -13,6 +13,8 @@ const here = fileURLToPath(new URL(".", import.meta.url))
 export default defineConfig({
   root: here,
   plugins: [react()],
+  // The engine's source (dsl/js), not its build in dsl/lib
+  resolve: { conditions: ["composer-nb-source", ...defaultClientConditions] },
   define: {
     "process.env.NODE_ENV": JSON.stringify("production"),
     __VERSION__: JSON.stringify(version),

@@ -9,7 +9,7 @@ from IPython.core.interactiveshell import InteractiveShell
 from composer_nb import Song, completer
 from composer_nb.completer import complete
 
-LANGUAGE_JS = Path(__file__).parents[2] / "js" / "language.js"
+VOCAB_TS = Path(__file__).parents[2] / "js" / "vocab.ts"
 
 
 def texts(cell, songs=None):
@@ -21,12 +21,20 @@ def texts(cell, songs=None):
     "name", ["DRUMS", "VARIATIONS", "SPLIT", "PITCHED", "SETTINGS", "TYPES", "KITS", "MODES", "UNITS"]
 )
 def test_words_match_the_language(name):
-    # One line, or an object or a list over several lines up to its closing bracket
+    # One line, or an object or a list over several lines up to its closing bracket, after
+    # any type the constant is given and before any `as const`
     found = re.search(
-        rf"^export const {name} = (\{{[^}}]*\}}|\[[^\]]*\]|.+)$", LANGUAGE_JS.read_text(), re.M
+        rf"^export const {name}(?::[^=]*)? = (\{{[^}}]*\}}|\[[^\]]*\]|.+?)(?: as const)?$",
+        VOCAB_TS.read_text(),
+        re.M,
     )
     literal = re.sub(r",(\s*[}\]])", r"\1", found.group(1))  # no trailing commas in JSON
     assert getattr(completer, name) == json.loads(re.sub(r"(\w+):", r'"\1":', literal))
+
+
+def test_every_type_declares_a_name():
+    for type_ in completer.TYPES:
+        assert completer.DEF_RE.match(f"{type_} fig = x") is not None, type_
 
 
 def test_a_drum_and_a_dot_offers_its_other_sounds():

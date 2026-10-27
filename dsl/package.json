@@ -23,24 +23,70 @@
   "main": "./dist/composer-nb.js",
   "exports": {
     ".": "./dist/composer-nb.js",
-    "./engine": "./js/music-engine.js",
-    "./language": "./js/language.js",
-    "./chord-lookup": "./js/chord-lookup.js",
-    "./editing": "./js/editing.js",
-    "./grid": "./js/grid.js",
-    "./sheet": "./js/sheet.js",
-    "./midi": "./js/midi.js",
-    "./highlight": "./js/highlight.js",
-    "./chords": "./js/chords.js",
-    "./grooves": "./js/grooves.js",
-    "./links": "./js/links.js"
+    "./engine": {
+      "types": "./lib/music-engine.d.ts",
+      "composer-nb-source": "./js/music-engine.js",
+      "default": "./lib/music-engine.js"
+    },
+    "./language": {
+      "types": "./lib/language.d.ts",
+      "composer-nb-source": "./js/language.js",
+      "default": "./lib/language.js"
+    },
+    "./chord-lookup": {
+      "types": "./lib/chord-lookup.d.ts",
+      "composer-nb-source": "./js/chord-lookup.js",
+      "default": "./lib/chord-lookup.js"
+    },
+    "./editing": {
+      "types": "./lib/editing.d.ts",
+      "composer-nb-source": "./js/editing.js",
+      "default": "./lib/editing.js"
+    },
+    "./grid": {
+      "types": "./lib/grid.d.ts",
+      "composer-nb-source": "./js/grid.js",
+      "default": "./lib/grid.js"
+    },
+    "./sheet": {
+      "types": "./lib/sheet.d.ts",
+      "composer-nb-source": "./js/sheet.js",
+      "default": "./lib/sheet.js"
+    },
+    "./midi": {
+      "types": "./lib/midi.d.ts",
+      "composer-nb-source": "./js/midi.js",
+      "default": "./lib/midi.js"
+    },
+    "./highlight": {
+      "types": "./lib/highlight.d.ts",
+      "composer-nb-source": "./js/highlight.js",
+      "default": "./lib/highlight.js"
+    },
+    "./chords": {
+      "types": "./lib/chords.d.ts",
+      "composer-nb-source": "./js/chords.js",
+      "default": "./lib/chords.js"
+    },
+    "./grooves": {
+      "types": "./lib/grooves.d.ts",
+      "composer-nb-source": "./js/grooves.js",
+      "default": "./lib/grooves.js"
+    },
+    "./links": {
+      "types": "./lib/links.d.ts",
+      "composer-nb-source": "./js/links.js",
+      "default": "./lib/links.js"
+    }
   },
   "files": [
     "dist",
-    "js"
+    "lib"
   ],
   "scripts": {
-    "build": "vite build && vite build --mode npm",
+    "build": "tsc -p . && vite build && vite build --mode npm",
+    "build:lib": "tsc -p .",
+    "typecheck": "tsc -p . --noEmit",
     "prepack": "npm run build",
     "test": "vitest run",
     "test:watch": "vitest"

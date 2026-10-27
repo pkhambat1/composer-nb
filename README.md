@@ -128,10 +128,13 @@ npm install     # installs both folders (npm workspaces)
 npm run dev     # playground at http://localhost:5173
 npm test        # language tests
 npm run lint
+npm run typecheck   # tsc over the engine's TypeScript modules
 npm run build   # builds the notebook widget, the npm bundle, the MCP server's reference and the playground
 npm run mcp     # the MCP server over stdio; npm run mcp -- --http 3333 serves it at localhost:3333/mcp
 npm run docs    # docs site preview at http://localhost:3000
 ```
+
+The engine (`dsl/js/`) is moving from JavaScript to TypeScript one module at a time; `vocab.ts` holds every word the language knows. Inside this repository everything runs the source: the playground and the MCP tests resolve `composer-nb/*` to `dsl/js/` through the `composer-nb-source` export condition, and Node runs it with `--conditions=composer-nb-source`. The npm package ships `dsl/lib/` instead, which `tsc` compiles (`npm run build:lib -w dsl`). `dsl/tests/js/corpus/` holds what every real cell (docs examples, grooves, skill examples) plays: a change to the engine that changes it fails `npm test`, and `npx vitest run -u` in `dsl/` rewrites it for a change that's meant.
 
 The Python package needs the widget built first:
 

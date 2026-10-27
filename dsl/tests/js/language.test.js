@@ -361,6 +361,9 @@ describe("types", () => {
     expect(firstError("notes riff F---")).toMatch(
       /notes riff needs = before what it holds: notes riff = F---/,
     )
+    expect(firstError("sticking para RLRR")).toMatch(
+      /sticking para needs = before what it holds: sticking para = RLRR/,
+    )
     // chords and no name is a chart with no instrument to play it
     expect(firstError("play chords Am F")).toMatch(
       /Chords go on an instrument's line: piano: chords Am F/,
@@ -1067,6 +1070,18 @@ describe("settings", () => {
     const p = parseSource("play piano: chords i V", above)
     expect(p.chords.map((e) => e.label)).toEqual(["Am", "E"])
     expect(p.fromAbove).toEqual(["tempo 90", "key A", "mode minor"])
+  })
+
+  it("say every setting and sound they carry on, swing too", () => {
+    const above = parseSource("set swing 67\nset tempo 90\nset guitar.electric muted").state
+    expect(parseSource("play kick: x-", above).fromAbove).toEqual([
+      "tempo 90",
+      "swing 67",
+      "guitar.electric muted",
+    ])
+    // what this cell sets again isn't from above
+    const again = parseSource("set guitar.electric clean\nset swing 60\nplay kick: x-", above)
+    expect(again.fromAbove).toEqual(["tempo 90"])
   })
 
   it("go on a with inside a block, so a block's lines can each have their own", () => {

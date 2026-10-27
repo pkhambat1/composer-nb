@@ -1,0 +1,25 @@
+{
+  // The engine is moving from JavaScript to TypeScript one module at a time. tsc checks the
+  // .ts files (the .js ones are carried along unchecked) and compiles both into lib/, the
+  // JavaScript the npm package's subpaths point at, with a .d.ts for each module.
+  "compilerOptions": {
+    "target": "es2022",
+    "lib": ["es2022", "dom"],
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
+    "strict": true,
+    // Only types on top of JavaScript: no enum or namespace, so Node can run the source as is
+    "erasableSyntaxOnly": true,
+    "verbatimModuleSyntax": true,
+    "rewriteRelativeImportExtensions": true,
+    "allowJs": true,
+    "checkJs": false,
+    "declaration": true,
+    "skipLibCheck": true,
+    "rootDir": "js",
+    "outDir": "lib"
+  },
+  "include": ["js"],
+  // The Jupyter widget is bundled by vite into the Python package, not published from lib/
+  "exclude": ["js/widget"]
+}
