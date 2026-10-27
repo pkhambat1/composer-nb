@@ -6,13 +6,8 @@
    so the diff is the list of real cells it changes. If the change is meant, update the files
    with `npx vitest run -u` and read the diff. */
 import { describe, it, expect } from "vitest"
-import { readdirSync, readFileSync } from "node:fs"
-import { fileURLToPath } from "node:url"
-import { initialState, parseCell } from "../../js/language.js"
-import { GROOVES } from "../../js/grooves.js"
-import { examples, pages, read, readMagic } from "./docs-examples.js"
-
-const SKILLS = fileURLToPath(new URL("../../../plugin/skills", import.meta.url))
+import { parseCell } from "../../js/language.js"
+import { realCells } from "./real-cells.js"
 
 // Times to four places, so float noise doesn't count as a change.
 const num = (n) => String(+n.toFixed(4))
@@ -66,39 +61,14 @@ function cellText(title, parsed) {
 
 const file = (cells) => cells.join("\n\n") + "\n"
 
+// One file per group of cells
+const FILES = { docs: "docs.txt", grooves: "grooves.txt", skills: "skills.txt" }
+
 describe("golden corpus", () => {
-  it("docs examples", async () => {
-    const cells = []
-    for (const page of pages) {
-      const named = {}
-      for (const block of examples(read(page))) {
-        const { body, name, after } = readMagic(block.source)
-        const parsed = parseCell(body, after ? named[after] : initialState())
-        if (name) named[name] = parsed.state
-        cells.push(cellText(`${page}:${block.line}`, parsed))
-      }
-    }
-    await expect(file(cells)).toMatchFileSnapshot("./corpus/docs.txt")
-  })
-
-  it("grooves and starter cells", async () => {
-    const cells = GROOVES.map((g) => cellText(g.title, parseCell(g.source)))
-    await expect(file(cells)).toMatchFileSnapshot("./corpus/grooves.txt")
-  })
-
-  it("plugin skill examples", async () => {
-    const cells = []
-    for (const skill of readdirSync(SKILLS).sort()) {
-      const text = readFileSync(`${SKILLS}/${skill}/SKILL.md`, "utf8")
-      const blocks = [...text.matchAll(/^```composer-nb\n([\s\S]*?)\n```/gm)].map((m) => m[1])
-      // Each example follows the ones above it in the same skill, as cells in a notebook.
-      let state = initialState()
-      blocks.forEach((source, i) => {
-        const parsed = parseCell(source, state)
-        state = parsed.state
-        cells.push(cellText(`${skill} example ${i + 1}`, parsed))
-      })
-    }
-    await expect(file(cells)).toMatchFileSnapshot("./corpus/skills.txt")
-  })
+  for (const [group, name] of Object.entries(FILES)) {
+    it(group, async () => {
+      const cells = realCells(group).map((c) => cellText(c.title, parseCell(c.source, c.inherited)))
+      await expect(file(cells)).toMatchFileSnapshot(`./corpus/${name}`)
+    })
+  }
 })
