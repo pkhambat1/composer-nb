@@ -1,6 +1,6 @@
 ---
 title: "Overview"
-description: "Cells, statements, types, blocks, lengths and scope."
+description: "Cells, statements, types, names, blocks, lengths and scope."
 ---
 
 import { Cell } from "/snippets/cell.jsx"
@@ -13,22 +13,25 @@ A cell is a program. The interpreter evaluates its statements top to bottom, one
 | --- | --- | --- |
 | Setting | `set tempo 90` | Top level only, outside every block. See [Settings](/language/settings). |
 | `with` | `with key E { ... }` | Anywhere a statement or a line goes: settings for its block only. See [with](/language/settings#with). |
-| Declaration | `steps fill = x-x-` | Anywhere. See [Types](#types). |
-| Line | `kick: x--x---` | In a block, or after `play`. |
+| Declaration | `steps fill = x-x-` | Anywhere. See [Names](#names). |
+| Line | `kick: x--x---` | In a block, or after `play`. See [Types](#types). |
 | Group | `(intro verse verse)` | In a block, or after `play`. What plays in order goes in brackets. See [Groups](/language/patterns#groups). |
-| `bar`, `every` | `bar 4 { ... }` | In a block, or after `play`. See [bar](/language/patterns#bar) and [Step length](/language/steps#step-length). |
+| `bar`, `every` | `bar 4 { ... }` | In a block, or after `play`. See [bar](/language/patterns#bar) and [every](/language/patterns#every). |
 | `play` | `play groove` | Top level only, which includes the top of a `with` there. See [play](/language/play). |
 
 ## Types
 
-Every value has one of four types.
+Every value has one of five types. A line is a kit piece or an instrument, a colon and a value, and the name before the colon decides the value's type. So the drums and the pitched instruments never take each other's values: a `steps` name on `bass` is an error, and so is a `notes` name on `kick`. A `pattern` holds lines of both.
 
-| Type | A value is | Literal | Used |
-| --- | --- | --- | --- |
-| `steps` | Hits for one kit piece, one character per step. | `x--x---` | After a kit piece's colon. See [Steps](/language/steps). |
-| `notes` | Notes for one instrument, one at a time, by name or by degree of the key. | `E---F# E-E--`, `1---b3---5---` | After an instrument's colon. See [Notes](/language/notes). |
-| `chords` | Bars of chords. | `Am F\|C G` | After `chords` on an instrument's line. See [Chords](/language/chords). |
-| `pattern` | Lines that play together and repeat. | `{ kick: x--- }` | After `play`, or in a group. See [Patterns](/language/patterns). |
+| Type | A value is | Literal | Used | See |
+| --- | --- | --- | --- | --- |
+| `steps` | Hits for one kit piece, as steps or beats. | `x--x---`, `2 4` | After a kit piece's colon. | [Steps](/drums/steps) |
+| `sticking` | The hand on each step. | `RLRR LRLL` | After `sticking:`. | [Stickings](/drums/stickings) |
+| `notes` | Notes for one instrument, one at a time, by name or by degree of the key. | `E---F# E-E--`, `1---b3---5---` | After an instrument's colon. | [Notes](/pitched/notes) |
+| `chords` | Bars of chords. | `Am F\|C G` | After `chords` on an instrument's line. | [Chords](/pitched/chords) |
+| `pattern` | Lines that play together and repeat. | `{ kick: x--- }` | After `play`, on a line of its own, or in a group. | [Patterns](/language/patterns) |
+
+## Names
 
 A declaration binds a name to a value: `<type> <name> = <value>`. The type is required. A name is accepted only where its type is, and only below its declaration.
 
@@ -61,8 +64,8 @@ A block is statements in braces, and it evaluates to a value. Where the block is
 | --- | --- |
 | After `pattern <name> =`, `play`, `bar` or `every` | A `pattern`. |
 | After `with` and its settings | At the top of a cell, the statements in it. Anywhere else, a `pattern`, played with the settings. |
-| After a kit piece's colon | One `steps` value, from [layers](/language/steps#layers). |
-| After an instrument's colon | [Layers](/language/notes#layers) of `notes` and `chords` that sound together. |
+| After a kit piece's colon | One `steps` value, from [layers](/drums/steps#layers). |
+| After an instrument's colon | [Layers](/pitched/notes#layers) of `notes` and `chords` that sound together. |
 
 The statements in a block start together, one per line. What plays in order goes in brackets: a [group](/language/patterns#groups) holds names, blocks, groups and lines, one after another, separated by spaces or new lines. Braces hold what plays together and brackets what plays in order, so a newline never decides between them.
 
@@ -85,17 +88,17 @@ play {
 
 The kick plays first and the snare after it, with the hats under both.
 
-A block holds one line per kit piece or instrument. To layer one, give its line a block. On a kit piece's line, or a layer, a block is the whole value, so nothing goes beside it: `hat: x--- { ... }` is an error. To put steps in a row with a block, name it: `steps fig = { ... }` and `hat: x--- fig`.
+A block holds one line per kit piece or instrument. To layer one, give its line a block.
 
-Where a line is decides whether it repeats. In a pattern, every line repeats until the pattern ends. Directly in a `play`, a line plays once. A `steps` value is not a loop: `x--x---` is seven steps, and the pattern around it does the repeating. So a `steps`, `notes` or `chords` value written as the same figure more than once is an error: `hat: x-x- x-x-` is `hat: x-`, and `chords Am F|Am F` is `chords Am F`.
+Where a line is decides whether it repeats. In a pattern, every line repeats until the pattern ends. Directly in a `play`, a line plays once. A value is not a loop: `x--x---` is seven steps, and the pattern around it does the repeating. So a `steps`, `notes` or `chords` value written as the same figure more than once is an error: `hat: x-x- x-x-` is `hat: x-`, and `chords Am F|Am F` is `chords Am F`.
 
 ## Lengths
 
-A length is a number and a unit, written in front of what it measures: `4 bars groove`, `2 beats rest`, `3 beats C2`, `every 3 steps`. Units are always plural, even after 1: `1 bars`. On a line, `...` is the length that is left of the block: `...rest`, `...x-`, `...G1`. On a kit piece's line a length repeats a figure, because a hit has no duration; on an instrument's line it holds one note, because a note has one.
+A length is a number and a unit, written in front of what it measures: `4 bars groove`, `2 beats rest`, `3 beats C2`, `every 3 steps`. Units are always plural, even after 1: `1 bars`. On a line, `...` is the length that is left of the block: `...rest`, `...x-`, `...G1`. On a [kit piece's line](/drums/steps#rests-and-lengths) a length repeats a figure, because a hit has no duration; on an [instrument's line](/pitched/notes#lengths) it holds one note, because a note has one.
 
 | Unit | Lasts |
 | --- | --- |
-| `steps` | One step: a sixteenth note, unless [`every`](/language/steps#step-length) changes it. |
+| `steps` | One step: a sixteenth note, unless [`every`](/language/patterns#every) changes it. |
 | `beats` | A quarter note, in every time signature. |
 | `bars` | One bar of the current [`time`](/language/settings#time). |
 

@@ -1,0 +1,40 @@
+---
+title: "Instruments"
+description: "The pitched instruments, a line each, and their settings: key, mode, octave, transpose and an instrument's sound."
+---
+
+Each pitched instrument has a line of its own. It holds [`notes`](/pitched/notes), or a [`chords`](/pitched/chords) chart after the word `chords`.
+
+| Name | Instrument |
+| --- | --- |
+| `piano` | Grand piano, sampled |
+| `piano.electric` | Electric piano, sampled |
+| `organ` | Drawbar organ, sampled |
+| `pad` | Synth pad |
+| `bass` | Fingered electric bass, sampled |
+| `guitar` | Steel-string guitar, sampled |
+| `guitar.electric` | Electric guitar, sampled. Clean or [muted](#sound). |
+
+## Settings
+
+These are set with `set` at the top of a cell, or on a [`with`](/language/settings#with) for one block. None of them changes the drums.
+
+| Setting | Value | Default | Sets |
+| --- | --- | --- | --- |
+| `key` | A note: `A` to `G`, then an optional `#` or `b` | `C` | The root that degrees and numerals count from. See [Key and mode](/pitched/key). |
+| `mode` | `major`, `minor`, `dorian`, `phrygian`, `lydian`, `mixolydian` or `locrian` | `major` | How the key is written. See [Key and mode](/pitched/key). |
+| `octave` | 1 to 6 | `3` | The octave of a note without a number, of degree 1, and of a chord's root. |
+| `transpose` | -12 to 12 | `0` | Semitones that every pitched instrument sounds from what's written. |
+| `guitar.electric` | `clean` or `muted` | `clean` | The electric guitar's sound. |
+
+## octave
+
+`octave` counts from C: `C4` is middle C, and the note below it is `B3`. Degree 1 and a numeral's root are the key's root in that octave, and the other degrees and numerals count up from there, so under `set key A`, `1` is A3 and `5` is E4. On a `with`, it gives one instrument its own octave: `with octave 2 { bass: 1---5--- }`.
+
+## transpose
+
+`transpose` moves the sound of every pitched instrument by that many semitones, up or down: its notes, its degrees and its chords. What's written stays: a chart keeps its chord names and a guitar its diagrams, so a guitar's shapes under `set transpose 4` are a capo at the 4th fret. On a `with`, it transposes one instrument and not another. A transpose where only drums play is an error.
+
+## Sound
+
+`set` with an instrument's name and a sound sets that instrument's sound: `set guitar.electric muted` is palm-muted. Only `guitar.electric` has more than one sound.

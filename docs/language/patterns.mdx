@@ -1,6 +1,6 @@
 ---
 title: "Patterns"
-description: "The pattern type: lines that play together and repeat, how long a pattern lasts, groups and bar."
+description: "The pattern type: lines that play together and repeat, how long a pattern lasts, groups, bar and every."
 ---
 
 import { Cell } from "/snippets/cell.jsx"
@@ -26,7 +26,7 @@ play groove
 
 ## Duration
 
-Each line repeats at its own length, and the pattern lasts until they end together: the least common multiple of their lengths. Above, the floor tom repeats every 3 steps, the kick every 4 and the snare every 5, so they meet after 60 steps: three bars of `5 over 4`. A line that ends in [`...`](/language/steps#rests-and-lengths) has no length of its own and doesn't count.
+Each line repeats at its own length, and the pattern lasts until they end together: the least common multiple of their lengths. Above, the floor tom repeats every 3 steps, the kick every 4 and the snare every 5, so they meet after 60 steps: three bars of `5 over 4`. A line that ends in [`...`](/language/overview#lengths) has no length of its own and doesn't count.
 
 A length in front sets the duration instead: `pattern groove = 4 bars { ... }`. Everything inside must then fit it a whole number of times, and the error names the shortest length that would. A pattern whose lines don't meet within 64 bars needs a length.
 
@@ -124,3 +124,45 @@ play {
 </Cell>
 
 This is *The Sound of Muzak* by Porcupine Tree. The lines of `groove` meet after two bars, so the pattern is two bars long and the fill closes every pass.
+
+## every
+
+`every <length>` in front of a line or block sets how long one step lasts inside it.
+
+<Cell>
+
+```composer-nb
+set time 3 over 4
+set tempo 100
+
+steps pa = ^---
+steps radiddle = -xxx
+
+pattern hands = {
+  snare: pa
+  snare.ghost: radiddle
+}
+
+pattern feet = every 3 steps {
+  kick: ^-^^-^--
+  hat.pedal: -x--x-xx
+}
+
+play {
+  hands
+  feet
+}
+```
+
+</Cell>
+
+This is Gavin Harrison's paradiddle challenge. `every 3 steps` makes each of the feet's steps three sixteenth notes long, so the feet play the paradiddle three times slower than the hands.
+
+| On the score | Write |
+| --- | --- |
+| Eighth notes | `every 2 steps` |
+| Eighth-note triplets | `every 1/3 beats` |
+| Sixteenth-note triplets | `every 1/6 beats` |
+| Thirty-second notes | `every 1/2 steps` |
+
+`every` changes the steps of kit pieces and instruments alike. Beats and chords keep their timing, and lines outside it keep their own step.

@@ -5,7 +5,7 @@ description: "The notes type: what an instrument plays, one note at a time, by n
 
 import { Cell } from "/snippets/cell.jsx"
 
-An instrument's line holds a `notes` value. It is drawn on steps like a kit piece's line, with a note where a kit piece has its `x`.
+An [instrument](/pitched/instruments)'s line holds a `notes` value. It is drawn on steps, and a step is a sixteenth note, so a bar of `4 over 4` is 16 steps.
 
 <Cell>
 
@@ -15,21 +15,9 @@ play piano: E4---E4---F4---G4--- | G4---F4---E4---D4---
 
 </Cell>
 
-## Instruments
-
-| Name | Instrument |
-| --- | --- |
-| `piano` | Grand piano, sampled |
-| `piano.electric` | Electric piano, sampled |
-| `organ` | Drawbar organ, sampled |
-| `pad` | Synth pad |
-| `bass` | Fingered electric bass, sampled |
-| `guitar` | Steel-string guitar, sampled |
-| `guitar.electric` | Electric guitar, sampled. Clean or [muted](/language/settings#instrument-sound). |
-
 ## Writing notes
 
-A note is a capital `A` to `G`, then an optional `#` or `b`, then an optional octave from 0 to 8. A note without a number is in the current [`octave`](/language/settings#transpose-and-octave). Pitches are as they sound, so a guitar's low E is `E2`.
+A note is a capital `A` to `G`, then an optional `#` or `b`, then an optional octave from 0 to 8. A note without a number is in the current [`octave`](/pitched/instruments#octave). Pitches are as they sound, so a guitar's low E is `E2`.
 
 | Step | Plays |
 | --- | --- |
@@ -45,7 +33,7 @@ In a pattern, the last note rings over the repeat until the first note or `_`. A
 
 ## Degrees
 
-A degree is a digit from `1` to `7` where a note goes, counted on the major scale of the [`key`](/language/settings#key-and-mode)'s root, whatever the key's mode. A `b` or `#` in front moves it a semitone, so a scale is written as it is described against major: natural minor is `1 2 b3 4 5 b6 b7`. Degree 1 is the root in the current `octave`; `'` after the digit is an octave up for each mark, and `'` before it an octave down.
+A degree is a digit from `1` to `7` where a note goes, counted on the major scale of the [`key`](/pitched/key)'s root, whatever the key's mode. A `b` or `#` in front moves it a semitone, so a scale is written as it is described against major: natural minor is `1 2 b3 4 5 b6 b7`. Degree 1 is the root in the current `octave`; `'` after the digit is an octave up for each mark, and `'` before it an octave down.
 
 <Cell>
 
@@ -65,7 +53,7 @@ play piano: major
 
 </Cell>
 
-A name holds degrees, not pitches, so it is read under whichever key plays it: the last play is F# major. Letters and degrees can share a line, as a chart holds `I vi|F G`. On a kit piece's line a number is a beat, so `kick: 1 3` hits beats 1 and 3 and `bass: 1 3` plays two degrees: the line's name says which.
+A name holds degrees, not pitches, so it is read under whichever key plays it: the last play is F# major. Letters and degrees can share a line, as a chart holds `I vi|F G`. On a kit piece's line a number is a [beat](/drums/steps#beats), so `kick: 1 3` hits beats 1 and 3 and `bass: 1 3` plays two degrees: the line's name says which.
 
 ## Counting from a note
 
@@ -86,7 +74,7 @@ This plays C3, G3, D4 and A4. Without the brackets, `5 of 5 of C3` is an error. 
 
 ## Lengths
 
-Commas split a line into parts, as on a kit piece's line. A [length](/language/overview#lengths) in front of one note holds it for that long, and in front of `rest` is silence. The length `...` is what is left of the block: `...G1` holds G1 to the end, and `...rest` is silence to the end. A line ended in `...` has no length of its own, so the other lines decide how long the block is.
+Commas split a line into parts. A [length](/language/overview#lengths) in front of one note holds it for that long, and in front of `rest` is silence. The length `...` is what is left of the block: `...G1` holds G1 to the end, and `...rest` is silence to the end. A line ended in `...` has no length of its own, so the other lines decide how long the block is.
 
 <Cell>
 

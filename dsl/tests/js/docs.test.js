@@ -45,12 +45,12 @@ describe("docs examples", () => {
 // A kit piece or instrument that exists in the language and not in its table is one nobody can
 // find.
 describe("docs names", () => {
-  it("language/steps.mdx has every kit piece", () => {
-    const text = read("language/steps.mdx")
+  it("drums/kit.mdx has every kit piece", () => {
+    const text = read("drums/kit.mdx")
     expect(LANES.filter((name) => !text.includes("| `" + name + "`"))).toEqual([])
   })
-  it("language/notes.mdx has every instrument", () => {
-    const text = read("language/notes.mdx")
+  it("pitched/instruments.mdx has every instrument", () => {
+    const text = read("pitched/instruments.mdx")
     expect(PITCHED.filter((name) => !text.includes("| `" + name + "`"))).toEqual([])
   })
 })

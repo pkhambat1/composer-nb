@@ -1,4 +1,4 @@
-"""Draws sheet-to-code.svg, the figure on docs/language/steps.mdx, beside this file:
+"""Draws sheet-to-code.svg, the figure on docs/drums/steps.mdx, beside this file:
 
     python3 docs/images/drum-notation.py
 
