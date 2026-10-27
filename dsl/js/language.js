@@ -93,6 +93,7 @@ import {
   swingWarp,
   timeLabel,
 } from "./time.ts"
+import { message } from "./diagnostics.ts"
 
 // Time, ticks and lengths are in time.ts; these are re-exported for code that imports them
 // from here.
@@ -332,22 +333,13 @@ const keyOf = (st) => parseKey(st.key, st.mode)
 function keyProblem(value, verb) {
   const both = /^([A-G][#b]?)(?:(m)|\s*([A-Za-z]+))$/.exec(value)
   const mode = both && (both[2] ? "minor" : both[3].toLowerCase())
-  if (both && MODES.includes(mode)) {
-    return verb === "with"
-      ? `A key is a note: with key ${both[1]}, mode ${mode} { ... }`
-      : `A key is a note: set key ${both[1]}, then set mode ${mode}`
-  }
-  if (both) {
-    return `A key is a note: ${verb} key ${both[1]}. Its mode is a setting of its own, one of ${MODES.join(", ")}`
-  }
-  return verb === "with"
-    ? "A key is a note, A to G with # or b after it: with key E { ... }"
-    : "A key is a note, A to G with # or b after it: set key E, set key Bb"
+  if (both && MODES.includes(mode)) return message("key.withMode", { verb, root: both[1], mode })
+  if (both) return message("key.notAMode", { verb, root: both[1] })
+  return message("key.notANote", { verb })
 }
 
 // A with in an instrument's block, among its layers: it goes around the line instead.
-const withInLayers = (name) =>
-  `A with goes around ${name}'s line, not among its layers: with ${PITCHED.includes(name) ? "octave 5" : "kit synth"} { ${name}: { ... } }`
+const withInLayers = (name) => message("with.inLayers", { name })
 
 // Applies a setting to `state`. `verb` is how it was written, set or with, for messages.
 // Returns whether it was one.
@@ -366,26 +358,28 @@ function applySetting(name, value, ln, state, err, verb = "set") {
       err(
         ln,
         divided && num
-          ? `/ is division, so ${value} is the number ${+num.value.toFixed(4)}, not a time. ` +
-              `Write ${verb} time ${divided[1].replace(/^\((.*)\)$/, "$1")} over ${divided[2]}`
-          : `time is how many notes over which note: ${verb} time 7 over 8 is seven eighth notes in a bar`,
+          ? message("time.division", {
+              verb,
+              value,
+              n: num.value,
+              count: divided[1].replace(/^\((.*)\)$/, "$1"),
+              unit: divided[2],
+            })
+          : message("time.shape", { verb }),
       )
       return false
     }
     const groups = sumTerms(count)
     if (!groups) {
-      err(
-        ln,
-        "The first number of time is how many notes are in a bar, a whole number like 7 or 3+4",
-      )
+      err(ln, message("time.count"))
       return false
     }
     if (![1, 2, 4, 8, 16].includes(unit.value)) {
-      err(ln, "The second number of time is the note being counted: 1, 2, 4, 8 or 16")
+      err(ln, message("time.unit"))
       return false
     }
     if (count.value / unit.value > 8) {
-      err(ln, "A bar can be up to 8 whole notes long")
+      err(ln, message("time.tooLong"))
       return false
     }
     state.groups = groups
@@ -394,7 +388,7 @@ function applySetting(name, value, ln, state, err, verb = "set") {
   }
   if (name === "tempo") {
     if (!num || !(num.value >= 20 && num.value <= 400)) {
-      err(ln, "tempo is quarter notes per minute, between 20 and 400")
+      err(ln, message("tempo.range"))
       return false
     }
     state.tempo = num.value
@@ -403,7 +397,7 @@ function applySetting(name, value, ln, state, err, verb = "set") {
   if (name === "swing") {
     const n = whole(50, 75)
     if (n == null) {
-      err(ln, `swing is where the off-beat eighth falls, from 50 (straight) to 75 (dotted): ${verb} swing 67 is a triplet feel`)
+      err(ln, message("swing.range", { verb }))
       return false
     }
     state.swing = n
@@ -426,8 +420,8 @@ function applySetting(name, value, ln, state, err, verb = "set") {
       err(
         ln,
         MODES.includes(value.toLowerCase())
-          ? `Modes are lowercase: ${verb} mode ${value.toLowerCase()}`
-          : `mode is one of: ${MODES.join(", ")}`,
+          ? message("mode.lowercase", { verb, mode: value.toLowerCase() })
+          : message("mode.unknown"),
       )
       return false
     }
@@ -440,7 +434,7 @@ function applySetting(name, value, ln, state, err, verb = "set") {
     // at the 4th fret. Drums have no pitch, so it leaves them alone.
     const n = whole(-12, 12)
     if (n == null) {
-      err(ln, `transpose is a number of semitones from -12 to 12: ${verb} transpose 2 sounds a whole step up`)
+      err(ln, message("transpose.range", { verb }))
       return false
     }
     state.transpose = n
@@ -449,7 +443,7 @@ function applySetting(name, value, ln, state, err, verb = "set") {
   if (name === "octave") {
     const n = whole(1, 6)
     if (n == null) {
-      err(ln, "octave is a number from 1 to 6")
+      err(ln, message("octave.range"))
       return false
     }
     state.octave = n
@@ -457,7 +451,7 @@ function applySetting(name, value, ln, state, err, verb = "set") {
   }
   if (name === "kit") {
     if (!KITS.includes(value)) {
-      err(ln, `kit is one of: ${KITS.join(", ")}`)
+      err(ln, message("kit.unknown"))
       return false
     }
     state.kit = value
@@ -465,7 +459,7 @@ function applySetting(name, value, ln, state, err, verb = "set") {
   }
   if (SOUNDS[name]) {
     if (!SOUNDS[name].includes(value)) {
-      err(ln, `${name}'s sound is one of: ${SOUNDS[name].join(", ")}`)
+      err(ln, message("sound.unknown", { name }))
       return false
     }
     if (value === SOUNDS[name][0]) delete state.sounds[name]
@@ -874,7 +868,7 @@ function paceTicks(l, st, err) {
 function readSetting(text, tokens, ln, err) {
   const raw = tokens[1] || ""
   if (!raw) {
-    err(ln, "set takes a setting and its value: set tempo 90")
+    err(ln, message("set.empty"))
     return null
   }
   const s = settingWords(raw, text.replace(/^set\s+/, "").slice(raw.length).trim(), ln, err, "set")
@@ -885,28 +879,26 @@ function readSetting(text, tokens, ln, err) {
 // Returns { name, value }, or null after saying what's wrong.
 function settingWords(raw, value, ln, err, verb) {
   const name = raw.toLowerCase()
-  const tail = verb === "with" ? " { ... }" : ""
   if (SETTINGS.includes(name)) {
     if (value) return { name, value }
-    err(ln, `${verb} ${name} needs a value after it, e.g. ${verb} ${name} ${SETTING_EXAMPLE[name]}${tail}`)
+    err(ln, message("set.needsValue", { verb, name }))
     return null
   }
   if (SOUNDS[name]) {
     if (value) return { name, value }
-    err(ln, `${verb} ${name} needs a sound after it: ${SOUNDS[name].join(" or ")}`)
+    err(ln, message("set.needsSound", { verb, name }))
     return null
   }
   if (PITCHED.includes(name)) {
-    const choice = Object.entries(SOUNDS).map(([i, s]) => `${i} (${s.join(", ")})`)
-    err(ln, `${name} has one sound. Instruments with more: ${choice.join(", ")}`)
+    err(ln, message("set.oneSound", { name }))
     return null
   }
   const [best, far] = closest(name, [...SETTINGS, ...Object.keys(SOUNDS)])
   err(
     ln,
     far <= 2
-      ? `"${raw}" isn't a setting. Did you mean ${verb} ${best}?`
-      : `"${raw}" isn't a setting. Settings: ${SETTINGS.join(", ")}, and an instrument's sound: ${verb} guitar.electric muted${tail}`,
+      ? message("set.unknownNear", { raw, verb, best })
+      : message("set.unknown", { raw, verb }),
   )
   return null
 }
@@ -1100,27 +1092,27 @@ function ofChord(tok, key, octave) {
   const left = main.slice(0, at)
   const right = main.slice(at + 1)
   if (!numeral(left)) {
-    return { error: "In a chart, of takes a numeral in front of it, counted from the chord after it: V7 of V" }
+    return { error: message("of.leftNumeral") }
   }
-  if (right.startsWith("(")) return { error: "The ( after of closes on its line: V7 of (V of V)" }
+  if (right.startsWith("(")) return { error: message("of.openBracket") }
   let root
   if (right.startsWith("‹")) {
-    if (!right.endsWith("›")) return { error: "A chain of of's takes brackets: V7 of (V of V)" }
+    if (!right.endsWith("›")) return { error: message("of.chainBrackets") }
     const inner = right.slice(1, -1)
     const r = inner.includes("@") ? ofChord(inner, key, octave) : numeral(inner) ? { chord: buildChord(inner, key, octave) } : null
-    if (!r || r.error || !r.chord) return r?.error ? r : { error: "After of, a chart takes a numeral to count from: V7 of V" }
+    if (!r || r.error || !r.chord) return r?.error ? r : { error: message("of.rightNumeral") }
     root = r.chord
   } else {
-    if (right.includes("@")) return { error: "A chain of of's takes brackets: V7 of (V of V)" }
+    if (right.includes("@")) return { error: message("of.chainBrackets") }
     if (!numeral(right)) {
       return {
         error: buildChord(right, key, octave)
-          ? "After of, a chart takes a numeral, not a chord name: V7 of V"
-          : "After of, a chart takes a numeral to count from: V7 of V",
+          ? message("of.rightName")
+          : message("of.rightNumeral"),
       }
     }
     root = buildChord(right, key, octave)
-    if (!root) return { error: `"${right}" isn't a chord I know` }
+    if (!root) return { error: message("chord.unknown", { chord: right }) }
   }
   // The root's own major key, spelt with one sign at most, as a key is, in the octave where
   // the root sounds: V7 of V in A counts up from V's E4, so it's B4
@@ -1129,7 +1121,7 @@ function ofChord(tok, key, octave) {
   const rootKey = parseKey(name)
   const rootOctave = Math.floor((root.notesMidi[0] - rootKey.tonicSemis) / 12) - 1
   const chord = buildChord(left + (bass === null ? "" : "/" + bass), rootKey, rootOctave)
-  return chord ? { chord } : { error: `"${left}" isn't a chord I know` }
+  return chord ? { chord } : { error: message("chord.unknown", { chord: left }) }
 }
 
 function chordSlot(tok, part, st, key, err) {
