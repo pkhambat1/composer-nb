@@ -57,7 +57,7 @@
    // starts a comment. Blank lines and indentation mean nothing. Settings set at the top,
    and names, carry on into later cells.
    Pure (no audio), so the notebook can also use it to pass state from cell to cell. */
-import { applyTranspose, buildChord, degreeSemitones, isRoman, midiToName, parseKey } from "./chords.js"
+import { buildChord, degreeSemitones, isRoman, midiToName, parseKey } from "./chords.js"
 import {
   DRUMS,
   KITS,
@@ -94,10 +94,13 @@ import {
   timeLabel,
 } from "./time.ts"
 import { message } from "./diagnostics.ts"
+import { cloneState, describe, initialState } from "./state.ts"
+import { CHORD_MARKS, chartRepeat, chordPattern, dimMarkProblem, ofChord } from "./values/chart.ts"
 
 // Time, ticks and lengths are in time.ts; these are re-exported for code that imports them
 // from here.
 export { TPQ, barQuarters, lastCount, timeLabel } from "./time.ts"
+export { initialState } from "./state.ts"
 // The language's words are listed once, in vocab.ts. These are re-exported for code that
 // imports them from here.
 export {
@@ -145,7 +148,7 @@ const STEPS = {
 }
 const ROMAN = ["i", "ii", "iii", "iv", "v", "vi", "vii"]
 // A token that reads as a name: a lowercase letter, then letters and digits (riff, partA)
-const NAME_LIKE = /^[a-z][A-Za-z0-9]+$/
+export const NAME_LIKE = /^[a-z][A-Za-z0-9]+$/
 const TAKEN = new Set([...SETTINGS, ...DRUMS, ...PARTS, ...KEYWORDS])
 // A block written inside a line: {#1} on the line, and the block in the line's `blocks`.
 const BLOCK_KEY = /^\{#\d+\}$/
@@ -159,43 +162,12 @@ const LINE_SHAPES =
   "pattern groove = { ... }), play, or inside braces an instrument and what it plays " +
   "(kick: x--x---, guitar: F---G---) or patterns to play (intro verse)"
 
-export function initialState() {
-  return {
-    groups: [4],
-    unit: 4,
-    tempo: 120,
-    swing: 50, // where the off-beat eighth falls, as a percentage of the beat: 50 is straight
-    stepTicks: TPQ / 4, // a step is a 16th note, unless every says otherwise
-    key: "C", // the root degrees and numerals count from
-    mode: "major", // which only changes how the music is written: its signature and spelling
-    transpose: 0, // semitones that what's pitched sounds from what's written
-    octave: 3,
-    kit: "rock",
-    sounds: {}, // instrument → its sound, for instruments set to one other than the first
-    words: {}, // names for steps, notes and chords: { type, tokens }
-    sections: {}, // names for patterns
-  }
-}
-
-function cloneState(s) {
-  return {
-    ...s,
-    groups: [...s.groups],
-    sounds: { ...s.sounds },
-    words: { ...s.words },
-    sections: { ...s.sections },
-  }
-}
-
-// A setting as a state has it, the way the cells below are told about it: tempo 90.
-const describe = (name, s) => `${name} ${name === "time" ? timeLabel(s) : s[name]}`
-
 function tokenize(value) {
   return value.replace(/,/g, " ").replace(/\|/g, " | ").trim().split(/\s+/).filter(Boolean)
 }
 
 // Split tokens on bar lines; empty bars (e.g. from a leading |) are dropped.
-function splitBars(tokens) {
+export function splitBars(tokens) {
   const bars = [[]]
   for (const t of tokens) {
     if (t === "|") bars.push([])
@@ -330,7 +302,7 @@ function checkBars(bars, ln, err) {
 export const keyName = (s) => `${s.key} ${s.mode}`
 
 // The key a state is in, as the chords and the sheet read it.
-const keyOf = (st) => parseKey(st.key, st.mode)
+export const keyOf = (st) => parseKey(st.key, st.mode)
 
 // A key is a note, and the mode a setting of its own. Why `value` isn't a key, as the line
 // to write after `verb` (set, or with in a with's header).
@@ -471,17 +443,6 @@ function applySetting(name, value, ln, state, err, verb = "set") {
     return true
   }
   return false
-}
-
-const CHORD_MARKS = ["|", "-", "_", "%"]
-// vii°, viiø: a diminished numeral is written with dim, as a chord is
-const DIM_MARK = /^([#b]?(?:VII|VI|IV|V|III|II|I|vii|vi|iv|v|iii|ii|i))([°ø])(.*)$/
-function dimMarkProblem(tok) {
-  const m = DIM_MARK.exec(tok)
-  if (!m) return null
-  const [, numeral, mark, rest] = m
-  const written = mark === "ø" ? `${numeral}m7b5` : `${numeral}dim${rest}`
-  return `"${tok}": a diminished numeral takes dim, as a chord does: ${written} (viidim, viidim7, or viim7b5 for half-diminished)`
 }
 
 // steps name = ^-x-, chords name = Am E7|G D: steps or chords to hand to an instrument.
@@ -1080,208 +1041,6 @@ function classify({ ln, text, blocks }, err, st) {
 // Parts: what one line plays. In a pattern it repeats until the pattern ends; in a play it
 // plays once.
 // ---------------------------------------------------------------------------
-
-// V7 of V (V7@V): a numeral counted on the major scale of the root of the chord after of, so
-// in C it's D7, the V7 of G. A chain takes brackets: V7 of (V of V). The chord after of gives
-// only its root, and a bass note goes at the end: V7 of V/F#. Returns { chord } or { error }.
-// Each side is a numeral, with whatever a chart takes after one (V7alt).
-const numeral = (t) => /^[#b]?[IViv]/.test(t)
-function ofChord(tok, key, octave) {
-  const at = tok.indexOf("@")
-  // the last / is a bass's unless it's a 6/9's own: V7 of V/F#, V of I6/9
-  const slash = tok.lastIndexOf("/")
-  const own = tok.slice(slash - 1, slash + 2) === "6/9"
-  const bass = slash > Math.max(at, tok.lastIndexOf("›")) && !own ? tok.slice(slash + 1) : null
-  const main = bass === null ? tok : tok.slice(0, slash)
-  const left = main.slice(0, at)
-  const right = main.slice(at + 1)
-  if (!numeral(left)) {
-    return { error: message("of.leftNumeral") }
-  }
-  if (right.startsWith("(")) return { error: message("of.openBracket") }
-  let root
-  if (right.startsWith("‹")) {
-    if (!right.endsWith("›")) return { error: message("of.chainBrackets") }
-    const inner = right.slice(1, -1)
-    const r = inner.includes("@") ? ofChord(inner, key, octave) : numeral(inner) ? { chord: buildChord(inner, key, octave) } : null
-    if (!r || r.error || !r.chord) return r?.error ? r : { error: message("of.rightNumeral") }
-    root = r.chord
-  } else {
-    if (right.includes("@")) return { error: message("of.chainBrackets") }
-    if (!numeral(right)) {
-      return {
-        error: buildChord(right, key, octave)
-          ? message("of.rightName")
-          : message("of.rightNumeral"),
-      }
-    }
-    root = buildChord(right, key, octave)
-    if (!root) return { error: message("chord.unknown", { chord: right }) }
-  }
-  // The root's own major key, spelt with one sign at most, as a key is, in the octave where
-  // the root sounds: V7 of V in A counts up from V's E4, so it's B4
-  let name = /^[A-G][#b]*/.exec(root.label)[0]
-  if (name.length > 2) name = midiToName(60 + root.rootPc, key.flats).replace(/-?\d+$/, "")
-  const rootKey = parseKey(name)
-  const rootOctave = Math.floor((root.notesMidi[0] - rootKey.tonicSemis) / 12) - 1
-  const chord = buildChord(left + (bass === null ? "" : "/" + bass), rootKey, rootOctave)
-  return chord ? { chord } : { error: message("chord.unknown", { chord: left }) }
-}
-
-function chordSlot(tok, part, st, key, err) {
-  if (tok === "-") return { hold: true }
-  if (tok === "_") return { rest: true }
-  if (tok === "%") {
-    err(part.ln, "% stands for a whole bar, so it goes between bar lines on its own: Am F|%")
-    return null
-  }
-  if (tok.includes("@")) {
-    const of = ofChord(tok, key, st.octave)
-    if (of.error) {
-      err(part.ln, of.error)
-      return null
-    }
-    applyTranspose(of.chord, st.transpose)
-    return { chord: of.chord }
-  }
-  if (NAME_LIKE.test(tok) && !isRoman(tok)) {
-    err(
-      part.ln,
-      st.sections[tok]
-        ? `${tok} is a pattern, so it goes on a line of its own, not on an instrument's line`
-        : `"${tok}" isn't defined above. Name it first: chords ${tok} = Am F|C G`,
-    )
-    return null
-  }
-  const chord = buildChord(tok, key, st.octave)
-  if (!chord) {
-    err(
-      part.ln,
-      dimMarkProblem(tok) ||
-        (drawsNotes(tok)
-        ? `"${tok}" is notes, and this line says chords. A line of notes has no word in front: ${part.name}: ${spaceNotes(tok)}`
-        : `"${tok}" isn't a chord I know`),
-    )
-    return null
-  }
-  applyTranspose(chord, st.transpose)
-  return { chord }
-}
-
-// A chart that is the same bars more than once, after its names and % are written out:
-// Am F|Am F is Am F twice. Returns the bars it repeats (Am F), or null. A chart repeats at
-// the bar, so C C inside one bar strikes the chord twice and is no repeat.
-function chartRepeat(tokens) {
-  const bars = []
-  for (const bar of splitBars(tokens)) {
-    if (bar.length === 1 && bar[0] === "%") bars.push(bars.at(-1) ?? "%")
-    else bars.push(bar.join(" "))
-  }
-  for (let p = 1; p <= bars.length / 2; p++) {
-    if (bars.length % p === 0 && bars.every((b, i) => b === bars[i % p])) {
-      return bars.slice(0, p).join("|")
-    }
-  }
-  return null
-}
-
-function chordPattern(part, tokens, st, barTicks, err) {
-  const key = keyOf(st)
-  const expanded = []
-  let ok = true
-  for (const t of tokens) {
-    const w = st.words[t]
-    if (w && w.type !== "chords") {
-      err(
-        part.ln,
-        w.type === "steps"
-          ? `${t} is steps, so it goes on a drum's line, not among chords`
-          : `${t} is notes, and the rest of this line is chords. A line plays one or the other`,
-      )
-      ok = false
-    } else if (w) expanded.push("|", ...w.tokens, "|")
-    else expanded.push(t)
-  }
-  if (!ok) return null
-  const again = chartRepeat(expanded)
-  if (again) {
-    err(
-      part.ln,
-      `${part.name}: chords ${tokens.join(" ").replace(/ \| /g, "|")} repeats ${again}. ` +
-        `Write ${part.name}: chords ${again}: a pattern repeats it`,
-    )
-    return null
-  }
-  const bars = []
-  for (const bar of splitBars(expanded)) {
-    if (bar.length === 1 && bar[0] === "%") {
-      if (bars.length) bars.push(bars[bars.length - 1])
-      else {
-        err(part.ln, "% repeats the bar before it, but this is the first bar")
-        ok = false
-      }
-      continue
-    }
-    if (barTicks % bar.length || (barTicks / bar.length) % (TPQ / 4)) {
-      err(
-        part.ln,
-        `A ${timeLabel(st)} bar can't be split evenly into ${bar.length}. ` +
-          "Use - to hold a chord for another slot, e.g. Am - F G",
-      )
-      ok = false
-      continue
-    }
-    const slots = bar.map((tok) => chordSlot(tok, part, st, key, err))
-    if (slots.includes(null)) ok = false
-    bars.push(slots)
-  }
-  if (!ok) return null
-  if (!bars.length) {
-    err(part.ln, `chords needs the chords after it: ${part.name}: chords Am F|C G`)
-    return null
-  }
-  if (bars[0][0].hold) {
-    err(part.ln, "This line starts with - but there's no chord to hold yet")
-    return null
-  }
-  const transpose = st.transpose
-  const sound = st.sounds[part.name]
-  return {
-    kind: "pitched",
-    ticks: bars.length * barTicks,
-    expand(total, loop) {
-      const out = []
-      let cur = null
-      for (let b = 0; b * barTicks < total && (loop || b < bars.length); b++) {
-        const bar = bars[b % bars.length]
-        const slot = barTicks / bar.length
-        bar.forEach((s, i) => {
-          if (s.hold) {
-            if (cur) cur.ticks += slot
-            return
-          }
-          if (s.rest) {
-            cur = null
-            return
-          }
-          cur = {
-            tick: b * barTicks + i * slot,
-            ticks: slot,
-            chord: s.chord,
-            label: s.chord.label,
-            instrument: part.name,
-            ...(sound && { sound }),
-            transpose,
-            repeat: b >= bars.length,
-            line: part.ln,
-          }
-          out.push(cur)
-        })
-      }
-      return out
-    },
-  }
-}
 
 // The snare's ghost notes have a line of their own, so a ghost note on the snare's main
 // line, or an accent or ghost on snare.ghost, is a mistake. Says why, or null.
@@ -2116,7 +1875,7 @@ function spacedNotes(run) {
 }
 
 // `text` with the notes in it spaced apart, for showing in a message as the line to write.
-const spaceNotes = (text) => text.replace(/[^\s|,{}]+/g, (w) => spacedNotes(w) || w)
+export const spaceNotes = (text) => text.replace(/[^\s|,{}]+/g, (w) => spacedNotes(w) || w)
 
 const notesTouch = (run, spaced) =>
   `"${run}": notes don't touch, so put a space between them: ${spaced}`
@@ -2124,7 +1883,7 @@ const notesTouch = (run, spaced) =>
 // Whether a token can only be notes drawn on steps: more than one step, with a note among
 // them (F---G, E2 G2, 1---3). One letter on its own could be a chord's name, and digits on
 // their own a number (15 bars), so they aren't told here.
-function drawsNotes(tok) {
+export function drawsNotes(tok) {
   const steps = noteSteps(tok)
   return !!steps && steps.length > 1 && steps.some((s) => s && !s.cut) && /[A-G_-]/.test(tok)
 }
