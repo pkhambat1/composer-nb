@@ -4,8 +4,9 @@
    chord's root (V7 of V). */
 import { applyTranspose, buildChord, isRoman, midiToName, parseKey } from "../chords.js"
 import { message } from "../diagnostics.ts"
-import { drawsNotes, keyOf, NAME_LIKE, spaceNotes } from "../language.js"
+import { keyOf, NAME_LIKE } from "../language.js"
 import type { State } from "../state.ts"
+import { drawsNotes, spaceNotes } from "./notes.ts"
 import { splitBars } from "./steps.ts"
 import { TPQ, timeLabel, type Report } from "../time.ts"
 

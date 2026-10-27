@@ -3,18 +3,7 @@
    (2 beats rest, ...x-), or hits spread over steps (3 in 8), or a block of layers that
    repeat until they line up. Also stickings: which hand plays each step. */
 import { buildChord } from "../chords.js"
-import {
-  blockBeside,
-  BLOCK_KEY,
-  grouped,
-  keyOf,
-  NAME_LIKE,
-  noteSteps,
-  period,
-  spaceNotes,
-  TRACK_RE,
-  withInLayers,
-} from "../language.js"
+import { blockBeside, BLOCK_KEY, keyOf, NAME_LIKE, TRACK_RE, withInLayers } from "../language.js"
 import type { Line, LineBlock, State } from "../state.ts"
 import {
   barQuarters,
@@ -32,6 +21,7 @@ import {
   type Report,
 } from "../time.ts"
 import { UNITS } from "../vocab.ts"
+import { grouped, noteSteps, period, spaceNotes } from "./notes.ts"
 
 const UNITS_ANY: readonly string[] = UNITS
 
@@ -248,7 +238,12 @@ function stepLetter(mods: Mods): string {
 
 // Beats written as steps, so they can be named as steps or layered with them: each bar on
 // the step grid. Null, after saying why, when the bars or beats aren't on it.
-export function beatsAsSteps(part: DrumPart, tokens: string[], st: State, err: Report): string | null {
+export function beatsAsSteps(
+  part: DrumPart,
+  tokens: string[],
+  st: State,
+  err: Report,
+): string | null {
   const { barTicks } = meterOf(st)
   const bars = readBeats(part, tokens, st, barTicks, err)
   if (!bars) return null
