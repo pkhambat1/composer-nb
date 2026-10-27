@@ -286,6 +286,10 @@ function nameRule(type, name, st) {
   if (!/^[a-z]/.test(name)) return `Names start with a lowercase letter: ${type} ${name[0].toLowerCase()}${name.slice(1)}`
   if (name.length < 2) return "Names need at least two characters, because single letters are steps"
   if (ROMAN.includes(name)) return `${name} is a chord, so pick another name`
+  // A name is defined once in a cell: not again, and not inside a block when it's defined
+  // outside it. A name from a cell above can be defined again here.
+  const same = st.words[name] || st.sections[name]
+  if (same && !same.above) return message("name.defined", { name, line: same.line ?? same.ln })
   const twin = [...Object.keys(st.words), ...Object.keys(st.sections)].find(
     (n) => n !== name && n.toLowerCase() === name.toLowerCase(),
   )
@@ -3288,6 +3292,9 @@ export function parseCell(src, inherited = initialState()) {
     if (!errors.some((e) => e.line === line && e.msg === msg)) errors.push({ line, msg })
   }
   const state = cloneState(inherited)
+  // Names from the cells above are marked so: this cell can define them again
+  for (const n in state.words) state.words[n] = { ...state.words[n], above: true }
+  for (const n in state.sections) state.sections[n] = { ...state.sections[n], above: true }
   const setHere = new Map() // setting name → the line in this cell that set it
   const outputs = []
   let transposeLine = null

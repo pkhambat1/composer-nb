@@ -663,14 +663,27 @@ describe("names", () => {
     expect(firstError("tempo = { kick: x }")).toMatch(/tempo already means something/)
   })
 
-  it("hold one thing at a time", () => {
-    expect(
-      labels("pattern aa = { piano: chords C }\npattern aa = { piano: chords G }\nplay aa"),
-    ).toEqual(["G"])
-    // Given again with another type, the name means the new thing.
-    expect(labels("steps riff = x-x-\nchords riff = Am F\nplay piano: chords riff")).toEqual([
-      "Am",
-      "F",
+  it("are defined once in a cell, inside a block too", () => {
+    const again = "A name is defined once, so pick another name"
+    expect(firstError("pattern aa = { piano: chords C }\npattern aa = { piano: chords G }\nplay aa")).toBe(
+      `aa is already defined on line 1. ${again}`,
+    )
+    // not with another type either
+    expect(firstError("steps riff = x---\nchords riff = Am F")).toBe(`riff is already defined on line 1. ${again}`)
+    // nor inside a block, when it's defined outside it
+    expect(firstError("steps fig = x---\nplay {\n  steps fig = --x-\n  snare: fig\n}")).toBe(
+      `fig is already defined on line 1. ${again}`,
+    )
+    // two blocks can each have their own, since what's named in braces stays inside
+    expect(allErrors("play {\n  steps fig = x---\n  snare: fig\n}\nplay {\n  steps fig = --x-\n  snare: fig\n}")).toEqual([])
+  })
+
+  it("from a cell above can be defined again in a cell below", () => {
+    const above = parseSource("steps fig = x---").state
+    expect(parseSource("steps fig = --x-\nplay snare: fig", above).errors).toEqual([])
+    // and then not again in that cell
+    expect(parseSource("steps fig = --x-\nsteps fig = x-x-", above).errors.map((e) => e.msg)).toEqual([
+      "fig is already defined on line 1. A name is defined once, so pick another name",
     ])
   })
 
@@ -703,8 +716,10 @@ describe("names", () => {
     expect(firstError("notes riffB = C4---\nchords riffb = Am")).toBe(
       "riffb differs from riffB only in its capitals, so pick another name or write riffB",
     )
-    // the same name, written the same way, is given again
-    expect(firstError("notes riffB = C4---\nnotes riffB = D4---")).toBeUndefined()
+    // the same name, written the same way, is defined twice
+    expect(firstError("notes riffB = C4---\nnotes riffB = D4---")).toBe(
+      "riffB is already defined on line 1. A name is defined once, so pick another name",
+    )
     // a play that names one with a capital gets the rule, not a name it can't write
     expect(allErrors("pattern Bridge = { kick: x--- }\nplay Bridge")).toEqual([
       "Names start with a lowercase letter: pattern bridge",

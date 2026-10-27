@@ -8,7 +8,7 @@ HOW A CELL READS. Every line says what it is:
   set tempo 90              a setting, at the top only: set, then the setting and its value
   with octave 2 { ... }     settings for its block only
   steps pair = ^-x-         a name, its type in front, = its value. Types: steps, sticking, notes, chords, pattern
-Names, of every type, start with a lowercase letter, then letters and digits in camelCase (riff, partA, countIn), at least two characters, never a numeral. Two names that differ only in their capitals are an error.
+Names, of every type, start with a lowercase letter, then letters and digits in camelCase (riff, partA, countIn), at least two characters, never a numeral. Two names that differ only in their capitals are an error. A name is defined once in a cell, inside its blocks too; a later cell may define it again.
   kick: x--x---             inside braces: a kit piece or instrument, a colon, what it plays
   play { ... }              plays what follows it. Nothing sounds outside a play
   // a comment

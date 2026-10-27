@@ -2,7 +2,7 @@
    with what it needs to say passed in, so the wording of a whole area can be read and
    changed in one place, and tsc checks that a code exists and gets what it needs.
    Messages still come out as { line, msg }; the codes are for the code that reports them.
-   Moving here so far: settings, time fitting, and of in a chart. The rest of the
+   Moving here so far: settings, defining a name twice, time fitting, and of in a chart. The rest of the
    engine's messages are still written where they're reported, in language.js. */
 import { KITS, MODES, PITCHED, SETTINGS, SETTING_EXAMPLE, SOUNDS } from "./vocab.ts"
 
@@ -72,6 +72,10 @@ export const MESSAGES = {
     `${name}'s sound is one of: ${SOUNDS[name]!.join(", ")}`,
   "with.inLayers": ({ name }: { name: string }) =>
     `A with goes around ${name}'s line, not among its layers: with ${(PITCHED as readonly string[]).includes(name) ? "octave 5" : "kit synth"} { ${name}: { ... } }`,
+
+  // Names
+  "name.defined": ({ name, line }: { name: string; line: number }) =>
+    `${name} is already defined on line ${line}. A name is defined once, so pick another name`,
 
   // What repeats has to fit what it's in a whole number of times
   "fit.whole": ({
