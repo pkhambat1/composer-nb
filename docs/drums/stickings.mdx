@@ -1,0 +1,42 @@
+---
+title: "Stickings"
+description: "The sticking type: the hand on each step."
+---
+
+import { Cell } from "/snippets/cell.jsx"
+
+`sticking:` is a line beside the kit pieces' lines. Its value names the hand on each step, `R` or `L`, with `-` where none is named. Spaces are ignored, as in [steps](/drums/steps), and the line repeats like any other. Each hand goes with the hit the hands play at that moment: the grid shows the sticking as a row under the kit, and the sheet writes the letter under the note. A hand on a step where no hand plays is an error.
+
+<Cell>
+
+```composer-nb
+set tempo 100
+
+pattern paradiddle = {
+  snare: ^xxx
+  sticking: RLRR LRLL
+}
+
+play 2 bars paradiddle
+```
+
+</Cell>
+
+A `d` is two strokes in one step, so one letter names the hand of both.
+
+<Cell>
+
+```composer-nb
+set tempo 80
+
+pattern five = {
+  snare: dd^-
+  sticking: RLR- LRL-
+}
+
+play 2 bars five
+```
+
+</Cell>
+
+A `sticking` name holds one: `sticking para = RLRR LRLL`.

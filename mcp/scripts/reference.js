@@ -1,4 +1,4 @@
-/* Writes mcp/reference.js from the docs site's language pages, so the server hands an
+/* Writes mcp/reference.js from the docs site's reference pages, so the server hands an
    assistant the same reference the site shows, with nothing to keep in step by hand. Run by
    `npm run build -w mcp`; a test checks the file is what this would write. */
 import { readFileSync, writeFileSync } from "node:fs"
@@ -7,12 +7,14 @@ import { fileURLToPath } from "node:url"
 const DOCS = fileURLToPath(new URL("../../docs/", import.meta.url))
 const SITE = "https://pkhambat.mintlify.site"
 const OUT = fileURLToPath(new URL("../reference.js", import.meta.url))
+// The sidebar's groups that make up the reference: the shared core, then the two parts.
+const GROUPS = ["Language", "Drums", "Pitched instruments"]
 
-// The language pages, in the sidebar's order, as { id, title, description, text }: the page
+// The reference pages, in the sidebar's order, as { id, title, description, text }: the page
 // as markdown, without the site's components.
 export function referencePages() {
   const nav = JSON.parse(readFileSync(DOCS + "docs.json", "utf8")).navigation.groups
-  const pages = nav.find((g) => g.group === "Language").pages
+  const pages = GROUPS.flatMap((name) => nav.find((g) => g.group === name).pages)
   return pages.map((page) => {
     const mdx = readFileSync(`${DOCS}${page}.mdx`, "utf8")
     const fm = /^---\n([\s\S]*?)\n---\n/.exec(mdx)
@@ -40,7 +42,7 @@ export function referencePages() {
 
 export function referenceSource() {
   return (
-    "// Generated from docs/language by scripts/reference.js: run npm run build -w mcp. Don't edit.\n" +
+    "// Generated from the docs' reference pages by scripts/reference.js: run npm run build -w mcp. Don't edit.\n" +
     `export const REFERENCE = ${JSON.stringify(referencePages(), null, 2)}\n`
   )
 }

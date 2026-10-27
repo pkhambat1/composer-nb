@@ -1,0 +1,36 @@
+---
+title: "Key and mode"
+description: "key and mode: the root that degrees and numerals count from, and how the music is written."
+---
+
+import { Cell } from "/snippets/cell.jsx"
+
+`key` is a note and `mode` is a setting of its own, so `set key E` then `set mode minor` is E minor. Each keeps the other: after `set mode minor`, a later `set key G` is G minor. On a [`with`](/language/settings#with), a block plays in another key.
+
+Roman numerals and degrees count on the major scale of the key's root, whatever the mode, and `b` or `#` in front moves them a semitone. That is how a scale is described against major: natural minor is `1 2 b3 4 5 b6 b7`, and its chords are `i bIII iv v bVI bVII`. So the mode changes no pitch. It sets how the music is written: the sheet's key signature (D dorian has none, A mixolydian two sharps), how accidentals are spelt, and minor's raised 7th, which gets a sharp.
+
+<Cell>
+
+```composer-nb
+set tempo 100
+set key D
+set mode dorian
+set octave 4
+
+pattern vamp = {
+  piano: {
+    chords i7 - IV -|i7 - bVII -
+    5---6---b7---1'---|2'-------b7---5---
+  }
+  bass: D2-------A2---B2---|D2-------C2---A2---
+  hat: x-
+  snare.cross: 2 4
+  kick: 1 3
+}
+
+play vamp
+```
+
+</Cell>
+
+In D, `i7 IV` is Dm7 G and `bVII` is C. The melody's `6` is B, the major sixth over a minor chord that makes the mode dorian.

@@ -38,11 +38,25 @@
         "pages": [
           "language/overview",
           "language/settings",
-          "language/steps",
-          "language/notes",
-          "language/chords",
           "language/patterns",
           "language/play"
+        ]
+      },
+      {
+        "group": "Drums",
+        "pages": [
+          "drums/kit",
+          "drums/steps",
+          "drums/stickings"
+        ]
+      },
+      {
+        "group": "Pitched instruments",
+        "pages": [
+          "pitched/instruments",
+          "pitched/key",
+          "pitched/notes",
+          "pitched/chords"
         ]
       }
     ]
@@ -75,27 +89,15 @@
     },
     {
       "source": "/drums/notation",
-      "destination": "/language/steps"
+      "destination": "/drums/steps"
     },
     {
       "source": "/drums/lines",
-      "destination": "/language/steps"
+      "destination": "/drums/steps"
     },
     {
       "source": "/drums/note-values",
-      "destination": "/language/steps#step-length"
-    },
-    {
-      "source": "/pitched/notes",
-      "destination": "/language/notes"
-    },
-    {
-      "source": "/pitched/chords",
-      "destination": "/language/chords"
-    },
-    {
-      "source": "/pitched/instruments",
-      "destination": "/language/notes#instruments"
+      "destination": "/language/patterns#every"
     },
     {
       "source": "/song/time-and-tempo",
@@ -119,7 +121,7 @@
     },
     {
       "source": "/reference/names",
-      "destination": "/language/overview#types"
+      "destination": "/language/overview#names"
     },
     {
       "source": "/reference/numbers-and-lengths",
@@ -155,19 +157,19 @@
     },
     {
       "source": "/language/drums",
-      "destination": "/language/steps"
+      "destination": "/drums/kit"
     },
     {
       "source": "/language/every",
-      "destination": "/language/steps#step-length"
+      "destination": "/language/patterns#every"
     },
     {
       "source": "/chords/lines",
-      "destination": "/language/chords"
+      "destination": "/pitched/chords"
     },
     {
       "source": "/chords/sound",
-      "destination": "/language/notes#instruments"
+      "destination": "/pitched/instruments#sound"
     },
     {
       "source": "/language/bar",
@@ -179,7 +181,7 @@
     },
     {
       "source": "/language/declarations",
-      "destination": "/language/overview#types"
+      "destination": "/language/overview#names"
     },
     {
       "source": "/language/numbers-and-lengths",
@@ -188,6 +190,18 @@
     {
       "source": "/language/errors",
       "destination": "/language/overview"
+    },
+    {
+      "source": "/language/steps",
+      "destination": "/drums/steps"
+    },
+    {
+      "source": "/language/notes",
+      "destination": "/pitched/notes"
+    },
+    {
+      "source": "/language/chords",
+      "destination": "/pitched/chords"
     }
   ]
 }

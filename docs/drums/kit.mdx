@@ -1,0 +1,27 @@
+---
+title: "Kit"
+description: "The drum kit: its pieces, a line each, and the kit setting."
+---
+
+The drum kit is one instrument, and each piece of it has a line of its own. A kit piece's line holds [`steps`](/drums/steps), and a [`sticking`](/drums/stickings) line names the hands.
+
+| Name | Kit piece |
+| --- | --- |
+| `kick` | Bass drum |
+| `snare` | Snare drum |
+| `snare.ghost` | Snare ghost notes |
+| `snare.rim` | Rimshot |
+| `snare.cross` | Cross-stick |
+| `hat` | Closed hi-hat |
+| `hat.open` | Open hi-hat. Rings until the next `hat` or `hat.pedal`. |
+| `hat.pedal` | Hi-hat played with the foot |
+| `ride` | Ride cymbal |
+| `ride.bell` | Ride bell |
+| `crash` | Crash cymbal |
+| `tom.high` | High tom |
+| `tom.low` | Low tom |
+| `tom.floor` | Floor tom |
+
+## kit
+
+`set kit rock` or `set kit synth` chooses the kit. `rock`, the default, is a recorded kit, loaded from the network on first use. `synth` is synthesized and works offline. On a [`with`](/language/settings#with), a block can play the other kit.
