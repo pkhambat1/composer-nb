@@ -2,6 +2,8 @@
    repeats fits, and swing. The one place time arithmetic lives. A time is counted in ticks,
    TPQ to a quarter note; seconds come from the tempo only at the end. */
 
+import { message } from "./diagnostics.ts"
+
 export const TPQ = 96 // ticks per quarter note: fine enough for 1/32 notes and triplets
 
 // The part of a cell's state that says how its time goes. Callers pass the whole state.
@@ -225,16 +227,19 @@ export function checkLoops(
   const every =
     loops.filter(whole).reduce((a, l) => lcm(a, Math.round(l.ticks)), barTicks) / barTicks
   const when = every === 1 ? "every bar" : `every ${fmt(every)} bars`
-  const hint =
-    loops.length > 1 ? `The things repeating here line up ${when}` : `It lines up ${when}`
+  const hint = message("fit.hint", { many: loops.length > 1, when })
   const length = sayTicks(total, st, barTicks)
   for (const l of bad) {
     err(
       l.ln,
       whole(l)
-        ? `${l.what} is ${sayTicks(Math.round(l.ticks), st, barTicks)} long, ` +
-            `which doesn't fit ${length} a whole number of times. ${hint}`
-        : `${l.what} sets its own tempo, and doesn't fit ${length} a whole number of times`,
+        ? message("fit.whole", {
+            what: l.what,
+            length: sayTicks(Math.round(l.ticks), st, barTicks),
+            total: length,
+            hint,
+          })
+        : message("fit.ownTempo", { what: l.what, total: length }),
     )
   }
   return false
