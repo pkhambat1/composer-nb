@@ -109,5 +109,5 @@ Any number can be arithmetic: `set tempo 60*2`, `every 1/3 beats`.
 - A `set` applies from its line to the end of the cell. It goes only at the top of a cell; inside a block, settings go on a `with`.
 - A `with`'s settings apply to its block only, and what was set before comes back at its `}`.
 - A declaration applies from its line to the end of the cell, or of the block it is in, including a `with`'s.
-- A pattern is evaluated where it is played, with the settings in effect there.
+- A pattern is evaluated where it is played, with the settings in effect there, and with the names written above it: a later cell that defines a name again doesn't change what an earlier pattern plays.
 - The settings set at the top and the names declared there carry into other cells; a `with`'s never do. In the playground, a cell starts from the cells above it. In Jupyter, it starts from the cell named by [`after`](/jupyter#cells-that-continue).

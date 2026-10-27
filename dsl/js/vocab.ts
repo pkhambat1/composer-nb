@@ -9,6 +9,23 @@
 export const TYPES = ["steps", "sticking", "notes", "chords", "pattern"] as const
 export type Type = (typeof TYPES)[number]
 
+// Words with a meaning of their own, which can't be names
+export const KEYWORDS: readonly string[] = [
+  ...TYPES,
+  "play",
+  "set",
+  "with",
+  "of",
+  "bars",
+  "beats",
+  "bar",
+  "to",
+  "every",
+  "rest",
+  "over",
+  "in",
+]
+
 export const DRUMS = ["crash", "ride", "hat", "tom", "snare", "kick"] as const
 export type Drum = (typeof DRUMS)[number]
 // A drum's other sounds are lines of their own, written drum.variation (ride.bell).

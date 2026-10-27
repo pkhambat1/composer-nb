@@ -3,7 +3,8 @@
    (2 beats rest, ...x-), or hits spread over steps (3 in 8), or a block of layers that
    repeat until they line up. Also stickings: which hand plays each step. */
 import { buildChord } from "../chords.js"
-import { blockBeside, BLOCK_KEY, keyOf, NAME_LIKE, TRACK_RE, withInLayers } from "../language.js"
+import { blockBeside, BLOCK_KEY, keyOf, TRACK_RE, withInLayers } from "../language.js"
+import { NAME_LIKE } from "../resolve.ts"
 import type { Line, LineBlock, State } from "../state.ts"
 import {
   barQuarters,
