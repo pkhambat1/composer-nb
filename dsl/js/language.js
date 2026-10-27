@@ -58,39 +58,38 @@
    and names, carry on into later cells.
    Pure (no audio), so the notebook can also use it to pass state from cell to cell. */
 import { applyTranspose, buildChord, degreeSemitones, isRoman, midiToName, parseKey } from "./chords.js"
+import {
+  DRUMS,
+  KITS,
+  LANES,
+  MODES,
+  PARTS,
+  PITCHED,
+  SETTING_EXAMPLE,
+  SETTINGS,
+  SOUNDS,
+  SPLIT,
+  TYPES,
+  UNITS,
+} from "./vocab.ts"
 
 export const TPQ = 96 // ticks per quarter note: fine enough for 1/32 notes and triplets
-export const DRUMS = ["crash", "ride", "hat", "tom", "snare", "kick"]
-// A drum's other sounds are lines of their own, written drum.variation (ride.bell).
-// snare.ghost plays the snare's ghost notes, so they can go under its main line.
-export const VARIATIONS = {
-  ride: ["bell"],
-  hat: ["open", "pedal"],
-  tom: ["high", "low", "floor"],
-  snare: ["ghost", "rim", "cross"],
-}
-// Drums that are only their variations, with no line of their own: tom is three drums.
-export const SPLIT = ["tom"]
-// Every drum line name, in the order the drum grid draws them.
-export const LANES = DRUMS.flatMap((d) => [
-  ...(SPLIT.includes(d) ? [] : [d]),
-  ...(VARIATIONS[d] || []).map((v) => `${d}.${v}`),
-])
-// Instruments that play notes and chords, each on a line of its own like a drum. A second
-// sound is written the way a drum's is: guitar.electric.
-export const PITCHED = [
-  "guitar",
-  "guitar.electric",
-  "piano",
-  "piano.electric",
-  "organ",
-  "pad",
-  "bass",
-]
-export const PARTS = [...PITCHED, ...LANES]
-export const SETTINGS = ["time", "tempo", "swing", "key", "mode", "transpose", "octave", "kit"]
-// The types a name can have. Its type goes in front of it: steps pair = ^-x-
-export const TYPES = ["steps", "sticking", "notes", "chords", "pattern"]
+// The language's words are listed once, in vocab.ts. These are re-exported for code that
+// imports them from here.
+export {
+  DRUMS,
+  KITS,
+  LANES,
+  MODES,
+  PARTS,
+  PITCHED,
+  SETTINGS,
+  SOUNDS,
+  SPLIT,
+  TYPES,
+  UNITS,
+  VARIATIONS,
+} from "./vocab.ts"
 export const KEYWORDS = [
   ...TYPES,
   "play",
@@ -106,23 +105,6 @@ export const KEYWORDS = [
   "over",
   "in",
 ]
-export const KITS = ["rock", "synth"]
-// The modes a key can be in, set on their own: set key D, set mode dorian. Major and minor
-// have one name each.
-export const MODES = ["major", "minor", "dorian", "phrygian", "lydian", "mixolydian", "locrian"]
-// Instruments with more than one sound. Naming the instrument and a sound is a setting,
-// like kit: set guitar.electric muted. The first sound is the one it has until then.
-export const SOUNDS = { "guitar.electric": ["clean", "muted"] }
-const SETTING_EXAMPLE = {
-  time: "7 over 8",
-  tempo: "90",
-  swing: "60",
-  key: "E",
-  mode: "minor",
-  transpose: "2",
-  octave: "3",
-  kit: "rock",
-}
 // The hands of a sticking line: R, L, or - for a step with no hand named
 const STICKING_RE = /^[RL-]+$/
 
@@ -197,15 +179,8 @@ export function lastCount(s) {
   return Math.floor(n / 4) + 1 + ["", "e", "&", "a"][n % 4]
 }
 
-const DESCRIBE = {
-  time: (s) => "time " + timeLabel(s),
-  tempo: (s) => "tempo " + s.tempo,
-  key: (s) => "key " + s.key,
-  mode: (s) => "mode " + s.mode,
-  transpose: (s) => "transpose " + s.transpose,
-  octave: (s) => "octave " + s.octave,
-  kit: (s) => "kit " + s.kit,
-}
+// A setting as a state has it, the way the cells below are told about it: tempo 90.
+const describe = (name, s) => `${name} ${name === "time" ? timeLabel(s) : s[name]}`
 
 function tokenize(value) {
   return value.replace(/,/g, " ").replace(/\|/g, " | ").trim().split(/\s+/).filter(Boolean)
@@ -742,7 +717,11 @@ function defineWord(type, name, value, ln, state, err, blocks = null) {
 // ---------------------------------------------------------------------------
 
 const DEF_RE = /^([A-Za-z][A-Za-z0-9]*)\s*=\s*(.*)$/
-const TYPED_RE = /^(steps|sticking|notes|chords|pattern)\s+([A-Za-z][A-Za-z0-9]*)\s*=\s*(.*)$/
+// A type, a name and what it holds: steps pair = ^-x-
+const TYPE_WORDS = TYPES.join("|")
+const TYPED_RE = new RegExp(`^(${TYPE_WORDS})\\s+([A-Za-z][A-Za-z0-9]*)\\s*=\\s*(.*)$`)
+// The same with the = left out: steps pair ^-x-
+const NO_EQUALS_RE = new RegExp(`^(${TYPE_WORDS})\\s+([A-Za-z][A-Za-z0-9]*)\\s+([^=].*)$`)
 const TRACK_RE = /^([A-Za-z][A-Za-z0-9]*(?:\.[A-Za-z0-9]+)?)\s*:\s*(.*)$/
 // bar 2 ..., bar 3 to 4 ...: a place in front of what plays there
 const PLACE_RE = /^bar(\s+\S|$)/
@@ -1109,7 +1088,7 @@ function classify({ ln, text, blocks }, err, st) {
     const tokens = tokenize(text)
     const first = tokens[0] || ""
     const after = tokens.slice(1).join(" ")
-    const noEquals = /^(steps|notes|chords|pattern)\s+([A-Za-z][A-Za-z0-9]*)\s+([^=].*)$/.exec(text)
+    const noEquals = NO_EQUALS_RE.exec(text)
     if (first === "set") return readSetting(text, tokens, ln, err)
     if (/^with(\s|\{|$)/.test(text)) {
       // with octave 2 { ... }: a block, played with those settings
@@ -1563,9 +1542,6 @@ function stepMods(c, part, err, where) {
   }
   return mods
 }
-
-// What steps can be measured in. Always plural, whatever the number.
-export const UNITS = ["steps", "beats", "bars"]
 
 // 3 in 8: this many hits, spread as evenly as they go over this many steps.
 const EUCLID_RE = /^(\d+)\s+in\s+(\d+)$/
@@ -3903,9 +3879,16 @@ export function parseCell(src, inherited = initialState()) {
   }
 
   const start = initialState()
-  const fromAbove = Object.keys(DESCRIBE)
-    .filter((k) => !setHere.has(k) && DESCRIBE[k](inherited) !== DESCRIBE[k](start))
-    .map((k) => DESCRIBE[k](inherited))
+  // What this cell plays with from the cells above: every setting they changed, and every
+  // instrument they set to another sound, unless this cell sets it again.
+  const fromAbove = [
+    ...SETTINGS.filter((k) => !setHere.has(k) && describe(k, inherited) !== describe(k, start)).map(
+      (k) => describe(k, inherited),
+    ),
+    ...Object.entries(inherited.sounds)
+      .filter(([instrument]) => !setHere.has(instrument))
+      .map(([instrument, sound]) => `${instrument} ${sound}`),
+  ]
 
   // One timeline with every output back to back, for views that show a single player.
   let t = 0

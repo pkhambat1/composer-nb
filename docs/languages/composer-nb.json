@@ -29,17 +29,17 @@
     },
     "instrument": {
       "name": "entity.name.function.composer-nb",
-      "match": "\\b(guitar(\\.electric)?|piano(\\.electric)?|organ|pad|bass|kick|snare(\\.(ghost|rim))?|hat(\\.(open|pedal))?|ride(\\.bell)?|crash|tom\\.(high|low|floor))(?=\\s*:)"
+      "match": "\\b(guitar(\\.electric)?|piano(\\.electric)?|organ|pad|bass|kick|snare(\\.(ghost|rim|cross))?|hat(\\.(open|pedal))?|ride(\\.bell)?|crash|tom\\.(high|low|floor))(?=\\s*:)"
     },
     "declaration": {
-      "match": "\\b(steps|notes|chords|pattern)\\s+([A-Za-z][A-Za-z0-9]*)(?=\\s*=)",
+      "match": "\\b(steps|sticking|notes|chords|pattern)\\s+([A-Za-z][A-Za-z0-9]*)(?=\\s*=)",
       "captures": {
         "1": { "name": "storage.type.composer-nb" },
         "2": { "name": "variable.other.composer-nb" }
       }
     },
     "setting": {
-      "match": "^\\s*(set)\\s+(time|tempo|swing|key|transpose|octave|kit|guitar\\.electric)\\b",
+      "match": "^\\s*(set)\\s+(time|tempo|swing|key|mode|transpose|octave|kit|guitar\\.electric)\\b",
       "captures": {
         "1": { "name": "keyword.control.composer-nb" },
         "2": { "name": "keyword.other.setting.composer-nb" }
@@ -47,7 +47,7 @@
     },
     "keyword": {
       "name": "keyword.control.composer-nb",
-      "match": "\\b(play|set|of|bar|bars|beats|steps|chords|to|every|rest|over)\\b"
+      "match": "\\b(play|set|with|of|bar|bars|beats|steps|chords|to|every|rest|over|in)\\b"
     },
     "value": {
       "name": "constant.language.composer-nb",

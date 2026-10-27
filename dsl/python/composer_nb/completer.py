@@ -1,7 +1,7 @@
 """Tab completion inside `%%music` cells.
 
 Jupyter asks the kernel what could come next, and IPython only knows Python, so the
-extension adds a matcher of its own. The word lists mirror dsl/js/language.js;
+extension adds a matcher of its own. The word lists mirror dsl/js/vocab.ts;
 tests/python/test_completer.py fails if the two drift apart.
 """
 
@@ -43,7 +43,7 @@ INSTRUMENT_SOUNDS = {"guitar.electric": ["clean", "muted"]}
 
 MAGIC = "%%music"
 # A name and the type in front of it: steps pair = ^-x-
-DEF_RE = re.compile(r"^\s*(steps|notes|chords|pattern)\s+([A-Za-z_]\w*)\s*=", re.M)
+DEF_RE = re.compile(rf"^\s*({'|'.join(TYPES)})\s+([A-Za-z_]\w*)\s*=", re.M)
 # The instrument line the cursor is on: its name, then what's been written after the colon.
 PART_RE = re.compile(r"(?:^|[\s{])([a-z]+(?:\.[a-z]+)?):([^:{}]*)$")
 NUMBER_RE = re.compile(r"^\d+$|\)$")
