@@ -1060,6 +1060,20 @@ describe("patterns repeat, and a play's own lines play once", () => {
   })
 })
 
+describe("events", () => {
+  it("count their ticks from the start of their block, as the block's own events do", () => {
+    const p = parseSource("pattern aa = {\n  kick: x---\n}\npattern bb = {\n  snare: x---\n}\nplay (aa bb)")
+    expect(p.drumEvents.map((e) => [e.lane, e.tick])).toEqual([
+      ["kick", 0],
+      ["snare", 96],
+    ])
+    expect(p.blocks[0].drumEvents.map((e) => [e.lane, e.tick])).toEqual([
+      ["kick", 0],
+      ["snare", 96],
+    ])
+  })
+})
+
 describe("settings", () => {
   it("apply from where they're written", () => {
     expect(durations("play piano: chords C\nset tempo 60\nplay piano: chords C")).toEqual([2, 4])

@@ -3698,14 +3698,23 @@ export function parseCell(src, inherited = initialState()) {
       .map(([instrument, sound]) => `${instrument} ${sound}`),
   ]
 
-  // One timeline with every output back to back, for views that show a single player.
+  // One timeline with every output back to back, for views that show a single player. An
+  // event's tick counts from the start of the block it plays in, as the blocks' own events
+  // do; a pattern's events count from the pattern, wherever it falls in the block.
   let t = 0
   const events = []
   const drumEvents = []
   const blocks = []
   for (const o of outputs) {
-    events.push(...o.events.map((e) => ({ ...e, secStart: e.secStart + t })))
-    drumEvents.push(...o.drumEvents.map((e) => ({ ...e, secStart: e.secStart + t })))
+    const place = (e) => {
+      const b = o.blocks.find(
+        (b) => e.secStart >= b.startSec - 1e-9 && e.secStart < b.startSec + b.durSec - 1e-9,
+      )
+      const tick = b ? Math.round((e.secStart - b.startSec) / b.secPerTick) : e.tick
+      return { ...e, tick, secStart: e.secStart + t }
+    }
+    events.push(...o.events.map(place))
+    drumEvents.push(...o.drumEvents.map(place))
     blocks.push(
       ...o.blocks.map((b) => ({ ...b, startSec: b.startSec + t, plays: [b.startSec + t] })),
     )

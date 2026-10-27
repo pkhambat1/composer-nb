@@ -30,15 +30,15 @@ drums:
   3.1667 inst=snare art=hit lane=snare kit=rock tick=456 vel=0.7 line=7
   3.3333 inst=hat art=hit lane=hat kit=rock tick=480 vel=1 accent=true line=9
   3.5 inst=kick art=hit lane=kick kit=rock tick=504 vel=0.7 line=6
-  3.6667 inst=snare art=ghost lane=snare.ghost kit=rock tick=192 vel=0.3 ghost=true double=true line=11
+  3.6667 inst=snare art=ghost lane=snare.ghost kit=rock tick=528 vel=0.3 ghost=true double=true line=11
   3.6667 inst=hat art=hit lane=hat kit=rock tick=528 vel=0.7 line=9
-  3.75 inst=snare art=ghost lane=snare.ghost kit=rock tick=204 vel=0.3 ghost=true double=true line=11 hidden=true gap=12 gapSec=0.0833
-  3.8333 inst=snare art=ghost lane=snare.ghost kit=rock tick=216 vel=0.3 ghost=true double=true line=11
-  3.9167 inst=snare art=ghost lane=snare.ghost kit=rock tick=228 vel=0.3 ghost=true double=true line=11 hidden=true gap=12 gapSec=0.0833
-  4 inst=hat art=open lane=hat.open kit=rock tick=240 vel=1 accent=true line=12
+  3.75 inst=snare art=ghost lane=snare.ghost kit=rock tick=540 vel=0.3 ghost=true double=true line=11 hidden=true gap=12 gapSec=0.0833
+  3.8333 inst=snare art=ghost lane=snare.ghost kit=rock tick=552 vel=0.3 ghost=true double=true line=11
+  3.9167 inst=snare art=ghost lane=snare.ghost kit=rock tick=564 vel=0.3 ghost=true double=true line=11 hidden=true gap=12 gapSec=0.0833
+  4 inst=hat art=open lane=hat.open kit=rock tick=576 vel=1 accent=true line=12
   4 inst=kick art=hit lane=kick kit=rock tick=576 vel=0.7 line=6
   4.3333 inst=hat art=hit lane=hat kit=rock tick=624 vel=0.7 line=9
-  4.3333 inst=hat art=pedal lane=hat.pedal kit=rock tick=288 vel=0.7 line=13
+  4.3333 inst=hat art=pedal lane=hat.pedal kit=rock tick=624 vel=0.7 line=13
   4.3333 inst=snare art=hit lane=snare kit=rock tick=624 vel=0.7 line=7
 
 ## Circle of Manias
@@ -86,44 +86,44 @@ drums:
   4.95 inst=kick art=hit lane=kick kit=rock tick=792 vel=0.7 line=8
   5.1 inst=hat art=hit lane=hat kit=rock tick=816 vel=0.7 line=7
   5.1 inst=snare art=hit lane=snare kit=rock tick=816 vel=0.7 line=9
-  5.4 inst=hat art=open lane=hat.open kit=rock tick=0 vel=0.7 line=6
-  5.4 inst=kick art=hit lane=kick kit=rock tick=0 vel=0.7 line=8
-  5.55 inst=snare art=ghost lane=snare.ghost kit=rock tick=24 vel=0.3 ghost=true line=10
-  5.7 inst=hat art=hit lane=hat kit=rock tick=48 vel=0.7 line=7
-  5.7 inst=snare art=ghost lane=snare.ghost kit=rock tick=48 vel=0.3 ghost=true line=10
-  5.85 inst=kick art=hit lane=kick kit=rock tick=72 vel=0.7 line=8
-  6 inst=hat art=open lane=hat.open kit=rock tick=96 vel=0.7 line=6
-  6.15 inst=kick art=hit lane=kick kit=rock tick=120 vel=0.7 line=8
-  6.3 inst=hat art=hit lane=hat kit=rock tick=144 vel=0.7 line=7
-  6.45 inst=snare art=hit lane=snare kit=rock tick=168 vel=0.7 line=9
-  6.6 inst=hat art=open lane=hat.open kit=rock tick=192 vel=0.7 line=6
-  6.75 inst=kick art=hit lane=kick kit=rock tick=216 vel=0.7 line=8
-  6.9 inst=hat art=hit lane=hat kit=rock tick=240 vel=0.7 line=7
-  7.2 inst=hat art=open lane=hat.open kit=rock tick=288 vel=0.7 line=6
-  7.2 inst=kick art=hit lane=kick kit=rock tick=288 vel=0.7 line=8
-  7.5 inst=hat art=hit lane=hat kit=rock tick=336 vel=0.7 line=7
-  7.5 inst=kick art=hit lane=kick kit=rock tick=336 vel=0.7 line=8
-  7.65 inst=kick art=hit lane=kick kit=rock tick=360 vel=0.7 line=8
-  7.8 inst=hat art=open lane=hat.open kit=rock tick=384 vel=0.7 line=6
-  7.8 inst=snare art=hit lane=snare kit=rock tick=384 vel=0.7 line=9
-  8.1 inst=hat art=hit lane=hat kit=rock tick=432 vel=0.7 line=7
-  8.1 inst=kick art=hit lane=kick kit=rock tick=432 vel=0.7 line=8
-  8.4 inst=hat art=open lane=hat.open kit=rock tick=480 vel=0.7 line=6
-  8.55 inst=kick art=hit lane=kick kit=rock tick=504 vel=0.7 line=8
-  8.7 inst=hat art=hit lane=hat kit=rock tick=528 vel=0.7 line=7
-  8.85 inst=kick art=hit lane=kick kit=rock tick=552 vel=0.7 line=8
-  9 inst=hat art=open lane=hat.open kit=rock tick=576 vel=0.7 line=6
-  9.15 inst=snare art=hit lane=snare kit=rock tick=600 vel=0.7 line=9
-  9.3 inst=hat art=hit lane=hat kit=rock tick=624 vel=0.7 line=7
-  9.45 inst=kick art=hit lane=kick kit=rock tick=648 vel=0.7 line=8
-  9.6 inst=hat art=open lane=hat.open kit=rock tick=672 vel=0.7 line=6
-  9.9 inst=hat art=hit lane=hat kit=rock tick=720 vel=0.7 line=7
-  9.9 inst=kick art=hit lane=kick kit=rock tick=720 vel=0.7 line=8
-  10.2 inst=hat art=open lane=hat.open kit=rock tick=768 vel=0.7 line=6
-  10.2 inst=kick art=hit lane=kick kit=rock tick=768 vel=0.7 line=8
-  10.35 inst=kick art=hit lane=kick kit=rock tick=792 vel=0.7 line=8
-  10.5 inst=hat art=hit lane=hat kit=rock tick=816 vel=0.7 line=7
-  10.5 inst=snare art=hit lane=snare kit=rock tick=816 vel=0.7 line=9
+  5.4 inst=hat art=open lane=hat.open kit=rock tick=864 vel=0.7 line=6
+  5.4 inst=kick art=hit lane=kick kit=rock tick=864 vel=0.7 line=8
+  5.55 inst=snare art=ghost lane=snare.ghost kit=rock tick=888 vel=0.3 ghost=true line=10
+  5.7 inst=hat art=hit lane=hat kit=rock tick=912 vel=0.7 line=7
+  5.7 inst=snare art=ghost lane=snare.ghost kit=rock tick=912 vel=0.3 ghost=true line=10
+  5.85 inst=kick art=hit lane=kick kit=rock tick=936 vel=0.7 line=8
+  6 inst=hat art=open lane=hat.open kit=rock tick=960 vel=0.7 line=6
+  6.15 inst=kick art=hit lane=kick kit=rock tick=984 vel=0.7 line=8
+  6.3 inst=hat art=hit lane=hat kit=rock tick=1008 vel=0.7 line=7
+  6.45 inst=snare art=hit lane=snare kit=rock tick=1032 vel=0.7 line=9
+  6.6 inst=hat art=open lane=hat.open kit=rock tick=1056 vel=0.7 line=6
+  6.75 inst=kick art=hit lane=kick kit=rock tick=1080 vel=0.7 line=8
+  6.9 inst=hat art=hit lane=hat kit=rock tick=1104 vel=0.7 line=7
+  7.2 inst=hat art=open lane=hat.open kit=rock tick=1152 vel=0.7 line=6
+  7.2 inst=kick art=hit lane=kick kit=rock tick=1152 vel=0.7 line=8
+  7.5 inst=hat art=hit lane=hat kit=rock tick=1200 vel=0.7 line=7
+  7.5 inst=kick art=hit lane=kick kit=rock tick=1200 vel=0.7 line=8
+  7.65 inst=kick art=hit lane=kick kit=rock tick=1224 vel=0.7 line=8
+  7.8 inst=hat art=open lane=hat.open kit=rock tick=1248 vel=0.7 line=6
+  7.8 inst=snare art=hit lane=snare kit=rock tick=1248 vel=0.7 line=9
+  8.1 inst=hat art=hit lane=hat kit=rock tick=1296 vel=0.7 line=7
+  8.1 inst=kick art=hit lane=kick kit=rock tick=1296 vel=0.7 line=8
+  8.4 inst=hat art=open lane=hat.open kit=rock tick=1344 vel=0.7 line=6
+  8.55 inst=kick art=hit lane=kick kit=rock tick=1368 vel=0.7 line=8
+  8.7 inst=hat art=hit lane=hat kit=rock tick=1392 vel=0.7 line=7
+  8.85 inst=kick art=hit lane=kick kit=rock tick=1416 vel=0.7 line=8
+  9 inst=hat art=open lane=hat.open kit=rock tick=1440 vel=0.7 line=6
+  9.15 inst=snare art=hit lane=snare kit=rock tick=1464 vel=0.7 line=9
+  9.3 inst=hat art=hit lane=hat kit=rock tick=1488 vel=0.7 line=7
+  9.45 inst=kick art=hit lane=kick kit=rock tick=1512 vel=0.7 line=8
+  9.6 inst=hat art=open lane=hat.open kit=rock tick=1536 vel=0.7 line=6
+  9.9 inst=hat art=hit lane=hat kit=rock tick=1584 vel=0.7 line=7
+  9.9 inst=kick art=hit lane=kick kit=rock tick=1584 vel=0.7 line=8
+  10.2 inst=hat art=open lane=hat.open kit=rock tick=1632 vel=0.7 line=6
+  10.2 inst=kick art=hit lane=kick kit=rock tick=1632 vel=0.7 line=8
+  10.35 inst=kick art=hit lane=kick kit=rock tick=1656 vel=0.7 line=8
+  10.5 inst=hat art=hit lane=hat kit=rock tick=1680 vel=0.7 line=7
+  10.5 inst=snare art=hit lane=snare kit=rock tick=1680 vel=0.7 line=9
 
 ## What Happens Now?
 errors: none
@@ -133,56 +133,56 @@ length: 5.7273 s
 block startSec=0 durSec=5.7273 bars=3 time=7 over 8 tempo=110 key=C unit=8 barTicks=336 res=4
 drums:
   0 inst=snare art=rim lane=snare.rim kit=rock tick=0 vel=1 accent=true line=14
-  0.2727 inst=crash art=hit lane=crash kit=rock tick=0 vel=0.7 line=15
-  0.2727 inst=kick art=hit lane=kick kit=rock tick=0 vel=0.7 line=8
-  0.2727 inst=ride art=bell lane=ride.bell kit=rock tick=0 vel=0.7 line=10
-  0.6818 inst=kick art=hit lane=kick kit=rock tick=72 vel=0.7 line=8
-  0.6818 inst=ride art=bell lane=ride.bell kit=rock tick=72 vel=0.7 line=10
-  0.8182 inst=snare art=rim lane=snare.rim kit=rock tick=96 vel=0.7 line=9
-  1.0909 inst=ride art=bell lane=ride.bell kit=rock tick=144 vel=0.7 line=10
-  1.2273 inst=kick art=hit lane=kick kit=rock tick=168 vel=0.7 line=8
-  1.5 inst=ride art=bell lane=ride.bell kit=rock tick=216 vel=0.7 line=10
-  1.6364 inst=kick art=hit lane=kick kit=rock tick=240 vel=0.7 line=8
-  1.7727 inst=snare art=rim lane=snare.rim kit=rock tick=264 vel=0.7 line=9
-  1.9091 inst=ride art=bell lane=ride.bell kit=rock tick=288 vel=0.7 line=10
-  2.1818 inst=kick art=hit lane=kick kit=rock tick=336 vel=0.7 line=8
-  2.3182 inst=ride art=bell lane=ride.bell kit=rock tick=360 vel=0.7 line=10
-  2.5909 inst=kick art=hit lane=kick kit=rock tick=408 vel=0.7 line=8
-  2.7273 inst=ride art=bell lane=ride.bell kit=rock tick=432 vel=0.7 line=10
-  2.7273 inst=snare art=rim lane=snare.rim kit=rock tick=432 vel=0.7 line=9
-  3.1364 inst=kick art=hit lane=kick kit=rock tick=504 vel=0.7 line=8
-  3.1364 inst=ride art=bell lane=ride.bell kit=rock tick=504 vel=0.7 line=10
-  3.5455 inst=kick art=hit lane=kick kit=rock tick=576 vel=0.7 line=8
-  3.5455 inst=ride art=bell lane=ride.bell kit=rock tick=576 vel=0.7 line=10
-  3.6818 inst=snare art=rim lane=snare.rim kit=rock tick=600 vel=0.7 line=9
-  3.9545 inst=ride art=bell lane=ride.bell kit=rock tick=648 vel=0.7 line=10
-  4.0909 inst=kick art=hit lane=kick kit=rock tick=672 vel=0.7 line=8
-  4.3636 inst=ride art=bell lane=ride.bell kit=rock tick=720 vel=0.7 line=10
-  4.5 inst=kick art=hit lane=kick kit=rock tick=744 vel=0.7 line=8
-  4.6364 inst=snare art=rim lane=snare.rim kit=rock tick=768 vel=0.7 line=9
-  4.7727 inst=ride art=bell lane=ride.bell kit=rock tick=792 vel=0.7 line=10
-  5.0455 inst=kick art=hit lane=kick kit=rock tick=840 vel=0.7 line=8
-  5.1818 inst=ride art=bell lane=ride.bell kit=rock tick=864 vel=0.7 line=10
-  5.4545 inst=kick art=hit lane=kick kit=rock tick=912 vel=0.7 line=8
-  5.5909 inst=ride art=bell lane=ride.bell kit=rock tick=936 vel=0.7 line=10
-  5.5909 inst=snare art=rim lane=snare.rim kit=rock tick=936 vel=0.7 line=9
+  0.2727 inst=crash art=hit lane=crash kit=rock tick=48 vel=0.7 line=15
+  0.2727 inst=kick art=hit lane=kick kit=rock tick=48 vel=0.7 line=8
+  0.2727 inst=ride art=bell lane=ride.bell kit=rock tick=48 vel=0.7 line=10
+  0.6818 inst=kick art=hit lane=kick kit=rock tick=120 vel=0.7 line=8
+  0.6818 inst=ride art=bell lane=ride.bell kit=rock tick=120 vel=0.7 line=10
+  0.8182 inst=snare art=rim lane=snare.rim kit=rock tick=144 vel=0.7 line=9
+  1.0909 inst=ride art=bell lane=ride.bell kit=rock tick=192 vel=0.7 line=10
+  1.2273 inst=kick art=hit lane=kick kit=rock tick=216 vel=0.7 line=8
+  1.5 inst=ride art=bell lane=ride.bell kit=rock tick=264 vel=0.7 line=10
+  1.6364 inst=kick art=hit lane=kick kit=rock tick=288 vel=0.7 line=8
+  1.7727 inst=snare art=rim lane=snare.rim kit=rock tick=312 vel=0.7 line=9
+  1.9091 inst=ride art=bell lane=ride.bell kit=rock tick=336 vel=0.7 line=10
+  2.1818 inst=kick art=hit lane=kick kit=rock tick=384 vel=0.7 line=8
+  2.3182 inst=ride art=bell lane=ride.bell kit=rock tick=408 vel=0.7 line=10
+  2.5909 inst=kick art=hit lane=kick kit=rock tick=456 vel=0.7 line=8
+  2.7273 inst=ride art=bell lane=ride.bell kit=rock tick=480 vel=0.7 line=10
+  2.7273 inst=snare art=rim lane=snare.rim kit=rock tick=480 vel=0.7 line=9
+  3.1364 inst=kick art=hit lane=kick kit=rock tick=552 vel=0.7 line=8
+  3.1364 inst=ride art=bell lane=ride.bell kit=rock tick=552 vel=0.7 line=10
+  3.5455 inst=kick art=hit lane=kick kit=rock tick=624 vel=0.7 line=8
+  3.5455 inst=ride art=bell lane=ride.bell kit=rock tick=624 vel=0.7 line=10
+  3.6818 inst=snare art=rim lane=snare.rim kit=rock tick=648 vel=0.7 line=9
+  3.9545 inst=ride art=bell lane=ride.bell kit=rock tick=696 vel=0.7 line=10
+  4.0909 inst=kick art=hit lane=kick kit=rock tick=720 vel=0.7 line=8
+  4.3636 inst=ride art=bell lane=ride.bell kit=rock tick=768 vel=0.7 line=10
+  4.5 inst=kick art=hit lane=kick kit=rock tick=792 vel=0.7 line=8
+  4.6364 inst=snare art=rim lane=snare.rim kit=rock tick=816 vel=0.7 line=9
+  4.7727 inst=ride art=bell lane=ride.bell kit=rock tick=840 vel=0.7 line=10
+  5.0455 inst=kick art=hit lane=kick kit=rock tick=888 vel=0.7 line=8
+  5.1818 inst=ride art=bell lane=ride.bell kit=rock tick=912 vel=0.7 line=10
+  5.4545 inst=kick art=hit lane=kick kit=rock tick=960 vel=0.7 line=8
+  5.5909 inst=ride art=bell lane=ride.bell kit=rock tick=984 vel=0.7 line=10
+  5.5909 inst=snare art=rim lane=snare.rim kit=rock tick=984 vel=0.7 line=9
 notes:
-  0.2727 tick=0 ticks=96 note={"midi":38,"name":"D2","spell":{"letter":"D","alter":0}} label=D instrument=guitar.electric sound=muted voice=0 vel=0.7 line=11 secDur=0.5455
-  0.8182 tick=96 ticks=24 note={"midi":40,"name":"E2","spell":{"letter":"E","alter":0}} label=E instrument=guitar.electric sound=muted voice=0 vel=0.7 line=11 secDur=0.1364
-  0.9545 tick=120 ticks=48 note={"midi":38,"name":"D2","spell":{"letter":"D","alter":0}} label=D instrument=guitar.electric sound=muted voice=0 vel=0.7 line=11 secDur=0.2727
-  1.2273 tick=168 ticks=72 note={"midi":38,"name":"D2","spell":{"letter":"D","alter":0}} label=D instrument=guitar.electric sound=muted voice=0 vel=0.7 line=11 secDur=0.4091
-  1.6364 tick=240 ticks=96 note={"midi":38,"name":"D2","spell":{"letter":"D","alter":0}} label=D instrument=guitar.electric sound=muted voice=0 vel=0.7 repeat=true line=11 secDur=0.5455
-  2.1818 tick=336 ticks=24 note={"midi":40,"name":"E2","spell":{"letter":"E","alter":0}} label=E instrument=guitar.electric sound=muted voice=0 vel=0.7 repeat=true line=11 secDur=0.1364
-  2.3182 tick=360 ticks=48 note={"midi":38,"name":"D2","spell":{"letter":"D","alter":0}} label=D instrument=guitar.electric sound=muted voice=0 vel=0.7 repeat=true line=11 secDur=0.2727
-  2.5909 tick=408 ticks=72 note={"midi":38,"name":"D2","spell":{"letter":"D","alter":0}} label=D instrument=guitar.electric sound=muted voice=0 vel=0.7 repeat=true line=11 secDur=0.4091
-  3 tick=480 ticks=96 note={"midi":38,"name":"D2","spell":{"letter":"D","alter":0}} label=D instrument=guitar.electric sound=muted voice=0 vel=0.7 repeat=true line=11 secDur=0.5455
-  3.5455 tick=576 ticks=24 note={"midi":40,"name":"E2","spell":{"letter":"E","alter":0}} label=E instrument=guitar.electric sound=muted voice=0 vel=0.7 repeat=true line=11 secDur=0.1364
-  3.6818 tick=600 ticks=48 note={"midi":38,"name":"D2","spell":{"letter":"D","alter":0}} label=D instrument=guitar.electric sound=muted voice=0 vel=0.7 repeat=true line=11 secDur=0.2727
-  3.9545 tick=648 ticks=72 note={"midi":38,"name":"D2","spell":{"letter":"D","alter":0}} label=D instrument=guitar.electric sound=muted voice=0 vel=0.7 repeat=true line=11 secDur=0.4091
-  4.3636 tick=720 ticks=96 note={"midi":38,"name":"D2","spell":{"letter":"D","alter":0}} label=D instrument=guitar.electric sound=muted voice=0 vel=0.7 repeat=true line=11 secDur=0.5455
-  4.9091 tick=816 ticks=24 note={"midi":40,"name":"E2","spell":{"letter":"E","alter":0}} label=E instrument=guitar.electric sound=muted voice=0 vel=0.7 repeat=true line=11 secDur=0.1364
-  5.0455 tick=840 ticks=48 note={"midi":38,"name":"D2","spell":{"letter":"D","alter":0}} label=D instrument=guitar.electric sound=muted voice=0 vel=0.7 repeat=true line=11 secDur=0.2727
-  5.3182 tick=888 ticks=72 note={"midi":38,"name":"D2","spell":{"letter":"D","alter":0}} label=D instrument=guitar.electric sound=muted voice=0 vel=0.7 repeat=true line=11 secDur=0.4091
+  0.2727 tick=48 ticks=96 note={"midi":38,"name":"D2","spell":{"letter":"D","alter":0}} label=D instrument=guitar.electric sound=muted voice=0 vel=0.7 line=11 secDur=0.5455
+  0.8182 tick=144 ticks=24 note={"midi":40,"name":"E2","spell":{"letter":"E","alter":0}} label=E instrument=guitar.electric sound=muted voice=0 vel=0.7 line=11 secDur=0.1364
+  0.9545 tick=168 ticks=48 note={"midi":38,"name":"D2","spell":{"letter":"D","alter":0}} label=D instrument=guitar.electric sound=muted voice=0 vel=0.7 line=11 secDur=0.2727
+  1.2273 tick=216 ticks=72 note={"midi":38,"name":"D2","spell":{"letter":"D","alter":0}} label=D instrument=guitar.electric sound=muted voice=0 vel=0.7 line=11 secDur=0.4091
+  1.6364 tick=288 ticks=96 note={"midi":38,"name":"D2","spell":{"letter":"D","alter":0}} label=D instrument=guitar.electric sound=muted voice=0 vel=0.7 repeat=true line=11 secDur=0.5455
+  2.1818 tick=384 ticks=24 note={"midi":40,"name":"E2","spell":{"letter":"E","alter":0}} label=E instrument=guitar.electric sound=muted voice=0 vel=0.7 repeat=true line=11 secDur=0.1364
+  2.3182 tick=408 ticks=48 note={"midi":38,"name":"D2","spell":{"letter":"D","alter":0}} label=D instrument=guitar.electric sound=muted voice=0 vel=0.7 repeat=true line=11 secDur=0.2727
+  2.5909 tick=456 ticks=72 note={"midi":38,"name":"D2","spell":{"letter":"D","alter":0}} label=D instrument=guitar.electric sound=muted voice=0 vel=0.7 repeat=true line=11 secDur=0.4091
+  3 tick=528 ticks=96 note={"midi":38,"name":"D2","spell":{"letter":"D","alter":0}} label=D instrument=guitar.electric sound=muted voice=0 vel=0.7 repeat=true line=11 secDur=0.5455
+  3.5455 tick=624 ticks=24 note={"midi":40,"name":"E2","spell":{"letter":"E","alter":0}} label=E instrument=guitar.electric sound=muted voice=0 vel=0.7 repeat=true line=11 secDur=0.1364
+  3.6818 tick=648 ticks=48 note={"midi":38,"name":"D2","spell":{"letter":"D","alter":0}} label=D instrument=guitar.electric sound=muted voice=0 vel=0.7 repeat=true line=11 secDur=0.2727
+  3.9545 tick=696 ticks=72 note={"midi":38,"name":"D2","spell":{"letter":"D","alter":0}} label=D instrument=guitar.electric sound=muted voice=0 vel=0.7 repeat=true line=11 secDur=0.4091
+  4.3636 tick=768 ticks=96 note={"midi":38,"name":"D2","spell":{"letter":"D","alter":0}} label=D instrument=guitar.electric sound=muted voice=0 vel=0.7 repeat=true line=11 secDur=0.5455
+  4.9091 tick=864 ticks=24 note={"midi":40,"name":"E2","spell":{"letter":"E","alter":0}} label=E instrument=guitar.electric sound=muted voice=0 vel=0.7 repeat=true line=11 secDur=0.1364
+  5.0455 tick=888 ticks=48 note={"midi":38,"name":"D2","spell":{"letter":"D","alter":0}} label=D instrument=guitar.electric sound=muted voice=0 vel=0.7 repeat=true line=11 secDur=0.2727
+  5.3182 tick=936 ticks=72 note={"midi":38,"name":"D2","spell":{"letter":"D","alter":0}} label=D instrument=guitar.electric sound=muted voice=0 vel=0.7 repeat=true line=11 secDur=0.4091
 
 ## Gavin Harrison's paradiddle challenge
 errors: none
@@ -197,32 +197,32 @@ drums:
   0.3 inst=snare art=ghost lane=snare.ghost kit=rock tick=48 vel=0.3 ghost=true line=10
   0.45 inst=hat art=pedal lane=hat.pedal kit=rock tick=72 vel=0.7 line=15
   0.45 inst=snare art=ghost lane=snare.ghost kit=rock tick=72 vel=0.3 ghost=true line=10
-  0.6 inst=snare art=hit lane=snare kit=rock tick=0 vel=1 accent=true line=9
-  0.75 inst=snare art=ghost lane=snare.ghost kit=rock tick=24 vel=0.3 ghost=true line=10
+  0.6 inst=snare art=hit lane=snare kit=rock tick=96 vel=1 accent=true line=9
+  0.75 inst=snare art=ghost lane=snare.ghost kit=rock tick=120 vel=0.3 ghost=true line=10
   0.9 inst=kick art=hit lane=kick kit=rock tick=144 vel=1 accent=true line=14
-  0.9 inst=snare art=ghost lane=snare.ghost kit=rock tick=48 vel=0.3 ghost=true line=10
-  1.05 inst=snare art=ghost lane=snare.ghost kit=rock tick=72 vel=0.3 ghost=true line=10
-  1.2 inst=snare art=hit lane=snare kit=rock tick=0 vel=1 accent=true line=9
+  0.9 inst=snare art=ghost lane=snare.ghost kit=rock tick=144 vel=0.3 ghost=true line=10
+  1.05 inst=snare art=ghost lane=snare.ghost kit=rock tick=168 vel=0.3 ghost=true line=10
+  1.2 inst=snare art=hit lane=snare kit=rock tick=192 vel=1 accent=true line=9
   1.35 inst=kick art=hit lane=kick kit=rock tick=216 vel=1 accent=true line=14
-  1.35 inst=snare art=ghost lane=snare.ghost kit=rock tick=24 vel=0.3 ghost=true line=10
-  1.5 inst=snare art=ghost lane=snare.ghost kit=rock tick=48 vel=0.3 ghost=true line=10
-  1.65 inst=snare art=ghost lane=snare.ghost kit=rock tick=72 vel=0.3 ghost=true line=10
+  1.35 inst=snare art=ghost lane=snare.ghost kit=rock tick=216 vel=0.3 ghost=true line=10
+  1.5 inst=snare art=ghost lane=snare.ghost kit=rock tick=240 vel=0.3 ghost=true line=10
+  1.65 inst=snare art=ghost lane=snare.ghost kit=rock tick=264 vel=0.3 ghost=true line=10
   1.8 inst=hat art=pedal lane=hat.pedal kit=rock tick=288 vel=0.7 line=15
-  1.8 inst=snare art=hit lane=snare kit=rock tick=0 vel=1 accent=true line=9
-  1.95 inst=snare art=ghost lane=snare.ghost kit=rock tick=24 vel=0.3 ghost=true line=10
-  2.1 inst=snare art=ghost lane=snare.ghost kit=rock tick=48 vel=0.3 ghost=true line=10
+  1.8 inst=snare art=hit lane=snare kit=rock tick=288 vel=1 accent=true line=9
+  1.95 inst=snare art=ghost lane=snare.ghost kit=rock tick=312 vel=0.3 ghost=true line=10
+  2.1 inst=snare art=ghost lane=snare.ghost kit=rock tick=336 vel=0.3 ghost=true line=10
   2.25 inst=kick art=hit lane=kick kit=rock tick=360 vel=1 accent=true line=14
-  2.25 inst=snare art=ghost lane=snare.ghost kit=rock tick=72 vel=0.3 ghost=true line=10
-  2.4 inst=snare art=hit lane=snare kit=rock tick=0 vel=1 accent=true line=9
-  2.55 inst=snare art=ghost lane=snare.ghost kit=rock tick=24 vel=0.3 ghost=true line=10
+  2.25 inst=snare art=ghost lane=snare.ghost kit=rock tick=360 vel=0.3 ghost=true line=10
+  2.4 inst=snare art=hit lane=snare kit=rock tick=384 vel=1 accent=true line=9
+  2.55 inst=snare art=ghost lane=snare.ghost kit=rock tick=408 vel=0.3 ghost=true line=10
   2.7 inst=hat art=pedal lane=hat.pedal kit=rock tick=432 vel=0.7 line=15
-  2.7 inst=snare art=ghost lane=snare.ghost kit=rock tick=48 vel=0.3 ghost=true line=10
-  2.85 inst=snare art=ghost lane=snare.ghost kit=rock tick=72 vel=0.3 ghost=true line=10
-  3 inst=snare art=hit lane=snare kit=rock tick=0 vel=1 accent=true line=9
+  2.7 inst=snare art=ghost lane=snare.ghost kit=rock tick=432 vel=0.3 ghost=true line=10
+  2.85 inst=snare art=ghost lane=snare.ghost kit=rock tick=456 vel=0.3 ghost=true line=10
+  3 inst=snare art=hit lane=snare kit=rock tick=480 vel=1 accent=true line=9
   3.15 inst=hat art=pedal lane=hat.pedal kit=rock tick=504 vel=0.7 line=15
-  3.15 inst=snare art=ghost lane=snare.ghost kit=rock tick=24 vel=0.3 ghost=true line=10
-  3.3 inst=snare art=ghost lane=snare.ghost kit=rock tick=48 vel=0.3 ghost=true line=10
-  3.45 inst=snare art=ghost lane=snare.ghost kit=rock tick=72 vel=0.3 ghost=true line=10
+  3.15 inst=snare art=ghost lane=snare.ghost kit=rock tick=504 vel=0.3 ghost=true line=10
+  3.3 inst=snare art=ghost lane=snare.ghost kit=rock tick=528 vel=0.3 ghost=true line=10
+  3.45 inst=snare art=ghost lane=snare.ghost kit=rock tick=552 vel=0.3 ghost=true line=10
 
 ## Vodka For My Goat
 errors: none
@@ -252,27 +252,27 @@ drums:
   2 inst=kick art=hit lane=kick kit=rock tick=264 vel=0.7 line=9
   2 inst=ride art=bell lane=ride.bell kit=rock tick=264 vel=0.7 line=6
   2 inst=snare art=ghost lane=snare.ghost kit=rock tick=264 vel=0.3 ghost=true line=8
-  2.1818 inst=kick art=hit lane=kick kit=rock tick=0 vel=0.7 line=9
-  2.1818 inst=ride art=bell lane=ride.bell kit=rock tick=0 vel=0.7 line=6
-  2.3636 inst=snare art=ghost lane=snare.ghost kit=rock tick=24 vel=0.3 ghost=true line=8
-  2.5455 inst=kick art=hit lane=kick kit=rock tick=48 vel=0.7 line=9
-  2.5455 inst=ride art=bell lane=ride.bell kit=rock tick=48 vel=0.7 line=6
-  2.7273 inst=snare art=ghost lane=snare.ghost kit=rock tick=72 vel=0.3 ghost=true line=8
-  2.7273 inst=snare art=hit lane=snare kit=rock tick=72 vel=0.7 line=7
-  2.9091 inst=ride art=bell lane=ride.bell kit=rock tick=96 vel=0.7 line=6
-  3.0909 inst=kick art=hit lane=kick kit=rock tick=120 vel=0.7 line=9
-  3.0909 inst=snare art=ghost lane=snare.ghost kit=rock tick=120 vel=0.3 ghost=true line=8
-  3.2727 inst=kick art=hit lane=kick kit=rock tick=144 vel=0.7 line=9
-  3.2727 inst=ride art=bell lane=ride.bell kit=rock tick=144 vel=0.7 line=6
-  3.4545 inst=ride art=bell lane=ride.bell kit=rock tick=168 vel=0.7 line=6
-  3.4545 inst=snare art=ghost lane=snare.ghost kit=rock tick=168 vel=0.3 ghost=true line=8
-  3.6364 inst=kick art=hit lane=kick kit=rock tick=192 vel=0.7 line=9
-  3.8182 inst=ride art=bell lane=ride.bell kit=rock tick=216 vel=0.7 line=6
-  3.8182 inst=snare art=ghost lane=snare.ghost kit=rock tick=216 vel=0.3 ghost=true line=8
-  3.8182 inst=snare art=hit lane=snare kit=rock tick=216 vel=0.7 line=7
-  4.1818 inst=kick art=hit lane=kick kit=rock tick=264 vel=0.7 line=9
-  4.1818 inst=ride art=bell lane=ride.bell kit=rock tick=264 vel=0.7 line=6
-  4.1818 inst=snare art=ghost lane=snare.ghost kit=rock tick=264 vel=0.3 ghost=true line=8
+  2.1818 inst=kick art=hit lane=kick kit=rock tick=288 vel=0.7 line=9
+  2.1818 inst=ride art=bell lane=ride.bell kit=rock tick=288 vel=0.7 line=6
+  2.3636 inst=snare art=ghost lane=snare.ghost kit=rock tick=312 vel=0.3 ghost=true line=8
+  2.5455 inst=kick art=hit lane=kick kit=rock tick=336 vel=0.7 line=9
+  2.5455 inst=ride art=bell lane=ride.bell kit=rock tick=336 vel=0.7 line=6
+  2.7273 inst=snare art=ghost lane=snare.ghost kit=rock tick=360 vel=0.3 ghost=true line=8
+  2.7273 inst=snare art=hit lane=snare kit=rock tick=360 vel=0.7 line=7
+  2.9091 inst=ride art=bell lane=ride.bell kit=rock tick=384 vel=0.7 line=6
+  3.0909 inst=kick art=hit lane=kick kit=rock tick=408 vel=0.7 line=9
+  3.0909 inst=snare art=ghost lane=snare.ghost kit=rock tick=408 vel=0.3 ghost=true line=8
+  3.2727 inst=kick art=hit lane=kick kit=rock tick=432 vel=0.7 line=9
+  3.2727 inst=ride art=bell lane=ride.bell kit=rock tick=432 vel=0.7 line=6
+  3.4545 inst=ride art=bell lane=ride.bell kit=rock tick=456 vel=0.7 line=6
+  3.4545 inst=snare art=ghost lane=snare.ghost kit=rock tick=456 vel=0.3 ghost=true line=8
+  3.6364 inst=kick art=hit lane=kick kit=rock tick=480 vel=0.7 line=9
+  3.8182 inst=ride art=bell lane=ride.bell kit=rock tick=504 vel=0.7 line=6
+  3.8182 inst=snare art=ghost lane=snare.ghost kit=rock tick=504 vel=0.3 ghost=true line=8
+  3.8182 inst=snare art=hit lane=snare kit=rock tick=504 vel=0.7 line=7
+  4.1818 inst=kick art=hit lane=kick kit=rock tick=552 vel=0.7 line=9
+  4.1818 inst=ride art=bell lane=ride.bell kit=rock tick=552 vel=0.7 line=6
+  4.1818 inst=snare art=ghost lane=snare.ghost kit=rock tick=552 vel=0.3 ghost=true line=8
 
 ## 3 over 4 over 5
 errors: none
@@ -832,52 +832,52 @@ drums:
   3.0804 inst=kick art=hit lane=kick kit=rock tick=552 vel=0.7 line=13
   3.2143 inst=ride art=bell lane=ride.bell kit=rock tick=576 vel=0.7 line=10
   3.2143 inst=snare art=ghost lane=snare.ghost kit=rock tick=576 vel=0.3 ghost=true line=12
-  3.3482 inst=hat art=open lane=hat.open kit=rock tick=240 vel=1 accent=true line=16
+  3.3482 inst=hat art=open lane=hat.open kit=rock tick=600 vel=1 accent=true line=16
   3.6161 inst=hat art=pedal lane=hat.pedal kit=rock tick=648 vel=0.7 line=14
   3.6161 inst=ride art=bell lane=ride.bell kit=rock tick=648 vel=0.7 line=10
-  3.6161 inst=snare art=ghost lane=snare.ghost kit=rock tick=288 vel=0.3 ghost=true double=true line=17
+  3.6161 inst=snare art=ghost lane=snare.ghost kit=rock tick=648 vel=0.3 ghost=true double=true line=17
   3.6161 inst=snare art=hit lane=snare kit=rock tick=648 vel=0.7 line=11
-  3.683 inst=snare art=ghost lane=snare.ghost kit=rock tick=300 vel=0.3 ghost=true double=true line=17 hidden=true gap=12 gapSec=0.067
+  3.683 inst=snare art=ghost lane=snare.ghost kit=rock tick=660 vel=0.3 ghost=true double=true line=17 hidden=true gap=12 gapSec=0.067
   3.75 inst=kick art=hit lane=kick kit=rock tick=672 vel=0.7 line=13
-  4.0179 inst=hat art=pedal lane=hat.pedal kit=rock tick=0 vel=0.7 line=14
-  4.0179 inst=kick art=hit lane=kick kit=rock tick=0 vel=0.7 line=13
-  4.0179 inst=ride art=bell lane=ride.bell kit=rock tick=0 vel=0.7 line=10
-  4.1518 inst=snare art=ghost lane=snare.ghost kit=rock tick=24 vel=0.3 ghost=true line=12
-  4.4196 inst=ride art=bell lane=ride.bell kit=rock tick=72 vel=0.7 line=10
-  4.5536 inst=hat art=pedal lane=hat.pedal kit=rock tick=96 vel=0.7 line=14
-  4.5536 inst=snare art=hit lane=snare kit=rock tick=96 vel=0.7 line=11
-  4.8214 inst=kick art=hit lane=kick kit=rock tick=144 vel=0.7 line=13
-  4.8214 inst=ride art=bell lane=ride.bell kit=rock tick=144 vel=0.7 line=10
-  4.8214 inst=snare art=ghost lane=snare.ghost kit=rock tick=144 vel=0.3 ghost=true line=12
-  5.0893 inst=hat art=pedal lane=hat.pedal kit=rock tick=192 vel=0.7 line=14
-  5.0893 inst=kick art=hit lane=kick kit=rock tick=192 vel=0.7 line=13
-  5.2232 inst=ride art=bell lane=ride.bell kit=rock tick=216 vel=0.7 line=10
-  5.2232 inst=snare art=ghost lane=snare.ghost kit=rock tick=216 vel=0.3 ghost=true line=12
-  5.625 inst=hat art=pedal lane=hat.pedal kit=rock tick=288 vel=0.7 line=14
-  5.625 inst=ride art=bell lane=ride.bell kit=rock tick=288 vel=0.7 line=10
-  5.625 inst=snare art=hit lane=snare kit=rock tick=288 vel=0.7 line=11
-  5.7589 inst=kick art=hit lane=kick kit=rock tick=312 vel=0.7 line=13
-  6.0268 inst=hat art=pedal lane=hat.pedal kit=rock tick=360 vel=0.7 line=14
-  6.0268 inst=kick art=hit lane=kick kit=rock tick=360 vel=0.7 line=13
-  6.0268 inst=ride art=bell lane=ride.bell kit=rock tick=360 vel=0.7 line=10
-  6.1607 inst=snare art=ghost lane=snare.ghost kit=rock tick=384 vel=0.3 ghost=true line=12
-  6.4286 inst=ride art=bell lane=ride.bell kit=rock tick=432 vel=0.7 line=10
-  6.5625 inst=hat art=pedal lane=hat.pedal kit=rock tick=456 vel=0.7 line=14
-  6.5625 inst=snare art=hit lane=snare kit=rock tick=456 vel=0.7 line=11
-  6.8304 inst=kick art=hit lane=kick kit=rock tick=504 vel=0.7 line=13
-  6.8304 inst=ride art=bell lane=ride.bell kit=rock tick=504 vel=0.7 line=10
-  6.8304 inst=snare art=ghost lane=snare.ghost kit=rock tick=504 vel=0.3 ghost=true line=12
-  7.0982 inst=hat art=pedal lane=hat.pedal kit=rock tick=552 vel=0.7 line=14
-  7.0982 inst=kick art=hit lane=kick kit=rock tick=552 vel=0.7 line=13
-  7.2321 inst=ride art=bell lane=ride.bell kit=rock tick=576 vel=0.7 line=10
-  7.2321 inst=snare art=ghost lane=snare.ghost kit=rock tick=576 vel=0.3 ghost=true line=12
-  7.3661 inst=hat art=open lane=hat.open kit=rock tick=240 vel=1 accent=true line=16
-  7.6339 inst=hat art=pedal lane=hat.pedal kit=rock tick=648 vel=0.7 line=14
-  7.6339 inst=ride art=bell lane=ride.bell kit=rock tick=648 vel=0.7 line=10
-  7.6339 inst=snare art=ghost lane=snare.ghost kit=rock tick=288 vel=0.3 ghost=true double=true line=17
-  7.6339 inst=snare art=hit lane=snare kit=rock tick=648 vel=0.7 line=11
-  7.7009 inst=snare art=ghost lane=snare.ghost kit=rock tick=300 vel=0.3 ghost=true double=true line=17 hidden=true gap=12 gapSec=0.067
-  7.7679 inst=kick art=hit lane=kick kit=rock tick=672 vel=0.7 line=13
+  4.0179 inst=hat art=pedal lane=hat.pedal kit=rock tick=720 vel=0.7 line=14
+  4.0179 inst=kick art=hit lane=kick kit=rock tick=720 vel=0.7 line=13
+  4.0179 inst=ride art=bell lane=ride.bell kit=rock tick=720 vel=0.7 line=10
+  4.1518 inst=snare art=ghost lane=snare.ghost kit=rock tick=744 vel=0.3 ghost=true line=12
+  4.4196 inst=ride art=bell lane=ride.bell kit=rock tick=792 vel=0.7 line=10
+  4.5536 inst=hat art=pedal lane=hat.pedal kit=rock tick=816 vel=0.7 line=14
+  4.5536 inst=snare art=hit lane=snare kit=rock tick=816 vel=0.7 line=11
+  4.8214 inst=kick art=hit lane=kick kit=rock tick=864 vel=0.7 line=13
+  4.8214 inst=ride art=bell lane=ride.bell kit=rock tick=864 vel=0.7 line=10
+  4.8214 inst=snare art=ghost lane=snare.ghost kit=rock tick=864 vel=0.3 ghost=true line=12
+  5.0893 inst=hat art=pedal lane=hat.pedal kit=rock tick=912 vel=0.7 line=14
+  5.0893 inst=kick art=hit lane=kick kit=rock tick=912 vel=0.7 line=13
+  5.2232 inst=ride art=bell lane=ride.bell kit=rock tick=936 vel=0.7 line=10
+  5.2232 inst=snare art=ghost lane=snare.ghost kit=rock tick=936 vel=0.3 ghost=true line=12
+  5.625 inst=hat art=pedal lane=hat.pedal kit=rock tick=1008 vel=0.7 line=14
+  5.625 inst=ride art=bell lane=ride.bell kit=rock tick=1008 vel=0.7 line=10
+  5.625 inst=snare art=hit lane=snare kit=rock tick=1008 vel=0.7 line=11
+  5.7589 inst=kick art=hit lane=kick kit=rock tick=1032 vel=0.7 line=13
+  6.0268 inst=hat art=pedal lane=hat.pedal kit=rock tick=1080 vel=0.7 line=14
+  6.0268 inst=kick art=hit lane=kick kit=rock tick=1080 vel=0.7 line=13
+  6.0268 inst=ride art=bell lane=ride.bell kit=rock tick=1080 vel=0.7 line=10
+  6.1607 inst=snare art=ghost lane=snare.ghost kit=rock tick=1104 vel=0.3 ghost=true line=12
+  6.4286 inst=ride art=bell lane=ride.bell kit=rock tick=1152 vel=0.7 line=10
+  6.5625 inst=hat art=pedal lane=hat.pedal kit=rock tick=1176 vel=0.7 line=14
+  6.5625 inst=snare art=hit lane=snare kit=rock tick=1176 vel=0.7 line=11
+  6.8304 inst=kick art=hit lane=kick kit=rock tick=1224 vel=0.7 line=13
+  6.8304 inst=ride art=bell lane=ride.bell kit=rock tick=1224 vel=0.7 line=10
+  6.8304 inst=snare art=ghost lane=snare.ghost kit=rock tick=1224 vel=0.3 ghost=true line=12
+  7.0982 inst=hat art=pedal lane=hat.pedal kit=rock tick=1272 vel=0.7 line=14
+  7.0982 inst=kick art=hit lane=kick kit=rock tick=1272 vel=0.7 line=13
+  7.2321 inst=ride art=bell lane=ride.bell kit=rock tick=1296 vel=0.7 line=10
+  7.2321 inst=snare art=ghost lane=snare.ghost kit=rock tick=1296 vel=0.3 ghost=true line=12
+  7.3661 inst=hat art=open lane=hat.open kit=rock tick=1320 vel=1 accent=true line=16
+  7.6339 inst=hat art=pedal lane=hat.pedal kit=rock tick=1368 vel=0.7 line=14
+  7.6339 inst=ride art=bell lane=ride.bell kit=rock tick=1368 vel=0.7 line=10
+  7.6339 inst=snare art=ghost lane=snare.ghost kit=rock tick=1368 vel=0.3 ghost=true double=true line=17
+  7.6339 inst=snare art=hit lane=snare kit=rock tick=1368 vel=0.7 line=11
+  7.7009 inst=snare art=ghost lane=snare.ghost kit=rock tick=1380 vel=0.3 ghost=true double=true line=17 hidden=true gap=12 gapSec=0.067
+  7.7679 inst=kick art=hit lane=kick kit=rock tick=1392 vel=0.7 line=13
 notes:
   0 tick=0 ticks=360 note={"midi":43,"name":"G2","spell":{"letter":"G","alter":0}} label=G2 instrument=bass voice=0 vel=0.7 line=23 secDur=2.0089
   0 tick=0 ticks=48 note={"midi":43,"name":"G2","spell":{"letter":"G","alter":0}} label=1 instrument=guitar.electric sound=muted voice=0 vel=0.7 line=22 secDur=0.2679
@@ -895,27 +895,27 @@ notes:
   3.0804 tick=552 ticks=48 note={"midi":50,"name":"D3","spell":{"letter":"D","alter":0}} label=5 instrument=guitar.electric sound=muted voice=0 vel=0.7 line=22 secDur=0.2679
   3.3482 tick=600 ticks=48 note={"midi":47,"name":"B2","spell":{"letter":"B","alter":0}} label=3 instrument=guitar.electric sound=muted voice=0 vel=0.7 line=22 secDur=0.2679
   3.6161 tick=648 ticks=72 note={"midi":45,"name":"A2","spell":{"letter":"A","alter":0}} label=2 instrument=guitar.electric sound=muted voice=0 vel=0.7 line=22 secDur=0.4018
-  4.0179 tick=0 ticks=360 note={"midi":43,"name":"G2","spell":{"letter":"G","alter":0}} label=G2 instrument=bass voice=0 vel=0.7 repeat=true line=23 secDur=2.0089
-  4.0179 tick=0 ticks=48 note={"midi":43,"name":"G2","spell":{"letter":"G","alter":0}} label=1 instrument=guitar.electric sound=muted voice=0 vel=0.7 repeat=true line=22 secDur=0.2679
-  4.2857 tick=48 ticks=48 note={"midi":43,"name":"G2","spell":{"letter":"G","alter":0}} label=1 instrument=guitar.electric sound=muted voice=0 vel=0.7 repeat=true line=22 secDur=0.2679
-  4.5536 tick=96 ticks=48 note={"midi":49,"name":"C#3","spell":{"letter":"C","alter":1}} label=#4 instrument=guitar.electric sound=muted voice=0 vel=0.7 repeat=true line=22 secDur=0.2679
-  4.8214 tick=144 ticks=48 note={"midi":43,"name":"G2","spell":{"letter":"G","alter":0}} label=1 instrument=guitar.electric sound=muted voice=0 vel=0.7 repeat=true line=22 secDur=0.2679
-  5.0893 tick=192 ticks=96 note={"midi":50,"name":"D3","spell":{"letter":"D","alter":0}} label=5 instrument=guitar.electric sound=muted voice=0 vel=0.7 repeat=true line=22 secDur=0.5357
-  5.625 tick=288 ticks=48 note={"midi":47,"name":"B2","spell":{"letter":"B","alter":0}} label=3 instrument=guitar.electric sound=muted voice=0 vel=0.7 repeat=true line=22 secDur=0.2679
-  5.8929 tick=336 ticks=24 note={"midi":45,"name":"A2","spell":{"letter":"A","alter":0}} label=2 instrument=guitar.electric sound=muted voice=0 vel=0.7 repeat=true line=22 secDur=0.1339
-  6.0268 tick=360 ticks=360 note={"midi":45,"name":"A2","spell":{"letter":"A","alter":0}} label=A2 instrument=bass voice=0 vel=0.7 repeat=true line=23 secDur=2.0089
-  6.0268 tick=360 ticks=48 note={"midi":43,"name":"G2","spell":{"letter":"G","alter":0}} label=1 instrument=guitar.electric sound=muted voice=0 vel=0.7 repeat=true line=22 secDur=0.2679
-  6.2946 tick=408 ticks=48 note={"midi":43,"name":"G2","spell":{"letter":"G","alter":0}} label=1 instrument=guitar.electric sound=muted voice=0 vel=0.7 repeat=true line=22 secDur=0.2679
-  6.5625 tick=456 ticks=48 note={"midi":49,"name":"C#3","spell":{"letter":"C","alter":1}} label=#4 instrument=guitar.electric sound=muted voice=0 vel=0.7 repeat=true line=22 secDur=0.2679
-  6.8304 tick=504 ticks=48 note={"midi":43,"name":"G2","spell":{"letter":"G","alter":0}} label=1 instrument=guitar.electric sound=muted voice=0 vel=0.7 repeat=true line=22 secDur=0.2679
-  7.0982 tick=552 ticks=48 note={"midi":50,"name":"D3","spell":{"letter":"D","alter":0}} label=5 instrument=guitar.electric sound=muted voice=0 vel=0.7 repeat=true line=22 secDur=0.2679
-  7.3661 tick=600 ticks=48 note={"midi":47,"name":"B2","spell":{"letter":"B","alter":0}} label=3 instrument=guitar.electric sound=muted voice=0 vel=0.7 repeat=true line=22 secDur=0.2679
-  7.6339 tick=648 ticks=72 note={"midi":45,"name":"A2","spell":{"letter":"A","alter":0}} label=2 instrument=guitar.electric sound=muted voice=0 vel=0.7 repeat=true line=22 secDur=0.4018
+  4.0179 tick=720 ticks=360 note={"midi":43,"name":"G2","spell":{"letter":"G","alter":0}} label=G2 instrument=bass voice=0 vel=0.7 repeat=true line=23 secDur=2.0089
+  4.0179 tick=720 ticks=48 note={"midi":43,"name":"G2","spell":{"letter":"G","alter":0}} label=1 instrument=guitar.electric sound=muted voice=0 vel=0.7 repeat=true line=22 secDur=0.2679
+  4.2857 tick=768 ticks=48 note={"midi":43,"name":"G2","spell":{"letter":"G","alter":0}} label=1 instrument=guitar.electric sound=muted voice=0 vel=0.7 repeat=true line=22 secDur=0.2679
+  4.5536 tick=816 ticks=48 note={"midi":49,"name":"C#3","spell":{"letter":"C","alter":1}} label=#4 instrument=guitar.electric sound=muted voice=0 vel=0.7 repeat=true line=22 secDur=0.2679
+  4.8214 tick=864 ticks=48 note={"midi":43,"name":"G2","spell":{"letter":"G","alter":0}} label=1 instrument=guitar.electric sound=muted voice=0 vel=0.7 repeat=true line=22 secDur=0.2679
+  5.0893 tick=912 ticks=96 note={"midi":50,"name":"D3","spell":{"letter":"D","alter":0}} label=5 instrument=guitar.electric sound=muted voice=0 vel=0.7 repeat=true line=22 secDur=0.5357
+  5.625 tick=1008 ticks=48 note={"midi":47,"name":"B2","spell":{"letter":"B","alter":0}} label=3 instrument=guitar.electric sound=muted voice=0 vel=0.7 repeat=true line=22 secDur=0.2679
+  5.8929 tick=1056 ticks=24 note={"midi":45,"name":"A2","spell":{"letter":"A","alter":0}} label=2 instrument=guitar.electric sound=muted voice=0 vel=0.7 repeat=true line=22 secDur=0.1339
+  6.0268 tick=1080 ticks=360 note={"midi":45,"name":"A2","spell":{"letter":"A","alter":0}} label=A2 instrument=bass voice=0 vel=0.7 repeat=true line=23 secDur=2.0089
+  6.0268 tick=1080 ticks=48 note={"midi":43,"name":"G2","spell":{"letter":"G","alter":0}} label=1 instrument=guitar.electric sound=muted voice=0 vel=0.7 repeat=true line=22 secDur=0.2679
+  6.2946 tick=1128 ticks=48 note={"midi":43,"name":"G2","spell":{"letter":"G","alter":0}} label=1 instrument=guitar.electric sound=muted voice=0 vel=0.7 repeat=true line=22 secDur=0.2679
+  6.5625 tick=1176 ticks=48 note={"midi":49,"name":"C#3","spell":{"letter":"C","alter":1}} label=#4 instrument=guitar.electric sound=muted voice=0 vel=0.7 repeat=true line=22 secDur=0.2679
+  6.8304 tick=1224 ticks=48 note={"midi":43,"name":"G2","spell":{"letter":"G","alter":0}} label=1 instrument=guitar.electric sound=muted voice=0 vel=0.7 repeat=true line=22 secDur=0.2679
+  7.0982 tick=1272 ticks=48 note={"midi":50,"name":"D3","spell":{"letter":"D","alter":0}} label=5 instrument=guitar.electric sound=muted voice=0 vel=0.7 repeat=true line=22 secDur=0.2679
+  7.3661 tick=1320 ticks=48 note={"midi":47,"name":"B2","spell":{"letter":"B","alter":0}} label=3 instrument=guitar.electric sound=muted voice=0 vel=0.7 repeat=true line=22 secDur=0.2679
+  7.6339 tick=1368 ticks=72 note={"midi":45,"name":"A2","spell":{"letter":"A","alter":0}} label=2 instrument=guitar.electric sound=muted voice=0 vel=0.7 repeat=true line=22 secDur=0.4018
 chords:
   0 tick=0 ticks=360 chord={"input":"I","label":"G","rootPc":7,"bassMidi":31,"notesMidi":[43,47,50],"noteNames":["G2","B2","D3"],"bassName":"G1"} label=G instrument=pad transpose=0 line=24 secDur=2.0089
   2.0089 tick=360 ticks=360 chord={"input":"II","label":"A","rootPc":9,"bassMidi":33,"notesMidi":[45,49,52],"noteNames":["A2","C#3","E3"],"bassName":"A1"} label=A instrument=pad transpose=0 line=24 secDur=2.0089
-  4.0179 tick=0 ticks=360 chord={"input":"I","label":"G","rootPc":7,"bassMidi":31,"notesMidi":[43,47,50],"noteNames":["G2","B2","D3"],"bassName":"G1"} label=G instrument=pad transpose=0 repeat=true line=24 secDur=2.0089
-  6.0268 tick=360 ticks=360 chord={"input":"II","label":"A","rootPc":9,"bassMidi":33,"notesMidi":[45,49,52],"noteNames":["A2","C#3","E3"],"bassName":"A1"} label=A instrument=pad transpose=0 repeat=true line=24 secDur=2.0089
+  4.0179 tick=720 ticks=360 chord={"input":"I","label":"G","rootPc":7,"bassMidi":31,"notesMidi":[43,47,50],"noteNames":["G2","B2","D3"],"bassName":"G1"} label=G instrument=pad transpose=0 repeat=true line=24 secDur=2.0089
+  6.0268 tick=1080 ticks=360 chord={"input":"II","label":"A","rootPc":9,"bassMidi":33,"notesMidi":[45,49,52],"noteNames":["A2","C#3","E3"],"bassName":"A1"} label=A instrument=pad transpose=0 repeat=true line=24 secDur=2.0089
 
 ## Single stroke roll
 errors: none
@@ -928,66 +928,66 @@ drums:
   0 inst=sticking art=hit lane=sticking hand=R tick=0 vel=0 line=7
   0.15 inst=snare art=hit lane=snare kit=rock tick=24 vel=0.7 line=6
   0.15 inst=sticking art=hit lane=sticking hand=L tick=24 vel=0 line=7
-  0.3 inst=snare art=hit lane=snare kit=rock tick=0 vel=0.7 line=6
-  0.3 inst=sticking art=hit lane=sticking hand=R tick=0 vel=0 line=7
-  0.45 inst=snare art=hit lane=snare kit=rock tick=24 vel=0.7 line=6
-  0.45 inst=sticking art=hit lane=sticking hand=L tick=24 vel=0 line=7
-  0.6 inst=snare art=hit lane=snare kit=rock tick=0 vel=0.7 line=6
-  0.6 inst=sticking art=hit lane=sticking hand=R tick=0 vel=0 line=7
-  0.75 inst=snare art=hit lane=snare kit=rock tick=24 vel=0.7 line=6
-  0.75 inst=sticking art=hit lane=sticking hand=L tick=24 vel=0 line=7
-  0.9 inst=snare art=hit lane=snare kit=rock tick=0 vel=0.7 line=6
-  0.9 inst=sticking art=hit lane=sticking hand=R tick=0 vel=0 line=7
-  1.05 inst=snare art=hit lane=snare kit=rock tick=24 vel=0.7 line=6
-  1.05 inst=sticking art=hit lane=sticking hand=L tick=24 vel=0 line=7
-  1.2 inst=snare art=hit lane=snare kit=rock tick=0 vel=0.7 line=6
-  1.2 inst=sticking art=hit lane=sticking hand=R tick=0 vel=0 line=7
-  1.35 inst=snare art=hit lane=snare kit=rock tick=24 vel=0.7 line=6
-  1.35 inst=sticking art=hit lane=sticking hand=L tick=24 vel=0 line=7
-  1.5 inst=snare art=hit lane=snare kit=rock tick=0 vel=0.7 line=6
-  1.5 inst=sticking art=hit lane=sticking hand=R tick=0 vel=0 line=7
-  1.65 inst=snare art=hit lane=snare kit=rock tick=24 vel=0.7 line=6
-  1.65 inst=sticking art=hit lane=sticking hand=L tick=24 vel=0 line=7
-  1.8 inst=snare art=hit lane=snare kit=rock tick=0 vel=0.7 line=6
-  1.8 inst=sticking art=hit lane=sticking hand=R tick=0 vel=0 line=7
-  1.95 inst=snare art=hit lane=snare kit=rock tick=24 vel=0.7 line=6
-  1.95 inst=sticking art=hit lane=sticking hand=L tick=24 vel=0 line=7
-  2.1 inst=snare art=hit lane=snare kit=rock tick=0 vel=0.7 line=6
-  2.1 inst=sticking art=hit lane=sticking hand=R tick=0 vel=0 line=7
-  2.25 inst=snare art=hit lane=snare kit=rock tick=24 vel=0.7 line=6
-  2.25 inst=sticking art=hit lane=sticking hand=L tick=24 vel=0 line=7
-  2.4 inst=snare art=hit lane=snare kit=rock tick=0 vel=0.7 line=6
-  2.4 inst=sticking art=hit lane=sticking hand=R tick=0 vel=0 line=7
-  2.55 inst=snare art=hit lane=snare kit=rock tick=24 vel=0.7 line=6
-  2.55 inst=sticking art=hit lane=sticking hand=L tick=24 vel=0 line=7
-  2.7 inst=snare art=hit lane=snare kit=rock tick=0 vel=0.7 line=6
-  2.7 inst=sticking art=hit lane=sticking hand=R tick=0 vel=0 line=7
-  2.85 inst=snare art=hit lane=snare kit=rock tick=24 vel=0.7 line=6
-  2.85 inst=sticking art=hit lane=sticking hand=L tick=24 vel=0 line=7
-  3 inst=snare art=hit lane=snare kit=rock tick=0 vel=0.7 line=6
-  3 inst=sticking art=hit lane=sticking hand=R tick=0 vel=0 line=7
-  3.15 inst=snare art=hit lane=snare kit=rock tick=24 vel=0.7 line=6
-  3.15 inst=sticking art=hit lane=sticking hand=L tick=24 vel=0 line=7
-  3.3 inst=snare art=hit lane=snare kit=rock tick=0 vel=0.7 line=6
-  3.3 inst=sticking art=hit lane=sticking hand=R tick=0 vel=0 line=7
-  3.45 inst=snare art=hit lane=snare kit=rock tick=24 vel=0.7 line=6
-  3.45 inst=sticking art=hit lane=sticking hand=L tick=24 vel=0 line=7
-  3.6 inst=snare art=hit lane=snare kit=rock tick=0 vel=0.7 line=6
-  3.6 inst=sticking art=hit lane=sticking hand=R tick=0 vel=0 line=7
-  3.75 inst=snare art=hit lane=snare kit=rock tick=24 vel=0.7 line=6
-  3.75 inst=sticking art=hit lane=sticking hand=L tick=24 vel=0 line=7
-  3.9 inst=snare art=hit lane=snare kit=rock tick=0 vel=0.7 line=6
-  3.9 inst=sticking art=hit lane=sticking hand=R tick=0 vel=0 line=7
-  4.05 inst=snare art=hit lane=snare kit=rock tick=24 vel=0.7 line=6
-  4.05 inst=sticking art=hit lane=sticking hand=L tick=24 vel=0 line=7
-  4.2 inst=snare art=hit lane=snare kit=rock tick=0 vel=0.7 line=6
-  4.2 inst=sticking art=hit lane=sticking hand=R tick=0 vel=0 line=7
-  4.35 inst=snare art=hit lane=snare kit=rock tick=24 vel=0.7 line=6
-  4.35 inst=sticking art=hit lane=sticking hand=L tick=24 vel=0 line=7
-  4.5 inst=snare art=hit lane=snare kit=rock tick=0 vel=0.7 line=6
-  4.5 inst=sticking art=hit lane=sticking hand=R tick=0 vel=0 line=7
-  4.65 inst=snare art=hit lane=snare kit=rock tick=24 vel=0.7 line=6
-  4.65 inst=sticking art=hit lane=sticking hand=L tick=24 vel=0 line=7
+  0.3 inst=snare art=hit lane=snare kit=rock tick=48 vel=0.7 line=6
+  0.3 inst=sticking art=hit lane=sticking hand=R tick=48 vel=0 line=7
+  0.45 inst=snare art=hit lane=snare kit=rock tick=72 vel=0.7 line=6
+  0.45 inst=sticking art=hit lane=sticking hand=L tick=72 vel=0 line=7
+  0.6 inst=snare art=hit lane=snare kit=rock tick=96 vel=0.7 line=6
+  0.6 inst=sticking art=hit lane=sticking hand=R tick=96 vel=0 line=7
+  0.75 inst=snare art=hit lane=snare kit=rock tick=120 vel=0.7 line=6
+  0.75 inst=sticking art=hit lane=sticking hand=L tick=120 vel=0 line=7
+  0.9 inst=snare art=hit lane=snare kit=rock tick=144 vel=0.7 line=6
+  0.9 inst=sticking art=hit lane=sticking hand=R tick=144 vel=0 line=7
+  1.05 inst=snare art=hit lane=snare kit=rock tick=168 vel=0.7 line=6
+  1.05 inst=sticking art=hit lane=sticking hand=L tick=168 vel=0 line=7
+  1.2 inst=snare art=hit lane=snare kit=rock tick=192 vel=0.7 line=6
+  1.2 inst=sticking art=hit lane=sticking hand=R tick=192 vel=0 line=7
+  1.35 inst=snare art=hit lane=snare kit=rock tick=216 vel=0.7 line=6
+  1.35 inst=sticking art=hit lane=sticking hand=L tick=216 vel=0 line=7
+  1.5 inst=snare art=hit lane=snare kit=rock tick=240 vel=0.7 line=6
+  1.5 inst=sticking art=hit lane=sticking hand=R tick=240 vel=0 line=7
+  1.65 inst=snare art=hit lane=snare kit=rock tick=264 vel=0.7 line=6
+  1.65 inst=sticking art=hit lane=sticking hand=L tick=264 vel=0 line=7
+  1.8 inst=snare art=hit lane=snare kit=rock tick=288 vel=0.7 line=6
+  1.8 inst=sticking art=hit lane=sticking hand=R tick=288 vel=0 line=7
+  1.95 inst=snare art=hit lane=snare kit=rock tick=312 vel=0.7 line=6
+  1.95 inst=sticking art=hit lane=sticking hand=L tick=312 vel=0 line=7
+  2.1 inst=snare art=hit lane=snare kit=rock tick=336 vel=0.7 line=6
+  2.1 inst=sticking art=hit lane=sticking hand=R tick=336 vel=0 line=7
+  2.25 inst=snare art=hit lane=snare kit=rock tick=360 vel=0.7 line=6
+  2.25 inst=sticking art=hit lane=sticking hand=L tick=360 vel=0 line=7
+  2.4 inst=snare art=hit lane=snare kit=rock tick=384 vel=0.7 line=6
+  2.4 inst=sticking art=hit lane=sticking hand=R tick=384 vel=0 line=7
+  2.55 inst=snare art=hit lane=snare kit=rock tick=408 vel=0.7 line=6
+  2.55 inst=sticking art=hit lane=sticking hand=L tick=408 vel=0 line=7
+  2.7 inst=snare art=hit lane=snare kit=rock tick=432 vel=0.7 line=6
+  2.7 inst=sticking art=hit lane=sticking hand=R tick=432 vel=0 line=7
+  2.85 inst=snare art=hit lane=snare kit=rock tick=456 vel=0.7 line=6
+  2.85 inst=sticking art=hit lane=sticking hand=L tick=456 vel=0 line=7
+  3 inst=snare art=hit lane=snare kit=rock tick=480 vel=0.7 line=6
+  3 inst=sticking art=hit lane=sticking hand=R tick=480 vel=0 line=7
+  3.15 inst=snare art=hit lane=snare kit=rock tick=504 vel=0.7 line=6
+  3.15 inst=sticking art=hit lane=sticking hand=L tick=504 vel=0 line=7
+  3.3 inst=snare art=hit lane=snare kit=rock tick=528 vel=0.7 line=6
+  3.3 inst=sticking art=hit lane=sticking hand=R tick=528 vel=0 line=7
+  3.45 inst=snare art=hit lane=snare kit=rock tick=552 vel=0.7 line=6
+  3.45 inst=sticking art=hit lane=sticking hand=L tick=552 vel=0 line=7
+  3.6 inst=snare art=hit lane=snare kit=rock tick=576 vel=0.7 line=6
+  3.6 inst=sticking art=hit lane=sticking hand=R tick=576 vel=0 line=7
+  3.75 inst=snare art=hit lane=snare kit=rock tick=600 vel=0.7 line=6
+  3.75 inst=sticking art=hit lane=sticking hand=L tick=600 vel=0 line=7
+  3.9 inst=snare art=hit lane=snare kit=rock tick=624 vel=0.7 line=6
+  3.9 inst=sticking art=hit lane=sticking hand=R tick=624 vel=0 line=7
+  4.05 inst=snare art=hit lane=snare kit=rock tick=648 vel=0.7 line=6
+  4.05 inst=sticking art=hit lane=sticking hand=L tick=648 vel=0 line=7
+  4.2 inst=snare art=hit lane=snare kit=rock tick=672 vel=0.7 line=6
+  4.2 inst=sticking art=hit lane=sticking hand=R tick=672 vel=0 line=7
+  4.35 inst=snare art=hit lane=snare kit=rock tick=696 vel=0.7 line=6
+  4.35 inst=sticking art=hit lane=sticking hand=L tick=696 vel=0 line=7
+  4.5 inst=snare art=hit lane=snare kit=rock tick=720 vel=0.7 line=6
+  4.5 inst=sticking art=hit lane=sticking hand=R tick=720 vel=0 line=7
+  4.65 inst=snare art=hit lane=snare kit=rock tick=744 vel=0.7 line=6
+  4.65 inst=sticking art=hit lane=sticking hand=L tick=744 vel=0 line=7
 
 ## Double stroke roll
 errors: none
@@ -1004,62 +1004,62 @@ drums:
   0.3333 inst=sticking art=hit lane=sticking hand=L tick=48 vel=0 line=7
   0.5 inst=snare art=hit lane=snare kit=rock tick=72 vel=0.7 line=6
   0.5 inst=sticking art=hit lane=sticking hand=L tick=72 vel=0 line=7
-  0.6667 inst=snare art=hit lane=snare kit=rock tick=0 vel=0.7 line=6
-  0.6667 inst=sticking art=hit lane=sticking hand=R tick=0 vel=0 line=7
-  0.8333 inst=snare art=hit lane=snare kit=rock tick=24 vel=0.7 line=6
-  0.8333 inst=sticking art=hit lane=sticking hand=R tick=24 vel=0 line=7
-  1 inst=snare art=hit lane=snare kit=rock tick=48 vel=0.7 line=6
-  1 inst=sticking art=hit lane=sticking hand=L tick=48 vel=0 line=7
-  1.1667 inst=snare art=hit lane=snare kit=rock tick=72 vel=0.7 line=6
-  1.1667 inst=sticking art=hit lane=sticking hand=L tick=72 vel=0 line=7
-  1.3333 inst=snare art=hit lane=snare kit=rock tick=0 vel=0.7 line=6
-  1.3333 inst=sticking art=hit lane=sticking hand=R tick=0 vel=0 line=7
-  1.5 inst=snare art=hit lane=snare kit=rock tick=24 vel=0.7 line=6
-  1.5 inst=sticking art=hit lane=sticking hand=R tick=24 vel=0 line=7
-  1.6667 inst=snare art=hit lane=snare kit=rock tick=48 vel=0.7 line=6
-  1.6667 inst=sticking art=hit lane=sticking hand=L tick=48 vel=0 line=7
-  1.8333 inst=snare art=hit lane=snare kit=rock tick=72 vel=0.7 line=6
-  1.8333 inst=sticking art=hit lane=sticking hand=L tick=72 vel=0 line=7
-  2 inst=snare art=hit lane=snare kit=rock tick=0 vel=0.7 line=6
-  2 inst=sticking art=hit lane=sticking hand=R tick=0 vel=0 line=7
-  2.1667 inst=snare art=hit lane=snare kit=rock tick=24 vel=0.7 line=6
-  2.1667 inst=sticking art=hit lane=sticking hand=R tick=24 vel=0 line=7
-  2.3333 inst=snare art=hit lane=snare kit=rock tick=48 vel=0.7 line=6
-  2.3333 inst=sticking art=hit lane=sticking hand=L tick=48 vel=0 line=7
-  2.5 inst=snare art=hit lane=snare kit=rock tick=72 vel=0.7 line=6
-  2.5 inst=sticking art=hit lane=sticking hand=L tick=72 vel=0 line=7
-  2.6667 inst=snare art=hit lane=snare kit=rock tick=0 vel=0.7 line=6
-  2.6667 inst=sticking art=hit lane=sticking hand=R tick=0 vel=0 line=7
-  2.8333 inst=snare art=hit lane=snare kit=rock tick=24 vel=0.7 line=6
-  2.8333 inst=sticking art=hit lane=sticking hand=R tick=24 vel=0 line=7
-  3 inst=snare art=hit lane=snare kit=rock tick=48 vel=0.7 line=6
-  3 inst=sticking art=hit lane=sticking hand=L tick=48 vel=0 line=7
-  3.1667 inst=snare art=hit lane=snare kit=rock tick=72 vel=0.7 line=6
-  3.1667 inst=sticking art=hit lane=sticking hand=L tick=72 vel=0 line=7
-  3.3333 inst=snare art=hit lane=snare kit=rock tick=0 vel=0.7 line=6
-  3.3333 inst=sticking art=hit lane=sticking hand=R tick=0 vel=0 line=7
-  3.5 inst=snare art=hit lane=snare kit=rock tick=24 vel=0.7 line=6
-  3.5 inst=sticking art=hit lane=sticking hand=R tick=24 vel=0 line=7
-  3.6667 inst=snare art=hit lane=snare kit=rock tick=48 vel=0.7 line=6
-  3.6667 inst=sticking art=hit lane=sticking hand=L tick=48 vel=0 line=7
-  3.8333 inst=snare art=hit lane=snare kit=rock tick=72 vel=0.7 line=6
-  3.8333 inst=sticking art=hit lane=sticking hand=L tick=72 vel=0 line=7
-  4 inst=snare art=hit lane=snare kit=rock tick=0 vel=0.7 line=6
-  4 inst=sticking art=hit lane=sticking hand=R tick=0 vel=0 line=7
-  4.1667 inst=snare art=hit lane=snare kit=rock tick=24 vel=0.7 line=6
-  4.1667 inst=sticking art=hit lane=sticking hand=R tick=24 vel=0 line=7
-  4.3333 inst=snare art=hit lane=snare kit=rock tick=48 vel=0.7 line=6
-  4.3333 inst=sticking art=hit lane=sticking hand=L tick=48 vel=0 line=7
-  4.5 inst=snare art=hit lane=snare kit=rock tick=72 vel=0.7 line=6
-  4.5 inst=sticking art=hit lane=sticking hand=L tick=72 vel=0 line=7
-  4.6667 inst=snare art=hit lane=snare kit=rock tick=0 vel=0.7 line=6
-  4.6667 inst=sticking art=hit lane=sticking hand=R tick=0 vel=0 line=7
-  4.8333 inst=snare art=hit lane=snare kit=rock tick=24 vel=0.7 line=6
-  4.8333 inst=sticking art=hit lane=sticking hand=R tick=24 vel=0 line=7
-  5 inst=snare art=hit lane=snare kit=rock tick=48 vel=0.7 line=6
-  5 inst=sticking art=hit lane=sticking hand=L tick=48 vel=0 line=7
-  5.1667 inst=snare art=hit lane=snare kit=rock tick=72 vel=0.7 line=6
-  5.1667 inst=sticking art=hit lane=sticking hand=L tick=72 vel=0 line=7
+  0.6667 inst=snare art=hit lane=snare kit=rock tick=96 vel=0.7 line=6
+  0.6667 inst=sticking art=hit lane=sticking hand=R tick=96 vel=0 line=7
+  0.8333 inst=snare art=hit lane=snare kit=rock tick=120 vel=0.7 line=6
+  0.8333 inst=sticking art=hit lane=sticking hand=R tick=120 vel=0 line=7
+  1 inst=snare art=hit lane=snare kit=rock tick=144 vel=0.7 line=6
+  1 inst=sticking art=hit lane=sticking hand=L tick=144 vel=0 line=7
+  1.1667 inst=snare art=hit lane=snare kit=rock tick=168 vel=0.7 line=6
+  1.1667 inst=sticking art=hit lane=sticking hand=L tick=168 vel=0 line=7
+  1.3333 inst=snare art=hit lane=snare kit=rock tick=192 vel=0.7 line=6
+  1.3333 inst=sticking art=hit lane=sticking hand=R tick=192 vel=0 line=7
+  1.5 inst=snare art=hit lane=snare kit=rock tick=216 vel=0.7 line=6
+  1.5 inst=sticking art=hit lane=sticking hand=R tick=216 vel=0 line=7
+  1.6667 inst=snare art=hit lane=snare kit=rock tick=240 vel=0.7 line=6
+  1.6667 inst=sticking art=hit lane=sticking hand=L tick=240 vel=0 line=7
+  1.8333 inst=snare art=hit lane=snare kit=rock tick=264 vel=0.7 line=6
+  1.8333 inst=sticking art=hit lane=sticking hand=L tick=264 vel=0 line=7
+  2 inst=snare art=hit lane=snare kit=rock tick=288 vel=0.7 line=6
+  2 inst=sticking art=hit lane=sticking hand=R tick=288 vel=0 line=7
+  2.1667 inst=snare art=hit lane=snare kit=rock tick=312 vel=0.7 line=6
+  2.1667 inst=sticking art=hit lane=sticking hand=R tick=312 vel=0 line=7
+  2.3333 inst=snare art=hit lane=snare kit=rock tick=336 vel=0.7 line=6
+  2.3333 inst=sticking art=hit lane=sticking hand=L tick=336 vel=0 line=7
+  2.5 inst=snare art=hit lane=snare kit=rock tick=360 vel=0.7 line=6
+  2.5 inst=sticking art=hit lane=sticking hand=L tick=360 vel=0 line=7
+  2.6667 inst=snare art=hit lane=snare kit=rock tick=384 vel=0.7 line=6
+  2.6667 inst=sticking art=hit lane=sticking hand=R tick=384 vel=0 line=7
+  2.8333 inst=snare art=hit lane=snare kit=rock tick=408 vel=0.7 line=6
+  2.8333 inst=sticking art=hit lane=sticking hand=R tick=408 vel=0 line=7
+  3 inst=snare art=hit lane=snare kit=rock tick=432 vel=0.7 line=6
+  3 inst=sticking art=hit lane=sticking hand=L tick=432 vel=0 line=7
+  3.1667 inst=snare art=hit lane=snare kit=rock tick=456 vel=0.7 line=6
+  3.1667 inst=sticking art=hit lane=sticking hand=L tick=456 vel=0 line=7
+  3.3333 inst=snare art=hit lane=snare kit=rock tick=480 vel=0.7 line=6
+  3.3333 inst=sticking art=hit lane=sticking hand=R tick=480 vel=0 line=7
+  3.5 inst=snare art=hit lane=snare kit=rock tick=504 vel=0.7 line=6
+  3.5 inst=sticking art=hit lane=sticking hand=R tick=504 vel=0 line=7
+  3.6667 inst=snare art=hit lane=snare kit=rock tick=528 vel=0.7 line=6
+  3.6667 inst=sticking art=hit lane=sticking hand=L tick=528 vel=0 line=7
+  3.8333 inst=snare art=hit lane=snare kit=rock tick=552 vel=0.7 line=6
+  3.8333 inst=sticking art=hit lane=sticking hand=L tick=552 vel=0 line=7
+  4 inst=snare art=hit lane=snare kit=rock tick=576 vel=0.7 line=6
+  4 inst=sticking art=hit lane=sticking hand=R tick=576 vel=0 line=7
+  4.1667 inst=snare art=hit lane=snare kit=rock tick=600 vel=0.7 line=6
+  4.1667 inst=sticking art=hit lane=sticking hand=R tick=600 vel=0 line=7
+  4.3333 inst=snare art=hit lane=snare kit=rock tick=624 vel=0.7 line=6
+  4.3333 inst=sticking art=hit lane=sticking hand=L tick=624 vel=0 line=7
+  4.5 inst=snare art=hit lane=snare kit=rock tick=648 vel=0.7 line=6
+  4.5 inst=sticking art=hit lane=sticking hand=L tick=648 vel=0 line=7
+  4.6667 inst=snare art=hit lane=snare kit=rock tick=672 vel=0.7 line=6
+  4.6667 inst=sticking art=hit lane=sticking hand=R tick=672 vel=0 line=7
+  4.8333 inst=snare art=hit lane=snare kit=rock tick=696 vel=0.7 line=6
+  4.8333 inst=sticking art=hit lane=sticking hand=R tick=696 vel=0 line=7
+  5 inst=snare art=hit lane=snare kit=rock tick=720 vel=0.7 line=6
+  5 inst=sticking art=hit lane=sticking hand=L tick=720 vel=0 line=7
+  5.1667 inst=snare art=hit lane=snare kit=rock tick=744 vel=0.7 line=6
+  5.1667 inst=sticking art=hit lane=sticking hand=L tick=744 vel=0 line=7
 
 ## Single paradiddle
 errors: none
@@ -1084,54 +1084,54 @@ drums:
   0.9 inst=sticking art=hit lane=sticking hand=L tick=144 vel=0 line=7
   1.05 inst=snare art=hit lane=snare kit=rock tick=168 vel=0.7 line=6
   1.05 inst=sticking art=hit lane=sticking hand=L tick=168 vel=0 line=7
-  1.2 inst=snare art=hit lane=snare kit=rock tick=0 vel=1 accent=true line=6
-  1.2 inst=sticking art=hit lane=sticking hand=R tick=0 vel=0 line=7
-  1.35 inst=snare art=hit lane=snare kit=rock tick=24 vel=0.7 line=6
-  1.35 inst=sticking art=hit lane=sticking hand=L tick=24 vel=0 line=7
-  1.5 inst=snare art=hit lane=snare kit=rock tick=48 vel=0.7 line=6
-  1.5 inst=sticking art=hit lane=sticking hand=R tick=48 vel=0 line=7
-  1.65 inst=snare art=hit lane=snare kit=rock tick=72 vel=0.7 line=6
-  1.65 inst=sticking art=hit lane=sticking hand=R tick=72 vel=0 line=7
-  1.8 inst=snare art=hit lane=snare kit=rock tick=96 vel=1 accent=true line=6
-  1.8 inst=sticking art=hit lane=sticking hand=L tick=96 vel=0 line=7
-  1.95 inst=snare art=hit lane=snare kit=rock tick=120 vel=0.7 line=6
-  1.95 inst=sticking art=hit lane=sticking hand=R tick=120 vel=0 line=7
-  2.1 inst=snare art=hit lane=snare kit=rock tick=144 vel=0.7 line=6
-  2.1 inst=sticking art=hit lane=sticking hand=L tick=144 vel=0 line=7
-  2.25 inst=snare art=hit lane=snare kit=rock tick=168 vel=0.7 line=6
-  2.25 inst=sticking art=hit lane=sticking hand=L tick=168 vel=0 line=7
-  2.4 inst=snare art=hit lane=snare kit=rock tick=0 vel=1 accent=true line=6
-  2.4 inst=sticking art=hit lane=sticking hand=R tick=0 vel=0 line=7
-  2.55 inst=snare art=hit lane=snare kit=rock tick=24 vel=0.7 line=6
-  2.55 inst=sticking art=hit lane=sticking hand=L tick=24 vel=0 line=7
-  2.7 inst=snare art=hit lane=snare kit=rock tick=48 vel=0.7 line=6
-  2.7 inst=sticking art=hit lane=sticking hand=R tick=48 vel=0 line=7
-  2.85 inst=snare art=hit lane=snare kit=rock tick=72 vel=0.7 line=6
-  2.85 inst=sticking art=hit lane=sticking hand=R tick=72 vel=0 line=7
-  3 inst=snare art=hit lane=snare kit=rock tick=96 vel=1 accent=true line=6
-  3 inst=sticking art=hit lane=sticking hand=L tick=96 vel=0 line=7
-  3.15 inst=snare art=hit lane=snare kit=rock tick=120 vel=0.7 line=6
-  3.15 inst=sticking art=hit lane=sticking hand=R tick=120 vel=0 line=7
-  3.3 inst=snare art=hit lane=snare kit=rock tick=144 vel=0.7 line=6
-  3.3 inst=sticking art=hit lane=sticking hand=L tick=144 vel=0 line=7
-  3.45 inst=snare art=hit lane=snare kit=rock tick=168 vel=0.7 line=6
-  3.45 inst=sticking art=hit lane=sticking hand=L tick=168 vel=0 line=7
-  3.6 inst=snare art=hit lane=snare kit=rock tick=0 vel=1 accent=true line=6
-  3.6 inst=sticking art=hit lane=sticking hand=R tick=0 vel=0 line=7
-  3.75 inst=snare art=hit lane=snare kit=rock tick=24 vel=0.7 line=6
-  3.75 inst=sticking art=hit lane=sticking hand=L tick=24 vel=0 line=7
-  3.9 inst=snare art=hit lane=snare kit=rock tick=48 vel=0.7 line=6
-  3.9 inst=sticking art=hit lane=sticking hand=R tick=48 vel=0 line=7
-  4.05 inst=snare art=hit lane=snare kit=rock tick=72 vel=0.7 line=6
-  4.05 inst=sticking art=hit lane=sticking hand=R tick=72 vel=0 line=7
-  4.2 inst=snare art=hit lane=snare kit=rock tick=96 vel=1 accent=true line=6
-  4.2 inst=sticking art=hit lane=sticking hand=L tick=96 vel=0 line=7
-  4.35 inst=snare art=hit lane=snare kit=rock tick=120 vel=0.7 line=6
-  4.35 inst=sticking art=hit lane=sticking hand=R tick=120 vel=0 line=7
-  4.5 inst=snare art=hit lane=snare kit=rock tick=144 vel=0.7 line=6
-  4.5 inst=sticking art=hit lane=sticking hand=L tick=144 vel=0 line=7
-  4.65 inst=snare art=hit lane=snare kit=rock tick=168 vel=0.7 line=6
-  4.65 inst=sticking art=hit lane=sticking hand=L tick=168 vel=0 line=7
+  1.2 inst=snare art=hit lane=snare kit=rock tick=192 vel=1 accent=true line=6
+  1.2 inst=sticking art=hit lane=sticking hand=R tick=192 vel=0 line=7
+  1.35 inst=snare art=hit lane=snare kit=rock tick=216 vel=0.7 line=6
+  1.35 inst=sticking art=hit lane=sticking hand=L tick=216 vel=0 line=7
+  1.5 inst=snare art=hit lane=snare kit=rock tick=240 vel=0.7 line=6
+  1.5 inst=sticking art=hit lane=sticking hand=R tick=240 vel=0 line=7
+  1.65 inst=snare art=hit lane=snare kit=rock tick=264 vel=0.7 line=6
+  1.65 inst=sticking art=hit lane=sticking hand=R tick=264 vel=0 line=7
+  1.8 inst=snare art=hit lane=snare kit=rock tick=288 vel=1 accent=true line=6
+  1.8 inst=sticking art=hit lane=sticking hand=L tick=288 vel=0 line=7
+  1.95 inst=snare art=hit lane=snare kit=rock tick=312 vel=0.7 line=6
+  1.95 inst=sticking art=hit lane=sticking hand=R tick=312 vel=0 line=7
+  2.1 inst=snare art=hit lane=snare kit=rock tick=336 vel=0.7 line=6
+  2.1 inst=sticking art=hit lane=sticking hand=L tick=336 vel=0 line=7
+  2.25 inst=snare art=hit lane=snare kit=rock tick=360 vel=0.7 line=6
+  2.25 inst=sticking art=hit lane=sticking hand=L tick=360 vel=0 line=7
+  2.4 inst=snare art=hit lane=snare kit=rock tick=384 vel=1 accent=true line=6
+  2.4 inst=sticking art=hit lane=sticking hand=R tick=384 vel=0 line=7
+  2.55 inst=snare art=hit lane=snare kit=rock tick=408 vel=0.7 line=6
+  2.55 inst=sticking art=hit lane=sticking hand=L tick=408 vel=0 line=7
+  2.7 inst=snare art=hit lane=snare kit=rock tick=432 vel=0.7 line=6
+  2.7 inst=sticking art=hit lane=sticking hand=R tick=432 vel=0 line=7
+  2.85 inst=snare art=hit lane=snare kit=rock tick=456 vel=0.7 line=6
+  2.85 inst=sticking art=hit lane=sticking hand=R tick=456 vel=0 line=7
+  3 inst=snare art=hit lane=snare kit=rock tick=480 vel=1 accent=true line=6
+  3 inst=sticking art=hit lane=sticking hand=L tick=480 vel=0 line=7
+  3.15 inst=snare art=hit lane=snare kit=rock tick=504 vel=0.7 line=6
+  3.15 inst=sticking art=hit lane=sticking hand=R tick=504 vel=0 line=7
+  3.3 inst=snare art=hit lane=snare kit=rock tick=528 vel=0.7 line=6
+  3.3 inst=sticking art=hit lane=sticking hand=L tick=528 vel=0 line=7
+  3.45 inst=snare art=hit lane=snare kit=rock tick=552 vel=0.7 line=6
+  3.45 inst=sticking art=hit lane=sticking hand=L tick=552 vel=0 line=7
+  3.6 inst=snare art=hit lane=snare kit=rock tick=576 vel=1 accent=true line=6
+  3.6 inst=sticking art=hit lane=sticking hand=R tick=576 vel=0 line=7
+  3.75 inst=snare art=hit lane=snare kit=rock tick=600 vel=0.7 line=6
+  3.75 inst=sticking art=hit lane=sticking hand=L tick=600 vel=0 line=7
+  3.9 inst=snare art=hit lane=snare kit=rock tick=624 vel=0.7 line=6
+  3.9 inst=sticking art=hit lane=sticking hand=R tick=624 vel=0 line=7
+  4.05 inst=snare art=hit lane=snare kit=rock tick=648 vel=0.7 line=6
+  4.05 inst=sticking art=hit lane=sticking hand=R tick=648 vel=0 line=7
+  4.2 inst=snare art=hit lane=snare kit=rock tick=672 vel=1 accent=true line=6
+  4.2 inst=sticking art=hit lane=sticking hand=L tick=672 vel=0 line=7
+  4.35 inst=snare art=hit lane=snare kit=rock tick=696 vel=0.7 line=6
+  4.35 inst=sticking art=hit lane=sticking hand=R tick=696 vel=0 line=7
+  4.5 inst=snare art=hit lane=snare kit=rock tick=720 vel=0.7 line=6
+  4.5 inst=sticking art=hit lane=sticking hand=L tick=720 vel=0 line=7
+  4.65 inst=snare art=hit lane=snare kit=rock tick=744 vel=0.7 line=6
+  4.65 inst=sticking art=hit lane=sticking hand=L tick=744 vel=0 line=7
 
 ## Double paradiddle
 errors: none
@@ -1164,30 +1164,30 @@ drums:
   1.5 inst=sticking art=hit lane=sticking hand=L tick=240 vel=0 line=7
   1.65 inst=snare art=hit lane=snare kit=rock tick=264 vel=0.7 line=6
   1.65 inst=sticking art=hit lane=sticking hand=L tick=264 vel=0 line=7
-  1.8 inst=snare art=hit lane=snare kit=rock tick=0 vel=1 accent=true line=6
-  1.8 inst=sticking art=hit lane=sticking hand=R tick=0 vel=0 line=7
-  1.95 inst=snare art=hit lane=snare kit=rock tick=24 vel=0.7 line=6
-  1.95 inst=sticking art=hit lane=sticking hand=L tick=24 vel=0 line=7
-  2.1 inst=snare art=hit lane=snare kit=rock tick=48 vel=0.7 line=6
-  2.1 inst=sticking art=hit lane=sticking hand=R tick=48 vel=0 line=7
-  2.25 inst=snare art=hit lane=snare kit=rock tick=72 vel=0.7 line=6
-  2.25 inst=sticking art=hit lane=sticking hand=L tick=72 vel=0 line=7
-  2.4 inst=snare art=hit lane=snare kit=rock tick=96 vel=0.7 line=6
-  2.4 inst=sticking art=hit lane=sticking hand=R tick=96 vel=0 line=7
-  2.55 inst=snare art=hit lane=snare kit=rock tick=120 vel=0.7 line=6
-  2.55 inst=sticking art=hit lane=sticking hand=R tick=120 vel=0 line=7
-  2.7 inst=snare art=hit lane=snare kit=rock tick=144 vel=1 accent=true line=6
-  2.7 inst=sticking art=hit lane=sticking hand=L tick=144 vel=0 line=7
-  2.85 inst=snare art=hit lane=snare kit=rock tick=168 vel=0.7 line=6
-  2.85 inst=sticking art=hit lane=sticking hand=R tick=168 vel=0 line=7
-  3 inst=snare art=hit lane=snare kit=rock tick=192 vel=0.7 line=6
-  3 inst=sticking art=hit lane=sticking hand=L tick=192 vel=0 line=7
-  3.15 inst=snare art=hit lane=snare kit=rock tick=216 vel=0.7 line=6
-  3.15 inst=sticking art=hit lane=sticking hand=R tick=216 vel=0 line=7
-  3.3 inst=snare art=hit lane=snare kit=rock tick=240 vel=0.7 line=6
-  3.3 inst=sticking art=hit lane=sticking hand=L tick=240 vel=0 line=7
-  3.45 inst=snare art=hit lane=snare kit=rock tick=264 vel=0.7 line=6
-  3.45 inst=sticking art=hit lane=sticking hand=L tick=264 vel=0 line=7
+  1.8 inst=snare art=hit lane=snare kit=rock tick=288 vel=1 accent=true line=6
+  1.8 inst=sticking art=hit lane=sticking hand=R tick=288 vel=0 line=7
+  1.95 inst=snare art=hit lane=snare kit=rock tick=312 vel=0.7 line=6
+  1.95 inst=sticking art=hit lane=sticking hand=L tick=312 vel=0 line=7
+  2.1 inst=snare art=hit lane=snare kit=rock tick=336 vel=0.7 line=6
+  2.1 inst=sticking art=hit lane=sticking hand=R tick=336 vel=0 line=7
+  2.25 inst=snare art=hit lane=snare kit=rock tick=360 vel=0.7 line=6
+  2.25 inst=sticking art=hit lane=sticking hand=L tick=360 vel=0 line=7
+  2.4 inst=snare art=hit lane=snare kit=rock tick=384 vel=0.7 line=6
+  2.4 inst=sticking art=hit lane=sticking hand=R tick=384 vel=0 line=7
+  2.55 inst=snare art=hit lane=snare kit=rock tick=408 vel=0.7 line=6
+  2.55 inst=sticking art=hit lane=sticking hand=R tick=408 vel=0 line=7
+  2.7 inst=snare art=hit lane=snare kit=rock tick=432 vel=1 accent=true line=6
+  2.7 inst=sticking art=hit lane=sticking hand=L tick=432 vel=0 line=7
+  2.85 inst=snare art=hit lane=snare kit=rock tick=456 vel=0.7 line=6
+  2.85 inst=sticking art=hit lane=sticking hand=R tick=456 vel=0 line=7
+  3 inst=snare art=hit lane=snare kit=rock tick=480 vel=0.7 line=6
+  3 inst=sticking art=hit lane=sticking hand=L tick=480 vel=0 line=7
+  3.15 inst=snare art=hit lane=snare kit=rock tick=504 vel=0.7 line=6
+  3.15 inst=sticking art=hit lane=sticking hand=R tick=504 vel=0 line=7
+  3.3 inst=snare art=hit lane=snare kit=rock tick=528 vel=0.7 line=6
+  3.3 inst=sticking art=hit lane=sticking hand=L tick=528 vel=0 line=7
+  3.45 inst=snare art=hit lane=snare kit=rock tick=552 vel=0.7 line=6
+  3.45 inst=sticking art=hit lane=sticking hand=L tick=552 vel=0 line=7
 
 ## Paradiddle-diddle
 errors: none
@@ -1208,42 +1208,42 @@ drums:
   0.6 inst=sticking art=hit lane=sticking hand=L tick=96 vel=0 line=7
   0.75 inst=snare art=hit lane=snare kit=rock tick=120 vel=0.7 line=6
   0.75 inst=sticking art=hit lane=sticking hand=L tick=120 vel=0 line=7
-  0.9 inst=snare art=hit lane=snare kit=rock tick=0 vel=1 accent=true line=6
-  0.9 inst=sticking art=hit lane=sticking hand=R tick=0 vel=0 line=7
-  1.05 inst=snare art=hit lane=snare kit=rock tick=24 vel=0.7 line=6
-  1.05 inst=sticking art=hit lane=sticking hand=L tick=24 vel=0 line=7
-  1.2 inst=snare art=hit lane=snare kit=rock tick=48 vel=0.7 line=6
-  1.2 inst=sticking art=hit lane=sticking hand=R tick=48 vel=0 line=7
-  1.35 inst=snare art=hit lane=snare kit=rock tick=72 vel=0.7 line=6
-  1.35 inst=sticking art=hit lane=sticking hand=R tick=72 vel=0 line=7
-  1.5 inst=snare art=hit lane=snare kit=rock tick=96 vel=0.7 line=6
-  1.5 inst=sticking art=hit lane=sticking hand=L tick=96 vel=0 line=7
-  1.65 inst=snare art=hit lane=snare kit=rock tick=120 vel=0.7 line=6
-  1.65 inst=sticking art=hit lane=sticking hand=L tick=120 vel=0 line=7
-  1.8 inst=snare art=hit lane=snare kit=rock tick=0 vel=1 accent=true line=6
-  1.8 inst=sticking art=hit lane=sticking hand=R tick=0 vel=0 line=7
-  1.95 inst=snare art=hit lane=snare kit=rock tick=24 vel=0.7 line=6
-  1.95 inst=sticking art=hit lane=sticking hand=L tick=24 vel=0 line=7
-  2.1 inst=snare art=hit lane=snare kit=rock tick=48 vel=0.7 line=6
-  2.1 inst=sticking art=hit lane=sticking hand=R tick=48 vel=0 line=7
-  2.25 inst=snare art=hit lane=snare kit=rock tick=72 vel=0.7 line=6
-  2.25 inst=sticking art=hit lane=sticking hand=R tick=72 vel=0 line=7
-  2.4 inst=snare art=hit lane=snare kit=rock tick=96 vel=0.7 line=6
-  2.4 inst=sticking art=hit lane=sticking hand=L tick=96 vel=0 line=7
-  2.55 inst=snare art=hit lane=snare kit=rock tick=120 vel=0.7 line=6
-  2.55 inst=sticking art=hit lane=sticking hand=L tick=120 vel=0 line=7
-  2.7 inst=snare art=hit lane=snare kit=rock tick=0 vel=1 accent=true line=6
-  2.7 inst=sticking art=hit lane=sticking hand=R tick=0 vel=0 line=7
-  2.85 inst=snare art=hit lane=snare kit=rock tick=24 vel=0.7 line=6
-  2.85 inst=sticking art=hit lane=sticking hand=L tick=24 vel=0 line=7
-  3 inst=snare art=hit lane=snare kit=rock tick=48 vel=0.7 line=6
-  3 inst=sticking art=hit lane=sticking hand=R tick=48 vel=0 line=7
-  3.15 inst=snare art=hit lane=snare kit=rock tick=72 vel=0.7 line=6
-  3.15 inst=sticking art=hit lane=sticking hand=R tick=72 vel=0 line=7
-  3.3 inst=snare art=hit lane=snare kit=rock tick=96 vel=0.7 line=6
-  3.3 inst=sticking art=hit lane=sticking hand=L tick=96 vel=0 line=7
-  3.45 inst=snare art=hit lane=snare kit=rock tick=120 vel=0.7 line=6
-  3.45 inst=sticking art=hit lane=sticking hand=L tick=120 vel=0 line=7
+  0.9 inst=snare art=hit lane=snare kit=rock tick=144 vel=1 accent=true line=6
+  0.9 inst=sticking art=hit lane=sticking hand=R tick=144 vel=0 line=7
+  1.05 inst=snare art=hit lane=snare kit=rock tick=168 vel=0.7 line=6
+  1.05 inst=sticking art=hit lane=sticking hand=L tick=168 vel=0 line=7
+  1.2 inst=snare art=hit lane=snare kit=rock tick=192 vel=0.7 line=6
+  1.2 inst=sticking art=hit lane=sticking hand=R tick=192 vel=0 line=7
+  1.35 inst=snare art=hit lane=snare kit=rock tick=216 vel=0.7 line=6
+  1.35 inst=sticking art=hit lane=sticking hand=R tick=216 vel=0 line=7
+  1.5 inst=snare art=hit lane=snare kit=rock tick=240 vel=0.7 line=6
+  1.5 inst=sticking art=hit lane=sticking hand=L tick=240 vel=0 line=7
+  1.65 inst=snare art=hit lane=snare kit=rock tick=264 vel=0.7 line=6
+  1.65 inst=sticking art=hit lane=sticking hand=L tick=264 vel=0 line=7
+  1.8 inst=snare art=hit lane=snare kit=rock tick=288 vel=1 accent=true line=6
+  1.8 inst=sticking art=hit lane=sticking hand=R tick=288 vel=0 line=7
+  1.95 inst=snare art=hit lane=snare kit=rock tick=312 vel=0.7 line=6
+  1.95 inst=sticking art=hit lane=sticking hand=L tick=312 vel=0 line=7
+  2.1 inst=snare art=hit lane=snare kit=rock tick=336 vel=0.7 line=6
+  2.1 inst=sticking art=hit lane=sticking hand=R tick=336 vel=0 line=7
+  2.25 inst=snare art=hit lane=snare kit=rock tick=360 vel=0.7 line=6
+  2.25 inst=sticking art=hit lane=sticking hand=R tick=360 vel=0 line=7
+  2.4 inst=snare art=hit lane=snare kit=rock tick=384 vel=0.7 line=6
+  2.4 inst=sticking art=hit lane=sticking hand=L tick=384 vel=0 line=7
+  2.55 inst=snare art=hit lane=snare kit=rock tick=408 vel=0.7 line=6
+  2.55 inst=sticking art=hit lane=sticking hand=L tick=408 vel=0 line=7
+  2.7 inst=snare art=hit lane=snare kit=rock tick=432 vel=1 accent=true line=6
+  2.7 inst=sticking art=hit lane=sticking hand=R tick=432 vel=0 line=7
+  2.85 inst=snare art=hit lane=snare kit=rock tick=456 vel=0.7 line=6
+  2.85 inst=sticking art=hit lane=sticking hand=L tick=456 vel=0 line=7
+  3 inst=snare art=hit lane=snare kit=rock tick=480 vel=0.7 line=6
+  3 inst=sticking art=hit lane=sticking hand=R tick=480 vel=0 line=7
+  3.15 inst=snare art=hit lane=snare kit=rock tick=504 vel=0.7 line=6
+  3.15 inst=sticking art=hit lane=sticking hand=R tick=504 vel=0 line=7
+  3.3 inst=snare art=hit lane=snare kit=rock tick=528 vel=0.7 line=6
+  3.3 inst=sticking art=hit lane=sticking hand=L tick=528 vel=0 line=7
+  3.45 inst=snare art=hit lane=snare kit=rock tick=552 vel=0.7 line=6
+  3.45 inst=sticking art=hit lane=sticking hand=L tick=552 vel=0 line=7
 
 ## Five-stroke roll
 errors: none
@@ -1268,51 +1268,51 @@ drums:
   1.0313 inst=snare art=hit lane=snare kit=rock tick=132 vel=0.7 double=true line=6 hidden=true gap=12 gapSec=0.0938
   1.125 inst=snare art=hit lane=snare kit=rock tick=144 vel=1 accent=true line=6
   1.125 inst=sticking art=hit lane=sticking hand=L tick=144 vel=0 line=7
-  1.5 inst=snare art=hit lane=snare kit=rock tick=0 vel=0.7 double=true line=6
-  1.5 inst=sticking art=hit lane=sticking hand=R tick=0 vel=0 line=7
-  1.5938 inst=snare art=hit lane=snare kit=rock tick=12 vel=0.7 double=true line=6 hidden=true gap=12 gapSec=0.0938
-  1.6875 inst=snare art=hit lane=snare kit=rock tick=24 vel=0.7 double=true line=6
-  1.6875 inst=sticking art=hit lane=sticking hand=L tick=24 vel=0 line=7
-  1.7813 inst=snare art=hit lane=snare kit=rock tick=36 vel=0.7 double=true line=6 hidden=true gap=12 gapSec=0.0938
-  1.875 inst=snare art=hit lane=snare kit=rock tick=48 vel=1 accent=true line=6
-  1.875 inst=sticking art=hit lane=sticking hand=R tick=48 vel=0 line=7
-  2.25 inst=snare art=hit lane=snare kit=rock tick=96 vel=0.7 double=true line=6
-  2.25 inst=sticking art=hit lane=sticking hand=L tick=96 vel=0 line=7
-  2.3438 inst=snare art=hit lane=snare kit=rock tick=108 vel=0.7 double=true line=6 hidden=true gap=12 gapSec=0.0938
-  2.4375 inst=snare art=hit lane=snare kit=rock tick=120 vel=0.7 double=true line=6
-  2.4375 inst=sticking art=hit lane=sticking hand=R tick=120 vel=0 line=7
-  2.5313 inst=snare art=hit lane=snare kit=rock tick=132 vel=0.7 double=true line=6 hidden=true gap=12 gapSec=0.0938
-  2.625 inst=snare art=hit lane=snare kit=rock tick=144 vel=1 accent=true line=6
-  2.625 inst=sticking art=hit lane=sticking hand=L tick=144 vel=0 line=7
-  3 inst=snare art=hit lane=snare kit=rock tick=0 vel=0.7 double=true line=6
-  3 inst=sticking art=hit lane=sticking hand=R tick=0 vel=0 line=7
-  3.0938 inst=snare art=hit lane=snare kit=rock tick=12 vel=0.7 double=true line=6 hidden=true gap=12 gapSec=0.0938
-  3.1875 inst=snare art=hit lane=snare kit=rock tick=24 vel=0.7 double=true line=6
-  3.1875 inst=sticking art=hit lane=sticking hand=L tick=24 vel=0 line=7
-  3.2813 inst=snare art=hit lane=snare kit=rock tick=36 vel=0.7 double=true line=6 hidden=true gap=12 gapSec=0.0938
-  3.375 inst=snare art=hit lane=snare kit=rock tick=48 vel=1 accent=true line=6
-  3.375 inst=sticking art=hit lane=sticking hand=R tick=48 vel=0 line=7
-  3.75 inst=snare art=hit lane=snare kit=rock tick=96 vel=0.7 double=true line=6
-  3.75 inst=sticking art=hit lane=sticking hand=L tick=96 vel=0 line=7
-  3.8438 inst=snare art=hit lane=snare kit=rock tick=108 vel=0.7 double=true line=6 hidden=true gap=12 gapSec=0.0938
-  3.9375 inst=snare art=hit lane=snare kit=rock tick=120 vel=0.7 double=true line=6
-  3.9375 inst=sticking art=hit lane=sticking hand=R tick=120 vel=0 line=7
-  4.0313 inst=snare art=hit lane=snare kit=rock tick=132 vel=0.7 double=true line=6 hidden=true gap=12 gapSec=0.0938
-  4.125 inst=snare art=hit lane=snare kit=rock tick=144 vel=1 accent=true line=6
-  4.125 inst=sticking art=hit lane=sticking hand=L tick=144 vel=0 line=7
-  4.5 inst=snare art=hit lane=snare kit=rock tick=0 vel=0.7 double=true line=6
-  4.5 inst=sticking art=hit lane=sticking hand=R tick=0 vel=0 line=7
-  4.5938 inst=snare art=hit lane=snare kit=rock tick=12 vel=0.7 double=true line=6 hidden=true gap=12 gapSec=0.0938
-  4.6875 inst=snare art=hit lane=snare kit=rock tick=24 vel=0.7 double=true line=6
-  4.6875 inst=sticking art=hit lane=sticking hand=L tick=24 vel=0 line=7
-  4.7813 inst=snare art=hit lane=snare kit=rock tick=36 vel=0.7 double=true line=6 hidden=true gap=12 gapSec=0.0938
-  4.875 inst=snare art=hit lane=snare kit=rock tick=48 vel=1 accent=true line=6
-  4.875 inst=sticking art=hit lane=sticking hand=R tick=48 vel=0 line=7
-  5.25 inst=snare art=hit lane=snare kit=rock tick=96 vel=0.7 double=true line=6
-  5.25 inst=sticking art=hit lane=sticking hand=L tick=96 vel=0 line=7
-  5.3438 inst=snare art=hit lane=snare kit=rock tick=108 vel=0.7 double=true line=6 hidden=true gap=12 gapSec=0.0938
-  5.4375 inst=snare art=hit lane=snare kit=rock tick=120 vel=0.7 double=true line=6
-  5.4375 inst=sticking art=hit lane=sticking hand=R tick=120 vel=0 line=7
-  5.5313 inst=snare art=hit lane=snare kit=rock tick=132 vel=0.7 double=true line=6 hidden=true gap=12 gapSec=0.0938
-  5.625 inst=snare art=hit lane=snare kit=rock tick=144 vel=1 accent=true line=6
-  5.625 inst=sticking art=hit lane=sticking hand=L tick=144 vel=0 line=7
+  1.5 inst=snare art=hit lane=snare kit=rock tick=192 vel=0.7 double=true line=6
+  1.5 inst=sticking art=hit lane=sticking hand=R tick=192 vel=0 line=7
+  1.5938 inst=snare art=hit lane=snare kit=rock tick=204 vel=0.7 double=true line=6 hidden=true gap=12 gapSec=0.0938
+  1.6875 inst=snare art=hit lane=snare kit=rock tick=216 vel=0.7 double=true line=6
+  1.6875 inst=sticking art=hit lane=sticking hand=L tick=216 vel=0 line=7
+  1.7813 inst=snare art=hit lane=snare kit=rock tick=228 vel=0.7 double=true line=6 hidden=true gap=12 gapSec=0.0938
+  1.875 inst=snare art=hit lane=snare kit=rock tick=240 vel=1 accent=true line=6
+  1.875 inst=sticking art=hit lane=sticking hand=R tick=240 vel=0 line=7
+  2.25 inst=snare art=hit lane=snare kit=rock tick=288 vel=0.7 double=true line=6
+  2.25 inst=sticking art=hit lane=sticking hand=L tick=288 vel=0 line=7
+  2.3438 inst=snare art=hit lane=snare kit=rock tick=300 vel=0.7 double=true line=6 hidden=true gap=12 gapSec=0.0938
+  2.4375 inst=snare art=hit lane=snare kit=rock tick=312 vel=0.7 double=true line=6
+  2.4375 inst=sticking art=hit lane=sticking hand=R tick=312 vel=0 line=7
+  2.5313 inst=snare art=hit lane=snare kit=rock tick=324 vel=0.7 double=true line=6 hidden=true gap=12 gapSec=0.0938
+  2.625 inst=snare art=hit lane=snare kit=rock tick=336 vel=1 accent=true line=6
+  2.625 inst=sticking art=hit lane=sticking hand=L tick=336 vel=0 line=7
+  3 inst=snare art=hit lane=snare kit=rock tick=384 vel=0.7 double=true line=6
+  3 inst=sticking art=hit lane=sticking hand=R tick=384 vel=0 line=7
+  3.0938 inst=snare art=hit lane=snare kit=rock tick=396 vel=0.7 double=true line=6 hidden=true gap=12 gapSec=0.0938
+  3.1875 inst=snare art=hit lane=snare kit=rock tick=408 vel=0.7 double=true line=6
+  3.1875 inst=sticking art=hit lane=sticking hand=L tick=408 vel=0 line=7
+  3.2813 inst=snare art=hit lane=snare kit=rock tick=420 vel=0.7 double=true line=6 hidden=true gap=12 gapSec=0.0938
+  3.375 inst=snare art=hit lane=snare kit=rock tick=432 vel=1 accent=true line=6
+  3.375 inst=sticking art=hit lane=sticking hand=R tick=432 vel=0 line=7
+  3.75 inst=snare art=hit lane=snare kit=rock tick=480 vel=0.7 double=true line=6
+  3.75 inst=sticking art=hit lane=sticking hand=L tick=480 vel=0 line=7
+  3.8438 inst=snare art=hit lane=snare kit=rock tick=492 vel=0.7 double=true line=6 hidden=true gap=12 gapSec=0.0938
+  3.9375 inst=snare art=hit lane=snare kit=rock tick=504 vel=0.7 double=true line=6
+  3.9375 inst=sticking art=hit lane=sticking hand=R tick=504 vel=0 line=7
+  4.0313 inst=snare art=hit lane=snare kit=rock tick=516 vel=0.7 double=true line=6 hidden=true gap=12 gapSec=0.0938
+  4.125 inst=snare art=hit lane=snare kit=rock tick=528 vel=1 accent=true line=6
+  4.125 inst=sticking art=hit lane=sticking hand=L tick=528 vel=0 line=7
+  4.5 inst=snare art=hit lane=snare kit=rock tick=576 vel=0.7 double=true line=6
+  4.5 inst=sticking art=hit lane=sticking hand=R tick=576 vel=0 line=7
+  4.5938 inst=snare art=hit lane=snare kit=rock tick=588 vel=0.7 double=true line=6 hidden=true gap=12 gapSec=0.0938
+  4.6875 inst=snare art=hit lane=snare kit=rock tick=600 vel=0.7 double=true line=6
+  4.6875 inst=sticking art=hit lane=sticking hand=L tick=600 vel=0 line=7
+  4.7813 inst=snare art=hit lane=snare kit=rock tick=612 vel=0.7 double=true line=6 hidden=true gap=12 gapSec=0.0938
+  4.875 inst=snare art=hit lane=snare kit=rock tick=624 vel=1 accent=true line=6
+  4.875 inst=sticking art=hit lane=sticking hand=R tick=624 vel=0 line=7
+  5.25 inst=snare art=hit lane=snare kit=rock tick=672 vel=0.7 double=true line=6
+  5.25 inst=sticking art=hit lane=sticking hand=L tick=672 vel=0 line=7
+  5.3438 inst=snare art=hit lane=snare kit=rock tick=684 vel=0.7 double=true line=6 hidden=true gap=12 gapSec=0.0938
+  5.4375 inst=snare art=hit lane=snare kit=rock tick=696 vel=0.7 double=true line=6
+  5.4375 inst=sticking art=hit lane=sticking hand=R tick=696 vel=0 line=7
+  5.5313 inst=snare art=hit lane=snare kit=rock tick=708 vel=0.7 double=true line=6 hidden=true gap=12 gapSec=0.0938
+  5.625 inst=snare art=hit lane=snare kit=rock tick=720 vel=1 accent=true line=6
+  5.625 inst=sticking art=hit lane=sticking hand=L tick=720 vel=0 line=7
