@@ -72,8 +72,31 @@ import {
   TYPES,
   UNITS,
 } from "./vocab.ts"
+import {
+  TPQ,
+  barQuarters,
+  checkLoops,
+  count,
+  evalNumber,
+  fmt,
+  lcm,
+  lengthAt,
+  lengthPrefix,
+  lastCount,
+  lengthText,
+  meterOf,
+  nearWhole,
+  numbers,
+  sayTicks,
+  singularLength,
+  sumTerms,
+  swingWarp,
+  timeLabel,
+} from "./time.ts"
 
-export const TPQ = 96 // ticks per quarter note: fine enough for 1/32 notes and triplets
+// Time, ticks and lengths are in time.ts; these are re-exported for code that imports them
+// from here.
+export { TPQ, barQuarters, lastCount, timeLabel } from "./time.ts"
 // The language's words are listed once, in vocab.ts. These are re-exported for code that
 // imports them from here.
 export {
@@ -161,22 +184,6 @@ function cloneState(s) {
     words: { ...s.words },
     sections: { ...s.sections },
   }
-}
-
-// A time the way it's written: 7 over 8, or 3+4 over 4.
-export function timeLabel(s) {
-  return `${s.groups.join("+")} over ${s.unit}`
-}
-
-// Bar length in quarter notes (a beat is always a quarter note).
-export function barQuarters(s) {
-  return (s.groups.reduce((a, b) => a + b, 0) * 4) / s.unit
-}
-
-// The last 16th a bar reaches, counted 1 e & a: a 7 over 8 bar ends on 4e.
-export function lastCount(s) {
-  const n = Math.round(barQuarters(s) * 4) - 1
-  return Math.floor(n / 4) + 1 + ["", "e", "&", "a"][n % 4]
 }
 
 // A setting as a state has it, the way the cells below are told about it: tempo 90.
@@ -282,107 +289,6 @@ function nameRule(type, name, st) {
     (n) => n !== name && n.toLowerCase() === name.toLowerCase(),
   )
   return twin ? `${name} differs from ${twin} only in its capitals, so pick another name or write ${twin}` : null
-}
-
-// ---------------------------------------------------------------------------
-// Numbers: wherever a number goes, arithmetic goes, and / only ever divides.
-// ---------------------------------------------------------------------------
-
-// Arithmetic over `src`: + - * / and brackets. sumAt parses from a position and returns
-// the expression tree (each node has a value) and where it ended, or null.
-function numbers(src) {
-  let i = 0
-  const ws = () => {
-    while (src[i] === " ") i++
-  }
-  const atom = () => {
-    ws()
-    if (src[i] === "(") {
-      i++
-      const e = sum()
-      ws()
-      if (!e || src[i] !== ")") return null
-      i++
-      return { op: "()", e, value: e.value }
-    }
-    if (src[i] === "-") {
-      i++
-      const e = atom()
-      return e && { op: "neg", e, value: -e.value }
-    }
-    const m = /^\d+(\.\d+)?/.exec(src.slice(i))
-    if (!m) return null
-    i += m[0].length
-    return { op: "num", value: Number(m[0]), whole: !m[1] }
-  }
-  // Reads `first (op next)*` for the given operators, stopping before anything else.
-  const chain = (next, ops, apply) => () => {
-    let l = next()
-    while (l) {
-      const back = i
-      ws()
-      const op = src[i]
-      if (!ops.includes(op)) {
-        i = back
-        break
-      }
-      i++
-      const r = next()
-      if (!r) return null
-      l = { op, l, r, value: apply(op, l.value, r.value) }
-    }
-    return l
-  }
-  const product = chain(atom, "*/", (op, a, b) => (op === "*" ? a * b : a / b))
-  const sum = chain(product, "+-", (op, a, b) => (op === "+" ? a + b : a - b))
-  const sumAt = (pos) => {
-    i = pos
-    const e = sum()
-    return e && Number.isFinite(e.value) ? { e, end: i } : null
-  }
-  return { sumAt }
-}
-
-// The whole text as one number, or null if it isn't arithmetic.
-function evalNumber(text) {
-  const src = String(text).trim()
-  const n = numbers(src).sumAt(0)
-  return n && n.end === src.length ? n.e : null
-}
-
-const nearWhole = (n) => Math.abs(n - Math.round(n)) < 1e-9
-
-// The whole numbers a count is written as: 7 → [7], 3+4 → [3, 4] (felt as 3 then 4).
-// null if it's anything else.
-function sumTerms(node) {
-  const bare = node.op === "()" ? node.e : node
-  if (bare.op === "()") return sumTerms(bare)
-  if (bare.op === "num") return bare.whole && bare.value > 0 ? [bare.value] : null
-  if (bare.op !== "+")
-    return nearWhole(bare.value) && bare.value > 0 ? [Math.round(bare.value)] : null
-  const l = sumTerms(bare.l)
-  const r = sumTerms(bare.r)
-  return l && r ? [...l, ...r] : null
-}
-
-// "3 bars groove" → { bars: 3, rest: "groove" }. A length goes in front of what it measures.
-function lengthPrefix(text) {
-  const n = /^[\d(]/.test(text) ? numbers(text).sumAt(0) : null
-  const m = n && /^\s*bars(?![A-Za-z0-9])\s*/.exec(text.slice(n.end))
-  return m
-    ? { has: true, bars: n.e.value, rest: text.slice(n.end + m[0].length).trim() }
-    : { has: false, bars: 0, rest: text }
-}
-
-const fmt = (n) => String(+n.toFixed(4))
-
-// Lengths are always plural, whatever the number (1 bars), so that bar only ever says which
-// bar. Says so for "1 bar", "2 beat" or "8 step", and returns whether it did.
-function singularLength(text, ln, err) {
-  const m = /(\S*(?:\d|\)))\s+(bar|beat|step)(?![A-Za-z0-9])/.exec(text)
-  if (!m) return false
-  err(ln, `Lengths are always plural, whatever the number: ${m[1]} ${m[2]}s`)
-  return true
 }
 
 // pattern groove 3 bars {: a pattern without its =.
@@ -1622,21 +1528,6 @@ function partsOf(value) {
     .map((p) => p.trim())
 }
 
-// "2 beats rest" → the length in front and what it measures, or null if `text` doesn't
-// start with a length.
-function lengthAt(text) {
-  const n = /^[\d(]/.test(text) ? numbers(text).sumAt(0) : null
-  const m = n && /^\s*(steps|beats|bars)(?![A-Za-z0-9])\s*/.exec(text.slice(n.end))
-  if (!m) return null
-  const end = n.end + m[0].length
-  return {
-    n: n.e.value,
-    unit: m[1],
-    shown: text.slice(0, end).trim(),
-    thing: text.slice(end).trim(),
-  }
-}
-
 // What a length measures, when it isn't rest: steps, written out as one run of letters.
 function figureRun(text, blocks, st, err, ln, part) {
   let run = ""
@@ -2204,14 +2095,6 @@ function period(s) {
 // A run grouped by fours, for a message: x-x-x-x- → x-x- x-x-
 const grouped = (run) => (run.length > 4 ? run.match(/.{1,4}/g).join(" ") : run)
 
-// A length as it's written: 1 bars, 3 beats, 7 steps. Always plural.
-function lengthText(ticks, st) {
-  const { barTicks } = meterOf(st)
-  if (ticks % barTicks === 0) return `${fmt(ticks / barTicks)} bars`
-  if (ticks % st.stepTicks === 0) return `${fmt(ticks / st.stepTicks)} steps`
-  return `${fmt(ticks / TPQ)} beats`
-}
-
 // `run` with a space between each two notes that touch (F#E → F# E), or null when it isn't
 // notes or no two notes touch. Notes don't touch, because a note takes one to four
 // characters, and where one ends and the next begins can't be seen (F#E, E2G2, ^F^G).
@@ -2684,22 +2567,6 @@ function readPart(part, st, barTicks, err) {
 // Times are in seconds from the clip's start; `spans` describe the bar grid over time.
 // ---------------------------------------------------------------------------
 
-function meterOf(st) {
-  const barTicks = Math.round(barQuarters(st) * TPQ)
-  const secPerTick = 60 / (st.tempo * TPQ)
-  return {
-    time: timeLabel(st),
-    groups: st.groups,
-    unit: st.unit,
-    tempo: st.tempo,
-    swing: st.swing,
-    key: st.key,
-    mode: st.mode,
-    barTicks,
-    secPerTick,
-  }
-}
-
 // Where something is being played from. In a pattern everything repeats until it ends; in
 // a play, lines play once and only patterns repeat.
 const blockCtx = (name, ln) => ({
@@ -2744,57 +2611,6 @@ const paceCtx = (ln) => ({
 const placeCtx = (l) => {
   const bars = l.from === l.to ? `bar ${l.from}` : `bar ${l.from} to ${l.to}`
   return { ln: l.ln, repeats: true, where: `in ${bars}`, what: `What's in ${bars}` }
-}
-
-const gcd = (a, b) => (b ? gcd(b, a % b) : a)
-const lcm = (a, b) => (a / gcd(a, b)) * b
-const count = (n, word) => `${fmt(n)} ${word}${n === 1 ? "" : "s"}`
-
-// A length the way it's written: 3 bars, 7 steps, 1.5 beats.
-function sayTicks(ticks, st, barTicks) {
-  if (ticks % barTicks === 0) return count(ticks / barTicks, "bar")
-  if (ticks % st.stepTicks === 0) return count(ticks / st.stepTicks, "step")
-  return count(ticks / TPQ, "beat")
-}
-
-// Anything that repeats has to fit what it's in a whole number of times. Reports each of
-// `loops` ({ what, ticks, ln }) that doesn't fit `total` ticks, and where they'd all fit.
-// Returns whether they all do.
-function checkLoops(loops, total, st, barTicks, err) {
-  // A pattern that sets its own tempo can come out at no whole number of ticks here.
-  const whole = (l) => l.ticks > 0 && nearWhole(l.ticks)
-  const bad = loops.filter((l) => !whole(l) || total % Math.round(l.ticks))
-  if (!bad.length) return true
-  const every =
-    loops.filter(whole).reduce((a, l) => lcm(a, Math.round(l.ticks)), barTicks) / barTicks
-  const when = every === 1 ? "every bar" : `every ${fmt(every)} bars`
-  const hint =
-    loops.length > 1 ? `The things repeating here line up ${when}` : `It lines up ${when}`
-  const length = sayTicks(total, st, barTicks)
-  for (const l of bad) {
-    err(
-      l.ln,
-      whole(l)
-        ? `${l.what} is ${sayTicks(Math.round(l.ticks), st, barTicks)} long, ` +
-            `which doesn't fit ${length} a whole number of times. ${hint}`
-        : `${l.what} sets its own tempo, and doesn't fit ${length} a whole number of times`,
-    )
-  }
-  return false
-}
-
-// How swing moves a tick: the first half of each beat stretches to swing% of it and the
-// second half shrinks to fit, so the off-beat eighth falls late and everything between
-// moves with it. Null when the swing is straight.
-function swingWarp(st) {
-  const s = st.swing / 100
-  if (s === 0.5) return null
-  return (tick) => {
-    const beat = Math.floor(tick / TPQ)
-    const pos = (tick - beat * TPQ) / TPQ
-    const moved = pos < 0.5 ? (pos / 0.5) * s : s + ((pos - 0.5) / 0.5) * (1 - s)
-    return (beat + moved) * TPQ
-  }
 }
 
 // A sticking names a hand on a step where no hand plays: said at the end, once the whole
