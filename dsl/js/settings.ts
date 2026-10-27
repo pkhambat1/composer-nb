@@ -298,3 +298,6 @@ export const pacing = (settings: SettingWords[]) => settings.find((s) => OWN_PAC
 // A set inside a block, which takes a with instead
 export const setInBlock = (l: SettingWords) =>
   `Inside a block, settings go on a with: with ${l.name} ${l.value} { ... }`
+
+// The key and mode as one name, for headers: E minor, C major.
+export const keyName = (s: State) => `${s.key} ${s.mode}`
