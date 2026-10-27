@@ -8,7 +8,7 @@ import {
   bufferDuration,
   bufferToWav,
 } from "../music-engine.js"
-import { TPQ } from "../language.js"
+import { TPQ } from "../language.ts"
 import { gridCounts, gridRows } from "../grid.js"
 import { sheetAbc } from "../sheet.js"
 import abcjs from "abcjs"

@@ -3,7 +3,7 @@ import { describe, it, expect, vi } from "vitest"
 vi.mock("tone", () => ({}))
 
 const { parseSource } = await import("../../js/music-engine.js")
-const { initialState } = await import("../../js/language.js")
+const { initialState } = await import("../../js/language.ts")
 const { GROOVES } = await import("../../js/grooves.js")
 
 // What a cell plays: its notes, chords and hits, with their times

@@ -4,7 +4,7 @@
    corpus and the parser's tests. */
 import { readdirSync, readFileSync } from "node:fs"
 import { fileURLToPath } from "node:url"
-import { initialState, parseCell } from "../../js/language.js"
+import { initialState, parseCell } from "../../js/language.ts"
 import { GROOVES } from "../../js/grooves.js"
 import { examples, pages, read, readMagic } from "./docs-examples.js"
 

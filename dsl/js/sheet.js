@@ -4,7 +4,7 @@
    comes with a tab staff. Pure, like grid.js. */
 import { abcKey, keySignature, parseKey } from "./chords.js"
 import { beatGroups, isCompound } from "./grid.js"
-import { TPQ } from "./language.js"
+import { TPQ } from "./language.ts"
 
 // Where each kit piece sits on the staff (its ABC pitch), its notehead, and whether a foot
 // plays it. The hands are one voice with stems up, the feet another with stems down.

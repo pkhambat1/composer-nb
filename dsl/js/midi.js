@@ -3,7 +3,7 @@
    pitched instrument. Times come from the events' seconds, so what swings in the audio
    swings here too. Pure, like grid.js. */
 import { parseKey } from "./chords.js"
-import { TPQ } from "./language.js"
+import { TPQ } from "./language.ts"
 
 // General MIDI drum notes for the kit pieces
 const DRUM_NOTES = {

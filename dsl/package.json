@@ -30,7 +30,7 @@
     },
     "./language": {
       "types": "./lib/language.d.ts",
-      "composer-nb-source": "./js/language.js",
+      "composer-nb-source": "./js/language.ts",
       "default": "./lib/language.js"
     },
     "./chord-lookup": {

@@ -3,7 +3,7 @@ import { describe, it, expect, vi } from "vitest"
 vi.mock("tone", () => ({}))
 
 const { parseSource } = await import("../../js/music-engine.js")
-const { LANES, MODES, initialState, parseCell } = await import("../../js/language.js")
+const { LANES, MODES, initialState, parseCell } = await import("../../js/language.ts")
 const { highlightMusic } = await import("../../js/highlight.js")
 const { gridRows } = await import("../../js/grid.js")
 const { prepareKit } = await import("../../js/drums.js")

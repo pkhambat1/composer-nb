@@ -6,7 +6,7 @@ vi.mock("tone", () => ({}))
 
 const { parseSource } = await import("../../js/music-engine.js")
 const { sheetAbc } = await import("../../js/sheet.js")
-const { initialState } = await import("../../js/language.js")
+const { initialState } = await import("../../js/language.ts")
 
 const clean = (src, inherited) => {
   const p = parseSource(src, inherited)

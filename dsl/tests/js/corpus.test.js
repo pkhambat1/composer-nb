@@ -6,7 +6,7 @@
    so the diff is the list of real cells it changes. If the change is meant, update the files
    with `npx vitest run -u` and read the diff. */
 import { describe, it, expect } from "vitest"
-import { parseCell } from "../../js/language.js"
+import { parseCell } from "../../js/language.ts"
 import { realCells } from "./real-cells.js"
 
 // Times to four places, so float noise doesn't count as a change.

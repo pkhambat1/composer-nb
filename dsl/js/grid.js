@@ -1,7 +1,7 @@
 /* The rows of the grid a play's output is drawn on, shared by the playground and the
    notebook widget: one row for each pitched instrument's line and each drum's, one cell a
    step. Pure, like the parser. */
-import { LANES, PITCHED, TPQ } from "./language.js"
+import { LANES, PITCHED, TPQ } from "./language.ts"
 
 // `block` is one of a parsed output's `blocks`. Returns how many cells a bar has, and its
 // rows from the top: pitched instruments (a row for each layer of an instrument's block),
