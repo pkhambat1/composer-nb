@@ -4,7 +4,8 @@
    verse). An instrument's line is then read as what it plays. */
 import { buildChord, parseKey } from "./chords.js"
 import { BLOCK_KEY, classifyDecl, patternHint, readDecl } from "./declare.ts"
-import { blockBeside, readSequence as readSequenceJs } from "./language.js"
+import { blockBeside } from "./eval.ts"
+import { readSequence, type Item } from "./sequence.ts"
 import { closest, unknownInstrument } from "./resolve.ts"
 import { keyOf, readSetting } from "./settings.ts"
 import type { Line, State } from "./state.ts"
@@ -51,6 +52,7 @@ export type DeclLine =
 export type PartLine = {
   kind: "part"
   ln: number
+  st?: State // the state where it plays
   name: string
   value: string
   blocks?: Blocks
@@ -59,7 +61,14 @@ export type PartLine = {
   drum?: string
   art?: string
 }
-export type Placed = { kind: "placed"; ln: number; from: number; to: number; lines: Line[] }
+export type Placed = {
+  kind: "placed"
+  ln: number
+  from: number
+  to: number
+  lines: Line[]
+  st?: State
+}
 export type Paced = {
   kind: "paced"
   ln: number
@@ -67,19 +76,14 @@ export type Paced = {
   unit: string
   shown: string
   line: Line
+  st?: State
 }
-export type SequenceLine = { kind: "sequence"; ln: number; items: unknown[] }
+export type SequenceLine = { kind: "sequence"; ln: number; items: Item[]; st?: State }
 export type ReadLine = SettingLine | DeclLine | PartLine | Placed | Paced | SequenceLine
 // An instrument's line, read as what it plays
 export type Played = (DrumClip | PitchedClip | ChartClip) & { part: PartLine }
 
 const among = (list: readonly string[], word: string) => list.includes(word)
-// readSequence is still in language.js, untyped: called through this, which gives it its
-// shape and looks it up when it's called, since language.js imports this module too
-function readSequence(text: string, ln: number, err: Report, blocks: object, st: State) {
-  const read = readSequenceJs as unknown as (...args: unknown[]) => unknown[] | null
-  return read(text, ln, err, blocks, st)
-}
 
 export const DEF_RE = /^([A-Za-z][A-Za-z0-9]*)\s*=\s*(.*)$/
 // A type, a name and what it holds: steps pair = ^-x-
@@ -203,7 +207,7 @@ export function classify({ ln, text, blocks }: Line, err: Report, st: State): Re
   const m = TRACK_RE.exec(text)
   // ( ... ) or 4 bars ( ... ): what plays in order, whatever lines are in it
   if (!m && lengthPrefix(text).rest.startsWith("(")) {
-    const items = readSequence(text, ln, err, blocks ?? {}, st)
+    const items = readSequence(text, ln, err, blocks, st)
     return items && { kind: "sequence", ln, items }
   }
   if (!m) {
@@ -214,7 +218,7 @@ export function classify({ ln, text, blocks }: Line, err: Report, st: State): Re
     if (first === "set") return readSetting(text, tokens, ln, err)
     if (/^with(\s|\{|$)/.test(text)) {
       // with octave 2 { ... }: a block, played with those settings
-      const items = readSequence(text, ln, err, blocks ?? {}, st)
+      const items = readSequence(text, ln, err, blocks, st)
       return items && { kind: "sequence", ln, items }
     }
     if (text.startsWith("|")) {
@@ -261,7 +265,7 @@ export function classify({ ln, text, blocks }: Line, err: Report, st: State): Re
       err(ln, `Notes go on an instrument's line, e.g. guitar: ${spaceNotes(text)}`)
     } else if (/^[A-Za-z(*\d{]/.test(first)) {
       // intro verse verse: patterns to play, one after another
-      const items = readSequence(text, ln, err, blocks ?? {}, st)
+      const items = readSequence(text, ln, err, blocks, st)
       return items && { kind: "sequence", ln, items }
     } else err(ln, LINE_SHAPES)
     return null
