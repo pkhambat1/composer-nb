@@ -35,10 +35,12 @@ export type Output = {
   durSec: number
   totalSec: number
   events: SoundEvent[]
-  chords: SoundEvent[]
-  notes: SoundEvent[]
+  chords: ChordSound[]
+  notes: NoteSound[]
   drumEvents: HitEvent[]
   blocks: ReturnType<typeof gridBlocks>
+  // Set once its audio is rendered: what couldn't be loaded
+  warnings?: string[]
 }
 
 // Grid cells per quarter note: the coarsest that still shows every hit, and where every
@@ -115,6 +117,10 @@ function gridBlocks(
 // Parses one music cell. `inherited` is the state left by the cells above (settings and
 // definitions); the result's `state` is what this cell passes on. Each play gives one
 // output.
+// A cell, read: each play's output, the same back to back, the errors, and the state it
+// hands on
+export type Parsed = ReturnType<typeof parseCell> & { warnings?: string[] }
+
 export function parseCell(src: unknown, inherited: State = initialState()) {
   const errors: { line: number; msg: string }[] = []
   const err = (line: number, msg: string) => {

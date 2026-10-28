@@ -2,7 +2,7 @@ import { describe, it, expect, vi } from "vitest"
 
 vi.mock("tone", () => ({}))
 
-const { parseSource, parseChain } = await import("../../js/music-engine.js")
+const { parseSource, parseChain } = await import("../../js/music-engine.ts")
 
 const labels = (p) => p.chords.map((e) => e.label)
 

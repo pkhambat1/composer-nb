@@ -2,7 +2,7 @@ import { describe, it, expect, vi } from "vitest"
 
 vi.mock("tone", () => ({}))
 
-const { parseSource } = await import("../../js/music-engine.js")
+const { parseSource } = await import("../../js/music-engine.ts")
 
 describe("Cadd9 audio path", () => {
   it("guitar: plays C E G D", () => {

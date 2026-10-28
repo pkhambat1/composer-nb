@@ -5,8 +5,8 @@ import { describe, it, expect, vi } from "vitest"
 vi.mock("tone", () => ({}))
 
 const { buildChord, parseKey, isRoman } = await import("../../js/chords.ts")
-const { parseSource } = await import("../../js/music-engine.js")
-const { highlightMusic } = await import("../../js/highlight.js")
+const { parseSource } = await import("../../js/music-engine.ts")
+const { highlightMusic } = await import("../../js/highlight.ts")
 
 const C = parseKey("C")
 const notes = (t) => buildChord(t, C).noteNames.map((n) => n.replace(/\d+$/, ""))

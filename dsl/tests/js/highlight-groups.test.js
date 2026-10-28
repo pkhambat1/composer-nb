@@ -6,7 +6,7 @@ import { describe, it, expect, vi } from "vitest"
 
 vi.mock("tone", () => ({}))
 
-const { highlightMusic } = await import("../../js/highlight.js")
+const { highlightMusic } = await import("../../js/highlight.ts")
 
 const parts = (src) => highlightMusic(src).flat()
 // What is painted as a mistake, in the order it's written

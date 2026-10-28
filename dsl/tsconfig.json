@@ -1,10 +1,10 @@
 {
-  // The engine is moving from JavaScript to TypeScript one module at a time. tsc checks the
-  // .ts files (the .js ones are carried along unchecked) and compiles both into lib/, the
-  // JavaScript the npm package's subpaths point at, with a .d.ts for each module.
+  // The library is TypeScript. tsc checks it and compiles it into lib/, the JavaScript the npm
+  // package's subpaths point at, with a .d.ts for each module. Vite bundles the player and the
+  // Jupyter widget from the same source.
   "compilerOptions": {
     "target": "es2022",
-    "lib": ["es2023", "dom"],
+    "lib": ["es2023", "dom", "dom.iterable"],
     "module": "esnext",
     "moduleResolution": "bundler",
     "strict": true,
@@ -12,14 +12,10 @@
     "erasableSyntaxOnly": true,
     "verbatimModuleSyntax": true,
     "rewriteRelativeImportExtensions": true,
-    "allowJs": true,
-    "checkJs": false,
     "declaration": true,
     "skipLibCheck": true,
     "rootDir": "js",
     "outDir": "lib"
   },
-  "include": ["js"],
-  // The Jupyter widget is bundled by vite into the Python package, not published from lib/
-  "exclude": ["js/widget"]
+  "include": ["js"]
 }
