@@ -2373,9 +2373,9 @@ describe("a numeral's octave", () => {
 })
 
 describe("the grooves library", () => {
-  it("holds cells that parse, in three sections", async () => {
+  it("holds cells that parse, in two sections", async () => {
     const { GROOVES, SECTIONS, searchGrooves } = await import("../../js/grooves.ts")
-    expect(SECTIONS).toEqual(["Transcriptions", "Harmony", "Rudiments"])
+    expect(SECTIONS).toEqual(["Transcriptions", "Harmony"])
     for (const g of GROOVES) {
       const p = parseCell(g.source, initialState())
       expect(p.errors, g.title).toEqual([])

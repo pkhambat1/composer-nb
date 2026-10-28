@@ -136,16 +136,17 @@ describe("tools", () => {
 
   it("library finds grooves by words, with their code and their pages", async () => {
     const t = textOf(await call("library", { query: "paradiddle" }))
-    expect(t).toContain("## Single paradiddle")
-    expect(t).toContain("sticking: RLRR LRLL")
-    expect(t).toContain("https://example.test/grooves/single-paradiddle/")
+    expect(t).toContain("## Gavin Harrison's paradiddle challenge")
+    expect(t).toContain("every 3 steps")
+    expect(t).toContain("https://example.test/grooves/gavin-harrison-s-paradiddle-challenge/")
     expect(t).not.toContain("?open")
   })
 
   it("library lists everything without a query", async () => {
     const t = textOf(await call("library", {}))
     expect(t).toContain("The Sound of Muzak")
-    expect(t).toContain("Five-stroke roll")
+    expect(t).toContain("Locrian walk")
+    expect(t).not.toContain("Five-stroke roll")
   })
 
   it("reference hands over a page, or all of them", async () => {
