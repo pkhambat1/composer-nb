@@ -1,4 +1,4 @@
-/* The grooves library: transcriptions, harmony cells and rudiments to start from. Each is
+/* The grooves library: transcriptions and harmony cells to start from. Each is
    a text cell's worth of words (a title, a byline, a paragraph and a link) and a music cell. The
    playground's welcome notebook holds them all and its build makes a page for each; the MCP
    server searches them. Pure data, shared so there is one copy. */
@@ -374,108 +374,6 @@ pattern walk = {
 }
 
 play walk`,
-  },
-  {
-    section: "Rudiments",
-    title: "Single stroke roll",
-    byline: "RLRL",
-    body: "Alternate hands, every stroke the same. Start slow: lower `set tempo` until every stroke is even, then bring it back up ten at a time.",
-    link: null,
-    source: `set time 4 over 4
-set tempo 100
-set swing off
-
-pattern roll = {
-  snare: x
-  sticking: RL
-}
-
-play 2 bars roll`,
-  },
-  {
-    section: "Rudiments",
-    title: "Double stroke roll",
-    byline: "RRLL",
-    body: "Two strokes a hand. The second of each pair should be as full as the first: that's the whole exercise.",
-    link: null,
-    source: `set time 4 over 4
-set tempo 90
-set swing off
-
-pattern roll = {
-  snare: x
-  sticking: RRLL
-}
-
-play 2 bars roll`,
-  },
-  {
-    section: "Rudiments",
-    title: "Single paradiddle",
-    byline: "RLRR LRLL",
-    body: "Right left right right, left right left left, with the accent on the first of each four. The hands swap lead every group, which is the point of it.",
-    link: null,
-    source: `set time 4 over 4
-set tempo 100
-set swing off
-
-pattern paradiddle = {
-  snare: ^xxx
-  sticking: RLRR LRLL
-}
-
-play 2 bars paradiddle`,
-  },
-  {
-    section: "Rudiments",
-    title: "Double paradiddle",
-    byline: "RLRLRR LRLRLL",
-    body: "Six strokes a group, so it sits in 3 over 4: two singles, then the diddle. Accent the first of each six.",
-    link: null,
-    source: `set time 3 over 4
-set tempo 100
-set swing off
-
-pattern paradiddle = {
-  snare: ^xxxxx
-  sticking: RLRLRR LRLRLL
-}
-
-play 2 bars paradiddle`,
-  },
-  {
-    section: "Rudiments",
-    title: "Paradiddle-diddle",
-    byline: "RLRRLL",
-    body: "A paradiddle with a second diddle on the end, six strokes a group. The lead hand stays the same, so it loops without swapping.",
-    link: null,
-    source: `set time 3 over 4
-set tempo 100
-set swing off
-
-pattern pdd = {
-  snare: ^xxxxx
-  sticking: RLRRLL
-}
-
-play 2 bars pdd`,
-  },
-  {
-    section: "Rudiments",
-    title: "Five-stroke roll",
-    byline: "RRLLR LLRRL",
-    body: "Two doubles and a single: a `d` is a double stroke, two strokes of the same hand in one step, so the sticking names the hand of each double. The accent lands on the fifth stroke.",
-    link: null,
-    source: `set time 4 over 4
-set tempo 80
-set swing off
-
-pattern five = {
-  snare: dd^-
-  sticking: RLR- LRL-
-}
-
-play 2 bars five`,
   },
 ]
 

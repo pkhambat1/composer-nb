@@ -5,7 +5,7 @@ description: Build a drum groove from a description as a composer-nb cell that p
 
 # Groove
 
-1. Call `library` with the style, meter or rudiment in the description. Start from the closest groove there and say which one; start from nothing when none is close.
+1. Call `library` with the style or meter in the description. Start from the closest groove there and say which one; start from nothing when none is close.
 2. Change it to the description: `set time`, `set tempo`, `set swing on` for a shuffle, the kit pieces, the accents and ghost notes. Read `reference` (topics `steps`, `patterns`) for anything you haven't written.
 3. Parse and fix it as the `write-cells` skill says, and hold the cell to its standard.
 4. Say in a line or two what plays: the ostinato, where the backbeat sits, how the bars differ. Don't walk through the grid.

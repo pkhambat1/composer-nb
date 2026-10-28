@@ -7,7 +7,7 @@ An assistant can talk about music all day and produce nothing you can hear. Plug
 
 The connection is an [MCP](https://modelcontextprotocol.io) server. Once it is connected you write in English, in the chat you already use:
 
-> Take the single paradiddle and move the accent to the second stroke, in 3 over 4 at 90.
+> Take The Sound of Muzak, put the hi-hat on every eighth, and bring it down to 80.
 
 The assistant writes the cell, calls `parse`, and if the parser says `line 5: The snare line is 6 steps long, which doesn't fit 12 steps a whole number of times`, it fixes the cell before you see it. Then it calls `render` for the sheet.
 
@@ -50,7 +50,7 @@ Nothing is stored on the server: a request is a cell in, a result out.
 | --- | --- |
 | `parse` | Checks a cell. Returns the errors with their line numbers, the settings and names in effect, and for each play a grid of every hit and note, bar by bar, with the chords it heard. |
 | `render` | The sheet music as a PNG (the kit on a percussion staff, each instrument on a staff of its own), or a MIDI file, or the ABC notation. |
-| `library` | Searches the [grooves](https://composer-nb.vercel.app/grooves/): transcriptions, harmony and rudiments to start from, each with its code and its page. |
+| `library` | Searches the [grooves](https://composer-nb.vercel.app/grooves/): transcriptions and harmony to start from, each with its code and its page. |
 | `reference` | The pages under Language, Drums and Pitched instruments on this site, for the assistant to read. |
 
 The reference pages and the grooves are also MCP resources, for clients that read those.
