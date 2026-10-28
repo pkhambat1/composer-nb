@@ -37,7 +37,6 @@ const style = `
   .card { background: #fff; border: 1px solid #e0e0e0; border-radius: 4px; padding: 14px 16px; margin: 12px 0; }
   .card h3 { margin: 0 0 4px; font-size: 18px; }
   .card p { margin: 0 0 8px; color: #585858; font-size: 14px; }
-  .open { display: inline-block; margin: 12px 0 0; font-weight: 600; }
   footer { margin-top: 40px; font-size: 13px; color: #8a8a8a; }
 `
 
@@ -81,7 +80,6 @@ for (const g of grooves) {
 ${marked.parse(g.body)}
 <h2>Play it</h2>
 ${embed(g.source)}
-<a class="open" href="/?open#src=${encodeURIComponent(g.source)}">Open it in the playground, playing →</a>
 <h2>The code</h2>
 <pre>${escape(g.source)}</pre>
 ${foot}`
@@ -89,7 +87,7 @@ ${foot}`
   writeFileSync(join(dist, "grooves", g.slug, "index.html"), html)
 }
 
-const index = `${head("Grooves", "Transcriptions and exercises to play, slow down and start from: Porcupine Tree, Gavin Harrison's exercises, polyrhythms.", "/grooves/")}
+const index = `${head("Grooves", "Transcriptions and exercises to play and start from: Porcupine Tree, Gavin Harrison's exercises, polyrhythms.", "/grooves/")}
 <h1>Grooves</h1>
 <p>Transcriptions and rudiments, each with the playground on it. Open one, slow it down, change it.</p>
 ${sections

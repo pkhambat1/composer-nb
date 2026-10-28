@@ -15,7 +15,7 @@ export type Timing = {
   groups: number[] // the bar's beats as felt: 3+4 over 8 is [3, 4]
   unit: number // the note a beat is: 8 in 7 over 8
   tempo: number // quarter notes a minute
-  swing: number // where the off-beat eighth falls, as a percentage of the beat: 50 is straight
+  swing: boolean // whether the eighths swing
   stepTicks: number // how long a step is
   key: string
   mode: string
@@ -249,12 +249,16 @@ export function checkLoops(
   return false
 }
 
-// How swing moves a tick: the first half of each beat stretches to swing% of it and the
+// Where a swung off-beat eighth falls: two thirds of the way through the beat, as the third
+// note of a triplet
+const SWUNG = 2 / 3
+
+// How swing moves a tick: the first half of each beat stretches to two thirds of it and the
 // second half shrinks to fit, so the off-beat eighth falls late and everything between
-// moves with it. Null when the swing is straight.
+// moves with it. Null when the eighths are straight.
 export function swingWarp(st: Timing): ((tick: number) => number) | null {
-  const s = st.swing / 100
-  if (s === 0.5) return null
+  if (!st.swing) return null
+  const s = SWUNG
   return (tick) => {
     const beat = Math.floor(tick / TPQ)
     const pos = (tick - beat * TPQ) / TPQ

@@ -50,15 +50,9 @@ beforeAll(async () => {
 })
 
 describe("tools", () => {
-  it("are parse, render, link, library and reference", async () => {
+  it("are parse, render, library and reference", async () => {
     const { tools } = await client.listTools()
-    expect(tools.map((t) => t.name).sort()).toEqual([
-      "library",
-      "link",
-      "parse",
-      "reference",
-      "render",
-    ])
+    expect(tools.map((t) => t.name).sort()).toEqual(["library", "parse", "reference", "render"])
   })
 
   it("parse reports a clean cell with its settings, names and a grid", async () => {
@@ -103,7 +97,7 @@ describe("tools", () => {
   it("parse hears the chords, with their notes the first time", async () => {
     const t = textOf(await call("parse", { source: CHORDS }))
     expect(t).toContain("key A minor")
-    expect(t).toContain("Settings at the end: time 4 over 4 · tempo 100 · swing 50 · key A · mode minor")
+    expect(t).toContain("Settings at the end: time 4 over 4 · tempo 100 · swing off · key A · mode minor")
     expect(t).toMatch(/chords bar 1: Am \(A C E\) · F \(F A C\)/)
     expect(t).toMatch(/piano\s+E5/)
   })
@@ -140,36 +134,12 @@ describe("tools", () => {
     expect(textOf(r)).toContain("line 1")
   })
 
-  it("link opens the playground on the cell", async () => {
-    const t = textOf(await call("link", { source: MUZAK }))
-    expect(t).toContain("https://example.test/?open#src=set%20time%207%20over%208")
-    expect(t).not.toContain("<iframe")
-    expect(t).not.toContain("errors")
-  })
-
-  it("link warns when the cell has errors", async () => {
-    const t = textOf(await call("link", { source: "play { kick: xq }" }))
-    expect(t).toContain("1 error")
-  })
-
-  it("link takes a notebook of cells", async () => {
-    const t = textOf(
-      await call("link", {
-        cells: [
-          { type: "text", source: "# Hi" },
-          { type: "music", source: MUZAK },
-        ],
-      }),
-    )
-    expect(t).toContain("https://example.test/?open#nb=")
-  })
-
-  it("library finds grooves by words, with their code and links", async () => {
+  it("library finds grooves by words, with their code and their pages", async () => {
     const t = textOf(await call("library", { query: "paradiddle" }))
     expect(t).toContain("## Single paradiddle")
     expect(t).toContain("sticking: RLRR LRLL")
     expect(t).toContain("https://example.test/grooves/single-paradiddle/")
-    expect(t).toContain("https://example.test/?open#src=")
+    expect(t).not.toContain("?open")
   })
 
   it("library lists everything without a query", async () => {
@@ -189,11 +159,10 @@ describe("tools", () => {
 })
 
 describe("the MCP App", () => {
-  it("is what parse and link name for a host that renders UI", async () => {
+  it("is what parse names for a host that renders UI", async () => {
     const { tools } = await client.listTools()
     const byName = Object.fromEntries(tools.map((t) => [t.name, t]))
     expect(byName.parse._meta.ui.resourceUri).toBe("ui://composer-nb/cell")
-    expect(byName.link._meta.ui.resourceUri).toBe("ui://composer-nb/cell")
     expect(byName.render._meta?.ui).toBeUndefined()
   })
 

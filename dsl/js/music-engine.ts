@@ -1,12 +1,11 @@
 /* Music engine: parses music cells (see language.ts) and renders them to audio with
-   Tone.js, plus waveform drawing and WAV export. */
+   Tone.js, plus waveform drawing and the audio as a WAV for the players. */
 import * as Tone from "tone"
 import * as ChordLookup from "./chord-lookup.ts"
 import * as Drums from "./drums.ts"
 import { midiToName, spellLike, type Voiced } from "./chords.ts"
 import type { ChordSound, NoteSound, SoundEvent } from "./clips.ts"
-import { TPQ, initialState, parseCell, type GridBlock, type Output } from "./language.ts"
-import { midiFile } from "./midi.ts"
+import { initialState, parseCell, type Output } from "./language.ts"
 import type { State } from "./state.ts"
 
 export { midiToName, parseKey, buildChord } from "./chords.ts"
@@ -81,14 +80,6 @@ function makeSynth(T: typeof Tone, kind: string): Synth {
       baseUrl: SOUNDFONTS + "electric_piano_1-mp3/",
     })
     s.volume.value = 3
-    return s
-  }
-  if (kind === "pad") {
-    const s = new T.PolySynth(T.Synth, {
-      oscillator: { type: "sawtooth" },
-      envelope: { attack: 0.8, decay: 0.4, sustain: 0.8, release: 2.0 },
-    })
-    s.volume.value = -16
     return s
   }
   if (kind === "guitar") {
@@ -197,26 +188,6 @@ export function renderToBuffer(parsed: Playable): Promise<Tone.ToneAudioBuffer> 
   return job
 }
 
-// One bar of stick clicks at the block's tempo and length, out loud, now. Resolves when
-// the bar is over, so playback can start on the one.
-export async function countIn(block?: GridBlock | null): Promise<void> {
-  const tempo = block?.tempo || 120
-  const quarters = block ? block.barTicks / TPQ : 4
-  const beatSec = 60 / tempo
-  await Tone.start()
-  const filter = new Tone.Filter(2500, "highpass").toDestination()
-  const click = new Tone.NoiseSynth({ envelope: { attack: 0.001, decay: 0.03, sustain: 0 } })
-  click.connect(filter)
-  click.volume.value = -8
-  const now = Tone.now() + 0.05
-  for (let k = 0; k < Math.ceil(quarters); k++) {
-    click.triggerAttackRelease(0.03, now + k * beatSec, k === 0 ? 1 : 0.6)
-  }
-  await new Promise((r) => setTimeout(r, (quarters * beatSec + 0.05) * 1000))
-  click.dispose()
-  filter.dispose()
-}
-
 async function renderNow(parsed: Playable): Promise<Tone.ToneAudioBuffer> {
   const chordEvents = parsed.events.filter((ev): ev is ChordSound => "chord" in ev)
   const noteEvents = parsed.events.filter((ev): ev is NoteSound => "note" in ev)
@@ -319,7 +290,7 @@ function trimSilence(buffer: Tone.ToneAudioBuffer, musicSec: number): Tone.ToneA
 
 function playChord(synth: Synth, ev: ChordSound): void {
   const inst = ev.instrument
-  const stagger = isGuitar(inst) ? 0.012 : inst === "pad" ? 0.05 : inst === "organ" ? 0 : 0.008
+  const stagger = isGuitar(inst) ? 0.012 : inst === "organ" ? 0 : 0.008
   const bassVel = isGuitar(inst) ? 0.6 : 0.7
   const chordVel = 0.55
   const dur = ev.secDur! * 0.96
@@ -464,7 +435,7 @@ export function drawWaveform(
   const raw = ab.getChannelData(0)
 
   // `normalize` scales the loudest sample to full height, so quiet
-  // instruments (guitar, pad) still draw a readable shape.
+  // instruments (a guitar) still draw a readable shape.
   let gain = 1
   if (opts.normalize) {
     let peak = 0
@@ -557,27 +528,4 @@ export function bufferToWav(buffer: Buffer): Blob {
     }
   }
   return new Blob([out], { type: "audio/wav" })
-}
-
-export function downloadWav(buffer: Buffer, filename?: string): void {
-  downloadBlob(bufferToWav(buffer), filename || "composition.wav")
-}
-
-// The cell's plays as a MIDI file, for a DAW or a notation program.
-export function downloadMidi(outputs: Output | Output[], filename?: string): void {
-  const bytes = midiFile(outputs)
-  downloadBlob(new Blob([bytes as BlobPart], { type: "audio/midi" }), filename || "composition.mid")
-}
-
-function downloadBlob(blob: Blob, filename: string): void {
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement("a")
-  a.href = url
-  a.download = filename
-  document.body.appendChild(a)
-  a.click()
-  setTimeout(() => {
-    document.body.removeChild(a)
-    URL.revokeObjectURL(url)
-  }, 0)
 }

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /* composer-nb-mcp: the server over stdio, for Claude Desktop, Claude Code, Cursor and the
    rest. `composer-nb-mcp --http 3333` serves it over HTTP at /mcp instead. COMPOSER_NB_SITE
-   sets the playground the links open (the hosted one by default). */
+   sets the site its links point at (the hosted one by default). */
 import { createServer as createHttpServer } from "node:http"
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import { handleMcp } from "./http.ts"

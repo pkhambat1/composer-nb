@@ -1,6 +1,6 @@
 ---
 name: write-cells
-description: Write music as composer-nb cells that parse clean and come back as a link that plays. Use whenever the user wants drums, a riff, a bass line, a melody, a chord chart, a scale or an exercise they can hear, read as sheet music or take into a DAW as MIDI, or asks to write, fix or change a composer-nb cell, or wants an empty cell to write in themselves.
+description: Write music as composer-nb cells that parse clean and play. Use whenever the user wants drums, a riff, a bass line, a melody, a chord chart, a scale or an exercise they can hear, read as sheet music or take into a DAW as MIDI, or asks to write, fix or change a composer-nb cell, or wants an empty cell to write in themselves.
 ---
 
 # Write cells
@@ -14,11 +14,11 @@ If the `parse` tool isn't there, the connector isn't connected: in claude.ai or 
 1. Write the cell.
 2. Call `parse`. If it reports errors, fix them and call `parse` again, until it reports none.
 3. Read the grid it returns against what was asked: the hits on the right steps, the bar count, the chords it heard.
-4. Call `link` and give the link. Call `render` when the user wants the sheet music or a MIDI file.
+4. Give the cell in a `composer-nb` code block. Call `render` when the user wants the sheet music or a MIDI file.
 
-A cell that uses the settings or names of earlier cells is parsed with their source in `after`. For several cells, call `link` with `cells`: one notebook, with text cells between the music.
+A cell that uses the settings or names of earlier cells is parsed with their source in `after`. For several cells, parse each in turn with the ones before it as `after`, and give them in order with a line of text before each.
 
-In claude.ai and Claude Desktop, `parse` and `link` draw the cell under the reply, where the user can change it and play it again, so don't describe what it already shows. A cell the user changed there comes back with their next message: build on that version.
+In claude.ai and Claude Desktop, `parse` draws the cell under the reply, where the user can change it and play it again, so don't describe what it already shows. A cell the user changed there comes back with their next message: build on that version.
 
 When the user wants to write the cell themselves ("give me a cell", "I'll write it"), call `parse` with an empty source and don't fill it in. They get an empty cell to type in and play.
 
@@ -38,14 +38,17 @@ Don't write out published melodies or lyrics. Write an original line in the styl
 
 ## Example
 
-A dorian groove: a named bass line in degrees, a chart by numeral continued on a `|` line, the bass and piano each in its own octave, and the parts in order in brackets.
+A walk through D dorian: the scale up and back down as a named line of degrees, continued on a `|` line, a chord by numeral under every second beat, the bass and the tune each in its own octave, and the parts in order in brackets.
 
 ```composer-nb
 set tempo 96
 set key D
 set mode dorian
 
-notes riff = 3 beats 1, b3-4-|5---b7---6---4---
+notes scale = 1---2---b3---4---|5---6---b7---1'---
+  |1'---b7---6---5---|4---b3---2-------|1 bars 1
+notes roots = 1-------b3-------|5-------b7-------
+  |1'-------6-------|4-------2-------|1 bars 1
 
 pattern groove = {
   hat: x-
@@ -53,14 +56,12 @@ pattern groove = {
   kick: x--- --x- x--- ----
 }
 
-pattern verse = {
+pattern walk = {
   groove
-  with octave 2 { bass: riff }
-  with octave 4 {
-    piano: chords i|IV|i|bVII
-    | i|IV|bVII|IV
-  }
+  with octave 4 { piano: scale }
+  with octave 2 { bass: roots }
+  guitar: chords i bIII|v bVII|i vidim|IV ii|i
 }
 
-play (2 bars groove 8 bars verse)
+play (2 bars groove walk)
 ```

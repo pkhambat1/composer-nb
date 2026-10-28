@@ -6,7 +6,7 @@
 import { describe, it, expect } from "vitest"
 import { readFileSync } from "node:fs"
 import { KEYWORDS } from "../../js/language.ts"
-import { KITS, PARTS, SETTINGS, SOUNDS, TYPES } from "../../js/vocab.ts"
+import { KITS, PARTS, SETTINGS, SOUNDS, SWING, TYPES } from "../../js/vocab.ts"
 
 const grammar = JSON.parse(
   readFileSync(new URL("../../../docs/languages/composer-nb.json", import.meta.url), "utf8"),
@@ -38,5 +38,9 @@ describe("the docs grammar knows every word", () => {
 
   it("every kit", () => {
     for (const kit of KITS) expect(captured("value", `set kit ${kit}`, 0), kit).toBe(kit)
+  })
+
+  it("swing on and off", () => {
+    for (const v of SWING) expect(captured("value", `set swing ${v}`, 0), v).toBe(v)
   })
 })

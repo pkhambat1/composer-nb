@@ -7,7 +7,7 @@ import { message } from "./diagnostics.ts"
 import { closest } from "./resolve.ts"
 import { cloneState, type State } from "./state.ts"
 import { evalNumber, nearWhole, sumTerms, type Report } from "./time.ts"
-import { among, KITS, MODES, PITCHED, SETTINGS, SOUNDS, soundsOf, type Setting } from "./vocab.ts"
+import { among, KITS, MODES, PITCHED, SETTINGS, SOUNDS, soundsOf, SWING, type Setting } from "./vocab.ts"
 
 // How a setting was written: after set, or in a with's header
 type Verb = "set" | "with"
@@ -94,12 +94,11 @@ export function applySetting(
     return true
   }
   if (name === "swing") {
-    const n = whole(50, 75)
-    if (n == null) {
-      err(ln, message("swing.range", { verb }))
+    if (!among(SWING, value)) {
+      err(ln, message("swing.onOff", { verb }))
       return false
     }
-    state.swing = n
+    state.swing = value === "on"
     return true
   }
   if (name === "key") {

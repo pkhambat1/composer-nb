@@ -20,7 +20,7 @@ export default function Sidebar({
   const [themeOpen, setThemeOpen] = React.useState(false)
   const popRef = React.useRef(null)
   const btnRef = React.useRef(null)
-  const { list, current, draft } = notebooks
+  const { list, current } = notebooks
   const onNotebook = sideTab === "notebook"
 
   React.useEffect(() => {
@@ -95,26 +95,6 @@ export default function Sidebar({
       </div>
 
       <nav className="lhs-nav">
-        {/* A link's cells, open but not saved: apart from the notebooks until they are */}
-        {draft && (
-          <>
-            <div className="lhs-section">
-              <span className="lhs-section-label">Shared with you</span>
-            </div>
-            <button
-              type="button"
-              className={"lhs-tab lhs-tab-shared" + (onNotebook ? " lhs-tab-active" : "")}
-              onClick={() => onTabChange("notebook")}
-              title="Opened from a link, not in your notebooks"
-            >
-              <svg className="lhs-tab-icon" width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" aria-hidden="true">
-                <path d="M6.5 9.5l3-3M7 11l-1.5 1.5a2.1 2.1 0 0 1-3-3L4 8M9 5l1.5-1.5a2.1 2.1 0 0 1 3 3L12 8" />
-              </svg>
-              <span className="lhs-tab-label">{draft.title}</span>
-            </button>
-          </>
-        )}
-
         {/* The notebooks kept on this device, the open one marked */}
         <div className="lhs-section">
           <span className="lhs-section-label">Notebooks</span>
@@ -136,7 +116,7 @@ export default function Sidebar({
             type="button"
             className={
               "lhs-tab lhs-tab-notebook" +
-              (onNotebook && !draft && current?.id === nb.id ? " lhs-tab-active" : "")
+              (onNotebook && current?.id === nb.id ? " lhs-tab-active" : "")
             }
             onClick={() => onOpenNotebook(nb.id)}
             title={nb.title}

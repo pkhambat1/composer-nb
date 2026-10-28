@@ -25,7 +25,7 @@ export async function handleMcp(
   await transport.handleRequest(req, res, req.body)
 }
 
-// The playground's address for links, from the request when it was made to a deployment.
+// The site's address for links, from the request when it was made to a deployment.
 export function siteOf(req: IncomingMessage, fallback?: string): string | undefined {
   // Node joins a header sent twice into one string, apart from a few it keeps as a list
   const header = (name: string) => {

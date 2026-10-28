@@ -1,6 +1,6 @@
-/* The MCP App: for a host that renders MCP Apps (claude.ai, Claude Desktop), parse and
-   link draw the cells inside the conversation as the playground's own: the code, which the
-   user can change and play again, the player and its practice controls. The view is
+/* The MCP App: for a host that renders MCP Apps (claude.ai, Claude Desktop), parse draws
+   the cell inside the conversation as the playground's own: the code, which the user can
+   change and play again, and the player. The view is
    app/main.js, the playground's App bundled by Vite into app/dist/app.js (npm run
    build:app -w mcp) and put inline in one HTML page here, which the host loads in a
    sandboxed frame. A host that doesn't render UI reads the tools' text
@@ -59,7 +59,7 @@ export async function cellHtml(): Promise<string> {
 `
 }
 
-// Registers the page as the resource parse and link name in their _meta.ui.resourceUri.
+// Registers the page as the resource parse names in its _meta.ui.resourceUri.
 export function registerCellApp(server: McpServer): void {
   registerAppResource(
     server,
@@ -67,7 +67,7 @@ export function registerCellApp(server: McpServer): void {
     CELL_UI,
     {
       description:
-        "The cells inside the conversation, as the playground draws them: the code, which the user can change and play again, the player and its practice controls, the hits as bricks or as sheet music, and the chords.",
+        "The cells inside the conversation, as the playground draws them: the code, which the user can change and play again, the player, the hits as bricks or as sheet music, and the chords.",
       mimeType: RESOURCE_MIME_TYPE,
     },
     async () => ({

@@ -45,7 +45,6 @@ const PROGRAMS: Record<string, number> = {
   piano: 0,
   "piano.electric": 4,
   organ: 16,
-  pad: 88,
   bass: 33, // fingered electric bass
 }
 const DRUM_CHANNEL = 9 // channel 10, counted from 0

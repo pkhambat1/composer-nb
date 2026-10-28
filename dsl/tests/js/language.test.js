@@ -1121,14 +1121,14 @@ describe("settings", () => {
   })
 
   it("say every setting and sound they carry on, swing too", () => {
-    const above = parseSource("set swing 67\nset tempo 90\nset guitar.electric muted").state
+    const above = parseSource("set swing on\nset tempo 90\nset guitar.electric muted").state
     expect(parseSource("play kick: x-", above).fromAbove).toEqual([
       "tempo 90",
-      "swing 67",
+      "swing on",
       "guitar.electric muted",
     ])
     // what this cell sets again isn't from above
-    const again = parseSource("set guitar.electric clean\nset swing 60\nplay kick: x-", above)
+    const again = parseSource("set guitar.electric clean\nset swing off\nplay kick: x-", above)
     expect(again.fromAbove).toEqual(["tempo 90"])
   })
 
@@ -1382,7 +1382,7 @@ describe("the closed hi-hat", () => {
 
 describe("swing", () => {
   it("moves the off-beat late in the sound, and nowhere in the writing", () => {
-    const p = parseSource("set swing 67\nplay hat: 8 steps x-")
+    const p = parseSource("set swing on\nplay hat: 8 steps x-")
     expect(p.errors).toEqual([])
     const hits = p.outputs[0].drumEvents
     const sounds = (events) => events.map((e) => e.secStart + (e.secSwing || 0))
@@ -1390,19 +1390,25 @@ describe("swing", () => {
       expect(got).toHaveLength(want.length)
       got.forEach((v, i) => expect(v).toBeCloseTo(want[i], 4))
     }
-    // at 120 a beat is half a second: the & sounds at 67% of it, and is written at 50%
-    near(sounds(hits), [0, 0.335, 0.5, 0.835])
+    // at 120 a beat is half a second: the & sounds two thirds of the way through it, as a
+    // triplet's third note, and is written halfway
+    near(sounds(hits), [0, 1 / 3, 0.5, 0.5 + 1 / 3])
     near(hits.map((e) => e.secStart), [0, 0.25, 0.5, 0.75])
     expect(p.outputs[0].blocks[0].drumEvents.map((e) => e.tick)).toEqual([0, 48, 96, 144])
     // sixteenths move with the eighth they belong to
-    near(sounds(parseSource("set swing 67\nplay hat: 4 steps x").outputs[0].drumEvents), [0, 0.1675, 0.335, 0.4175])
+    near(sounds(parseSource("set swing on\nplay hat: 4 steps x").outputs[0].drumEvents), [0, 1 / 6, 1 / 3, 5 / 12])
   })
 
-  it("takes 50 to 75", () => {
-    expect(firstError("set swing 40")).toMatch(/swing is where the off-beat eighth falls, from 50 \(straight\) to 75/)
-    expect(firstError("set swing 80")).toMatch(/from 50 \(straight\) to 75/)
-    const straight = parseSource("set swing 50\nplay hat: 4 steps x-").outputs[0].drumEvents
-    expect(straight.every((e) => e.secSwing === undefined)).toBe(true)
+  it("is on or off, and off unless it's set", () => {
+    const rule = "swing is on or off: set swing on plays the off-beat eighths late, as a triplet feel"
+    expect(firstError("set swing 67")).toBe(rule)
+    expect(firstError("set swing On")).toBe(rule)
+    expect(firstError("with swing true { play hat: x- }")).toBe(
+      "swing is on or off: with swing on plays the off-beat eighths late, as a triplet feel",
+    )
+    for (const src of ["play hat: 4 steps x-", "set swing on\nset swing off\nplay hat: 4 steps x-"]) {
+      expect(parseSource(src).outputs[0].drumEvents.every((e) => e.secSwing === undefined)).toBe(true)
+    }
   })
 })
 
@@ -2375,7 +2381,9 @@ describe("the grooves library", () => {
       expect(p.errors, g.title).toEqual([])
       expect(p.outputs.length, g.title).toBeGreaterThan(0)
     }
-    expect(searchGrooves("phrygian").map((g) => g.title)[0]).toBe("Phrygian riff")
-    expect(searchGrooves("lydian").map((g) => g.title)).toContain("Lydian groove in fifteen")
+    expect(searchGrooves("phrygian").map((g) => g.title)[0]).toBe("Phrygian walk")
+    for (const mode of ["Lydian", "Mixolydian", "Dorian", "Minor", "Phrygian", "Locrian"]) {
+      expect(searchGrooves(mode.toLowerCase()).map((g) => g.title)).toContain(`${mode} walk`)
+    }
   })
 })

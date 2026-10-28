@@ -164,7 +164,7 @@ describe("with", () => {
       "with tempo 60 { play ... }, or on a part that plays in order: ( with tempo 60 { ... } )"
     expect(firstError("play {\n  kick: x---\n  with tempo 60 { snare: ---- x--- }\n}")).toBe(rule)
     expect(firstError("pattern pp = {\n  kick: x---\n  with tempo 60 { snare: ---- x--- }\n}\nplay pp")).toBe(rule)
-    expect(firstError("play {\n  with swing 67 { ride: x- }\n  kick: 1 3\n}")).toMatch(/so they share one swing/)
+    expect(firstError("play {\n  with swing on { ride: x- }\n  kick: 1 3\n}")).toMatch(/so they share one swing/)
     // nor can a group that changes it, played with other lines
     expect(firstError("pattern slow = (with tempo 60 { kick: x--- })\nplay {\n  slow\n  snare: ---- x---\n}")).toBe(
       "slow changes the tempo, so it can't sound together with other lines. Play it on its own, or put the with around the whole play: with tempo 60 { play ... }",

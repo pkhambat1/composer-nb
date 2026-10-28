@@ -48,7 +48,7 @@ function defineElement() {
 
 // The player for one cell's worth of source. Pass `after` (what an earlier music() call
 // returned) to start from the settings and names that song ended with, and `name` to
-// label it and name its WAV file.
+// label it.
 export function music(
   source: string,
   { after, name }: { after?: HTMLElement; name?: string } = {},

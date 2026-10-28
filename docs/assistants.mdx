@@ -1,19 +1,19 @@
 ---
 title: "Assistants"
-description: "composer-nb as a tool for Claude, Cursor or any assistant that speaks MCP: it writes a cell, checks it, draws the sheet and sends a link."
+description: "composer-nb as a tool for Claude, Cursor or any assistant that speaks MCP: it writes a cell, checks it and draws the sheet."
 ---
 
-An assistant can talk about music all day and produce nothing you can hear. Plugged into composer-nb, what it hands back plays: a cell it has checked against the parser, the sheet music as a picture, and a link that opens the playground on it, ready to play.
+An assistant can talk about music all day and produce nothing you can hear. Plugged into composer-nb, what it hands back plays: a cell it has checked against the parser, which plays right in the chat in claude.ai and Claude Desktop, and the sheet music as a picture or a MIDI file.
 
 The connection is an [MCP](https://modelcontextprotocol.io) server. Once it is connected you write in English, in the chat you already use:
 
 > Take the single paradiddle and move the accent to the second stroke, in 3 over 4 at 90.
 
-The assistant writes the cell, calls `parse`, and if the parser says `line 5: The snare line is 6 steps long, which doesn't fit 12 steps a whole number of times`, it fixes the cell before you see it. Then it calls `render` for the sheet and `link` for the link.
+The assistant writes the cell, calls `parse`, and if the parser says `line 5: The snare line is 6 steps long, which doesn't fit 12 steps a whole number of times`, it fixes the cell before you see it. Then it calls `render` for the sheet.
 
 ## Install the plugin
 
-In Claude, the composer-nb plugin brings the connector and four skills: `write-cells` (parse every cell, fix it, hand over the link), `groove`, `practice` and `theory`.
+In Claude, the composer-nb plugin brings the connector and four skills: `write-cells` (parse every cell, fix it, hand it over), `groove`, `practice` and `theory`.
 
 **Claude.ai and Claude Desktop.** Customize → Plugins → Add → Add marketplace, with the repository `pkhambat1/composer-nb`. Select composer-nb, then Add. Then add its connector on the plugin's Connectors tab. The server has no sign-in.
 
@@ -50,18 +50,17 @@ Nothing is stored on the server: a request is a cell in, a result out.
 | --- | --- |
 | `parse` | Checks a cell. Returns the errors with their line numbers, the settings and names in effect, and for each play a grid of every hit and note, bar by bar, with the chords it heard. |
 | `render` | The sheet music as a PNG (the kit on a percussion staff, each instrument on a staff of its own), or a MIDI file, or the ABC notation. |
-| `link` | A link that opens the playground on the cell, ready to play, with the practice controls. With a list of cells, a link to a whole notebook. |
-| `library` | Searches the [grooves](https://composer-nb.vercel.app/grooves/): transcriptions and rudiments to start from, each with its code and its link. |
+| `library` | Searches the [grooves](https://composer-nb.vercel.app/grooves/): transcriptions, harmony and rudiments to start from, each with its code and its page. |
 | `reference` | The pages under Language, Drums and Pitched instruments on this site, for the assistant to read. |
 
 The reference pages and the grooves are also MCP resources, for clients that read those.
 
-In claude.ai and Claude Desktop's chat, `parse` and `link` also draw the playground's own cell under the reply: its code, which you can change and play again with Play or Shift+Enter, and its player with the practice controls. What you play there reaches the assistant with your next message. Ask for an empty cell to write in, and you get one.
+In claude.ai and Claude Desktop's chat, `parse` also draws the playground's own cell under the reply: its code, which you can change and play again with Play or Shift+Enter, and its player. What you play there reaches the assistant with your next message. Ask for an empty cell to write in, and you get one.
 
 ## What to ask for
 
 - A groove from a description: "seven-eight, hats on every eighth alternating open and closed, kick and snare resolving every two bars."
-- Variations: "the same at 80 with just the hands, then bring it up ten at a time", each a link.
+- Variations: "the same at 80 with just the hands, then bring it up ten at a time", each a cell.
 - An exercise written out: "a paradiddle with the accent on 2 and 4, in 6/8, with the sticking", as a sheet to print.
 - A chord chart with a bass line under it, in a key or a mode, as a MIDI file for your DAW.
-- An explanation that plays: "I don't understand how the ride and the kick line up here", with the kick muted in the link.
+- An explanation that plays: "I don't understand how the ride and the kick line up here", as a cell of just the ride and the kick.

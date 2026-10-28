@@ -1,6 +1,6 @@
 # composer-nb
 
-**Sketch music like you write code.** Drums, riffs and chords in a small language you can read at a glance. Play a cell and hear it, with a grid of what plays or the whole thing as sheet music, chord shapes for guitar, and a WAV or MIDI file to keep. It runs in your browser, and right inside Jupyter.
+**Sketch music like you write code.** Drums, riffs and chords in a small language you can read at a glance. Play a cell and hear it, with a grid of what plays or the whole thing as sheet music, and chord shapes for guitar. It runs in your browser, and right inside Jupyter.
 
 **[Open the playground →](https://composer-nb.vercel.app)** · **[Docs](https://pkhambat.mintlify.site)** · `pip install composer-nb`
 
@@ -97,7 +97,7 @@ play 6 bars {
 
 ## From an assistant
 
-composer-nb is an [MCP](https://modelcontextprotocol.io) server too, so Claude, Cursor or any assistant that speaks MCP can write a cell, check it against the parser, draw the sheet and hand you a link that plays. In Claude, install the plugin, which brings the connector with skills: add `pkhambat1/composer-nb` as a marketplace (Customize → Plugins → Add → Add marketplace; in Claude Code, `/plugin marketplace add pkhambat1/composer-nb`), then install `composer-nb` (`/plugin install composer-nb@composer-nb`). Or add a custom connector with the URL `https://composer-nb.vercel.app/mcp`; elsewhere, give that URL to the assistant as a remote MCP server. See [Assistants](https://pkhambat.mintlify.site/assistants) in the docs.
+composer-nb is an [MCP](https://modelcontextprotocol.io) server too, so Claude, Cursor or any assistant that speaks MCP can write a cell, check it against the parser and draw the sheet; in claude.ai and Claude Desktop the cell plays right in the chat. In Claude, install the plugin, which brings the connector with skills: add `pkhambat1/composer-nb` as a marketplace (Customize → Plugins → Add → Add marketplace; in Claude Code, `/plugin marketplace add pkhambat1/composer-nb`), then install `composer-nb` (`/plugin install composer-nb@composer-nb`). Or add a custom connector with the URL `https://composer-nb.vercel.app/mcp`; elsewhere, give that URL to the assistant as a remote MCP server. See [Assistants](https://pkhambat.mintlify.site/assistants) in the docs.
 
 ## In Jupyter
 

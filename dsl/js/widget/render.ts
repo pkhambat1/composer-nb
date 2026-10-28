@@ -52,7 +52,7 @@ function formatTime(sec: number): string {
 
 function describeBlock(b: GridBlock): string {
   const bars = `${b.bars} bar${b.bars === 1 ? "" : "s"}${b.times > 1 ? ` × ${b.times}` : ""}`
-  return `time ${b.time} · tempo ${b.tempo} · key ${b.key} ${b.mode} · ${bars}`
+  return `time ${b.time} · tempo ${b.tempo}${b.swing ? " · swing" : ""} · key ${b.key} ${b.mode} · ${bars}`
 }
 
 // The pitched instruments that play, e.g. "guitar, transpose 2 · bass".
@@ -196,7 +196,6 @@ const views = new Set<() => void>() // each output's switch, so they change toge
 function renderPlayer(
   slot: HTMLElement,
   buffer: ToneAudioBuffer,
-  filename: string,
   onTime: Follow,
   autoplay: boolean,
 ): () => void {
@@ -217,11 +216,7 @@ function renderPlayer(
   progress.append(fill)
   wave.append(base, progress)
   const time = h("span", "cnb-time", `0:00 / ${formatTime(duration)}`)
-  const download = h("a", "cnb-download", "WAV")
-  download.href = audioUrl
-  download.download = filename
-  download.title = "Download as WAV"
-  row.append(play, wave, time, download)
+  row.append(play, wave, time)
   slot.replaceChildren(row)
 
   const draw = () => {
@@ -295,7 +290,6 @@ function renderPlayer(
 // One play line's output: what it is, its player, drum grid and chords.
 function renderOutput(
   output: Output,
-  filename: string,
   messages: Messages,
   autoplay: boolean,
 ): { box: HTMLElement; dispose(): void } {
@@ -367,7 +361,7 @@ function renderOutput(
   queueRender(output, () => disposed)
     .then((buffer) => {
       if (disposed || !buffer) return
-      disposePlayer = renderPlayer(slot, buffer, filename, setTime, autoplay)
+      disposePlayer = renderPlayer(slot, buffer, setTime, autoplay)
       for (const msg of output.warnings || []) messages.add(msg)
     })
     .catch((err) => {
@@ -438,14 +432,7 @@ export function renderCell(
     if (shown.length && !errors.isConnected) root.append(errors)
   }
 
-  const outputs = parsed.outputs.map((o, i) =>
-    renderOutput(
-      o,
-      `${name || "composer-nb"}${parsed.outputs.length > 1 ? "-" + (i + 1) : ""}.wav`,
-      messages,
-      play && i === 0,
-    ),
-  )
+  const outputs = parsed.outputs.map((o, i) => renderOutput(o, messages, play && i === 0))
   for (const o of outputs) root.append(o.box)
   if (!outputs.length && !parsed.errors.length) {
     const defined = Object.keys(parsed.state.sections)

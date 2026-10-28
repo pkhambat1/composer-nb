@@ -51,7 +51,6 @@ export const PITCHED = [
   "piano",
   "piano.electric",
   "organ",
-  "pad",
   "bass",
 ] as const
 export type Pitched = (typeof PITCHED)[number]
@@ -72,7 +71,7 @@ export type Setting = (typeof SETTINGS)[number]
 export const SETTING_EXAMPLE: Readonly<Record<Setting, string>> = {
   time: "7 over 8",
   tempo: "90",
-  swing: "60",
+  swing: "on",
   key: "E",
   mode: "minor",
   transpose: "2",
@@ -80,6 +79,8 @@ export const SETTING_EXAMPLE: Readonly<Record<Setting, string>> = {
   kit: "rock",
 }
 export const KITS = ["rock", "synth"] as const
+// Swing is on or off. On, the off-beat eighths fall late, as a triplet's third note does
+export const SWING = ["on", "off"] as const
 // The modes a key can be in, set on their own: set key D, set mode dorian. Major and minor
 // have one name each.
 export const MODES = [

@@ -32,7 +32,7 @@ export function settingsOf(state: State): Record<string, string | number> {
   const out: Record<string, string | number> = {
     time: timeLabel(state),
     tempo: state.tempo,
-    swing: state.swing,
+    swing: state.swing ? "on" : "off",
     key: state.key,
     mode: state.mode,
     transpose: state.transpose,

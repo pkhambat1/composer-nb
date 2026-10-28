@@ -1,5 +1,5 @@
-/* The composer-nb MCP server: the language for any assistant that speaks MCP. Five tools
-   wrap what the library does already (parse, render, link, library, reference), and the
+/* The composer-nb MCP server: the language for any assistant that speaks MCP. Four tools
+   wrap what the library does already (parse, render, library, reference), and the
    reference pages and the grooves are resources too, for clients that read those. One
    server is one McpServer; the transports are in bin.ts (stdio) and http.ts. */
 import { createRequire } from "node:module"
@@ -9,7 +9,7 @@ import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js"
 import { z } from "zod"
 import { GROOVES, grooveText, plain, searchGrooves, slugOf, type Groove } from "composer-nb/grooves"
 import type { Output, Parsed } from "composer-nb/language"
-import { SITE, notebookUrl, openUrl } from "composer-nb/links"
+import { SITE } from "composer-nb/links"
 import { CELL_UI, registerCellApp } from "./app.ts"
 import { describe, parse, playersOf } from "./cell.ts"
 import { INSTRUCTIONS } from "./instructions.ts"
@@ -64,8 +64,8 @@ export function createServer({ site = SITE }: Options = {}): McpServer {
   const query = (source: string, after?: string) =>
     `src=${encodeURIComponent(source)}` + (after ? `&after=${encodeURIComponent(after)}` : "")
 
-  // parse and link name the MCP App (app.js): a host that renders MCP Apps draws the
-  // player for the cell under the tool's result; every other host reads the text.
+  // parse names the MCP App (app.js): a host that renders MCP Apps draws the player for the
+  // cell under the tool's result; every other host reads the text.
   registerAppTool(
     server,
     "parse",
@@ -144,57 +144,12 @@ export function createServer({ site = SITE }: Options = {}): McpServer {
     },
   )
 
-  registerAppTool(
-    server,
-    "link",
-    {
-      title: "A link that plays a cell",
-      description:
-        "A link that opens the playground on a cell, ready to play, with practice controls (tempo, loop, count-in, mute a part), sheet music, and WAV and MIDI downloads: send it, and it opens on a phone. Give cells instead of source for a link to a whole notebook of text and music cells. Where the client renders MCP Apps, the cell is drawn under the link as well, for the user to change and play.",
-      _meta: { ui: { resourceUri: CELL_UI } },
-      inputSchema: {
-        source: SOURCE.optional(),
-        cells: z
-          .array(z.object({ type: z.enum(["text", "music"]), source: z.string() }))
-          .optional()
-          .describe("A notebook: text cells (markdown) and music cells, in order"),
-      },
-    },
-    async ({ source, cells }) => {
-      if (cells?.length) {
-        const music = cells.filter((c) => c.type === "music")
-        const bad = music.map((c) => parse(c.source).parsed.errors.length).filter(Boolean).length
-        const note = bad
-          ? ` ${plural(bad, "music cell")} of ${music.length} has errors; parse each to see them.`
-          : ""
-        return {
-          content: [
-            text(
-              `Opens the playground on the notebook, ready to play:\n${notebookUrl(site, cells)}${note}`,
-            ),
-          ],
-        }
-      }
-      if (!source)
-        return { isError: true, content: [text("Give source (one cell) or cells (a notebook).")] }
-      const { parsed } = parse(source)
-      const warn = parsed.errors.length
-        ? `\n\nThe cell has ${plural(parsed.errors.length, "error")}, so the link opens on the errors, not on music. Parse it to see them.`
-        : ""
-      return {
-        content: [
-          text(`Opens the playground on the cell, ready to play:\n${openUrl(site, source)}${warn}`),
-        ],
-      }
-    },
-  )
-
   server.registerTool(
     "library",
     {
       title: "Grooves and rudiments to start from",
       description:
-        "Searches the grooves library: transcriptions (Porcupine Tree in 7 and 9, Gavin Harrison's paradiddle challenge, a 3 over 4 over 5 polyrhythm, Polyrhythmics), harmony cells (a ii–V–I with a walking bass, dorian, mixolydian and lydian vamps, a 12-bar blues, a harmonic-minor cadence, a phrygian riff, a lydian groove in 15/16) and the rudiments with their stickings. Each comes as a cell to start from, with its page and a link that plays it. Search by words (paradiddle, dorian, blues, 7/8, guitar) or leave the query empty for the list.",
+        "Searches the grooves library: transcriptions (Porcupine Tree in 7 and 9, Gavin Harrison's paradiddle challenge, a 3 over 4 over 5 polyrhythm, Polyrhythmics), harmony cells (a ii–V–I with a walking bass, a 12-bar blues, and a walk through each mode, from lydian to locrian: its scale up and down with every chord of the mode under it) and the rudiments with their stickings. Each comes as a cell to start from, with its page, where it plays. Search by words (paradiddle, dorian, blues, 7/8, guitar) or leave the query empty for the list.",
       inputSchema: {
         query: z
           .string()
@@ -218,7 +173,7 @@ export function createServer({ site = SITE }: Options = {}): McpServer {
       const out: string[] = []
       for (const g of full) {
         out.push(
-          `## ${g.title}\n${plain(g.byline)}\n\n${plain(g.body)}\n\n${fence(g.source)}\n\nPage: ${grooveUrl(g)}\nPlays at: ${openUrl(site, g.source)}`,
+          `## ${g.title}\n${plain(g.byline)}\n\n${plain(g.body)}\n\n${fence(g.source)}\n\nPage: ${grooveUrl(g)}`,
         )
       }
       if (rest.length) {
@@ -281,7 +236,7 @@ export function createServer({ site = SITE }: Options = {}): McpServer {
           {
             uri: uri.href,
             mimeType: "text/markdown",
-            text: `${grooveText(g)}\n\n${fence(g.source)}\n\nPage: ${grooveUrl(g)}\nPlays at: ${openUrl(site, g.source)}\n`,
+            text: `${grooveText(g)}\n\n${fence(g.source)}\n\nPage: ${grooveUrl(g)}\n`,
           },
         ],
       }),
