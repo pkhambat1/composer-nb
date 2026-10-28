@@ -1,6 +1,6 @@
 /* A cell's state: its settings and the names it has, as the engine carries them from line to
    line, into blocks, and from cell to cell. Also the shapes the engine reads a cell into:
-   a line, with each block inside it written {#1} and kept beside it, and a named pattern. */
+   a line, which holds its text and the blocks written in it, in order, and a named pattern. */
 import { TPQ, timeLabel, type Timing } from "./time.ts"
 import type { Setting, Type } from "./vocab.ts"
 
@@ -13,16 +13,14 @@ export type Word = {
   above?: boolean // it came from a cell above, so this cell can define it again
 }
 
-// A block inside a line, kept beside it: { kick: x--- } on `play {#1}`
-export type LineBlock = { key: string; anon: boolean; ln: number; lines: Line[]; bars: number }
+// A block written in a line: its own lines. { kick: x--- } in play { kick: x--- }
+export type Braces = { kind: "braces"; ln: number; lines: Line[] }
+// What a line holds, in order: text as it was written, and the blocks written in it
+export type Piece = string | Braces
 
-// One line as the engine reads it. A line that plays keeps the state it plays with in `st`.
-export type Line = {
-  ln: number
-  text: string
-  blocks?: Record<string, LineBlock> | null
-  st?: State
-}
+// One line as the engine reads it (parts.ts reads its parts). A line that plays keeps the
+// state it plays with in `st`.
+export type Line = { ln: number; parts: Piece[]; st?: State }
 
 // A pattern with a name: its lines and the length written in front of it, if any
 export type Section = {

@@ -4,11 +4,12 @@
    end. A block holds layers that sound together, each a voice of its own. */
 import { buildChord, degreeSemitones, isRoman, midiToName } from "../chords.js"
 import { misplaced } from "../check.ts"
-import { BLOCK_KEY, CHORDS_BLOCK } from "../declare.ts"
+import { CHORDS_BLOCK } from "../declare.ts"
+import { bracesIn, headOf, onlyBraces, textOf } from "../parts.ts"
 import { TRACK_RE } from "../lines.ts"
 import { keyOf, withInLayers } from "../settings.ts"
 import { NAME_LIKE } from "../resolve.ts"
-import type { Line, LineBlock, State } from "../state.ts"
+import type { Line, Piece, State } from "../state.ts"
 import { lcm, lengthAt, MAX_BARS, meterOf, nearWhole, sayTicks, TPQ, type Report } from "../time.ts"
 import { UNITS } from "../vocab.ts"
 import {
@@ -43,8 +44,8 @@ type Step = NoteStep | null
 // ends in ..., and what fills the rest when it does
 type NoteParts = { tokens: string[]; open: boolean; fill: NoteStep | null }
 type Voice = { steps: Step[]; open?: boolean; fill?: NoteStep | null }
-// A pitched instrument's line: its name, where it is, what it holds and its blocks
-export type PitchedPart = Part & { value: string; blocks?: Record<string, LineBlock> | null }
+// A pitched instrument's line: its name, where it is, and what it holds
+export type PitchedPart = Part & { value: Piece[] }
 // One note, as it sounds
 export type NoteEvent = {
   tick: number
@@ -442,7 +443,15 @@ export function notNotes(tok: string, st: State, inst: string, chart: string): s
 // `open` is a line ended in ... and `fill` what fills the rest of it, or null after saying
 // what's wrong.
 function noteVoice(line: Line, part: PitchedPart, st: State, err: Report): Voice | null {
-  const parts = noteParts(line.text, st, err, line.ln, part)
+  const text = textOf(line.parts)
+  if (bracesIn(line.parts).length) {
+    err(
+      line.ln,
+      `A block is everything ${part.name} plays, so nothing goes beside it: ${part.name}: { ... }`,
+    )
+    return null
+  }
+  const parts = noteParts(text, st, err, line.ln, part)
   if (!parts) return null
   const steps: Step[] = []
   let ok = true
@@ -452,16 +461,14 @@ function noteVoice(line: Line, part: PitchedPart, st: State, err: Report): Voice
   }
   // guitar: C G|F G reads as four notes, a step each, where a chart was probably meant
   const key = keyOf(st)!
-  const chart = tokenize(line.text).every(
+  const chart = tokenize(text).every(
     (t) => CHORD_MARKS.includes(t) || st.words[t]?.type === "chords" || buildChord(t, key),
   )
   const barLine = () => {
     const problem = ok && barLineProblem(steps.length, st)
     if (!problem) return
     fail(
-      chart
-        ? `${problem}. For chords, put chords in front: ${part.name}: chords ${line.text}`
-        : problem,
+      chart ? `${problem}. For chords, put chords in front: ${part.name}: chords ${text}` : problem,
     )
   }
   const add = (tok: string, viaWord?: string) => {
@@ -470,21 +477,17 @@ function noteVoice(line: Line, part: PitchedPart, st: State, err: Report): Voice
     if (spaced) fail(notesTouch(tok, spaced))
     else if (run) steps.push(...run)
     else if (viaWord) fail(`"${tok}" (in ${viaWord}) isn't a note. ${NOTE_HELP}`)
-    else fail(notNotes(tok, st, part.name, `${part.name}: chords ${line.text}`))
+    else fail(notNotes(tok, st, part.name, `${part.name}: chords ${text}`))
   }
   for (const tok of parts.tokens) {
     const w = st.words[tok]
     if (tok === "|") barLine()
-    else if (line.blocks?.[tok]) {
-      fail(
-        `A block is everything ${part.name} plays, so nothing goes beside it: ${part.name}: { ... }`,
-      )
-    } else if (!w) add(tok)
+    else if (!w) add(tok)
     else {
       const problem = misplaced(tok, w.type, {
         line: "pitched",
         part: part.name,
-        text: line.text,
+        text,
         chart,
       })
       if (problem) fail(problem)
@@ -576,10 +579,11 @@ function pitchedLayer(
   barTicks: number,
   err: Report,
 ): PitchedClip | ChartClip | null {
-  const here = { ...part, ln: line.ln, blocks: line.blocks }
-  const tokens = tokenize(line.text)
+  const here = { ...part, ln: line.ln, value: line.parts }
+  const text = textOf(line.parts)
+  const tokens = tokenize(text)
   if (tokens[0] === "notes") {
-    const rest = line.text.replace(/^\s*notes\s*/, "")
+    const rest = text.replace(/^\s*notes\s*/, "")
     err(
       line.ln,
       `A line's notes need no word in front: ${part.name}: ${spaceNotes(rest) || "F---G---"}`,
@@ -588,7 +592,7 @@ function pitchedLayer(
   }
   if (tokens[0] === "chords") {
     const chart = tokens.slice(1)
-    if (chart.some((t) => BLOCK_KEY.test(t))) {
+    if (bracesIn(line.parts).length) {
       err(line.ln, CHORDS_BLOCK)
       return null
     }
@@ -607,26 +611,17 @@ export function pitchedPattern(
   barTicks: number,
   err: Report,
 ): PitchedClip | ChartClip | null {
-  const tokens = tokenize(part.value)
-  const block = tokens.length === 1 ? part.blocks?.[tokens[0]] : undefined
-  if (!block) {
-    return pitchedLayer(
-      { ln: part.ln, text: part.value, blocks: part.blocks },
-      part,
-      st,
-      barTicks,
-      err,
-    )
-  }
+  const block = onlyBraces(part.value)
+  if (!block) return pitchedLayer({ ln: part.ln, parts: part.value }, part, st, barTicks, err)
   const layers = block.lines.map((line) => {
-    if (/^with(\s|\{|$)/.test(line.text)) {
+    if (/^with(\s|\{|$)/.test(textOf(line.parts))) {
       err(line.ln, withInLayers(part.name))
       return null
     }
-    if (TRACK_RE.test(line.text)) {
+    if (TRACK_RE.test(headOf(line.parts))) {
       err(
         line.ln,
-        `A block after ${part.name}: holds what ${part.name} plays, one layer a line. ${line.text} is an instrument's line, which goes in a pattern`,
+        `A block after ${part.name}: holds what ${part.name} plays, one layer a line. ${textOf(line.parts)} is an instrument's line, which goes in a pattern`,
       )
       return null
     }

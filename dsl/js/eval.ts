@@ -45,7 +45,7 @@ function readLines(
     read.push(l)
     if (PLAYS.includes(l.kind)) (l as { st?: State }).st = cloneState(st)
     if (l.kind === "setting") err(l.ln, setInBlock(l))
-    else if (l.kind === "word") defineWord(l.type, l.name, l.value, l.ln, st, err, l.blocks)
+    else if (l.kind === "word") defineWord(l.type, l.name, l.value, l.ln, st, err)
     else if (l.kind === "blockdef") {
       const sec = defineBlock(l, st, err)
       if (sec && named) named(sec)
