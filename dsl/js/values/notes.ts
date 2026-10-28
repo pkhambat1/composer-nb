@@ -404,7 +404,7 @@ export function notNotes(tok: string, st: State, inst: string, chart: string): s
     }
     if (!right.startsWith("(") && isOf(right))
       return "A chain of of's takes brackets: 5 of (5 of C3)"
-    return "After of goes the note to count from: 5 of C3, or a degree of the key: 5 of 1"
+    return "After of goes the note to count from: 5 of C3, or a degree of the key: 5 of 2"
   }
   if (/^[-_^~A-G#b\d]+$/.test(tok) && /[A-G][#b]?9/.test(tok)) {
     return `"${tok}": octaves run from 0 to 8`

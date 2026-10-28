@@ -137,10 +137,10 @@ with time 5 over 4 { play groove }`,
     section: "Harmony",
     title: "Lydian walk",
     byline: "D lydian: major with a raised fourth",
-    body: "One chart, `chords i ii|iii iv|v vi|vii i|vii vi|v iv|iii ii|i`, goes up the scale and back down, and a lowercase numeral is the chord the scale has on that degree. In D lydian those are D E F#m G#dim A Bm C#m. The G#dim on 4 is lydian's, and so is the major E on 2, a whole step above the root, where major has a minor one: the floating sound. Change `mode lydian` in the with to `mode major` and the same chart turns into D major's chords.",
+    body: "One chart, `chords i ii|iii iv|v vi|vii i'|vii vi|v iv|iii ii|i`, goes up the scale and back down, and a lowercase numeral is the chord the scale has on that degree. In D lydian those are D E F#m G#dim A Bm C#m. The G#dim on 4 is lydian's, and so is the major E on 2, a whole step above the root, where major has a minor one: the floating sound. Change `mode lydian` in the with to `mode major` and the same chart turns into D major's chords.",
     link: null,
     source: `pattern walk = {
-  piano: chords i ii|iii iv|v vi|vii i|vii vi|v iv|iii ii|i
+  piano: chords i ii|iii iv|v vi|vii i'|vii vi|v iv|iii ii|i
   hat: x-
   snare.cross: 2 4
   kick: 1 3
@@ -152,10 +152,10 @@ with key D, mode lydian, tempo 84 { play walk }`,
     section: "Harmony",
     title: "Mixolydian walk",
     byline: "D mixolydian: major with a flat seventh",
-    body: "One chart, `chords i ii|iii iv|v vi|vii i|vii vi|v iv|iii ii|i`, goes up the scale and back down, and a lowercase numeral is the chord the scale has on that degree. In D mixolydian those are D Em F#dim G Am Bm C. The flat seventh makes 7 a major C, a whole step under the root, and turns 5 into a minor Am: the rock sound. Change `mode mixolydian` in the with to `mode major` and the same chart turns into D major's chords.",
+    body: "One chart, `chords i ii|iii iv|v vi|vii i'|vii vi|v iv|iii ii|i`, goes up the scale and back down, and a lowercase numeral is the chord the scale has on that degree. In D mixolydian those are D Em F#dim G Am Bm C. The flat seventh makes 7 a major C, a whole step under the root, and turns 5 into a minor Am: the rock sound. Change `mode mixolydian` in the with to `mode major` and the same chart turns into D major's chords.",
     link: null,
     source: `pattern walk = {
-  piano: chords i ii|iii iv|v vi|vii i|vii vi|v iv|iii ii|i
+  piano: chords i ii|iii iv|v vi|vii i'|vii vi|v iv|iii ii|i
   hat: x-
   snare.cross: 2 4
   kick: 1 3
@@ -167,10 +167,10 @@ with key D, mode mixolydian, tempo 104 { play walk }`,
     section: "Harmony",
     title: "Dorian walk",
     byline: "D dorian: minor with a major sixth",
-    body: "One chart, `chords i ii|iii iv|v vi|vii i|vii vi|v iv|iii ii|i`, goes up the scale and back down, and a lowercase numeral is the chord the scale has on that degree. In D dorian those are Dm Em F G Am Bdim C. 6 is Bdim and 4 is a major G, where natural minor has Gm: a minor key with a major iv. Change `mode dorian` in the with to `mode major` and the same chart turns into D major's chords.",
+    body: "One chart, `chords i ii|iii iv|v vi|vii i'|vii vi|v iv|iii ii|i`, goes up the scale and back down, and a lowercase numeral is the chord the scale has on that degree. In D dorian those are Dm Em F G Am Bdim C. 6 is Bdim and 4 is a major G, where natural minor has Gm: a minor key with a major iv. Change `mode dorian` in the with to `mode major` and the same chart turns into D major's chords.",
     link: null,
     source: `pattern walk = {
-  piano: chords i ii|iii iv|v vi|vii i|vii vi|v iv|iii ii|i
+  piano: chords i ii|iii iv|v vi|vii i'|vii vi|v iv|iii ii|i
   hat: x-
   snare.cross: 2 4
   kick: 1 3
@@ -182,10 +182,10 @@ with key D, mode dorian, tempo 96 { play walk }`,
     section: "Harmony",
     title: "Minor walk",
     byline: "D minor: the natural minor scale",
-    body: "One chart, `chords i ii|iii iv|v vi|vii i|vii vi|v iv|iii ii|i`, goes up the scale and back down, and a lowercase numeral is the chord the scale has on that degree. In D minor those are Dm Edim F Gm Am Bb C. 3, 6 and 7 are the major chords F, Bb and C, and 5 is the minor Am: the chords of natural minor. Change `mode minor` in the with to `mode major` and the same chart turns into D major's chords.",
+    body: "One chart, `chords i ii|iii iv|v vi|vii i'|vii vi|v iv|iii ii|i`, goes up the scale and back down, and a lowercase numeral is the chord the scale has on that degree. In D minor those are Dm Edim F Gm Am Bb C. 3, 6 and 7 are the major chords F, Bb and C, and 5 is the minor Am: the chords of natural minor. Change `mode minor` in the with to `mode major` and the same chart turns into D major's chords.",
     link: null,
     source: `pattern walk = {
-  piano: chords i ii|iii iv|v vi|vii i|vii vi|v iv|iii ii|i
+  piano: chords i ii|iii iv|v vi|vii i'|vii vi|v iv|iii ii|i
   hat: x-
   snare.cross: 2 4
   kick: 1 3
@@ -197,10 +197,10 @@ with key D, mode minor, tempo 92 { play walk }`,
     section: "Harmony",
     title: "Phrygian walk",
     byline: "D phrygian: minor with a flat second",
-    body: "One chart, `chords i ii|iii iv|v vi|vii i|vii vi|v iv|iii ii|i`, goes up the scale and back down, and a lowercase numeral is the chord the scale has on that degree. In D phrygian those are Dm Eb F Gm Adim Bb Cm. 2 is a major Eb, a half step above the root, and 5 is the diminished Adim: the dark, Spanish sound. Change `mode phrygian` in the with to `mode major` and the same chart turns into D major's chords.",
+    body: "One chart, `chords i ii|iii iv|v vi|vii i'|vii vi|v iv|iii ii|i`, goes up the scale and back down, and a lowercase numeral is the chord the scale has on that degree. In D phrygian those are Dm Eb F Gm Adim Bb Cm. 2 is a major Eb, a half step above the root, and 5 is the diminished Adim: the dark, Spanish sound. Change `mode phrygian` in the with to `mode major` and the same chart turns into D major's chords.",
     link: null,
     source: `pattern walk = {
-  piano: chords i ii|iii iv|v vi|vii i|vii vi|v iv|iii ii|i
+  piano: chords i ii|iii iv|v vi|vii i'|vii vi|v iv|iii ii|i
   hat: x-
   snare.cross: 2 4
   kick: 1 3
@@ -212,10 +212,10 @@ with key D, mode phrygian, tempo 88 { play walk }`,
     section: "Harmony",
     title: "Locrian walk",
     byline: "D locrian: a diminished root",
-    body: "One chart, `chords i ii|iii iv|v vi|vii i|vii vi|v iv|iii ii|i`, goes up the scale and back down, and a lowercase numeral is the chord the scale has on that degree. In D locrian those are Ddim Eb Fm Gm Ab Bb Cm. 1 is Ddim, so the root's own chord never sounds at rest: locrian is the mode that won't settle. Change `mode locrian` in the with to `mode major` and the same chart turns into D major's chords.",
+    body: "One chart, `chords i ii|iii iv|v vi|vii i'|vii vi|v iv|iii ii|i`, goes up the scale and back down, and a lowercase numeral is the chord the scale has on that degree. In D locrian those are Ddim Eb Fm Gm Ab Bb Cm. 1 is Ddim, so the root's own chord never sounds at rest: locrian is the mode that won't settle. Change `mode locrian` in the with to `mode major` and the same chart turns into D major's chords.",
     link: null,
     source: `pattern walk = {
-  piano: chords i ii|iii iv|v vi|vii i|vii vi|v iv|iii ii|i
+  piano: chords i ii|iii iv|v vi|vii i'|vii vi|v iv|iii ii|i
   hat: x-
   snare.cross: 2 4
   kick: 1 3
@@ -226,11 +226,11 @@ with key D, mode locrian, tempo 80 { play walk }`,
   {
     section: "Harmony",
     title: "Fifth of a fifth",
-    byline: "of counts a note from another note: 5 of 1, 5 of (5 of 1)",
-    body: "`5 of 1` is the 5th of the key's root, and `5 of (5 of 1)` the 5th of that: one `of` a fifth up, and brackets chain them. This goes up the circle of fifths from the key's root, C G D A, and it follows the key: put `key F` in a with around the play and every note moves with it. Without the brackets, `5 of 5 of 1` is an error.",
+    byline: "of counts a note from another note: 5 of 5, 5 of (5 of 5)",
+    body: "`5` is the 5th of the key's root, `5 of 5` the 5th of that, and `5 of (5 of 5)` the 5th of that again: one `of` a fifth up, and brackets chain them. This goes up the circle of fifths from the key's root, C G D A, and it follows the key: put `key F` in a with around the play and every note moves with it. Without the brackets, `5 of 5 of 5` is an error.",
     link: null,
     source: `pattern fifths = {
-  piano: notes 1--- 5 of 1--- 5 of (5 of 1)--- 5 of (5 of (5 of 1))---
+  piano: notes 1--- 5--- 5 of 5--- 5 of (5 of 5)---
   hat: x-
   kick: 1 3
 }
@@ -254,6 +254,20 @@ with tempo 84 { play 4 bars pulls }`,
   },
   {
     section: "Harmony",
+    title: "Circle of fourths",
+    byline: "of counts a chord from another chord: iv of iv is Bb in C",
+    body: "`iv` is the chord on the key's 4th: in C, F. `iv of iv` counts that numeral from F instead of from the key, so it is the 4th of F, Bb, and `iv of (iv of iv)` is the 4th of Bb, Eb. This goes round the circle of fourths on chords, C F Bb Eb, and it follows the key and the mode: put `key G` in a with around the play and every chord moves with it.",
+    link: null,
+    source: `pattern fourths = {
+  piano: chords i|iv|iv of iv|iv of (iv of iv)
+  hat: x-
+  kick: 1 3
+}
+
+with tempo 76 { play 4 bars fourths }`,
+  },
+  {
+    section: "Harmony",
     title: "Fifth of a chord",
     byline: "of counts a chord from another chord: v of v is D in C",
     body: "`v` is the chord on the key's 5th: in C, G. `v of v` counts that numeral from G instead of from the key, so it is the 5th of G, D, and `v of (v of v)` is the 5th of D, A. This walks up the circle of fifths on chords, C G D A, and it follows the key and the mode. (`v of i` would be the 5th of the key's own root, which is just `v`.)",
@@ -272,7 +286,7 @@ with tempo 80 { play 4 bars fifths }`,
     byline: "with gives a block its own key, mode and tempo",
     body: "The same chart of chords, one per degree, played in three scopes. A `with` gives its block settings that last until its `}` and then put back what was set before, so the first scope is C major, the second C minor, and the third D dorian at a slower tempo. Nothing leaks out of a `with`, and nothing set at the top is lost.",
     link: null,
-    source: `chords chart = i ii|iii iv|v vi|vii i|vii vi|v iv|iii ii|i
+    source: `chords chart = i ii|iii iv|v vi|vii i'|vii vi|v iv|iii ii|i
 
 play (
   with key C { piano: chords chart }

@@ -16,7 +16,7 @@ description: Explain a music theory idea with small composer-nb cells the user c
 "What makes dorian different from natural minor?" The chords differ at the 4 and the 6. A lowercase numeral is the chord the scale has on that degree, so one chart plays each mode's own chords:
 
 ```composer-nb
-chords chart = i ii|iii iv|v vi|vii i
+chords chart = i ii|iii iv|v vi|vii i'
 
 with key D, mode minor { play piano: chords chart }
 with key D, mode dorian { play piano: chords chart }
