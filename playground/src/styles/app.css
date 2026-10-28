@@ -769,6 +769,50 @@ body {
 .cell:hover {
   border-color: var(--border-soft);
 }
+/* Between two cells, and above the first and below the last: a strip over the space between
+   them, where a + shows on hover, centred, to add a cell right there. It overlaps the cells'
+   margins, so the space stays as it was. */
+.cell-gap {
+  position: relative;
+  z-index: 2;
+  height: 12px;
+  margin: -6px 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.cell-gap-btn {
+  appearance: none;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  background: var(--paper);
+  color: var(--text-dim);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 120ms ease;
+}
+.cell-gap:hover .cell-gap-btn,
+.cell-gap-open .cell-gap-btn,
+.cell-gap-btn:focus-visible {
+  opacity: 1;
+}
+.cell-gap-btn:hover,
+.cell-gap-open .cell-gap-btn {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+.cell-gap-menu {
+  top: calc(50% + 14px);
+  left: 50%;
+  margin-top: 0;
+  transform: translateX(-50%);
+}
 .cell-selected {
   border-color: var(--border-soft);
 }
