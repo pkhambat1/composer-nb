@@ -28,58 +28,58 @@
       "default": "./dist/composer-nb.js"
     },
     "./engine": {
-      "types": "./lib/music-engine.d.ts",
       "composer-nb-source": "./js/music-engine.ts",
+      "types": "./lib/music-engine.d.ts",
       "default": "./lib/music-engine.js"
     },
     "./language": {
-      "types": "./lib/language.d.ts",
       "composer-nb-source": "./js/language.ts",
+      "types": "./lib/language.d.ts",
       "default": "./lib/language.js"
     },
     "./chord-lookup": {
-      "types": "./lib/chord-lookup.d.ts",
       "composer-nb-source": "./js/chord-lookup.ts",
+      "types": "./lib/chord-lookup.d.ts",
       "default": "./lib/chord-lookup.js"
     },
     "./editing": {
-      "types": "./lib/editing.d.ts",
       "composer-nb-source": "./js/editing.ts",
+      "types": "./lib/editing.d.ts",
       "default": "./lib/editing.js"
     },
     "./grid": {
-      "types": "./lib/grid.d.ts",
       "composer-nb-source": "./js/grid.ts",
+      "types": "./lib/grid.d.ts",
       "default": "./lib/grid.js"
     },
     "./sheet": {
-      "types": "./lib/sheet.d.ts",
       "composer-nb-source": "./js/sheet.ts",
+      "types": "./lib/sheet.d.ts",
       "default": "./lib/sheet.js"
     },
     "./midi": {
-      "types": "./lib/midi.d.ts",
       "composer-nb-source": "./js/midi.ts",
+      "types": "./lib/midi.d.ts",
       "default": "./lib/midi.js"
     },
     "./highlight": {
-      "types": "./lib/highlight.d.ts",
       "composer-nb-source": "./js/highlight.ts",
+      "types": "./lib/highlight.d.ts",
       "default": "./lib/highlight.js"
     },
     "./chords": {
-      "types": "./lib/chords.d.ts",
       "composer-nb-source": "./js/chords.ts",
+      "types": "./lib/chords.d.ts",
       "default": "./lib/chords.js"
     },
     "./grooves": {
-      "types": "./lib/grooves.d.ts",
       "composer-nb-source": "./js/grooves.ts",
+      "types": "./lib/grooves.d.ts",
       "default": "./lib/grooves.js"
     },
     "./links": {
-      "types": "./lib/links.d.ts",
       "composer-nb-source": "./js/links.ts",
+      "types": "./lib/links.d.ts",
       "default": "./lib/links.js"
     }
   },

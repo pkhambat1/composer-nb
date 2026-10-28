@@ -1,5 +1,5 @@
-// Generated from the docs' reference pages by scripts/reference.js: run npm run build -w mcp. Don't edit.
-export const REFERENCE = [
+// Generated from the docs' reference pages by scripts/reference.ts: run npm run reference -w mcp. Don't edit.
+export const REFERENCE: { id: string; title: string; description: string; text: string }[] = [
   {
     "id": "overview",
     "title": "Overview",

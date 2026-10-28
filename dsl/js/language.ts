@@ -63,7 +63,7 @@
 
 export { parseCell, type GridBlock, type Output, type Parsed } from "./cell.ts"
 export { keyName } from "./settings.ts"
-export { initialState } from "./state.ts"
+export { initialState, type State } from "./state.ts"
 export { TPQ, barQuarters, lastCount, timeLabel } from "./time.ts"
 export {
   DRUMS,

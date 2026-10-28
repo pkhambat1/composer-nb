@@ -18,10 +18,11 @@ export default [
       "**/node_modules",
       "**/dist",
       "dsl/lib",
+      "mcp/lib",
       ".git",
       ".claude",
       "dsl/python",
-      "mcp/reference.js",
+      "mcp/src/reference.ts",
     ],
   },
   {
@@ -70,7 +71,7 @@ export default [
     },
   },
   {
-    files: ["playground/src/**/*.{js,jsx}", "dsl/js/**/*.js"],
+    files: ["playground/src/**/*.{js,jsx}"],
     languageOptions: {
       ecmaVersion: 2022,
       sourceType: "module",
@@ -102,14 +103,15 @@ export default [
     },
   },
   {
-    // The engine's TypeScript modules. tsc checks their types (npm run typecheck); this
-    // checks the rest, as for the JavaScript beside them.
-    files: ["dsl/js/**/*.ts"],
+    // The TypeScript: the engine, which runs in a browser, and the MCP server and the Vercel
+    // functions, which run in Node. tsc checks their types (npm run typecheck); this checks
+    // the rest, as for the JavaScript beside them.
+    files: ["dsl/js/**/*.ts", "mcp/src/**/*.ts", "mcp/scripts/**/*.ts", "api/**/*.ts"],
     languageOptions: {
       parser: tseslint.parser,
       ecmaVersion: 2022,
       sourceType: "module",
-      globals: globals.browser,
+      globals: { ...globals.browser, ...globals.node },
     },
     plugins: { "@typescript-eslint": tseslint.plugin, "@stylistic": stylistic },
     rules: {

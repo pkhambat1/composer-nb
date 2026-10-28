@@ -4,8 +4,8 @@
    sets the site its links point at (the hosted one by default). */
 import { createServer as createHttpServer } from "node:http"
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
-import { handleMcp } from "./http.js"
-import { createServer } from "./server.js"
+import { handleMcp } from "./http.ts"
+import { createServer } from "./server.ts"
 
 const site = process.env.COMPOSER_NB_SITE || undefined
 const args = process.argv.slice(2)
@@ -14,7 +14,7 @@ const at = args.indexOf("--http")
 if (at >= 0) {
   const port = Number(args[at + 1]) || 3333
   createHttpServer((req, res) => {
-    if (!req.url.startsWith("/mcp")) {
+    if (!req.url?.startsWith("/mcp")) {
       res.writeHead(404).end("composer-nb-mcp serves MCP at /mcp")
       return
     }
