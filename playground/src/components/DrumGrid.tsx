@@ -41,13 +41,16 @@ function DrumBlock({ block, index }: { block: GridBlock; index: number }) {
                   if (e.double) cls += " dg-dbl"
                 } else if (e?.held) cls += " dg-held"
                 return (
-                  <div key={col} className={cls} data-k={`${index}-${bar}-${col}`}>
+                  <div key={col} className={cls}>
                     {e?.text}
                   </div>
                 )
               })}
             </React.Fragment>
           ))}
+          {/* The playhead: one outline around the step playing now, over every row. It sits
+              in the bar's grid, and DrumGrid puts it in the step's column */}
+          <div className="dg-now-col" data-bar={`${index}-${bar}`} style={{ gridRow: `1 / ${rows.length + 1}` }} />
           <div className="dg-lane dg-bar-num">{block.bars > 1 ? `bar ${bar + 1}` : ""}</div>
           {counts.map((c, col) => (
             <div
@@ -75,7 +78,8 @@ function DrumGrid({ blocks, getTime, playing }: Follows) {
     let lastKey: string | null | undefined
     const paint = () => {
       const t = getTime()
-      let key: string | null = null
+      // The step playing now: its block, its bar and its column
+      let now: { bi: number; bar: number; col: number } | null = null
       // A block that plays more than once is drawn once; the playhead goes round it each time.
       const playingAt = (b: GridBlock) => b.plays.find((at) => t >= at && t < at + b.durSec)
       const bi = blocks.findIndex((b) => playingAt(b) !== undefined)
@@ -84,11 +88,21 @@ function DrumGrid({ blocks, getTime, playing }: Follows) {
         const tick = (t - playingAt(b)!) / b.secPerTick
         const bar = Math.floor(tick / b.barTicks)
         const col = Math.floor((tick - bar * b.barTicks) / (TPQ / b.res))
-        key = `${bi}-${bar}-${col}`
+        now = { bi, bar, col }
       }
+      const key = now && `${now.bi}-${now.bar}-${now.col}`
       if (key !== lastKey) {
         root.querySelectorAll(".dg-now").forEach((el) => el.classList.remove("dg-now"))
-        if (key) root.querySelectorAll(`[data-k="${key}"]`).forEach((el) => el.classList.add("dg-now"))
+        if (now) {
+          // The step's count, and the outline, moved to the step's column (the first is the
+          // names). Positioned out of the flow, it needs its end line too, or it runs to the edge.
+          root.querySelector(`[data-k="${key}"]`)?.classList.add("dg-now")
+          const outline = root.querySelector<HTMLElement>(`[data-bar="${now.bi}-${now.bar}"]`)
+          if (outline) {
+            outline.style.gridColumn = `${now.col + 2} / span 1`
+            outline.classList.add("dg-now")
+          }
+        }
         lastKey = key
       }
       if (playing) raf = requestAnimationFrame(paint)

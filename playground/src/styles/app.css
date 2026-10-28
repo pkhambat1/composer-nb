@@ -1775,6 +1775,7 @@ body {
   }
 }
 .dg-bar {
+  position: relative;
   display: grid;
   gap: 2px;
   align-items: center;
@@ -1855,9 +1856,18 @@ body {
     var(--accent) 58% 100%
   );
 }
-.dg-cell.dg-now {
-  outline: 1.5px solid var(--text);
-  outline-offset: -1px;
+/* The playhead: one outline around the column of the step playing now, every row of it.
+   Placed in the bar's grid, over the step's column, it takes that column's size. */
+.dg-now-col {
+  display: none;
+  position: absolute;
+  inset: -1px;
+  border: 1.5px solid var(--text);
+  border-radius: 4px;
+  pointer-events: none;
+}
+.dg-now-col.dg-now {
+  display: block;
 }
 .dg-count {
   font-family: var(--font-mono);
