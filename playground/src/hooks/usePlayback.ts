@@ -14,27 +14,28 @@
    PLAYING/PAUSED ──[stop]──> IDLE
 */
 import { useState, useRef, useCallback } from "react"
+import type { Player } from "../shared/types.ts"
 
-export function usePlayback(armAudio) {
+export function usePlayback(armAudio: () => Promise<void>) {
   // State: split single playingId into two values
-  const [focusedCellId, setFocusedCellId] = useState(null)
+  const [focusedCellId, setFocusedCellId] = useState<string | null>(null)
   const [isPlaying, setIsPlaying] = useState(false)
 
   // Refs
-  const playersRef = useRef({})
+  const playersRef = useRef<Record<string, Player>>({})
 
   // Register a player API for a cell
-  const registerPlayer = useCallback((cellId, playerApi) => {
+  const registerPlayer = useCallback((cellId: string, playerApi: Player) => {
     playersRef.current[cellId] = playerApi
   }, [])
 
   // Unregister a player API
-  const unregisterPlayer = useCallback((cellId) => {
+  const unregisterPlayer = useCallback((cellId: string) => {
     delete playersRef.current[cellId]
   }, [])
 
   // Play a specific cell (stops previous if different)
-  const playCell = useCallback(async (id) => {
+  const playCell = useCallback(async (id: string) => {
     await armAudio()
 
     // Stop different cell if playing
@@ -53,7 +54,7 @@ export function usePlayback(armAudio) {
   }, [])
 
   // Smart toggle: play/pause/switch
-  const togglePlayback = useCallback(async (id) => {
+  const togglePlayback = useCallback(async (id: string) => {
     await armAudio()
 
     if (focusedCellId === id) {
@@ -70,7 +71,7 @@ export function usePlayback(armAudio) {
   }, [armAudio, focusedCellId])
 
   // Stop a specific cell and clear focus if it matches
-  const stopCell = useCallback((id) => {
+  const stopCell = useCallback((id: string) => {
     const player = playersRef.current[id]
     if (player) player.stop()
 
@@ -93,7 +94,7 @@ export function usePlayback(armAudio) {
   }, [focusedCellId])
 
   // Called when WaveSurfer reaches end
-  const onPlaybackFinished = useCallback((id) => {
+  const onPlaybackFinished = useCallback((id: string) => {
     setFocusedCellId((cur) => {
       if (cur === id) {
         setIsPlaying(false)

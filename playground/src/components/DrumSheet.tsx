@@ -1,10 +1,27 @@
-// components/DrumSheet.jsx — A play's output as sheet music, a system per block, with a playhead
+// components/DrumSheet.tsx — A play's output as sheet music, a system per block, with a playhead
 import React from "react"
-import abcjs from "abcjs"
+import abcjs, { type NoteTimingEvent, type TuneObject } from "abcjs"
+import type { GridBlock } from "composer-nb/language"
 import { sheetAbc } from "composer-nb/sheet"
+import type { Follows } from "./DrumGrid.tsx"
 
-function SheetBlock({ block, index, counts, setTimings }) {
-  const mountRef = React.useRef(null)
+// Keeps when each note of a block sounds, or forgets them (null)
+type SetTimings = (index: number, timings: NoteTimingEvent[] | null) => void
+// abcjs gives a tune its timings once it's timed
+type TimedTune = TuneObject & { noteTimings: NoteTimingEvent[] }
+
+function SheetBlock({
+  block,
+  index,
+  counts,
+  setTimings,
+}: {
+  block: GridBlock
+  index: number
+  counts: boolean
+  setTimings: SetTimings
+}) {
+  const mountRef = React.useRef<HTMLDivElement>(null)
   const { abc, tablature } = React.useMemo(() => sheetAbc(block, { counts }), [block, counts])
 
   React.useLayoutEffect(() => {
@@ -25,7 +42,7 @@ function SheetBlock({ block, index, counts, setTimings }) {
     })
     // When each note sounds, at the tempo in the ABC, so the playhead can find it
     tune.setTiming(0, 0)
-    setTimings(index, tune.noteTimings.filter((t) => t.type === "event"))
+    setTimings(index, (tune as TimedTune).noteTimings.filter((t) => t.type === "event"))
     return () => setTimings(index, null)
   }, [abc, tablature, index, setTimings])
 
@@ -39,10 +56,10 @@ function SheetBlock({ block, index, counts, setTimings }) {
   )
 }
 
-function DrumSheet({ blocks, counts, getTime, playing }) {
-  const rootRef = React.useRef(null)
-  const timingsRef = React.useRef(new Map())
-  const setTimings = React.useCallback((index, timings) => {
+function DrumSheet({ blocks, counts, getTime, playing }: Follows & { counts: boolean }) {
+  const rootRef = React.useRef<HTMLDivElement>(null)
+  const timingsRef = React.useRef(new Map<number, NoteTimingEvent[]>())
+  const setTimings = React.useCallback<SetTimings>((index, timings) => {
     if (timings) timingsRef.current.set(index, timings)
     else timingsRef.current.delete(index)
   }, [])
@@ -52,14 +69,14 @@ function DrumSheet({ blocks, counts, getTime, playing }) {
     const root = rootRef.current
     if (!root) return
     let raf = 0
-    let last = null
+    let last: NoteTimingEvent | null = null
     const paint = () => {
       const t = getTime()
-      let now = null
-      const playingAt = (b) => b.plays.find((at) => t >= at && t < at + b.durSec)
+      let now: NoteTimingEvent | null = null
+      const playingAt = (b: GridBlock) => b.plays.find((at) => t >= at && t < at + b.durSec)
       const bi = blocks.findIndex((b) => playingAt(b) !== undefined)
       if (bi >= 0 && (playing || t > 0)) {
-        const ms = (t - playingAt(blocks[bi])) * 1000
+        const ms = (t - playingAt(blocks[bi])!) * 1000
         const timings = timingsRef.current.get(bi) || []
         for (const ev of timings) if (ev.milliseconds <= ms + 1) now = ev
       }
@@ -74,7 +91,7 @@ function DrumSheet({ blocks, counts, getTime, playing }) {
     return () => cancelAnimationFrame(raf)
   }, [blocks, getTime, playing])
 
-  const drawn = (b) => b.drumEvents.length || b.noteEvents.length || b.chordEvents?.length
+  const drawn = (b: GridBlock) => b.drumEvents.length || b.noteEvents.length || b.chordEvents?.length
   return (
     <div className="drum-sheet" ref={rootRef}>
       {blocks.map((b, i) =>

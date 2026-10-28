@@ -1,0 +1,23 @@
+{
+  // The playground: React in TypeScript. Vite bundles it without checking types, so this
+  // checks them (npm run typecheck). It reads the library's source through the
+  // composer-nb-source condition, as Vite does, so nothing needs building first.
+  "compilerOptions": {
+    "target": "es2022",
+    "lib": ["es2023", "dom", "dom.iterable"],
+    // Vite's own imports (a stylesheet ?inline), and Node for scripts/
+    "types": ["vite/client", "node"],
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "customConditions": ["composer-nb-source"],
+    "jsx": "react-jsx",
+    "strict": true,
+    // Only types on top of JavaScript, as in the library
+    "erasableSyntaxOnly": true,
+    "verbatimModuleSyntax": true,
+    "allowImportingTsExtensions": true,
+    "skipLibCheck": true,
+    "noEmit": true
+  },
+  "include": ["src", "scripts"]
+}

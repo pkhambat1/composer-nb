@@ -2,22 +2,23 @@
    and saving the open one as it changes. A notebook is a title and its cells' sources;
    an account would sync the same thing. */
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
-import { cellId } from "./useCellManager.js"
-import { fingerprint, refreshStarters } from "../shared/starters.js"
+import { cellId } from "./useCellManager.ts"
+import { fingerprint, refreshStarters } from "../shared/starters.ts"
+import type { Notebook, NotebookCell, SavedCell, Store } from "../shared/types.ts"
 
 const KEY = "composer-nb:notebooks"
 const FILE_KIND = "composer-nb notebook"
 
 const notebookId = () => "n" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6)
-const bare = (cells) => cells.map((c) => ({ type: c.type, source: c.source }))
-const sameCells = (a, b) =>
+const bare = (cells: SavedCell[]): SavedCell[] => cells.map((c) => ({ type: c.type, source: c.source }))
+const sameCells = (a: SavedCell[], b: SavedCell[]) =>
   a.length === b.length && a.every((c, i) => c.type === b[i].type && c.source === b[i].source)
 
 // What's stored: { current, list: [{ id, title, cells, updated }] }, or null when there's
 // nothing yet or storage isn't there.
-export function loadStore() {
+export function loadStore(): Store | null {
   try {
-    const store = JSON.parse(localStorage.getItem(KEY))
+    const store = JSON.parse(localStorage.getItem(KEY) || "null")
     if (store && Array.isArray(store.list)) return store
   } catch {
     return null
@@ -25,7 +26,7 @@ export function loadStore() {
   return null
 }
 
-function saveStore(store) {
+function saveStore(store: Store): void {
   try {
     localStorage.setItem(KEY, JSON.stringify(store))
   } catch {
@@ -35,7 +36,7 @@ function saveStore(store) {
 
 // A notebook's title: its first heading when it has one, else what its first music cell
 // names and its time, or its key: "groove · 6 over 8", "cadence · Am".
-export function titleOf(cells, fallback = "Untitled") {
+export function titleOf(cells: SavedCell[], fallback = "Untitled"): string {
   for (const c of cells) {
     if (c.type !== "text") continue
     const m = /^#+\s+(.+)$/m.exec(c.source)
@@ -53,7 +54,7 @@ export function titleOf(cells, fallback = "Untitled") {
 }
 
 // Cells for the page: each with its own id and no output yet.
-export function withIds(cells) {
+export function withIds(cells: SavedCell[]): NotebookCell[] {
   return cells.map((c) => ({
     id: cellId(),
     type: c.type,
@@ -67,7 +68,7 @@ export function withIds(cells) {
 // Notebooks kept from shared links, before sharing was taken out, went by the name a link
 // gave them when nothing in them named it. They go, and if one was open, the first notebook left opens.
 const SHARED_TITLES = ["Shared notebook", "Shared cell"]
-export function dropShared(store) {
+export function dropShared(store: Store): Store {
   const list = store.list.filter((n) => !SHARED_TITLES.includes(n.title))
   if (list.length === store.list.length) return store
   const current = list.some((n) => n.id === store.current) ? store.current : (list[0]?.id ?? null)
@@ -79,7 +80,7 @@ export function dropShared(store) {
 // What the page opens with: the notebook that was open, else the starters as the first
 // notebook. Returns { store, cells }. A starter notebook nobody has changed gets the current
 // starters first.
-export function openingNotebook(starters) {
+export function openingNotebook(starters: SavedCell[]): { store: Store; cells: SavedCell[] } {
   let store = dropShared(loadStore() || { current: null, list: [] })
   const refreshed = refreshStarters(store, starters)
   if (refreshed !== store) {
@@ -88,7 +89,7 @@ export function openingNotebook(starters) {
   }
   const current = store.list.find((n) => n.id === store.current)
   if (current) return { store, cells: current.cells }
-  const first = {
+  const first: Notebook = {
     id: notebookId(),
     title: "Welcome",
     cells: bare(starters),
@@ -100,12 +101,22 @@ export function openingNotebook(starters) {
   return { store, cells: first.cells }
 }
 
-export function useNotebooks({ store: initial, cells, setCells, setSelectedId }) {
+export function useNotebooks({
+  store: initial,
+  cells,
+  setCells,
+  setSelectedId,
+}: {
+  store: Store
+  cells: NotebookCell[]
+  setCells: (cells: NotebookCell[]) => void
+  setSelectedId: (id: string | null) => void
+}) {
   const [store, setStore] = useState(initial)
   const storeRef = useRef(store)
   storeRef.current = store
 
-  const put = useCallback((next) => {
+  const put = useCallback((next: Store) => {
     saveStore(next)
     setStore(next)
   }, [])
@@ -131,7 +142,7 @@ export function useNotebooks({ store: initial, cells, setCells, setSelectedId })
   }, [cells, currentId])
 
   const open = useCallback(
-    (id) => {
+    (id: string) => {
       const s = storeRef.current
       const nb = s.list.find((n) => n.id === id)
       if (!nb) return
@@ -145,8 +156,8 @@ export function useNotebooks({ store: initial, cells, setCells, setSelectedId })
 
   // `fields` are kept with the notebook: `starters` marks one made from the starters
   const add = useCallback(
-    (title, cells, fields = {}) => {
-      const nb = { id: notebookId(), title, cells: bare(cells), ...fields, updated: Date.now() }
+    (title: string, cells: SavedCell[], fields: Partial<Notebook> = {}) => {
+      const nb: Notebook = { id: notebookId(), title, cells: bare(cells), ...fields, updated: Date.now() }
       put({ current: nb.id, list: [nb, ...storeRef.current.list] })
       const fresh = withIds(nb.cells)
       setCells(fresh)
@@ -162,7 +173,7 @@ export function useNotebooks({ store: initial, cells, setCells, setSelectedId })
   )
 
   const duplicate = useCallback(
-    (id) => {
+    (id: string) => {
       const nb = storeRef.current.list.find((n) => n.id === id)
       if (nb) add(`${nb.title} (copy)`, nb.cells)
     },
@@ -170,7 +181,7 @@ export function useNotebooks({ store: initial, cells, setCells, setSelectedId })
   )
 
   const rename = useCallback(
-    (id, title) => {
+    (id: string, title: string) => {
       const s = storeRef.current
       put({ ...s, list: s.list.map((n) => (n.id === id ? { ...n, title: title.trim() || "Untitled" } : n)) })
     },
@@ -178,7 +189,7 @@ export function useNotebooks({ store: initial, cells, setCells, setSelectedId })
   )
 
   const remove = useCallback(
-    (id) => {
+    (id: string) => {
       const s = storeRef.current
       const list = s.list.filter((n) => n.id !== id)
       if (s.current !== id) return put({ ...s, list })
@@ -197,7 +208,7 @@ export function useNotebooks({ store: initial, cells, setCells, setSelectedId })
   )
 
   // A notebook as a file, and back
-  const exportFile = useCallback((id) => {
+  const exportFile = useCallback((id: string) => {
     const nb = storeRef.current.list.find((n) => n.id === id)
     if (!nb) return
     const json = JSON.stringify({ kind: FILE_KIND, title: nb.title, cells: nb.cells }, null, 2)
@@ -214,7 +225,7 @@ export function useNotebooks({ store: initial, cells, setCells, setSelectedId })
   }, [])
 
   const importFile = useCallback(
-    async (file) => {
+    async (file: File) => {
       const text = await file.text()
       let data
       try {
@@ -222,14 +233,15 @@ export function useNotebooks({ store: initial, cells, setCells, setSelectedId })
       } catch {
         throw new Error("That file isn't a notebook: it doesn't hold JSON")
       }
-      const cells = Array.isArray(data?.cells) ? data.cells : null
-      if (!cells || !cells.every((c) => typeof c.source === "string")) {
+      const found: { type?: unknown; source?: unknown }[] | null = Array.isArray(data?.cells) ? data.cells : null
+      if (!found || !found.every((c) => typeof c.source === "string")) {
         throw new Error("That file isn't a notebook: no cells in it")
       }
-      add(
-        typeof data.title === "string" && data.title.trim() ? data.title.trim() : titleOf(cells),
-        cells.map((c) => ({ type: c.type === "text" ? "text" : "music", source: c.source })),
+      // A cell that isn't text is music
+      const cells = found.map(
+        (c): SavedCell => ({ type: c.type === "text" ? "text" : "music", source: c.source as string }),
       )
+      add(typeof data.title === "string" && data.title.trim() ? data.title.trim() : titleOf(cells), cells)
     },
     [add],
   )

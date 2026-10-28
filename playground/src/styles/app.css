@@ -1882,7 +1882,7 @@ body {
   color: var(--busy-bar);
 }
 
-/* Embed mode: one cell in a frame, with nothing around it (see shared/embed.js) */
+/* Embed mode: one cell in a frame, with nothing around it (see shared/embed.ts) */
 .embed-root .cells {
   max-width: none;
 }

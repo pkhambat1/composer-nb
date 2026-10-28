@@ -1,17 +1,18 @@
-// components/Toolbar.jsx — Top bar controls
+// components/Toolbar.tsx — Top bar controls
 import React from "react"
+import type { KernelStatus } from "../shared/types.ts"
 
 // The + menu: a music cell or a text cell, at the end of the notebook
-function AddCellDropdown({ onAddCode, onAddText }) {
+function AddCellDropdown({ onAddCode, onAddText }: { onAddCode: () => void; onAddText: () => void }) {
   const [open, setOpen] = React.useState(false)
-  const ref = React.useRef(null)
+  const ref = React.useRef<HTMLDivElement>(null)
 
   React.useEffect(() => {
     if (!open) return
-    const handler = (e) => {
-      if (ref.current && !ref.current.contains(e.target)) setOpen(false)
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
     }
-    const onKey = (e) => e.key === "Escape" && setOpen(false)
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false)
     document.addEventListener("mousedown", handler)
     document.addEventListener("keydown", onKey)
     return () => {
@@ -54,13 +55,24 @@ export default function Toolbar({
   onRunAll,
   onStop,
   kernelStatus,
+}: {
+  onAddCode: () => void
+  onAddText: () => void
+  onRunAll: () => void
+  onStop: () => void
+  kernelStatus: KernelStatus
 }) {
-  const Icon = (children, viewBox = "0 0 16 16") => (
+  const Icon = (children: React.ReactNode, viewBox = "0 0 16 16") => (
     <svg width="14" height="14" viewBox={viewBox} fill="currentColor">
       {children}
     </svg>
   )
-  const btn = (title, onClick, children, opts = {}) => (
+  const btn = (
+    title: string,
+    onClick: () => void,
+    children: React.ReactNode,
+    opts: { primary?: boolean; danger?: boolean } = {},
+  ) => (
     <button
       className={
         "tb-btn" + (opts.primary ? " tb-btn-primary" : "") + (opts.danger ? " tb-btn-danger" : "")

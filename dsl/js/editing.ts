@@ -22,13 +22,15 @@ function replaceRange(
     requestAnimationFrame(() => ta.setSelectionRange(from + text.length, from + text.length))
 }
 
+// What editKey reads of a keydown: the browser's event, or React's
+type Key = Pick<
+  KeyboardEvent,
+  "key" | "metaKey" | "ctrlKey" | "altKey" | "shiftKey" | "preventDefault"
+>
+
 // Handles a keydown in `ta`. `onChange(value)` is called with the new text when the
 // browser can't make the edit itself.
-export function editKey(
-  e: KeyboardEvent,
-  ta: HTMLTextAreaElement,
-  onChange: (value: string) => void,
-): void {
+export function editKey(e: Key, ta: HTMLTextAreaElement, onChange: (value: string) => void): void {
   const plain = !e.metaKey && !e.ctrlKey && !e.altKey
   if (e.key === "Tab" && plain) {
     e.preventDefault()

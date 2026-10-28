@@ -10,7 +10,9 @@
    - Arrow keys / J/K: navigate cells (command mode)
 */
 import { useEffect, useRef } from "react"
-import { APP_CONSTANTS } from "../shared/constants.js"
+import { APP_CONSTANTS } from "../shared/constants.ts"
+import type { CellType, NotebookCell } from "../shared/types.ts"
+import type { Place } from "./useCellManager.ts"
 
 export function useKeyboard({
   selectedId,
@@ -24,17 +26,28 @@ export function useKeyboard({
   setSelectedId,
   setEditingId,
   single = false, // one cell that can't be added to or deleted: the embedded cell
+}: {
+  selectedId: string | null
+  editingId: string | null
+  cells: NotebookCell[]
+  findIndex: (id: string) => number
+  runCell: (id: string) => void
+  insertCell: (afterId: string | null, where?: Place, type?: CellType) => void
+  deleteCell: (id: string) => void
+  undoDelete: () => void
+  setSelectedId: (id: string | null) => void
+  setEditingId: (id: string | null) => void
+  single?: boolean
 }) {
   // Double-key press tracking for DD delete
   const dPressedRef = useRef(false)
-  const dTimerRef = useRef(null)
+  const dTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
-    const onKey = (e) => {
+    const onKey = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement
       const inEditable =
-        e.target.tagName === "TEXTAREA" ||
-        e.target.tagName === "INPUT" ||
-        e.target.isContentEditable
+        target.tagName === "TEXTAREA" || target.tagName === "INPUT" || target.isContentEditable
 
       // Shift+Enter: run cell and move to next (or insert new at end)
       if (e.key === "Enter" && e.shiftKey) {
@@ -50,7 +63,7 @@ export function useKeyboard({
           } else {
             insertCell(selectedId, "below", "music")
           }
-          if (e.target.blur) e.target.blur()
+          target.blur?.()
         }
         return
       }
@@ -77,7 +90,7 @@ export function useKeyboard({
         if (e.key === "Escape") {
           e.preventDefault()
           setEditingId(null)
-          if (e.target.blur) e.target.blur()
+          target.blur?.()
         }
         return
       }

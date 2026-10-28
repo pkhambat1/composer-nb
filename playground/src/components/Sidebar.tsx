@@ -1,9 +1,13 @@
-// components/Sidebar.jsx — The left side: a notebook opened from a link, the notebooks on this
+// components/Sidebar.tsx — The left side: a notebook opened from a link, the notebooks on this
 // device, the reference panels, and the theme popover
 import React from "react"
-import { APP_CONSTANTS } from "../shared/constants.js"
+import { APP_CONSTANTS } from "../shared/constants.ts"
+import type { Notebook, Theme } from "../shared/types.ts"
 
-const THEMES = [
+// What the main panel shows: the open notebook, or the chord library
+export type SideTab = "notebook" | "chords"
+
+const THEMES: { id: Theme; label: string }[] = [
   { id: "light", label: "Light" },
   { id: "dark", label: "Dark" },
 ]
@@ -16,19 +20,28 @@ export default function Sidebar({
   onTabChange,
   theme,
   onSetTheme,
+}: {
+  notebooks: { list: Notebook[]; current: Notebook | null }
+  onOpenNotebook: (id: string) => void
+  onNewNotebook: () => void
+  sideTab: SideTab
+  onTabChange: (tab: SideTab) => void
+  theme: Theme
+  onSetTheme: (theme: Theme) => void
 }) {
   const [themeOpen, setThemeOpen] = React.useState(false)
-  const popRef = React.useRef(null)
-  const btnRef = React.useRef(null)
+  const popRef = React.useRef<HTMLDivElement>(null)
+  const btnRef = React.useRef<HTMLButtonElement>(null)
   const { list, current } = notebooks
   const onNotebook = sideTab === "notebook"
 
   React.useEffect(() => {
     if (!themeOpen) return
-    const handler = (e) => {
+    const handler = (e: MouseEvent) => {
+      const target = e.target as Node
       if (
-        popRef.current && !popRef.current.contains(e.target) &&
-        btnRef.current && !btnRef.current.contains(e.target)
+        popRef.current && !popRef.current.contains(target) &&
+        btnRef.current && !btnRef.current.contains(target)
       ) {
         setThemeOpen(false)
       }

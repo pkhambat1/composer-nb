@@ -1,7 +1,13 @@
 // Shared application constants
 import { grooveCells } from "composer-nb/grooves"
+import type { SavedCell, Settings } from "./types.ts"
 
-export const APP_CONSTANTS = {
+export const APP_CONSTANTS: {
+  DOCS_URL: string
+  DOUBLE_KEY_TIMEOUT: number
+  THEME_DEFAULTS: Settings
+  STARTER_CELLS: SavedCell[]
+} = {
   // The docs site, built by Mintlify from the docs/ folder
   DOCS_URL: "https://pkhambat.mintlify.site",
 

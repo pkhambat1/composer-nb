@@ -1,8 +1,8 @@
-// components/MarkdownCell.jsx — Markdown rendering (marked -> React, no innerHTML)
-import React from "react"
-import { marked } from "marked"
+// components/MarkdownCell.tsx — Markdown rendering (marked -> React, no innerHTML)
+import type React from "react"
+import { marked, type Token, type Tokens } from "marked"
 
-function renderMdInline(tokens, keyBase) {
+function renderMdInline(tokens: Token[] | undefined, keyBase: string): React.ReactNode {
   if (!tokens) return null
   return tokens.map((tok, i) => {
     const key = keyBase + "-" + i
@@ -31,12 +31,12 @@ function renderMdInline(tokens, keyBase) {
   })
 }
 
-function renderMdBlock(tokens) {
+function renderMdBlock(tokens: Token[]): React.ReactNode[] {
   return tokens.map((tok, i) => {
     const key = "md-" + i
     switch (tok.type) {
       case "heading": {
-        const Tag = "h" + tok.depth
+        const Tag = `h${tok.depth}` as "h1" | "h2" | "h3" | "h4" | "h5" | "h6"
         return (
           <Tag key={key}>
             {tok.tokens ? renderMdInline(tok.tokens, key) : tok.text}
@@ -58,13 +58,13 @@ function renderMdBlock(tokens) {
       case "list":
         return tok.ordered ? (
           <ol key={key} start={tok.start || 1}>
-            {tok.items.map((item, j) => (
+            {tok.items.map((item: Tokens.ListItem, j: number) => (
               <li key={key + "-li-" + j}>{renderMdBlock(item.tokens || [])}</li>
             ))}
           </ol>
         ) : (
           <ul key={key}>
-            {tok.items.map((item, j) => (
+            {tok.items.map((item: Tokens.ListItem, j: number) => (
               <li key={key + "-li-" + j}>{renderMdBlock(item.tokens || [])}</li>
             ))}
           </ul>
@@ -83,7 +83,7 @@ function renderMdBlock(tokens) {
   })
 }
 
-export default function MarkdownContent({ source }) {
+export default function MarkdownContent({ source }: { source: string }) {
   if (!source.trim()) {
     return <p className="md-empty">Empty text cell — double-click to edit.</p>
   }

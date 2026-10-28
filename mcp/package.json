@@ -56,7 +56,7 @@
     "reference": "node scripts/reference.ts",
     "build": "npm run reference && npm run build:lib",
     "build:lib": "tsc -p tsconfig.build.json",
-    "typecheck": "tsc -p .",
+    "typecheck": "tsc -p . && tsc -p app",
     "build:app": "vite build --config app/vite.config.js",
     "dev:app": "vite --config app/vite.config.js --port 5184",
     "prepack": "npm run build",

@@ -1,24 +1,37 @@
-// components/NotebookTitle.jsx — The open notebook's name, which opens its menu: rename it,
+// components/NotebookTitle.tsx — The open notebook's name, which opens its menu: rename it,
 // duplicate it, move it as a file, delete it
 import React from "react"
+
+// What the menu does to the open notebook
+export type NotebookMenu = {
+  rename: (title: string) => void
+  duplicate: () => void
+  exportFile: () => void
+  importFile: (file: File) => Promise<void>
+  remove: () => void
+}
 
 export default function NotebookTitle({
   title,
   subtitle,
   menu, // null when no notebook is open
+}: {
+  title: string
+  subtitle: string
+  menu: NotebookMenu | null
 }) {
   const [open, setOpen] = React.useState(false)
-  const [renaming, setRenaming] = React.useState(null) // the name as it's typed
-  const [problem, setProblem] = React.useState(null)
-  const wrapRef = React.useRef(null)
-  const fileRef = React.useRef(null)
+  const [renaming, setRenaming] = React.useState<string | null>(null) // the name as it's typed
+  const [problem, setProblem] = React.useState<string | null>(null)
+  const wrapRef = React.useRef<HTMLDivElement>(null)
+  const fileRef = React.useRef<HTMLInputElement>(null)
 
   React.useEffect(() => {
     if (!open) return
-    const close = (e) => {
-      if (wrapRef.current && !wrapRef.current.contains(e.target)) setOpen(false)
+    const close = (e: MouseEvent) => {
+      if (wrapRef.current && !wrapRef.current.contains(e.target as Node)) setOpen(false)
     }
-    const onKey = (e) => e.key === "Escape" && setOpen(false)
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false)
     document.addEventListener("mousedown", close)
     document.addEventListener("keydown", onKey)
     return () => {
@@ -35,21 +48,21 @@ export default function NotebookTitle({
   }, [problem])
 
   const finishRename = () => {
-    if (renaming != null) menu.rename(renaming)
+    if (renaming != null) menu?.rename(renaming)
     setRenaming(null)
   }
-  const pick = async (e) => {
+  const pick = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     e.target.value = ""
     if (!file) return
     try {
-      await menu.importFile(file)
+      await menu?.importFile(file)
       setProblem(null)
     } catch (err) {
-      setProblem(err.message)
+      setProblem((err as Error).message)
     }
   }
-  const item = (label, fn, cls = "") => (
+  const item = (label: string, fn: () => void, cls = "") => (
     <button
       type="button"
       className={"cell-menu-item " + cls}

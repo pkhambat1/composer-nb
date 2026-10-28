@@ -1,7 +1,7 @@
 /* Notebooks kept from shared links, before sharing was taken out, are dropped when the page
    opens: they went by "Shared notebook" or "Shared cell". */
 import { describe, it, expect } from "vitest"
-import { dropShared } from "../src/hooks/useNotebooks.js"
+import { dropShared } from "../src/hooks/useNotebooks.ts"
 
 const nb = (id, title) => ({ id, title, cells: [], updated: 1 })
 

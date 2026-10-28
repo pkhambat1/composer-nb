@@ -1,14 +1,34 @@
-// components/MusicOutput.jsx — Music cell output: waveform, piano roll, chord chips, errors
+// components/MusicOutput.tsx — Music cell output: waveform, piano roll, chord chips, errors
 import React from "react"
 import WaveSurfer from "wavesurfer.js"
 import * as MusicEngine from "composer-nb/engine"
-import DrumGrid from "./DrumGrid.jsx"
+import type { GridBlock, Parsed } from "composer-nb/language"
+import type { DrumView, NotebookCell, Player, Theme } from "../shared/types.ts"
+import DrumGrid from "./DrumGrid.tsx"
+
+// What a cell's output plays and draws with: which cell is playing, what plays and stops
+// it, and how the page draws the hits
+export type PlayerProps = {
+  focusedCellId: string | null
+  isPlaying: boolean
+  onTogglePlayback: (id: string) => void
+  onPlaybackFinished: (id: string) => void
+  registerPlayer: (id: string, player: Player) => void
+  unregisterPlayer: (id: string) => void
+  armAudio: () => Promise<void>
+  theme: Theme
+  accent: string
+  drumView: DrumView
+  onSetDrumView: (view: DrumView) => void
+  sheetCounts: boolean
+  onSetSheetCounts: (counts: boolean) => void
+}
 
 // Loaded when first shown: the chord shapes for the diagrams, abcjs for the sheet music
-const ChordDiagram = React.lazy(() => import("./ChordDiagram.jsx"))
-const DrumSheet = React.lazy(() => import("./DrumSheet.jsx"))
+const ChordDiagram = React.lazy(() => import("./ChordDiagram.tsx"))
+const DrumSheet = React.lazy(() => import("./DrumSheet.tsx"))
 
-function themeColors(theme, accent) {
+function themeColors(theme: string, accent: string) {
   if (theme === "retro") {
     return {
       primary: "#ffb000",
@@ -58,12 +78,17 @@ function CellDetails({
   onSetSheetCounts,
   getTime = noTime,
   playing = false,
+}: Pick<PlayerProps, "accent" | "drumView" | "onSetDrumView" | "sheetCounts" | "onSetSheetCounts"> & {
+  parsed: Parsed
+  getTime?: () => number
+  playing?: boolean
 }) {
-  const chords = parsed.events.filter((e) => e.chord && !e.repeat)
-  const drawn = (b) => b.drumEvents.length > 0 || b.noteEvents.length > 0 || b.chordEvents?.length > 0
+  const chords = parsed.chords.filter((e) => !e.repeat)
+  const drawn = (b: GridBlock) =>
+    b.drumEvents.length > 0 || b.noteEvents.length > 0 || b.chordEvents.length > 0
   const sheet = drumView === "sheet"
   // Print: only this cell's sheet goes to the printer (see @media print)
-  const sheetRef = React.useRef(null)
+  const sheetRef = React.useRef<HTMLDivElement>(null)
   const printSheet = () => {
     const el = sheetRef.current
     if (!el) return
@@ -97,7 +122,7 @@ function CellDetails({
           <div className="out-section-label out-section-row">
             <span>{sheet ? "Sheet music" : parsed.notes.length ? "Steps" : "Drums"}</span>
             <span className="view-toggle" role="group" aria-label="How the hits are drawn">
-              {["bricks", "sheet"].map((v) => (
+              {(["bricks", "sheet"] as const).map((v) => (
                 <button
                   key={v}
                   type="button"
@@ -187,7 +212,7 @@ function CellDetails({
   )
 }
 
-function formatTime(sec) {
+function formatTime(sec: number): string {
   if (!sec || sec < 0) return "0:00"
   const m = Math.floor(sec / 60)
   const s = Math.floor(sec % 60)
@@ -209,15 +234,15 @@ export default function MusicOutput({
   onSetDrumView,
   sheetCounts,
   onSetSheetCounts,
-}) {
-  const waveMountRef = React.useRef(null)
-  const wsRef = React.useRef(null)
-  const urlRef = React.useRef(null)
+}: PlayerProps & { cell: NotebookCell }) {
+  const waveMountRef = React.useRef<HTMLDivElement>(null)
+  const wsRef = React.useRef<WaveSurfer | null>(null)
+  const urlRef = React.useRef<string | null>(null)
   const onPlaybackFinishedRef = React.useRef(onPlaybackFinished)
   const [ready, setReady] = React.useState(false)
   const [timeTick, setTimeTick] = React.useState(0)
   // Where playback was when the cell was run again, so the new audio carries on from there
-  const resumeRef = React.useRef(null)
+  const resumeRef = React.useRef<number | null>(null)
 
   React.useEffect(() => {
     onPlaybackFinishedRef.current = onPlaybackFinished
@@ -244,8 +269,8 @@ export default function MusicOutput({
     setReady(false)
 
     // Extract pre-decoded channel data to avoid expensive decodeAudioData for large files
-    const ab = buffer && buffer.get ? buffer.get() : buffer
-    const channelData = []
+    const ab = buffer.get()!
+    const channelData: Float32Array[] = []
     for (let ch = 0; ch < ab.numberOfChannels; ch++) {
       channelData.push(ab.getChannelData(ch))
     }

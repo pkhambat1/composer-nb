@@ -5,21 +5,22 @@
 import React from "react"
 import * as Tone from "tone"
 import * as MusicEngine from "composer-nb/engine"
-import { APP_CONSTANTS } from "./shared/constants.js"
-import { EMBED, embedCell, embedTheme, listenForTheme, reportHeight } from "./shared/embed.js"
-import { useCellManager } from "./hooks/useCellManager.js"
-import { openingNotebook, useNotebooks } from "./hooks/useNotebooks.js"
-import NotebookTitle from "./components/NotebookTitle.jsx"
-import { usePlayback } from "./hooks/usePlayback.js"
-import { useKeyboard } from "./hooks/useKeyboard.js"
-import { useTheme } from "./components/theme-panel.jsx"
-import Sidebar from "./components/Sidebar.jsx"
-import Toolbar from "./components/Toolbar.jsx"
-import Cell from "./components/Cell.jsx"
-import StatusBar from "./components/StatusBar.jsx"
+import { APP_CONSTANTS } from "./shared/constants.ts"
+import { EMBED, embedCell, embedTheme, listenForTheme, reportHeight } from "./shared/embed.ts"
+import type { Host, KernelStatus } from "./shared/types.ts"
+import { useCellManager } from "./hooks/useCellManager.ts"
+import { openingNotebook, useNotebooks } from "./hooks/useNotebooks.ts"
+import NotebookTitle, { type NotebookMenu } from "./components/NotebookTitle.tsx"
+import { usePlayback } from "./hooks/usePlayback.ts"
+import { useKeyboard } from "./hooks/useKeyboard.ts"
+import { useTheme } from "./components/theme-panel.tsx"
+import Sidebar, { type SideTab } from "./components/Sidebar.tsx"
+import Toolbar from "./components/Toolbar.tsx"
+import Cell from "./components/Cell.tsx"
+import StatusBar from "./components/StatusBar.tsx"
 
 // The chord library brings every chord shape with it, so it loads when first opened
-const ChordBrowserPanel = React.lazy(() => import("./components/ChordBrowser.jsx"))
+const ChordBrowserPanel = React.lazy(() => import("./components/ChordBrowser.tsx"))
 
 // ============================================================================
 // App
@@ -29,26 +30,26 @@ const ChordBrowserPanel = React.lazy(() => import("./components/ChordBrowser.jsx
 // inside Claude: { cells: [{ type, source }], after, theme, onRun }. Then, as in a frame,
 // there are only the cells: `after` is the source they continue from, `theme` follows the
 // page's, the music cells render as they open, and `onRun` hears every cell as it runs.
-export default function App({ host = null } = {}) {
+export default function App({ host = null }: { host?: Host | null }) {
   const single = EMBED || !!host // only cells, with nothing around them
   const hostRef = React.useRef(host)
   hostRef.current = host
-  const [sideTab, setSideTab] = React.useState("notebook")
+  const [sideTab, setSideTab] = React.useState<SideTab>("notebook")
   const [chordsOpened, setChordsOpened] = React.useState(false)
-  const openTab = React.useCallback((tab) => {
+  const openTab = React.useCallback((tab: SideTab) => {
     if (tab === "chords") setChordsOpened(true)
     setSideTab(tab)
   }, [])
-  const [kernelStatus, setKernelStatus] = React.useState("idle")
-  const [activeCellId, setActiveCellId] = React.useState(null)
+  const [kernelStatus, setKernelStatus] = React.useState<KernelStatus>("idle")
+  const [activeCellId, setActiveCellId] = React.useState<string | null>(null)
   const [runCounter, setRunCounter] = React.useState(0)
-  const abortRef = React.useRef(null)
+  const abortRef = React.useRef<symbol | null>(null)
   // The notebook the page opens with: the one that was open, or the starters as the first
   // one. In a frame there's just the one cell, and in a host page its cells, kept nowhere.
   const [opening] = React.useState(() =>
     single ? null : openingNotebook(APP_CONSTANTS.STARTER_CELLS),
   )
-  const cm = useCellManager(host ? host.cells : EMBED ? [embedCell()] : opening.cells)
+  const cm = useCellManager(host ? host.cells : EMBED ? [embedCell()] : opening!.cells)
   const {
     cells,
     selectedId,
@@ -75,7 +76,7 @@ export default function App({ host = null } = {}) {
   // device
   const [settings, setSetting] = useTheme(
     single
-      ? { ...APP_CONSTANTS.THEME_DEFAULTS, theme: host ? host.theme : embedTheme() }
+      ? { ...APP_CONSTANTS.THEME_DEFAULTS, theme: host ? (host.theme ?? "light") : embedTheme() }
       : APP_CONSTANTS.THEME_DEFAULTS,
     { remember: !single },
   )
@@ -87,11 +88,11 @@ export default function App({ host = null } = {}) {
   }, [theme])
 
   // In a frame: follow the page's theme, and tell the page how tall the cell is.
-  const embedRef = React.useRef(null)
+  const embedRef = React.useRef<HTMLDivElement>(null)
   React.useEffect(() => {
     if (!EMBED) return
     const stopTheme = listenForTheme((t) => setSetting("theme", t))
-    const stopHeight = reportHeight(embedRef.current)
+    const stopHeight = reportHeight(embedRef.current!)
     return () => {
       stopTheme()
       stopHeight()
@@ -111,11 +112,11 @@ export default function App({ host = null } = {}) {
   const playback = usePlayback(armAudio)
 
   // Play all: every music cell renders, then they play one after another.
-  const playAllRef = React.useRef(null) // { ids, rendered, pending }
+  const playAllRef = React.useRef<{ ids: string[]; rendered: Set<string>; pending: number } | null>(null)
 
   // Renders a cell, and plays it when asked (the cell's own button and Shift+Enter).
   const runCell = React.useCallback(
-    async (id, play = false) => {
+    async (id: string, play = false) => {
       const c = cells.find((x) => x.id === id)
       if (!c) return
       if (c.type === "text") {
@@ -183,7 +184,7 @@ export default function App({ host = null } = {}) {
         playback.stopCell(id)
         updateCell(id, {
           status: "idle",
-          output: { kind: "error", error: String((e && e.message) || e) },
+          output: { kind: "error", error: String((e as Error)?.message || e) },
         })
       } finally {
         if (abortRef.current === runId) {
@@ -204,9 +205,9 @@ export default function App({ host = null } = {}) {
   )
 
   // --- Run queue: array queue with sequential processing ------------------
-  const queueRef = React.useRef([])
+  const queueRef = React.useRef<{ id: string; play: boolean }[]>([])
   const processingRef = React.useRef(false)
-  const skipRef = React.useRef(null) // resolve fn to immediately unblock queue
+  const skipRef = React.useRef<(() => void) | null>(null) // resolve fn to immediately unblock queue
   const runCellRef = React.useRef(runCell)
   React.useEffect(() => { runCellRef.current = runCell }, [runCell])
 
@@ -214,8 +215,8 @@ export default function App({ host = null } = {}) {
     if (processingRef.current) return
     processingRef.current = true
     while (queueRef.current.length > 0) {
-      const { id, play } = queueRef.current.shift()
-      await new Promise((resolve) => {
+      const { id, play } = queueRef.current.shift()!
+      await new Promise<void>((resolve) => {
         skipRef.current = resolve
         runCellRef.current(id, play).then(resolve, resolve)
       })
@@ -225,7 +226,7 @@ export default function App({ host = null } = {}) {
     setKernelStatus("idle")
   }, [])
 
-  const queuedRunCell = React.useCallback((id, play = false) => {
+  const queuedRunCell = React.useCallback((id: string, play = false) => {
     updateCell(id, { status: "waiting", output: null, runCount: null })
     setKernelStatus("busy")
     queueRef.current.push({ id, play })
@@ -233,13 +234,13 @@ export default function App({ host = null } = {}) {
   }, [updateCell, processQueue])
 
   // The cell's own Play button and Shift+Enter: render, then play
-  const playCellNow = React.useCallback((id) => {
+  const playCellNow = React.useCallback((id: string) => {
     playAllRef.current = null
     queuedRunCell(id, true)
   }, [queuedRunCell])
 
   const interruptCell = React.useCallback(
-    (id) => {
+    (id: string) => {
       const c = cells.find((x) => x.id === id)
       if (!c) return
       if (c.status === "waiting") {
@@ -282,13 +283,13 @@ export default function App({ host = null } = {}) {
   const queuedRunAll = React.useCallback(() => {
     playback.stopAll()
     const ids = cells.filter((c) => c.type === "music").map((c) => c.id)
-    playAllRef.current = { ids, rendered: new Set(), pending: ids.length }
+    playAllRef.current = { ids, rendered: new Set<string>(), pending: ids.length }
     for (const id of ids) queuedRunCell(id)
   }, [cells, playback, queuedRunCell])
 
   // When a cell finishes in a play-all, the next rendered one plays
   const onPlaybackFinished = React.useCallback(
-    (id) => {
+    (id: string) => {
       playback.onPlaybackFinished(id)
       const pa = playAllRef.current
       if (!pa) return
@@ -301,7 +302,7 @@ export default function App({ host = null } = {}) {
   )
   // Pressing play on a cell by hand ends a play-all
   const togglePlayback = React.useCallback(
-    (id) => {
+    (id: string) => {
       playAllRef.current = null
       return playback.togglePlayback(id)
     },
@@ -326,7 +327,7 @@ export default function App({ host = null } = {}) {
     stopAll()
   }, [playback, stopAll])
   const openNotebook = React.useCallback(
-    (id) => {
+    (id: string) => {
       if (notebooks.current?.id === id) return openTab("notebook")
       quiet()
       notebooks.open(id)
@@ -341,7 +342,7 @@ export default function App({ host = null } = {}) {
   }, [notebooks, quiet, openTab])
   // The title's menu, for the open notebook
   const current = notebooks.current
-  const notebookMenu = React.useMemo(
+  const notebookMenu = React.useMemo<NotebookMenu | null>(
     () =>
       current
         ? {
@@ -422,7 +423,7 @@ export default function App({ host = null } = {}) {
     </div>
   )
 
-  // Cells and nothing else: see shared/embed.js
+  // Cells and nothing else: see shared/embed.ts
   if (single) {
     return (
       <div className="embed-root" ref={embedRef}>
@@ -475,7 +476,7 @@ export default function App({ host = null } = {}) {
           <main
             className="nb-main"
             onClick={(e) => {
-              if (e.target === e.currentTarget || e.target.classList.contains("cells"))
+              if (e.target === e.currentTarget || (e.target as HTMLElement).classList.contains("cells"))
                 setSelectedId(null)
             }}
           >

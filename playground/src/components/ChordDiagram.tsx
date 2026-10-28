@@ -1,15 +1,27 @@
-// components/ChordDiagram.jsx — Chord diagrams: guitar fingering grid & piano keyboard
+// components/ChordDiagram.tsx — Chord diagrams: guitar fingering grid & piano keyboard
 import React from "react"
 import * as ChordLookup from "composer-nb/chord-lookup"
+import type { Position } from "composer-nb/chord-lookup"
 
-function getChordIntervals(chord) {
-  const set = new Set()
+// What a diagram draws: a chord's name, its root and notes, and for a guitar its shape when
+// it's known already (the chord library has them all)
+export type DiagramChord = {
+  label: string
+  rootPc: number
+  notesMidi: number[]
+  noteNames: string[]
+  bassMidi?: number
+  position?: Position | null
+}
+
+function getChordIntervals(chord: DiagramChord): Set<number> {
+  const set = new Set<number>()
   ;(chord.notesMidi || []).forEach((m) => set.add((((m - chord.rootPc) % 12) + 12) % 12))
   return set
 }
 
-function detectChordQuality(intervals) {
-  const has = (n) => intervals.has(n)
+function detectChordQuality(intervals: Set<number>): string {
+  const has = (n: number) => intervals.has(n)
   if (!has(3) && !has(4)) {
     if (has(5)) return "sus4"
     if (has(2)) return "sus2"
@@ -44,7 +56,8 @@ function detectChordQuality(intervals) {
   return "maj"
 }
 
-const GUITAR_SHAPES = {
+// A shape to move up the neck: its frets from the low E (-1 muted), and the root it has there
+const GUITAR_SHAPES: Record<string, { frets: number[]; baseRootPc: number }> = {
   maj: { frets: [0, 2, 2, 1, 0, 0], baseRootPc: 4 },
   min: { frets: [0, 2, 2, 0, 0, 0], baseRootPc: 4 },
   7: { frets: [0, 2, 0, 1, 0, 0], baseRootPc: 4 },
@@ -61,8 +74,8 @@ const GUITAR_SHAPES = {
   dim7: { frets: [-1, -1, 0, 1, 0, 1], baseRootPc: 2 },
 }
 
-export const GuitarDiagram = React.memo(function GuitarDiagram({ chord }) {
-  const [dbPosition, setDbPosition] = React.useState(chord?.position ?? null)
+export const GuitarDiagram = React.memo(function GuitarDiagram({ chord }: { chord: DiagramChord }) {
+  const [dbPosition, setDbPosition] = React.useState<Position | null>(chord?.position ?? null)
 
   React.useEffect(() => {
     if (chord?.position) {
@@ -82,9 +95,9 @@ export const GuitarDiagram = React.memo(function GuitarDiagram({ chord }) {
     }
   }, [chord?.label, chord?.position])
 
-  let fretted
-  let fingers = null
-  let barres = []
+  let fretted: number[]
+  let fingers: number[] | null = null
+  let barres: number[] = []
   let lowFret = 1
   let showNutLabel = false
   let relativeSlots = false
@@ -127,20 +140,20 @@ export const GuitarDiagram = React.memo(function GuitarDiagram({ chord }) {
     FRETS = 5
   const stringStep = (W - PAD_L - PAD_R) / (STRINGS - 1)
   const fretStep = (H - PAD_T - PAD_B) / FRETS
-  const xOf = (si) => PAD_L + si * stringStep
-  const fretSlot = (f) => (relativeSlots ? f : f - lowFret + 1)
-  const yOfFret = (f) => PAD_T + (fretSlot(f) - 0.5) * fretStep
-  const inWindow = (f) => f > 0 && fretSlot(f) >= 1 && fretSlot(f) <= FRETS
+  const xOf = (si: number) => PAD_L + si * stringStep
+  const fretSlot = (f: number) => (relativeSlots ? f : f - lowFret + 1)
+  const yOfFret = (f: number) => PAD_T + (fretSlot(f) - 0.5) * fretStep
+  const inWindow = (f: number) => f > 0 && fretSlot(f) >= 1 && fretSlot(f) <= FRETS
 
-  const stringsOnBarre = (barreFret) => {
-    const indices = []
+  const stringsOnBarre = (barreFret: number) => {
+    const indices: number[] = []
     for (let si = 0; si < fretted.length; si++) {
       if (fretted[si] === barreFret) indices.push(si)
     }
     return indices
   }
 
-  const barredStringSet = new Set()
+  const barredStringSet = new Set<number>()
   for (const bf of barres) {
     const onBarre = stringsOnBarre(bf)
     if (onBarre.length >= 2) onBarre.forEach((si) => barredStringSet.add(si))
@@ -154,11 +167,13 @@ export const GuitarDiagram = React.memo(function GuitarDiagram({ chord }) {
       const x1 = xOf(onBarre[0]) - stringStep * 0.38
       const x2 = xOf(onBarre[onBarre.length - 1]) + stringStep * 0.38
       const barH = Math.min(fretStep * 0.6, 15)
-      const barDigits = onBarre.map((si) => fingers?.[si]).filter((n) => n > 0)
+      const barDigits = onBarre
+        .map((si) => fingers?.[si])
+        .filter((n): n is number => n != null && n > 0)
       const barFinger = barDigits.length ? Math.min(...barDigits) : 1
       return { key: "barre-" + bi, y, x1, x2, barH, barFinger }
     })
-    .filter(Boolean)
+    .filter((b) => b !== null)
 
   return (
     <svg
@@ -210,7 +225,7 @@ export const GuitarDiagram = React.memo(function GuitarDiagram({ chord }) {
       )}
       {fretted.map((f, si) => {
         const x = xOf(si)
-        const finger = fingers?.[si]
+        const finger = fingers?.[si] ?? 0
         if (barredStringSet.has(si)) return null
         if (f <= 0 || !inWindow(f)) return null
         const belowBarre = barres.some((bf) => f < bf)
@@ -262,7 +277,7 @@ export const GuitarDiagram = React.memo(function GuitarDiagram({ chord }) {
       ))}
       {fretted.map((f, si) => {
         const x = xOf(si)
-        const finger = fingers?.[si]
+        const finger = fingers?.[si] ?? 0
         if (barredStringSet.has(si)) return null
         const belowBarre = f > 0 && barres.some((bf) => f < bf)
         if (belowBarre) return null
@@ -331,7 +346,7 @@ export const GuitarDiagram = React.memo(function GuitarDiagram({ chord }) {
   )
 })
 
-function PianoDiagram({ chord }) {
+function PianoDiagram({ chord }: { chord: DiagramChord }) {
   const notes = [...new Set(chord.notesMidi || [])]
   if (chord.bassMidi != null) notes.push(chord.bassMidi)
   if (!notes.length) return null
@@ -351,14 +366,14 @@ function PianoDiagram({ chord }) {
   const dotR = 3.2
 
   const whiteOrder = [0, 2, 4, 5, 7, 9, 11]
-  const blackAfterWhite = { 1: 0, 3: 1, 6: 3, 8: 4, 10: 5 }
+  const blackAfterWhite: Record<number, number> = { 1: 0, 3: 1, 6: 3, 8: 4, 10: 5 }
 
   const noteSet = new Set(notes)
 
-  const whiteKeyRects = []
-  const blackKeyRects = []
-  const whiteDots = []
-  const blackDots = []
+  const whiteKeyRects: React.ReactElement[] = []
+  const blackKeyRects: React.ReactElement[] = []
+  const whiteDots: React.ReactElement[] = []
+  const blackDots: React.ReactElement[] = []
 
   for (let o = 0; o < octs; o++) {
     const baseM = startC + o * 12
@@ -435,7 +450,14 @@ function PianoDiagram({ chord }) {
   )
 }
 
-const ChordDiagram = React.memo(function ChordDiagram({ chord, instrument }) {
+const ChordDiagram = React.memo(function ChordDiagram({
+  chord,
+  instrument,
+}: {
+  chord: DiagramChord
+  instrument: string
+  accent?: string
+}) {
   if (instrument.split(".")[0] === "guitar") return <GuitarDiagram chord={chord} />
   return <PianoDiagram chord={chord} />
 })
