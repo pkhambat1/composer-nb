@@ -5,8 +5,8 @@ vi.mock("tone", () => ({}))
 const { parseSource } = await import("../../js/music-engine.js")
 const { LANES, MODES, initialState, parseCell } = await import("../../js/language.ts")
 const { highlightMusic } = await import("../../js/highlight.js")
-const { gridRows } = await import("../../js/grid.js")
-const { prepareKit } = await import("../../js/drums.js")
+const { gridRows } = await import("../../js/grid.ts")
+const { prepareKit } = await import("../../js/drums.ts")
 
 const WHAT_HAPPENS_NOW = `// what happens now: crash once, the groove repeating under it
 set time 7 over 8
@@ -2368,7 +2368,7 @@ describe("a numeral's octave", () => {
 
 describe("the grooves library", () => {
   it("holds cells that parse, in three sections", async () => {
-    const { GROOVES, SECTIONS, searchGrooves } = await import("../../js/grooves.js")
+    const { GROOVES, SECTIONS, searchGrooves } = await import("../../js/grooves.ts")
     expect(SECTIONS).toEqual(["Transcriptions", "Harmony", "Rudiments"])
     for (const g of GROOVES) {
       const p = parseCell(g.source, initialState())

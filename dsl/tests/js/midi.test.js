@@ -3,7 +3,7 @@ import { describe, it, expect, vi } from "vitest"
 vi.mock("tone", () => ({}))
 
 const { parseSource } = await import("../../js/music-engine.js")
-const { midiFile } = await import("../../js/midi.js")
+const { midiFile } = await import("../../js/midi.ts")
 
 const file = (src) => {
   const p = parseSource(src)

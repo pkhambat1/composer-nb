@@ -2,7 +2,7 @@
    the type it says (steps, sticking, notes, chords) and defined in its scope, or, for a
    pattern, kept as lines to play where it's played. A value that isn't the type it says,
    or a missing type, is said here. */
-import { buildChord, isRoman } from "./chords.js"
+import { buildChord, isRoman } from "./chords.ts"
 import { blockBeside } from "./eval.ts"
 import { EVERY_RE, PLACE_RE, TRACK_RE, TYPED_RE, DEF_RE, type DeclLine } from "./lines.ts"
 import { closest, NAME_LIKE, nameProblem, Scope } from "./resolve.ts"

@@ -3,7 +3,7 @@ import { describe, it, expect, vi } from "vitest"
 vi.mock("tone", () => ({}))
 
 async function loadLib() {
-  const lib = await import("../../js/chord-lookup.js")
+  const lib = await import("../../js/chord-lookup.ts")
   await lib.load()
   return lib
 }

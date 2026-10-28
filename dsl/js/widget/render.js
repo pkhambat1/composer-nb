@@ -9,7 +9,7 @@ import {
   bufferToWav,
 } from "../music-engine.js"
 import { TPQ } from "../language.ts"
-import { gridCounts, gridRows } from "../grid.js"
+import { gridCounts, gridRows } from "../grid.ts"
 import { sheetAbc } from "../sheet.js"
 import abcjs from "abcjs"
 

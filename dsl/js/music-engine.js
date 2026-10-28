@@ -1,13 +1,13 @@
 /* Music engine: parses music cells (see language.js) and renders them to audio with
    Tone.js, plus waveform drawing and WAV export. */
 import * as Tone from "tone"
-import * as ChordLookup from "./chord-lookup.js"
-import * as Drums from "./drums.js"
-import { midiToName, spellLike } from "./chords.js"
+import * as ChordLookup from "./chord-lookup.ts"
+import * as Drums from "./drums.ts"
+import { midiToName, spellLike } from "./chords.ts"
 import { TPQ, initialState, parseCell } from "./language.ts"
-import { midiFile } from "./midi.js"
+import { midiFile } from "./midi.ts"
 
-export { midiToName, parseKey, buildChord } from "./chords.js"
+export { midiToName, parseKey, buildChord } from "./chords.ts"
 export { initialState } from "./language.ts"
 
 // Parses one music cell. `inherited` is the state (settings and words) left by the cells

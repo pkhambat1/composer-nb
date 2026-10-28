@@ -2,7 +2,7 @@
    applied to a state: time, tempo, swing, key, mode, transpose, octave, kit, and an
    instrument's sound. A set applies from its line to the end of the cell; a with's settings
    apply to its block. */
-import { parseKey } from "./chords.js"
+import { parseKey } from "./chords.ts"
 import { message } from "./diagnostics.ts"
 import { closest } from "./resolve.ts"
 import { cloneState, type State } from "./state.ts"

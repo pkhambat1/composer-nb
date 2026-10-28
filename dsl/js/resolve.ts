@@ -5,7 +5,7 @@
    it refers to doesn't change when a later cell defines a name again: names bind where
    they're written. (Settings are different: a pattern plays with the settings where it's
    played.) */
-import { buildChord, parseKey } from "./chords.js"
+import { buildChord, parseKey } from "./chords.ts"
 import { misplaced } from "./check.ts"
 import { message } from "./diagnostics.ts"
 import type { Section, State, Word } from "./state.ts"

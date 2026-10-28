@@ -4,9 +4,9 @@
   // JavaScript the npm package's subpaths point at, with a .d.ts for each module.
   "compilerOptions": {
     "target": "es2022",
-    "lib": ["es2022", "dom"],
-    "module": "nodenext",
-    "moduleResolution": "nodenext",
+    "lib": ["es2023", "dom"],
+    "module": "esnext",
+    "moduleResolution": "bundler",
     "strict": true,
     // Only types on top of JavaScript: no enum or namespace, so Node can run the source as is
     "erasableSyntaxOnly": true,

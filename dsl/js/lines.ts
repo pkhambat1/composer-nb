@@ -2,7 +2,7 @@
    a declaration (steps pair = ^-x-), an instrument's line (kick: x--x), what plays in a bar
    (bar 2 { ... }) or at its own pace (every 3 steps { ... }), or patterns to play (intro
    verse). An instrument's line is then read as what it plays. */
-import { buildChord, parseKey } from "./chords.js"
+import { buildChord, parseKey } from "./chords.ts"
 import { classifyDecl, patternHint, readDecl } from "./declare.ts"
 import { blockBeside } from "./eval.ts"
 import { readSequence, type Item } from "./sequence.ts"
