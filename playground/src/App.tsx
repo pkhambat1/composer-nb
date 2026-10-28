@@ -8,7 +8,7 @@ import * as MusicEngine from "composer-nb/engine"
 import { APP_CONSTANTS } from "./shared/constants.ts"
 import { EMBED, embedCell, embedTheme, listenForTheme, reportHeight } from "./shared/embed.ts"
 import type { Host, KernelStatus } from "./shared/types.ts"
-import { useCellManager } from "./hooks/useCellManager.ts"
+import { useCellManager, type Place } from "./hooks/useCellManager.ts"
 import { openingNotebook, useNotebooks } from "./hooks/useNotebooks.ts"
 import NotebookTitle, { type NotebookMenu } from "./components/NotebookTitle.tsx"
 import { usePlayback } from "./hooks/usePlayback.ts"
@@ -17,6 +17,7 @@ import { useTheme } from "./components/theme-panel.tsx"
 import Sidebar, { type SideTab } from "./components/Sidebar.tsx"
 import Toolbar from "./components/Toolbar.tsx"
 import Cell from "./components/Cell.tsx"
+import CellGap from "./components/CellGap.tsx"
 import StatusBar from "./components/StatusBar.tsx"
 
 // The chord library brings every chord shape with it, so it loads when first opened
@@ -382,43 +383,51 @@ export default function App({ host = null }: { host?: Host | null }) {
     single,
   })
 
+  // In a notebook, a + shows between two cells on hover (and above the first and below the
+  // last), to add a cell right there
+  const gap = (key: string, at: string | null, where: Place) =>
+    single ? null : <CellGap key={key} onAdd={(type) => insertCell(at, where, type)} />
+
   const cellList = (
     <div className="cells">
+      {gap("gap-top", cells[0]?.id ?? null, "above")}
       {cells.map((c, i) => (
-        <Cell
-          key={c.id}
-          cell={c}
-          index={i}
-          selected={c.id === selectedId}
-          editing={c.id === editingId}
-          isActive={c.id === activeCellId}
-          theme={theme}
-          accent={accent}
-          drumView={settings.drumView || "bricks"}
-          onSetDrumView={(v) => setSetting("drumView", v)}
-          sheetCounts={!!settings.sheetCounts}
-          onSetSheetCounts={(v) => setSetting("sheetCounts", v)}
-          focusedCellId={playback.focusedCellId}
-          isPlaying={playback.isPlaying}
-          onSelect={() => setSelectedId(c.id)}
-          onEnterEdit={() => setEditingId(c.id)}
-          onLeaveEdit={() => setEditingId((cur) => (cur === c.id ? null : cur))}
-          onChange={(v) => updateCell(c.id, { source: v })}
-          onRun={() => playCellNow(c.id)}
-          onInterrupt={() => interruptCell(c.id)}
-          onDelete={() => deleteCell(c.id)}
-          onMoveUp={() => moveCell(c.id, -1)}
-          onMoveDown={() => moveCell(c.id, 1)}
-          onDuplicate={() => duplicateCell(c.id)}
-          first={i === 0}
-          last={i === cells.length - 1}
-          onSetPreview={(v) => updateCell(c.id, { previewMode: v })}
-          onTogglePlayback={togglePlayback}
-          onPlaybackFinished={onPlaybackFinished}
-          registerPlayer={playback.registerPlayer}
-          unregisterPlayer={playback.unregisterPlayer}
-          armAudio={armAudio}
-        />
+        <React.Fragment key={c.id}>
+          <Cell
+            cell={c}
+            index={i}
+            selected={c.id === selectedId}
+            editing={c.id === editingId}
+            isActive={c.id === activeCellId}
+            theme={theme}
+            accent={accent}
+            drumView={settings.drumView || "bricks"}
+            onSetDrumView={(v) => setSetting("drumView", v)}
+            sheetCounts={!!settings.sheetCounts}
+            onSetSheetCounts={(v) => setSetting("sheetCounts", v)}
+            focusedCellId={playback.focusedCellId}
+            isPlaying={playback.isPlaying}
+            onSelect={() => setSelectedId(c.id)}
+            onEnterEdit={() => setEditingId(c.id)}
+            onLeaveEdit={() => setEditingId((cur) => (cur === c.id ? null : cur))}
+            onChange={(v) => updateCell(c.id, { source: v })}
+            onRun={() => playCellNow(c.id)}
+            onInterrupt={() => interruptCell(c.id)}
+            onDelete={() => deleteCell(c.id)}
+            onMoveUp={() => moveCell(c.id, -1)}
+            onMoveDown={() => moveCell(c.id, 1)}
+            onDuplicate={() => duplicateCell(c.id)}
+            first={i === 0}
+            last={i === cells.length - 1}
+            onSetPreview={(v) => updateCell(c.id, { previewMode: v })}
+            onTogglePlayback={togglePlayback}
+            onPlaybackFinished={onPlaybackFinished}
+            registerPlayer={playback.registerPlayer}
+            unregisterPlayer={playback.unregisterPlayer}
+            armAudio={armAudio}
+          />
+          {gap("gap-" + c.id, c.id, "below")}
+        </React.Fragment>
       ))}
     </div>
   )
