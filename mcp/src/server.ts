@@ -31,7 +31,7 @@ const fence = (code: string) => "```composer-nb\n" + code + "\n```"
 const SOURCE = z.string().describe("The cell: composer-nb source, a line per statement")
 // What parse says of an empty cell, which is one for the user to write in.
 const EMPTY =
-  "An empty cell, for the user to write in. Where the client renders MCP Apps, it is drawn under your reply: the user types the code there and plays it with Play or Shift+Enter, and what they play comes back with their next message. Don't fill it in unless they ask."
+  "An empty cell, for the user to write in. Where the client renders MCP Apps, it is drawn under your reply: the user types the code there and runs it with Run or Shift+Enter, and what they play comes back with their next message. Don't fill it in unless they ask."
 
 const AFTER = z
   .string()
@@ -149,7 +149,7 @@ export function createServer({ site = SITE }: Options = {}): McpServer {
     {
       title: "Grooves to start from",
       description:
-        "Searches the grooves library: transcriptions (Porcupine Tree in 7 and 9, Gavin Harrison's paradiddle challenge, a 3 over 4 over 5 polyrhythm, Polyrhythmics), harmony cells (a ii–V–I with a walking bass, a 12-bar blues, and a walk through each mode, from lydian to locrian: its scale up and down with every chord of the mode under it). Each comes as a cell to start from, with its page, where it plays. Search by words (dorian, blues, 7/8, guitar) or leave the query empty for the list.",
+        "Searches the grooves library: transcriptions (Porcupine Tree in 7 and 9, Gavin Harrison's paradiddle challenge, a 3 over 4 over 5 polyrhythm, Polyrhythmics), harmony cells (counting with of and with, a ii–V–I with a walking bass, and the chords of each mode, from lydian to locrian). Each comes as a cell to start from, with its page, where it plays. Search by words (dorian, blues, 7/8, guitar) or leave the query empty for the list.",
       inputSchema: {
         query: z
           .string()

@@ -4,9 +4,6 @@ import React from "react"
 import { APP_CONSTANTS } from "../shared/constants.ts"
 import type { Notebook, Theme } from "../shared/types.ts"
 
-// What the main panel shows: the open notebook, or the chord library
-export type SideTab = "notebook" | "chords"
-
 const THEMES: { id: Theme; label: string }[] = [
   { id: "light", label: "Light" },
   { id: "dark", label: "Dark" },
@@ -16,16 +13,12 @@ export default function Sidebar({
   notebooks,
   onOpenNotebook,
   onNewNotebook,
-  sideTab,
-  onTabChange,
   theme,
   onSetTheme,
 }: {
   notebooks: { list: Notebook[]; current: Notebook | null }
   onOpenNotebook: (id: string) => void
   onNewNotebook: () => void
-  sideTab: SideTab
-  onTabChange: (tab: SideTab) => void
   theme: Theme
   onSetTheme: (theme: Theme) => void
 }) {
@@ -33,7 +26,6 @@ export default function Sidebar({
   const popRef = React.useRef<HTMLDivElement>(null)
   const btnRef = React.useRef<HTMLButtonElement>(null)
   const { list, current } = notebooks
-  const onNotebook = sideTab === "notebook"
 
   React.useEffect(() => {
     if (!themeOpen) return
@@ -55,12 +47,7 @@ export default function Sidebar({
   return (
     <aside className="app-lhs" aria-label="Workspace">
       <div className="lhs-brand">
-        <button
-          type="button"
-          className="lhs-brand-link"
-          onClick={() => onTabChange("notebook")}
-          title="Go to the notebook"
-        >
+        <button type="button" className="lhs-brand-link" title="composer-nb">
           <svg className="lhs-brand-logo" width="22" height="22" viewBox="0 0 24 24">
             <circle cx="9" cy="17" r="3" fill="var(--accent)" />
             <circle cx="18" cy="14" r="3" fill="var(--accent)" />
@@ -170,8 +157,7 @@ export default function Sidebar({
             key={nb.id}
             type="button"
             className={
-              "lhs-tab lhs-tab-notebook" +
-              (onNotebook && current?.id === nb.id ? " lhs-tab-active" : "")
+              "lhs-tab lhs-tab-notebook" + (current?.id === nb.id ? " lhs-tab-active" : "")
             }
             onClick={() => onOpenNotebook(nb.id)}
             title={nb.title}
@@ -183,14 +169,6 @@ export default function Sidebar({
         <div className="lhs-section">
           <span className="lhs-section-label">Reference</span>
         </div>
-        <button
-          type="button"
-          className={"lhs-tab lhs-tab-ref" + (sideTab === "chords" ? " lhs-tab-active" : "")}
-          onClick={() => onTabChange("chords")}
-          title="Guitar chord shapes: click one to copy its name"
-        >
-          <span className="lhs-tab-label">Chord library</span>
-        </button>
         <a
           className="lhs-tab lhs-tab-ref"
           href={APP_CONSTANTS.DOCS_URL}

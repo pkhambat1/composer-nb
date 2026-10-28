@@ -42,6 +42,16 @@ type Of = { chord: Chord; error?: undefined } | { error: string; chord?: undefin
 // What a chart line holds besides chords: a bar line, a hold, a rest, the bar again
 export const CHORD_MARKS = ["|", "-", "_", "%"]
 
+// V, IV7: a numeral is lowercase, since the mode makes the chord major or minor
+const UPPER = /^([#b]?)(VII|VI|IV|V|III|II|I)(.*)$/
+export function upperNumeral(tok: string): string | null {
+  const m = UPPER.exec(tok)
+  if (!m) return null
+  const [, acc, numeral, rest] = m
+  const lower = acc + numeral.toLowerCase() + rest
+  return `"${tok}": numerals are lowercase, and the mode makes the chord major or minor: ${lower}. To say a chord outright, write its quality after it: ${acc}${numeral.toLowerCase()}M, ${acc}${numeral.toLowerCase()}m`
+}
+
 // vii°, viiø: a diminished numeral is written with dim, as a chord is
 const DIM_MARK = /^([#b]?(?:VII|VI|IV|V|III|II|I|vii|vi|iv|v|iii|ii|i))([°ø])(.*)$/
 export function dimMarkProblem(tok: string): string | null {
@@ -130,11 +140,12 @@ function chordSlot(tok: string, part: Part, st: State, key: Key, err: Report): S
     )
     return null
   }
-  const chord = buildChord(tok, key, st.octave, true)
+  const chord = buildChord(tok, key, st.octave)
   if (!chord) {
     err(
       part.ln,
       dimMarkProblem(tok) ||
+        upperNumeral(tok) ||
         (drawsNotes(tok)
           ? `"${tok}" is notes, and this line says chords. A line of notes says notes in front: ${part.name}: notes ${spaceNotes(tok)}`
           : `"${tok}" isn't a chord I know`),

@@ -84,12 +84,6 @@ export function load(): Promise<Db> {
   })
 }
 
-function displayKey(key: string): string {
-  if (key === "Csharp") return "C#"
-  if (key === "Fsharp") return "F#"
-  return key
-}
-
 function chordListForKey(key: string): DbEntry[] | null {
   if (!db) return null
   return db.chords[key] || db.chords[KEY_ALIASES[key]] || null
@@ -99,15 +93,6 @@ function chordEntryFor(key: string, suffix: string): DbEntry | null {
   const list = chordListForKey(key)
   if (!list) return null
   return list.find((e) => e && e.suffix === suffix) || null
-}
-
-function labelFromKeySuffix(key: string, suffix: string): string {
-  const root = displayKey(key)
-  if (suffix === "major") return root
-  if (suffix === "minor") return root + "m"
-  if (suffix.startsWith("m/")) return root + "m/" + suffix.slice(2)
-  if (suffix.startsWith("/")) return root + suffix
-  return root + suffix
 }
 
 function absFret(f: number, base: number): number {
@@ -305,13 +290,6 @@ function positionFromEntry(entry: DbEntry | null, required: ChordPcs | null): Po
   return exportPosition(pickPosition(entry.positions, required))
 }
 
-function maxAbsoluteFret(position: Position): number {
-  const played = position.frets.filter((f) => f > 0)
-  if (!played.length) return 0
-  const base = position.baseFret || 1
-  return Math.max(...played.map((f) => absFret(f, base)))
-}
-
 // Chords whose tonal names the database doesn't share. Without these a minor-major
 // seventh fell through to the major seventh's shape (E natural in CmMaj7), a minor-major
 // ninth to the minor triad, and 9#5 and M7b5 found no shape.
@@ -428,66 +406,4 @@ function soundsRootAndThird(pos: Position, label: string, chordPcs: ChordPcs): b
 
 export function lookupBySymbol(symbol: string): Position | null {
   return lookupPosition(symbol)
-}
-
-function isBrowserChordLabel(label: string): boolean {
-  if (!/^[A-G][#b]?/.test(label)) return false
-  const parts = chordParts(label)
-  if (parts.length > 2) return false
-  if (parts.length === 2) {
-    const bass = parts[1]
-    if (!/^[A-G][#b]?$/.test(bass)) return false
-    const root = parts[0].match(/^[A-G][#b]?/)![0]
-    if (bass === root) return false
-  }
-  return true
-}
-
-// The database's names that the language spells another way: a minor-major seventh is
-// mMaj7 (tonal reads mmaj7 as nothing), an augmented ninth is 9#5, and a major seventh
-// flat five is M7b5, and a 6/9 is written as on a lead sheet.
-const LIBRARY_SUFFIX: Record<string, string> = {
-  mmaj7: "mMaj7",
-  mmaj9: "mMaj9",
-  aug9: "9#5",
-  maj7b5: "M7b5",
-  "69": "6/9",
-  m69: "m6/9",
-}
-
-// A slash chord's bass, spelt as the chord's own note when it is one (E/G#, not E/Ab), and
-// otherwise by its interval above the root: F/Eb (the flat seventh), not the database's F/D#.
-const BASS_INTERVAL = ["1P", "2m", "2M", "3m", "3M", "4P", "4A", "5P", "6m", "6M", "7m", "7M"]
-function spellBass(label: string): string {
-  const [head, bass] = chordParts(label)
-  if (!bass) return label
-  const ch = Chord.get(tonalName(head))
-  const own = ch.notes.find((n) => Note.chroma(n) === Note.chroma(bass))
-  if (own) return `${head}/${own}`
-  const step = (Note.chroma(bass)! - Note.chroma(ch.tonic!)! + 12) % 12
-  return `${head}/${Note.pitchClass(Note.transpose(ch.tonic!, BASS_INTERVAL[step]))}`
-}
-
-// Every chord the language plays on a guitar, named as it's written in a cell and drawn
-// with the shape a cell plays and draws for it. The database's names the language has no
-// chord for are left out: alt (its shapes have no seventh), 7sg, maj11, mmaj11, mmaj7b5.
-export function buildCatalog(): { label: string; position: Position }[] {
-  if (!db) return []
-  const items: { label: string; position: Position }[] = []
-  const seen = new Set<string>()
-  for (const key of db.keys) {
-    const list = chordListForKey(key)
-    if (!list) continue
-    for (const entry of list) {
-      if (!entry?.suffix) continue
-      const label = spellBass(labelFromKeySuffix(key, LIBRARY_SUFFIX[entry.suffix] ?? entry.suffix))
-      if (seen.has(label) || !isBrowserChordLabel(label)) continue
-      if (Chord.get(tonalName(chordParts(label)[0])).empty) continue
-      const position = lookupPosition(label)
-      if (!position || maxAbsoluteFret(position) > 12) continue
-      seen.add(label)
-      items.push({ label, position })
-    }
-  }
-  return items
 }

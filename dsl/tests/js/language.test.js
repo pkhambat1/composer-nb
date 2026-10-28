@@ -1156,7 +1156,7 @@ describe("settings", () => {
 
   it("carry on into the cells below, and say so", () => {
     const above = parseSource("set tempo 90\nset key A\nset mode minor").state
-    const p = parseSource("play piano: chords i V", above)
+    const p = parseSource("play piano: chords i vM", above)
     expect(p.chords.map((e) => e.label)).toEqual(["Am", "E"])
     expect(p.fromAbove).toEqual(["tempo 90", "key A", "mode minor"])
   })
@@ -1909,7 +1909,7 @@ describe("chords", () => {
   })
 
   it("read Roman numerals in the key", () => {
-    expect(labels("set key C\nplay piano: chords I vi|IV V7|bVII IV|ii7 viidim")).toEqual([
+    expect(labels("set key C\nplay piano: chords i vi|iv v7|bvii iv|ii7 viidim")).toEqual([
       "C",
       "Am",
       "F",
@@ -1919,7 +1919,7 @@ describe("chords", () => {
       "Dm7",
       "Bdim",
     ])
-    expect(labels("set key A\nset mode minor\nplay piano: chords V v")).toEqual(["E", "Em"])
+    expect(labels("set key A\nset mode minor\nplay piano: chords vM v")).toEqual(["E", "Em"])
   })
 
   it("keep / in a chord's name, since its two sides aren't numbers", () => {
@@ -2347,35 +2347,37 @@ describe("key", () => {
     return p.outputs[0].chords.map((e) => e.chord.label).join(" ")
   }
   it("reads numerals in each key and mode", () => {
-    expect(labels("set key Bb\nplay piano: chords I IV V vi")).toBe("Bb Eb F Gm")
-    expect(labels("set key F#\nset mode minor\nplay piano: chords i iv V7 VI")).toBe("F#m Bm C#7 D")
-    expect(labels("set key D\nset mode dorian\nplay piano: chords i ii|III IV|v vidim|VII")).toBe(
+    expect(labels("set key Bb\nplay piano: chords i iv v vi")).toBe("Bb Eb F Gm")
+    expect(labels("set key F#\nset mode minor\nplay piano: chords i iv vdom7 vi")).toBe(
+      "F#m Bm C#7 D",
+    )
+    expect(labels("set key D\nset mode dorian\nplay piano: chords i ii|iii iv|v vidim|vii")).toBe(
       "Dm Em F G Am Bdim C",
     )
-    expect(labels("set key G\nset mode mixolydian\nplay piano: chords I VII|IV v")).toBe("G F C Dm")
-    expect(labels("set key E\nset mode phrygian\nplay piano: chords i II|III")).toBe("Em F G")
-    expect(labels("set key F\nset mode lydian\nplay piano: chords I II|ivdim")).toBe("F G Bdim")
-    expect(labels("set key B\nset mode locrian\nplay piano: chords idim II")).toBe("Bdim C")
-    expect(labels("set key A\nset mode minor\nplay piano: chords i VII")).toBe("Am G")
+    expect(labels("set key G\nset mode mixolydian\nplay piano: chords i vii|iv v")).toBe("G F C Dm")
+    expect(labels("set key E\nset mode phrygian\nplay piano: chords i ii|iii")).toBe("Em F G")
+    expect(labels("set key F\nset mode lydian\nplay piano: chords i ii|ivdim")).toBe("F G Bdim")
+    expect(labels("set key B\nset mode locrian\nplay piano: chords idim ii")).toBe("Bdim C")
+    expect(labels("set key A\nset mode minor\nplay piano: chords i vii")).toBe("Am G")
   })
   it("counts numerals on the key's own scale, so the mode changes them", () => {
-    const chart = "play piano: chords i III|iv v|VI VII"
+    const chart = "play piano: chords i iii|iv v|vi vii"
     expect(labels("set key A\nset mode minor\n" + chart)).toBe("Am C Dm Em F G")
-    expect(labels("set key A\nset mode major\n" + chart)).toBe("Am C# Dm Em F# G#")
+    expect(labels("set key A\nset mode major\n" + chart)).toBe("A C#m D E F#m G#dim")
     // b and # move a numeral's root off the scale: minor's V7 is on its own 5, and bII is Bb
-    expect(labels("set key A\nset mode minor\nplay piano: chords V7 bII")).toBe("E7 Bb")
+    expect(labels("set key A\nset mode minor\nplay piano: chords vdom7 bii")).toBe("E7 Bb")
   })
   it("names a numeral's root by its letter in the scale", () => {
-    expect(labels("set key G\nset mode minor\nplay piano: chords i VI|VII")).toBe("Gm Eb F")
+    expect(labels("set key G\nset mode minor\nplay piano: chords i vi|vii")).toBe("Gm Eb F")
     expect(labels("set key A\nplay piano: chords ii iii")).toBe("Bm C#m")
-    expect(labels("set key Bb\nset mode dorian\nplay piano: chords i IV")).toBe("Bbm Eb")
+    expect(labels("set key Bb\nset mode dorian\nplay piano: chords i iv")).toBe("Bbm Eb")
     // the 7th of G minor is F#, not Gb, and the 3rd of F# is A#: one letter a degree
-    expect(labels("set key G\nset mode minor\nplay piano: chords #viidim7 V7")).toBe("F#dim7 D7")
-    expect(labels("set key F#\nplay piano: chords iii viidim|IV")).toBe("A#m E#dim B")
-    expect(labels("set key C#\nset mode minor\nplay piano: chords #VII")).toBe("B#")
-    expect(labels("set key Gb\nplay piano: chords IV")).toBe("Cb")
-    expect(labels("set key Cb\nplay piano: chords I IV|V vi")).toBe("Cb Fb Gb Abm")
-    expect(labels("set key A\nplay piano: chords bVII bVI")).toBe("G F")
+    expect(labels("set key G\nset mode minor\nplay piano: chords #viidim7 vdom7")).toBe("F#dim7 D7")
+    expect(labels("set key F#\nplay piano: chords iii viidim|iv")).toBe("A#m E#dim B")
+    expect(labels("set key C#\nset mode minor\nplay piano: chords #vii")).toBe("B#")
+    expect(labels("set key Gb\nplay piano: chords iv")).toBe("Cb")
+    expect(labels("set key Cb\nplay piano: chords i iv|v vi")).toBe("Cb Fb Gb Abm")
+    expect(labels("set key A\nplay piano: chords bvii bvi")).toBe("G F")
   })
   it("is a note, and its mode a setting of its own", () => {
     expect(MODES).toEqual([
@@ -2442,10 +2444,10 @@ describe("numerals' qualities", () => {
     return p.outputs[0].chords.map((e) => e.chord.label).join(" ")
   }
   it("follow the numeral as a chord's follow its root", () => {
-    expect(labels("play piano: chords viidim viidim7|viim7b5 IVmaj7")).toBe(
+    expect(labels("play piano: chords viidim viidim7|viim7b5 ivmaj7")).toBe(
       "Bdim Bdim7 Bm7b5 Fmaj7",
     )
-    expect(labels("play piano: chords ii7 iimaj7|Vsus4 V7")).toBe("Dm7 DmMaj7 Gsus4 G7")
+    expect(labels("play piano: chords ii7 iimmaj7|vsus4 v7")).toBe("Dm7 DmMaj7 Gsus4 G7")
   })
   it("are typed, not drawn: ° and ø say what to write", () => {
     const errs = (src) => parseCell(src, initialState()).errors.map((e) => e.msg)
@@ -2465,7 +2467,7 @@ describe("a numeral's octave", () => {
   }
   const shape = (src) => roots(src).map((m, i, all) => m - all[0])
   it("counts up from the key's root, as a degree does, so a progression keeps its shape", () => {
-    const iviIVV = "play piano: chords I|vi|IV|V"
+    const iviIVV = "play piano: chords i|vi|iv|v"
     // in C: C3 A3 F3 G3, and every key the same steps up from its root
     expect(roots("set key C\n" + iviIVV)).toEqual([48, 57, 53, 55])
     for (const key of ["D", "E", "Gb", "A", "B", "D\nset mode dorian"]) {
@@ -2480,17 +2482,17 @@ describe("a numeral's octave", () => {
   it("keeps the bass an octave below the root, or a bass note under the key's root", () => {
     const bass = (src) =>
       parseCell(src, initialState()).outputs[0].chords.map((e) => e.chord.bassMidi)
-    expect(bass("set key E\nplay piano: chords I vi|I/G# IV/E")).toEqual([40, 49, 44, 40])
+    expect(bass("set key E\nplay piano: chords i vi|i/G# iv/E")).toEqual([40, 49, 44, 40])
     // in C as before: F/C has C2 under F3
-    expect(bass("play piano: chords IV/C F/C")).toEqual([36, 36])
+    expect(bass("play piano: chords iv/C F/C")).toEqual([36, 36])
   })
   it("leaves a chord symbol in the octave from C", () => {
     expect(roots("set key E\nplay piano: chords E|C#m|A|B")).toEqual([52, 49, 57, 59])
   })
   it("counts of from where its root sounds", () => {
     // V7 of V in A is a 5th above V's E4; a chain steps down by 5ths as it resolves
-    expect(roots("set key A\nplay piano: chords V|V7 of V")).toEqual([64, 71])
-    expect(roots("play piano: chords V7 of (V of V)|V7 of V|V7|I")).toEqual([69, 62, 55, 48])
+    expect(roots("set key A\nplay piano: chords v|v7 of v")).toEqual([64, 71])
+    expect(roots("play piano: chords v7 of (v of v)|v7 of v|v7|i")).toEqual([69, 62, 55, 48])
   })
 })
 

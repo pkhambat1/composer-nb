@@ -134,12 +134,12 @@ const CodeEditor = React.forwardRef<HTMLTextAreaElement, Props>(function CodeEdi
             e.stopPropagation()
             onRun()
           }}
-          title="Play this cell (Shift+Enter)"
+          title="Run this cell (Shift+Enter)"
         >
           <svg width="10" height="10" viewBox="0 0 10 10">
             <polygon points="2,1 9,5 2,9" fill="currentColor" />
           </svg>
-          <span>Play</span>
+          <span>Run</span>
         </button>
       )}
       {runState === "running" && onInterrupt && (

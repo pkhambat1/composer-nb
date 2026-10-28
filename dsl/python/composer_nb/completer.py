@@ -54,7 +54,7 @@ ARITHMETIC_RE = re.compile(r"[\d./+*-]*\d")
 # A degree, or a numeral with what follows it, which of can count from another note or chord:
 # 5 of C3, V7 of V
 DEGREE_RE = re.compile(r"[\^~]?'*[#b]?[1-7]'*")
-NUMERAL_RE = re.compile(r"[#b]?(VII|VI|IV|V|III|II|I|vii|vi|iv|v|iii|ii|i)[A-Za-z0-9#+]*")
+NUMERAL_RE = re.compile(r"[#b]?(vii|vi|iv|v|iii|ii|i)[A-Za-z0-9#+]*")
 # What makes a { an instrument's block of layers: kick: or piano: in front of it, or
 # steps name =
 STEPS_OPENER_RE = re.compile(r"([a-z]+(?:\.[a-z]+)?)\s*:[^:{}]*$|^\s*steps\s+[A-Za-z_]\w*\s*=[^{}]*$")

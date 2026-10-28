@@ -82,25 +82,3 @@ describe("a chord's guitar shape sounds that chord", () => {
     expect(lookupPosition("Emadd9")).toBeNull()
   })
 })
-
-describe("the chord library", () => {
-  it("lists only names the language plays, drawn with the shape a cell plays", async () => {
-    const { buildCatalog, lookupPosition } = await loadLib()
-    const { parseSource } = await import("../../js/music-engine.ts")
-    const catalog = buildCatalog()
-    expect(catalog.length).toBeGreaterThan(400)
-    for (const { label, position } of catalog) {
-      expect(parseSource(`play guitar: chords ${label}`).errors, label).toEqual([])
-      expect(position, label).toEqual(lookupPosition(label))
-    }
-  })
-
-  it("names the database's chords as a cell writes them", async () => {
-    const { buildCatalog } = await loadLib()
-    const labels = new Set(buildCatalog().map((c) => c.label))
-    for (const l of ["CmMaj7", "C9#5", "CM7b5", "Em/B", "F/Eb", "E/G#"])
-      expect(labels.has(l), l).toBe(true)
-    for (const l of ["Cmmaj7", "Caug9", "Cmaj7b5", "Calt", "C7sg", "F/D#"])
-      expect(labels.has(l), l).toBe(false)
-  })
-})

@@ -43,12 +43,12 @@ describe("a key and its mode", () => {
 
   it("change the pitch: the same degrees and numerals sound in each mode's own scale", () => {
     const cell =
-      "play piano: {\n  chords i III|VII IV\n  notes 3-------6-------|7-------1'-------\n}"
+      "play piano: {\n  chords i iii|vii iv\n  notes 3-------6-------|7-------1'-------\n}"
     const sounds = (mode) =>
       clean(`set key D\nset mode ${mode}\n${cell}`).events.map((e) => e.note?.name ?? e.chord.label)
-    expect(sounds("minor")).toEqual(["Dm", "F3", "F", "Bb3", "C", "C4", "G", "D4"])
+    expect(sounds("minor")).toEqual(["Dm", "F3", "F", "Bb3", "C", "C4", "Gm", "D4"])
     expect(sounds("dorian")).toEqual(["Dm", "F3", "F", "B3", "C", "C4", "G", "D4"])
-    expect(sounds("major")).toEqual(["Dm", "F#3", "F#", "B3", "C#", "C#4", "G", "D4"])
+    expect(sounds("major")).toEqual(["D", "F#3", "F#m", "B3", "C#dim", "C#4", "G", "D4"])
   })
 
   it("are set apart: the key keeps the mode, and the mode keeps the key", () => {
@@ -74,14 +74,14 @@ describe("with", () => {
   it("never carries into the next cell", () => {
     const above = clean("with tempo 60, key G {\n  play kick: x\n}")
     expect([above.state.tempo, above.state.key]).toEqual([120, "C"])
-    const below = clean("play piano: chords I", above.state)
+    const below = clean("play piano: chords i", above.state)
     expect(chords(below.outputs[0])).toEqual(["C"])
     expect(below.fromAbove).toEqual([])
   })
 
   it("keeps the names declared in it inside it", () => {
     const p = parseSource(
-      "with key E {\n  chords inside = I IV\n  play piano: chords inside\n}\nplay piano: chords inside",
+      "with key E {\n  chords inside = i iv\n  play piano: chords inside\n}\nplay piano: chords inside",
     )
     expect(p.errors.map((e) => e.msg)).toEqual([
       `"inside" isn't defined above. Name it first: chords inside = Am F|C G`,
@@ -99,18 +99,18 @@ describe("with", () => {
 
   it("holds statements at the top: names, plays and other withs", () => {
     const p = clean(
-      "with key D {\n  chords vamp = I IV\n  play piano: chords vamp\n  with mode dorian {\n    play piano: chords vamp\n  }\n}",
+      "with key D {\n  chords vamp = i iv\n  play piano: chords vamp\n  with mode dorian {\n    play piano: chords vamp\n  }\n}",
     )
     expect(p.outputs.map(chords)).toEqual([
       ["D", "G"],
-      ["D", "G"],
+      ["Dm", "G"],
     ])
     expect(p.outputs.map((o) => o.blocks[0].mode)).toEqual(["major", "dorian"])
   })
 
   it("is a block in a play: on its own line it sounds with the others, and repeats as a block does", () => {
     const o = clean(
-      "set tempo 96\nchords verse = i III|VII iv\n\nwith key E, mode minor {\n  play {\n    piano: chords verse\n    with octave 2 { bass: notes 1---5--- }\n  }\n}",
+      "set tempo 96\nchords verse = i iii|vii iv\n\nwith key E, mode minor {\n  play {\n    piano: chords verse\n    with octave 2 { bass: notes 1---5--- }\n  }\n}",
     ).outputs[0]
     expect(chords(o)).toEqual(["Em", "G", "D", "Am"])
     // the bass's two notes, under the whole chart, an octave below
@@ -121,7 +121,7 @@ describe("with", () => {
 
   it("is one part in order in a group", () => {
     const o = clean(
-      "chords prog = I vi|IV V\nplay (\n  with key E { piano: chords prog }\n  with key G { piano: chords prog }\n)",
+      "chords prog = i vi|iv v\nplay (\n  with key E { piano: chords prog }\n  with key G { piano: chords prog }\n)",
     ).outputs[0]
     expect(chords(o)).toEqual(["E", "C#m", "A", "B", "G", "Em", "C", "D"])
     expect(o.chords.map((e) => e.secStart)).toEqual([0, 1, 2, 3, 4, 5, 6, 7])
@@ -133,7 +133,7 @@ describe("with", () => {
     expect(
       chords(
         clean(
-          "chords prog = I vi\nplay (with key E { piano: chords prog } with key G { piano: chords prog })",
+          "chords prog = i vi\nplay (with key E { piano: chords prog } with key G { piano: chords prog })",
         ).outputs[0],
       ),
     ).toEqual(["E", "C#m", "G", "Em"])
@@ -142,7 +142,7 @@ describe("with", () => {
 
   it("plays a pattern where it's played, so a pattern under two keys plays in each", () => {
     const o = clean(
-      "pattern song = {\n  piano: chords I V\n  bass: notes 1-------5-------\n}\nplay (\n  with key A { song }\n  with key Bb { song }\n)",
+      "pattern song = {\n  piano: chords i v\n  bass: notes 1-------5-------\n}\nplay (\n  with key A { song }\n  with key Bb { song }\n)",
     ).outputs[0]
     expect(chords(o)).toEqual(["A", "E", "Bb", "F"])
     expect(notes(o).filter((n) => n.startsWith("bass"))).toEqual([
@@ -178,7 +178,7 @@ describe("with", () => {
     // or around everything a play or a pattern plays, with nothing beside it
     expect(clean("play with tempo 60 { kick: x--- }").outputs[0].durSec).toBe(1)
     const tag = clean(
-      "pattern tag = with time 6 over 4 {\n  piano: chords I\n  hat: x---\n}\nplay (tag piano: chords V)",
+      "pattern tag = with time 6 over 4 {\n  piano: chords i\n  hat: x---\n}\nplay (tag piano: chords v)",
     )
     expect(tag.outputs[0].blocks.map((b) => [b.time, b.bars])).toEqual([
       ["6 over 4", 1],
@@ -254,8 +254,8 @@ describe("with", () => {
   })
 
   it("can't hold an instrument's line at the top, where nothing plays it", () => {
-    expect(firstError("with key E {\n  piano: chords I\n}")).toBe(
-      "An instrument's line goes inside braces: in a pattern, or play { piano: chords I }",
+    expect(firstError("with key E {\n  piano: chords i\n}")).toBe(
+      "An instrument's line goes inside braces: in a pattern, or play { piano: chords i }",
     )
     expect(errors("play {\n  with key E {\n    play piano: notes 1---\n  }\n}")).toContain(
       "play goes at the top, not inside braces",
@@ -263,13 +263,13 @@ describe("with", () => {
   })
 
   it("goes around an instrument's line, not among its layers or in a value", () => {
-    expect(firstError("play piano: {\n  chords I\n  with octave 5 { 1--- }\n}")).toBe(
+    expect(firstError("play piano: {\n  chords i\n  with octave 5 { 1--- }\n}")).toBe(
       "A with goes around piano's line, not among its layers: with octave 5 { piano: { ... } }",
     )
     expect(firstError("play snare.ghost: {\n  --x-\n  with kit synth { x--- }\n}")).toBe(
       "A with goes around snare.ghost's line, not among its layers: with kit synth { snare.ghost: { ... } }",
     )
-    expect(firstError("chords xx = with key E { I }")).toBe(
+    expect(firstError("chords xx = with key E { i }")).toBe(
       "A with's block plays, so it goes around a line or a play, not after chords xx =",
     )
     expect(firstError("with key E { }")).toBe("These braces have nothing in them")
@@ -285,19 +285,5 @@ describe("with", () => {
     )
     expect(clean("play piano: chords i", above.state).outputs[0].chords[0].chord.label).toBe("Am")
     expect(parseSource("play kick: x", initialState()).fromAbove).toEqual([])
-  })
-})
-
-describe("a digit in a chart", () => {
-  const labels = (mode) =>
-    clean(`with key D, mode ${mode} { play piano: chords 1 2|3 4|5 6|7 1 }`).chords.map(
-      (e) => e.chord.label,
-    )
-  it("is the chord the scale has on that degree, so the mode changes it", () => {
-    expect(labels("major")).toEqual(["D", "Em", "F#m", "G", "A", "Bm", "C#dim", "D"])
-    expect(labels("minor")).toEqual(["Dm", "Edim", "F", "Gm", "Am", "Bb", "C", "Dm"])
-    expect(labels("dorian")).toEqual(["Dm", "Em", "F", "G", "Am", "Bdim", "C", "Dm"])
-    expect(labels("lydian")).toEqual(["D", "E", "F#m", "G#dim", "A", "Bm", "C#m", "D"])
-    expect(labels("locrian")[0]).toBe("Ddim")
   })
 })
