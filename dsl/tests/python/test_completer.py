@@ -109,12 +109,13 @@ def test_instrument_lines_offer_names_of_their_type():
     assert texts(cell + "snare: 2 b") == ["beats ", "bars "]
     assert texts(cell + "snare: 2 beats ") == ["rest", "pair"]
     assert texts(cell + "snare: 2 beats rest, ") == ["pair"]
-    # A pitched instrument's line is notes, or a chart with chords in front of it.
-    assert texts(cell + "piano: ") == ["chords ", "riff"]
+    # A pitched instrument's line says what it holds: notes, or a chart with chords in front.
+    assert texts(cell + "piano: ") == ["notes ", "chords "]
     assert texts(cell + "piano: c") == ["chords "]
+    assert texts(cell + "piano: notes ") == ["riff"]
     assert texts(cell + "piano: chords ") == ["verse"]
     assert texts(cell + "piano: chords Am ") == ["verse"]
-    assert texts(cell + "guitar.electric: F--- ") == ["riff"]
+    assert texts(cell + "guitar.electric: notes F--- ") == ["riff"]
     # A name only goes where its type goes.
     assert texts(cell + "hat: v") == []
     assert texts(cell + "hat: r") == []
@@ -135,10 +136,11 @@ def test_a_drums_block_offers_names_of_steps():
 
 def test_a_pitched_instruments_block_offers_notes_and_chords():
     cell = "%%music\nsteps pair = ^-x-\nnotes riff = F---G---\nchords verse = Am F\nplay piano: {\n  "
-    assert texts(cell) == ["chords ", "riff"]
+    assert texts(cell) == ["notes ", "chords "]
+    assert texts(cell + "notes ") == ["riff"]
     assert texts(cell + "chords ") == ["verse"]
-    assert texts(cell + "C4--- ") == ["riff"]
-    assert "kick: " in texts("%%music\nplay {\n  piano: {\n    C4---\n  }\n  ")  # closed
+    assert texts(cell + "notes C4--- ") == ["riff"]
+    assert "kick: " in texts("%%music\nplay {\n  piano: {\n    notes C4---\n  }\n  ")  # closed
 
 
 def test_a_name_is_not_offered_inside_its_own_braces():
@@ -221,7 +223,7 @@ def test_after_a_block_or_a_group_more_follows_only_in_a_group():
     assert texts(cell + "play (1+2) bars ") == ["groove"]
     # a kit piece's or an instrument's block is the whole of its line
     assert texts(cell + "play hat: {\n  x-\n} ") == []
-    assert texts(cell + "play piano: {\n  C4---\n} ") == []
+    assert texts(cell + "play piano: {\n  notes C4---\n} ") == []
     assert texts(cell + "steps fig = {\n  x-\n} ") == []
     # and a new line starts again
     assert "play " in texts(cell + "play { kick: x }\n")
@@ -229,15 +231,15 @@ def test_after_a_block_or_a_group_more_follows_only_in_a_group():
 
 def test_a_line_of_notes_takes_lengths():
     cell = "%%music\nnotes riff = F---\nplay {\n  "
-    assert texts(cell + "bass: 3 ") == ["steps ", "beats ", "bars ", "of "]
-    assert texts(cell + "bass: 3 beats ") == ["rest", "riff"]
-    assert texts(cell + "bass: 3 beats C2, ") == ["riff"]
+    assert texts(cell + "bass: notes 3 ") == ["steps ", "beats ", "bars ", "of "]
+    assert texts(cell + "bass: notes 3 beats ") == ["rest", "riff"]
+    assert texts(cell + "bass: notes 3 beats C2, ") == ["riff"]
 
 
 def test_a_degree_or_a_numeral_offers_of():
     cell = "%%music\nnotes riff = F---\nchords verse = Am F\nplay {\n  "
-    assert texts(cell + "piano: b3 ") == ["of ", "riff"]
-    assert texts(cell + "piano: C3 ") == ["riff"]
+    assert texts(cell + "piano: notes b3 ") == ["of ", "riff"]
+    assert texts(cell + "piano: notes C3 ") == ["riff"]
     assert texts(cell + "piano: chords V7 ") == ["of ", "verse"]
     assert texts(cell + "piano: chords Am ") == ["verse"]
 
