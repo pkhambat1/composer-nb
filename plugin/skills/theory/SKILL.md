@@ -19,23 +19,22 @@ description: Explain a music theory idea with small composer-nb cells the user c
 set key D
 set octave 4
 
-notes minor = 1---2---b3---4---|5---b6---b7---1'---
-notes dorian = 1---2---b3---4---|5---6---b7---1'---
+notes scale = 1---2---3---4---|5---6---7---1'---
 
-play piano: minor
-play piano: dorian
+with mode minor { play piano: scale }
+with mode dorian { play piano: scale }
 ```
 
 The raised 6 makes the IV major: G in D dorian, where natural minor has Gm. Every chord of D dorian, in turn:
 
 ```composer-nb
 set mode dorian
-play piano: chords i ii|bIII IV|v vidim|bVII i
+play piano: chords i ii|III IV|v vidim|VII i
 ```
 
 The same name in another key, parsed with the first cell as `after`:
 
 ```composer-nb
 set key A
-play piano: dorian
+play piano: scale
 ```

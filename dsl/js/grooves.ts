@@ -22,7 +22,6 @@ export const GROOVES: Groove[] = [
     link: "https://www.youtube.com/watch?v=4ulgVOBpNWA",
     source: `set time 7 over 8
 set tempo 90
-set swing off
 
 pattern groove = {
   kick: x--x---
@@ -49,7 +48,6 @@ play {
     link: "https://www.youtube.com/results?search_query=Porcupine+Tree+Circle+of+Manias",
     source: `set time 9 over 8
 set tempo 100
-set swing off
 
 pattern manias = {
   hat.open: x---
@@ -69,7 +67,6 @@ play 4 bars manias`,
     link: "https://www.youtube.com/watch?v=v0Iv4SYJW-k",
     source: `set time 7 over 8
 set tempo 110
-set swing off
 set octave 2
 set guitar.electric muted
 
@@ -93,7 +90,6 @@ play 3 bars ({ snare.rim: ^- } {
     link: "https://www.youtube.com/watch?v=XEWmzQ_fJmw",
     source: `set time 3 over 4
 set tempo 100
-set swing off
 
 steps pa = ^---
 steps radiddle = -xxx
@@ -121,7 +117,6 @@ play {
     link: "https://www.youtube.com/watch?v=YZPtPMCDEs4",
     source: `set time 3 over 4
 set tempo 82.5
-set swing off
 
 pattern groove = {
   ride.bell: x-x-x-xx-x-x
@@ -140,7 +135,6 @@ play 2 bars groove`,
     link: null,
     source: `set time 5 over 4
 set tempo 120
-set swing off
 
 pattern groove = {
   kick: x---
@@ -152,6 +146,180 @@ play groove`,
   },
   {
     section: "Harmony",
+    title: "Lydian walk",
+    byline: "D lydian: major with a raised fourth",
+    body: "The scale goes up and back down, and on every second beat the chord underneath has that note as its root, so you hear all seven notes and all seven chords: D F#m A C#m, then D Bm G#dim E, and back to D. The G#, the raised fourth, is lydian's colour. It makes the II chord, E, major, and E falling to D at the end is the floating sound lydian is known for. Every note is a plain degree and every chord a plain numeral, so the mode alone makes it lydian: change `set mode lydian` to `set mode major` and it turns into D major.",
+    link: null,
+    source: `set time 4 over 4
+set tempo 84
+set key D
+set mode lydian
+set octave 3
+
+pattern walk = {
+  with octave 4 {
+    piano: 1---2---3---4---|5---6---7---1'---
+      |1'---7---6---5---|4---3---2-------|1 bars 1
+  }
+  guitar: chords I iii|V vii|I vi|ivdim II|I
+  with octave 2 {
+    bass: 1-------3-------|5-------7-------
+      |1'-------6-------|4-------2-------|1 bars 1
+  }
+  hat: x-
+  snare.cross: 2 4
+  kick: 1 3
+}
+
+play walk`,
+  },
+  {
+    section: "Harmony",
+    title: "Mixolydian walk",
+    byline: "D mixolydian: major with a flat seventh",
+    body: "The scale goes up and back down, and on every second beat the chord underneath has that note as its root, so you hear all seven notes and all seven chords: D F#dim Am C, then D Bm G Em, and back to D. The C natural, the flat seventh, is mixolydian's sound. It makes the v chord minor (Am) and puts a major chord, C, a whole step under the root. On the way down, the tune's C over the D chord is a dominant seventh that never resolves. Every note is a plain degree and every chord a plain numeral, so the mode alone makes it mixolydian: change `set mode mixolydian` to `set mode major` and it turns into D major.",
+    link: null,
+    source: `set time 4 over 4
+set tempo 104
+set key D
+set mode mixolydian
+set octave 3
+
+pattern walk = {
+  with octave 4 {
+    piano: 1---2---3---4---|5---6---7---1'---
+      |1'---7---6---5---|4---3---2-------|1 bars 1
+  }
+  guitar: chords I iiidim|v VII|I vi|IV ii|I
+  with octave 2 {
+    bass: 1-------3-------|5-------7-------
+      |1'-------6-------|4-------2-------|1 bars 1
+  }
+  hat: x-
+  snare.cross: 2 4
+  kick: 1 3
+}
+
+play walk`,
+  },
+  {
+    section: "Harmony",
+    title: "Dorian walk",
+    byline: "D dorian: minor with a major sixth",
+    body: "The scale goes up and back down, and on every second beat the chord underneath has that note as its root, so you hear all seven notes and all seven chords: Dm F Am C, then Dm Bdim G Em, and back to Dm. The B natural, a major sixth in a minor key, is dorian's colour. It makes the IV chord, G, major where natural minor has Gm. Every note is a plain degree and every chord a plain numeral, so the mode alone makes it dorian: change `set mode dorian` to `set mode major` and it turns into D major.",
+    link: null,
+    source: `set time 4 over 4
+set tempo 96
+set key D
+set mode dorian
+set octave 3
+
+pattern walk = {
+  with octave 4 {
+    piano: 1---2---3---4---|5---6---7---1'---
+      |1'---7---6---5---|4---3---2-------|1 bars 1
+  }
+  guitar: chords i III|v VII|i vidim|IV ii|i
+  with octave 2 {
+    bass: 1-------3-------|5-------7-------
+      |1'-------6-------|4-------2-------|1 bars 1
+  }
+  hat: x-
+  snare.cross: 2 4
+  kick: 1 3
+}
+
+play walk`,
+  },
+  {
+    section: "Harmony",
+    title: "Minor walk",
+    byline: "D minor: the natural minor scale",
+    body: "The scale goes up and back down, and on every second beat the chord underneath has that note as its root, so you hear all seven notes and all seven chords: Dm F Am C, then Dm Bb Gm Edim, and back to Dm. The Bb, the flat sixth, is what makes it minor rather than dorian: hear it over the Bb chord on the way down, and the diminished ii, Edim, just before the end. Every note is a plain degree and every chord a plain numeral, so the mode alone makes it minor: change `set mode minor` to `set mode major` and it turns into D major.",
+    link: null,
+    source: `set time 4 over 4
+set tempo 92
+set key D
+set mode minor
+set octave 3
+
+pattern walk = {
+  with octave 4 {
+    piano: 1---2---3---4---|5---6---7---1'---
+      |1'---7---6---5---|4---3---2-------|1 bars 1
+  }
+  guitar: chords i III|v VII|i VI|iv iidim|i
+  with octave 2 {
+    bass: 1-------3-------|5-------7-------
+      |1'-------6-------|4-------2-------|1 bars 1
+  }
+  hat: x-
+  snare.cross: 2 4
+  kick: 1 3
+}
+
+play walk`,
+  },
+  {
+    section: "Harmony",
+    title: "Phrygian walk",
+    byline: "D phrygian: minor with a flat second",
+    body: "The scale goes up and back down, and on every second beat the chord underneath has that note as its root, so you hear all seven notes and all seven chords: Dm F Adim Cm, then Dm Bb Gm Eb, and back to Dm. The Eb, a half step above the root, is phrygian's dark, Spanish sound, and the Eb chord falling to Dm at the end is the phrygian cadence. Every note is a plain degree and every chord a plain numeral, so the mode alone makes it phrygian: change `set mode phrygian` to `set mode major` and it turns into D major.",
+    link: null,
+    source: `set time 4 over 4
+set tempo 88
+set key D
+set mode phrygian
+set octave 3
+
+pattern walk = {
+  with octave 4 {
+    piano: 1---2---3---4---|5---6---7---1'---
+      |1'---7---6---5---|4---3---2-------|1 bars 1
+  }
+  guitar: chords i III|vdim vii|i VI|iv II|i
+  with octave 2 {
+    bass: 1-------3-------|5-------7-------
+      |1'-------6-------|4-------2-------|1 bars 1
+  }
+  hat: x-
+  snare.cross: 2 4
+  kick: 1 3
+}
+
+play walk`,
+  },
+  {
+    section: "Harmony",
+    title: "Locrian walk",
+    byline: "D locrian: a diminished root",
+    body: "The scale goes up and back down, and on every second beat the chord underneath has that note as its root, so you hear all seven notes and all seven chords: Ddim Fm Ab Cm, then Ddim Bb Gm Eb, and back to Ddim. The fifth is flat (Ab), so the root's own chord is diminished and never sounds at rest: locrian is the mode that won't settle. Every note is a plain degree and every chord a plain numeral, so the mode alone makes it locrian: change `set mode locrian` to `set mode major` and it turns into D major.",
+    link: null,
+    source: `set time 4 over 4
+set tempo 80
+set key D
+set mode locrian
+set octave 3
+
+pattern walk = {
+  with octave 4 {
+    piano: 1---2---3---4---|5---6---7---1'---
+      |1'---7---6---5---|4---3---2-------|1 bars 1
+  }
+  guitar: chords idim iii|V vii|idim VI|iv II|idim
+  with octave 2 {
+    bass: 1-------3-------|5-------7-------
+      |1'-------6-------|4-------2-------|1 bars 1
+  }
+  hat: x-
+  snare.cross: 2 4
+  kick: 1 3
+}
+
+play walk`,
+  },
+  {
+    section: "Harmony",
     title: "ii–V–I",
     byline: "The cadence jazz is built on",
     body: "Dm7 to G7 to Cmaj7: the ii sets up the V, and the V resolves home. Written as numerals, so `key` moves it: change `set key C` to `set key F` and the whole thing follows. The bass walks a quarter note a step, `set swing on` puts the ride's off-beats late, and `set octave 4` keeps the piano's voicings around middle C.",
@@ -160,6 +328,7 @@ play groove`,
 set tempo 132
 set swing on
 set key C
+set mode major
 set octave 4
 
 pattern turnaround = {
@@ -183,6 +352,7 @@ play turnaround`,
 set tempo 120
 set swing on
 set key A
+set mode major
 set octave 3
 set guitar.electric clean
 
@@ -194,186 +364,6 @@ pattern blues = {
 }
 
 play blues`,
-  },
-  {
-    section: "Harmony",
-    title: "Lydian walk",
-    byline: "D lydian: major with a raised fourth",
-    body: "The scale goes up and back down, and on every second beat the chord underneath has that note as its root, so you hear all seven notes and all seven chords: D F#m A C#m, then D Bm G#dim E, and back to D. The G#, the raised fourth, is lydian's colour. It makes the II chord, E, major, and E falling to D at the end is the floating sound lydian is known for. Degrees and numerals count on D major, so the raised fourth is written `#4`.",
-    link: null,
-    source: `set time 4 over 4
-set tempo 84
-set swing off
-set key D
-set mode lydian
-set octave 3
-
-pattern walk = {
-  with octave 4 {
-    piano: 1---2---3---#4---|5---6---7---1'---
-      |1'---7---6---5---|#4---3---2-------|1 bars 1
-  }
-  guitar: chords I iii|V vii|I vi|#ivdim II|I
-  with octave 2 {
-    bass: 1-------3-------|5-------7-------
-      |1'-------6-------|#4-------2-------|1 bars 1
-  }
-  hat: x-
-  snare.cross: 2 4
-  kick: 1 3
-}
-
-play walk`,
-  },
-  {
-    section: "Harmony",
-    title: "Mixolydian walk",
-    byline: "D mixolydian: major with a flat seventh",
-    body: "The scale goes up and back down, and on every second beat the chord underneath has that note as its root, so you hear all seven notes and all seven chords: D F#dim Am C, then D Bm G Em, and back to D. The C natural, the flat seventh, is mixolydian's sound. It makes the v chord minor (Am) and puts a major chord, C, a whole step under the root. On the way down, the tune's C over the D chord is a dominant seventh that never resolves. Degrees and numerals count on D major, so the flat seventh is written `b7`.",
-    link: null,
-    source: `set time 4 over 4
-set tempo 104
-set swing off
-set key D
-set mode mixolydian
-set octave 3
-
-pattern walk = {
-  with octave 4 {
-    piano: 1---2---3---4---|5---6---b7---1'---
-      |1'---b7---6---5---|4---3---2-------|1 bars 1
-  }
-  guitar: chords I iiidim|v bVII|I vi|IV ii|I
-  with octave 2 {
-    bass: 1-------3-------|5-------b7-------
-      |1'-------6-------|4-------2-------|1 bars 1
-  }
-  hat: x-
-  snare.cross: 2 4
-  kick: 1 3
-}
-
-play walk`,
-  },
-  {
-    section: "Harmony",
-    title: "Dorian walk",
-    byline: "D dorian: minor with a major sixth",
-    body: "The scale goes up and back down, and on every second beat the chord underneath has that note as its root, so you hear all seven notes and all seven chords: Dm F Am C, then Dm Bdim G Em, and back to Dm. The B natural, a major sixth in a minor key, is dorian's colour. It makes the IV chord, G, major where natural minor has Gm. Degrees and numerals count on D major, so the minor third and seventh are written `b3` and `b7`, and the sixth needs no mark.",
-    link: null,
-    source: `set time 4 over 4
-set tempo 96
-set swing off
-set key D
-set mode dorian
-set octave 3
-
-pattern walk = {
-  with octave 4 {
-    piano: 1---2---b3---4---|5---6---b7---1'---
-      |1'---b7---6---5---|4---b3---2-------|1 bars 1
-  }
-  guitar: chords i bIII|v bVII|i vidim|IV ii|i
-  with octave 2 {
-    bass: 1-------b3-------|5-------b7-------
-      |1'-------6-------|4-------2-------|1 bars 1
-  }
-  hat: x-
-  snare.cross: 2 4
-  kick: 1 3
-}
-
-play walk`,
-  },
-  {
-    section: "Harmony",
-    title: "Minor walk",
-    byline: "D minor: the natural minor scale",
-    body: "The scale goes up and back down, and on every second beat the chord underneath has that note as its root, so you hear all seven notes and all seven chords: Dm F Am C, then Dm Bb Gm Edim, and back to Dm. The Bb, the flat sixth, is what makes it minor rather than dorian: hear it over the Bb chord on the way down, and the diminished ii, Edim, just before the end. Degrees and numerals count on D major, so the flats are written out: `b3`, `b6`, `b7`.",
-    link: null,
-    source: `set time 4 over 4
-set tempo 92
-set swing off
-set key D
-set mode minor
-set octave 3
-
-pattern walk = {
-  with octave 4 {
-    piano: 1---2---b3---4---|5---b6---b7---1'---
-      |1'---b7---b6---5---|4---b3---2-------|1 bars 1
-  }
-  guitar: chords i bIII|v bVII|i bVI|iv iidim|i
-  with octave 2 {
-    bass: 1-------b3-------|5-------b7-------
-      |1'-------b6-------|4-------2-------|1 bars 1
-  }
-  hat: x-
-  snare.cross: 2 4
-  kick: 1 3
-}
-
-play walk`,
-  },
-  {
-    section: "Harmony",
-    title: "Phrygian walk",
-    byline: "D phrygian: minor with a flat second",
-    body: "The scale goes up and back down, and on every second beat the chord underneath has that note as its root, so you hear all seven notes and all seven chords: Dm F Adim Cm, then Dm Bb Gm Eb, and back to Dm. The Eb, a half step above the root, is phrygian's dark, Spanish sound, and the Eb chord falling to Dm at the end is the phrygian cadence. Degrees and numerals count on D major, so the flat second is written `b2`.",
-    link: null,
-    source: `set time 4 over 4
-set tempo 88
-set swing off
-set key D
-set mode phrygian
-set octave 3
-
-pattern walk = {
-  with octave 4 {
-    piano: 1---b2---b3---4---|5---b6---b7---1'---
-      |1'---b7---b6---5---|4---b3---b2-------|1 bars 1
-  }
-  guitar: chords i bIII|vdim bvii|i bVI|iv bII|i
-  with octave 2 {
-    bass: 1-------b3-------|5-------b7-------
-      |1'-------b6-------|4-------b2-------|1 bars 1
-  }
-  hat: x-
-  snare.cross: 2 4
-  kick: 1 3
-}
-
-play walk`,
-  },
-  {
-    section: "Harmony",
-    title: "Locrian walk",
-    byline: "D locrian: a diminished root",
-    body: "The scale goes up and back down, and on every second beat the chord underneath has that note as its root, so you hear all seven notes and all seven chords: Ddim Fm Ab Cm, then Ddim Bb Gm Eb, and back to Ddim. The fifth is flat (Ab), so the root's own chord is diminished and never sounds at rest: locrian is the mode that won't settle. Degrees and numerals count on D major, so every flat is written: `b2`, `b3`, `b5`, `b6`, `b7`.",
-    link: null,
-    source: `set time 4 over 4
-set tempo 80
-set swing off
-set key D
-set mode locrian
-set octave 3
-
-pattern walk = {
-  with octave 4 {
-    piano: 1---b2---b3---4---|b5---b6---b7---1'---
-      |1'---b7---b6---b5---|4---b3---b2-------|1 bars 1
-  }
-  guitar: chords idim biii|bV bvii|idim bVI|iv bII|idim
-  with octave 2 {
-    bass: 1-------b3-------|b5-------b7-------
-      |1'-------b6-------|4-------b2-------|1 bars 1
-  }
-  hat: x-
-  snare.cross: 2 4
-  kick: 1 3
-}
-
-play walk`,
   },
 ]
 

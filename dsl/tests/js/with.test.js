@@ -20,10 +20,10 @@ const notes = (o) => o.notes.map((e) => `${e.instrument} ${e.note.name}`)
 const chords = (o) => o.chords.map((e) => e.chord.label)
 
 describe("a key and its mode", () => {
-  const scale = "play piano: 1-2-b3-4-5-b6-b7-1'-"
-  it("give E minor's key signature and spelling, and the pitches E's degrees have", () => {
+  const scale = "play piano: 1-2-3-4-5-6-7-1'-"
+  it("give E minor's key signature and spelling, and its scale to the degrees", () => {
     const minor = clean(`set key E\nset mode minor\nset octave 4\n${scale}`)
-    expect(minor.notes.map((e) => e.note.midi)).toEqual(midis(`set key E\nset octave 4\n${scale}`))
+    expect(minor.notes.map((e) => e.note.midi)).toEqual([64, 66, 67, 69, 71, 72, 74, 76])
     const block = minor.outputs[0].blocks[0]
     expect([block.key, block.mode]).toEqual(["E", "minor"])
     const { abc } = sheetAbc(block)
@@ -33,16 +33,18 @@ describe("a key and its mode", () => {
   })
 
   it("raise minor's 7th with a sharp in a flat key, and name the key in the header", () => {
-    const p = clean("set key G\nset mode minor\nset octave 4\nplay piano: 7---1'---")
+    const p = clean("set key G\nset mode minor\nset octave 4\nplay piano: #7---1'---")
     const voice = sheetAbc(p.outputs[0].blocks[0]).abc.split("\n").find((l) => l.startsWith("[V:P1]"))
     expect(voice).toBe("[V:P1] ^f4 g4 z4 z4 |")
     expect(sheetAbc(p.outputs[0].blocks[0]).abc).toContain("K:Gm")
   })
 
-  it("change no pitch: numerals sound the same in every mode of a root", () => {
-    const chart = "play piano: chords i bIII|bVII IV"
-    const sounds = (mode) => clean(`set key D\nset mode ${mode}\n${chart}`).chords.map((e) => e.chord.notesMidi)
-    for (const mode of ["major", "minor", "dorian", "mixolydian"]) expect(sounds(mode), mode).toEqual(sounds("dorian"))
+  it("change the pitch: the same degrees and numerals sound in each mode's own scale", () => {
+    const cell = "play piano: {\n  chords i III|VII IV\n  3-------6-------|7-------1'-------\n}"
+    const sounds = (mode) => clean(`set key D\nset mode ${mode}\n${cell}`).events.map((e) => e.note?.name ?? e.chord.label)
+    expect(sounds("minor")).toEqual(["Dm", "F3", "F", "Bb3", "C", "C4", "G", "D4"])
+    expect(sounds("dorian")).toEqual(["Dm", "F3", "F", "B3", "C", "C4", "G", "D4"])
+    expect(sounds("major")).toEqual(["Dm", "F#3", "F#", "B3", "C#", "C#4", "G", "D4"])
   })
 
   it("are set apart: the key keeps the mode, and the mode keeps the key", () => {
@@ -91,7 +93,7 @@ describe("with", () => {
 
   it("is a block in a play: on its own line it sounds with the others, and repeats as a block does", () => {
     const o = clean(
-      "set tempo 96\nchords verse = i bIII|bVII iv\n\nwith key E, mode minor {\n  play {\n    piano: chords verse\n    with octave 2 { bass: 1---5--- }\n  }\n}",
+      "set tempo 96\nchords verse = i III|VII iv\n\nwith key E, mode minor {\n  play {\n    piano: chords verse\n    with octave 2 { bass: 1---5--- }\n  }\n}",
     ).outputs[0]
     expect(chords(o)).toEqual(["Em", "G", "D", "Am"])
     // the bass's two notes, under the whole chart, an octave below
