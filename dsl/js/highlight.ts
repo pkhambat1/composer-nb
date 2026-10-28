@@ -191,9 +191,9 @@ const isCount = (w: string | undefined) => /^[\d(][\d.()+*/-]*$/.test(w || "")
 function values(text: string, kind: Kind): Part[] {
   const all = pieces(text, /(\s+|\||[{},])/)
   const words = all.filter((p) => !/^\s+$/.test(p))
-  // piano: chords Am F|C G: the word, then the chart
-  const chart = kind === "pitched" && words[0] === "chords"
-  if (kind === "pitched") kind = chart ? "chord" : "notes"
+  // piano: chords Am F|C G, bass: notes 1---5---: the word that says the type, then its value
+  const lead = kind === "pitched" && (words[0] === "chords" || words[0] === "notes")
+  if (kind === "pitched") kind = words[0] === "chords" ? "chord" : "notes"
   lastKind = kind
   const mistakes = kind === "drum" ? beside(words) : new Set<number>()
   const timed = kind === "drum" || kind === "notes" // lines that take lengths and ...
@@ -203,13 +203,13 @@ function values(text: string, kind: Kind): Part[] {
     if (/^\s+$/.test(p)) return [part(null, p)]
     k++
     if (mistakes.has(k)) return [part("tk-error", p)]
-    if (chart && k === 0) return [part("tk-directive-key", p)]
+    if (lead && k === 0) return [part("tk-directive-key", p)]
     if (p === ",") return [part("tk-punct", p)]
     // 5 of C3, V7 of V: of counts from what comes after it, and a chain of of's takes
     // brackets, 5 of (5 of C3), so an of straight after another one is a mistake
     if (ofs && p === "of") {
       const chained = words[k - 2] === "of" && !words[k - 1].startsWith("(")
-      const alone = k === (chart ? 1 : 0) || k === words.length - 1
+      const alone = k === (lead ? 1 : 0) || k === words.length - 1
       return [part(chained || alone ? "tk-error" : "tk-directive-key", p)]
     }
     if (ofs && /[()]/.test(p)) return ofBrackets(p, kind)

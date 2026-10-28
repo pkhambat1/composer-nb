@@ -65,7 +65,7 @@ describe("MIDI export", () => {
   })
 
   it("puts each pitched instrument on its own track with its program, as long as it sounds", () => {
-    const bytes = file("play {\n  guitar: C---E---\n  bass: C-------\n}")
+    const bytes = file("play {\n  guitar: notes C---E---\n  bass: notes C-------\n}")
     const [, , g, b] = chunks(bytes)
     const guitar = events(g.body)
     expect(String.fromCharCode(...guitar[0].slice(3))).toBe("guitar")

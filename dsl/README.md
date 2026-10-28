@@ -135,7 +135,7 @@ A name's type goes in front of it, and `=` gives it its value:
 | Type      | What it holds                                                                 | Where it goes                                                 |
 | --------- | ----------------------------------------------------------------------------- | ------------------------------------------------------------- |
 | `steps`   | A drum's hits: `steps pair = ^-x-`                                            | On a drum's line: `hat: pair`                                 |
-| `notes`   | A line of notes or degrees: `notes riff = E---F# E-E--`                       | On a pitched instrument's line: `guitar: riff`                |
+| `notes`   | A line of notes or degrees: `notes riff = E---F# E-E--`                       | After `notes` on an instrument's line: `guitar: notes riff`   |
 | `chords`  | Bars of chords: `chords verse = Am F\|C G`                                    | After `chords` on an instrument's line: `piano: chords verse` |
 | `pattern` | Lines in braces that play together, over and over: `pattern groove = { ... }` | On a line of its own, or after `play`                         |
 
@@ -167,7 +167,7 @@ chords prog = I vi|IV V
 with key E, mode minor {
   play {
     piano: chords walk
-    with octave 2 { bass: 1---5--- }
+    with octave 2 { bass: notes 1---5--- }
   }
 }
 
@@ -192,7 +192,7 @@ set octave 2
 pattern groove = {
   kick: x--x---
   snare: ----x--
-  guitar.electric: E---F# E-E--
+  guitar.electric: notes E---F# E-E--
 }
 
 play groove
@@ -209,17 +209,17 @@ set octave 3
 
 notes scale = 1---2---3---4---|5---6---7---1'---
 
-play piano: scale
+play piano: notes scale
 ```
 
 `of` counts a degree from another note instead of from the key, on that note's major scale: `5 of C3` is `G3` and `b3 of C3` is `Eb3`. A note counted that way goes in brackets to count from it, so the circle of fifths from C3 is `C3--- 5 of C3--- 5 of (5 of C3)--- 5 of (5 of (5 of C3))---`.
 
-A length in front of one note holds it, as a length in front of `rest` is silence: `bass: 3 beats C2, 3 beats G1`. `...G1` holds G1 to the end of the block. A length holds one note, so a figure is drawn and a long note takes a length. A line plays one note at a time. For more, its line takes a block of lines, which play together:
+A length in front of one note holds it, as a length in front of `rest` is silence: `bass: notes 3 beats C2, 3 beats G1`. `...G1` holds G1 to the end of the block. A length holds one note, so a figure is drawn and a long note takes a length. A line plays one note at a time. For more, its line takes a block of lines, which play together:
 
 ```
 play piano: {
-  C5-D5-E5-G5-E5-D5-C5---
-  1 bars C3
+  notes C5-D5-E5-G5-E5-D5-C5---
+  notes 1 bars C3
 }
 ```
 

@@ -31,7 +31,7 @@ set mode minor
 
 play piano: {
   chords i VI|III VII
-  E5-------C5-------|E5---D5---C5---B4---
+  notes E5-------C5-------|E5---D5---C5---B4---
 }`
 
 let client
@@ -70,13 +70,13 @@ describe("tools", () => {
 
   it("parse reports errors with their lines and the line's text", async () => {
     const r = await call("parse", {
-      source: "set tempo 90\n\nplay {\n  kick: x--x---\n  piano: Am F\n}",
+      source: "set tempo 90\n\nplay {\n  kick: x--x---\n  piano: notes Am F\n}",
     })
     expect(r.isError).toBe(true)
     const t = textOf(r)
     expect(t).toContain("1 error")
     expect(t).toMatch(/line 5: .*chords/)
-    expect(t).toContain("piano: Am F")
+    expect(t).toContain("piano: notes Am F")
   })
 
   it("parse takes an empty source as a cell for the user to write in", async () => {

@@ -20,7 +20,7 @@ const notes = (o) => o.notes.map((e) => `${e.instrument} ${e.note.name}`)
 const chords = (o) => o.chords.map((e) => e.chord.label)
 
 describe("a key and its mode", () => {
-  const scale = "play piano: 1-2-3-4-5-6-7-1'-"
+  const scale = "play piano: notes 1-2-3-4-5-6-7-1'-"
   it("give E minor's key signature and spelling, and its scale to the degrees", () => {
     const minor = clean(`set key E\nset mode minor\nset octave 4\n${scale}`)
     expect(minor.notes.map((e) => e.note.midi)).toEqual([64, 66, 67, 69, 71, 72, 74, 76])
@@ -33,14 +33,14 @@ describe("a key and its mode", () => {
   })
 
   it("raise minor's 7th with a sharp in a flat key, and name the key in the header", () => {
-    const p = clean("set key G\nset mode minor\nset octave 4\nplay piano: #7---1'---")
+    const p = clean("set key G\nset mode minor\nset octave 4\nplay piano: notes #7---1'---")
     const voice = sheetAbc(p.outputs[0].blocks[0]).abc.split("\n").find((l) => l.startsWith("[V:P1]"))
     expect(voice).toBe("[V:P1] ^f4 g4 z4 z4 |")
     expect(sheetAbc(p.outputs[0].blocks[0]).abc).toContain("K:Gm")
   })
 
   it("change the pitch: the same degrees and numerals sound in each mode's own scale", () => {
-    const cell = "play piano: {\n  chords i III|VII IV\n  3-------6-------|7-------1'-------\n}"
+    const cell = "play piano: {\n  chords i III|VII IV\n  notes 3-------6-------|7-------1'-------\n}"
     const sounds = (mode) => clean(`set key D\nset mode ${mode}\n${cell}`).events.map((e) => e.note?.name ?? e.chord.label)
     expect(sounds("minor")).toEqual(["Dm", "F3", "F", "Bb3", "C", "C4", "G", "D4"])
     expect(sounds("dorian")).toEqual(["Dm", "F3", "F", "B3", "C", "C4", "G", "D4"])
@@ -59,7 +59,7 @@ describe("a key and its mode", () => {
 
 describe("with", () => {
   it("gives its block its settings, and puts back what was set at its }", () => {
-    const p = clean("set octave 4\nwith key E, mode minor, octave 2 {\n  play piano: 1---\n}\nplay piano: 1---")
+    const p = clean("set octave 4\nwith key E, mode minor, octave 2 {\n  play piano: notes 1---\n}\nplay piano: notes 1---")
     expect(p.outputs.map(notes)).toEqual([["piano E2"], ["piano C4"]])
     expect([p.outputs[0].blocks[0].key, p.outputs[0].blocks[0].mode]).toEqual(["E", "minor"])
     expect([p.state.key, p.state.mode, p.state.octave]).toEqual(["C", "major", 4])
@@ -79,7 +79,7 @@ describe("with", () => {
     expect(chords(p.outputs[0])).toEqual(["E", "A"])
     expect(Object.keys(p.state.words)).toEqual([])
     // and inside a play, as names in any block do
-    const q = parseSource("play {\n  with key E {\n    notes riff = 1---5---\n    bass: riff\n  }\n  piano: riff\n}")
+    const q = parseSource("play {\n  with key E {\n    notes riff = 1---5---\n    bass: notes riff\n  }\n  piano: notes riff\n}")
     expect(q.errors.map((e) => e.msg)).toContain(`"riff" isn't defined above. Name it first: notes riff = F---G---`)
   })
 
@@ -93,7 +93,7 @@ describe("with", () => {
 
   it("is a block in a play: on its own line it sounds with the others, and repeats as a block does", () => {
     const o = clean(
-      "set tempo 96\nchords verse = i III|VII iv\n\nwith key E, mode minor {\n  play {\n    piano: chords verse\n    with octave 2 { bass: 1---5--- }\n  }\n}",
+      "set tempo 96\nchords verse = i III|VII iv\n\nwith key E, mode minor {\n  play {\n    piano: chords verse\n    with octave 2 { bass: notes 1---5--- }\n  }\n}",
     ).outputs[0]
     expect(chords(o)).toEqual(["Em", "G", "D", "Am"])
     // the bass's two notes, under the whole chart, an octave below
@@ -121,25 +121,25 @@ describe("with", () => {
 
   it("plays a pattern where it's played, so a pattern under two keys plays in each", () => {
     const o = clean(
-      "pattern song = {\n  piano: chords I V\n  bass: 1-------5-------\n}\nplay (\n  with key A { song }\n  with key Bb { song }\n)",
+      "pattern song = {\n  piano: chords I V\n  bass: notes 1-------5-------\n}\nplay (\n  with key A { song }\n  with key Bb { song }\n)",
     ).outputs[0]
     expect(chords(o)).toEqual(["A", "E", "Bb", "F"])
     expect(notes(o).filter((n) => n.startsWith("bass"))).toEqual(["bass A3", "bass E4", "bass Bb3", "bass F4"])
   })
 
   it("can be in a pattern, a bar or an every, and the play's one line", () => {
-    const o = clean("pattern pp = {\n  piano: 1---\n  with octave 2 { bass: 1--- }\n}\nplay pp").outputs[0]
+    const o = clean("pattern pp = {\n  piano: notes 1---\n  with octave 2 { bass: notes 1--- }\n}\nplay pp").outputs[0]
     expect(notes(o)).toEqual(["piano C3", "bass C2"])
     // what's in a bar repeats to fill it
-    const bar = clean("play 2 bars {\n  bar 2 with octave 5 { piano: 1--- }\n  kick: x---\n}").outputs[0]
+    const bar = clean("play 2 bars {\n  bar 2 with octave 5 { piano: notes 1--- }\n  kick: x---\n}").outputs[0]
     expect(bar.notes.map((e) => [e.note.name, e.secStart])).toEqual([
       ["C5", 2],
       ["C5", 2.5],
       ["C5", 3],
       ["C5", 3.5],
     ])
-    expect(notes(clean("play every 2 steps with octave 5 { piano: 1- }").outputs[0])).toEqual(["piano C5"])
-    expect(notes(clean("play with key E { piano: 1--- }").outputs[0])).toEqual(["piano E3"])
+    expect(notes(clean("play every 2 steps with octave 5 { piano: notes 1- }").outputs[0])).toEqual(["piano C5"])
+    expect(notes(clean("play with key E { piano: notes 1--- }").outputs[0])).toEqual(["piano E3"])
   })
 
   it("sets time, tempo and swing around a whole play, or on a part in order", () => {
@@ -174,32 +174,32 @@ describe("with", () => {
   })
 
   it("takes settings with commas between them, each once, and a block", () => {
-    expect(firstError("with key E mode minor {\n  play piano: 1---\n}")).toBe(
+    expect(firstError("with key E mode minor {\n  play piano: notes 1---\n}")).toBe(
       "Settings in a with are separated by commas: with key E, mode minor { ... }",
     )
-    expect(firstError("with key E, key G {\n  play piano: 1---\n}")).toBe("key is in this with twice. A with sets each setting once")
-    expect(firstError("with {\n  play piano: 1---\n}")).toBe(
+    expect(firstError("with key E, key G {\n  play piano: notes 1---\n}")).toBe("key is in this with twice. A with sets each setting once")
+    expect(firstError("with {\n  play piano: notes 1---\n}")).toBe(
       "with takes the settings its block plays with, then the block: with octave 2 { ... }",
     )
     expect(firstError("with key E")).toBe("with takes the settings its block plays with, then the block: with octave 2 { ... }")
-    expect(firstError("play {\n  with key E bass: 1---\n}")).toBe(
+    expect(firstError("play {\n  with key E bass: notes 1---\n}")).toBe(
       "with takes the settings its block plays with, then the block: with octave 2 { ... }",
     )
-    expect(firstError("with key E, {\n  play piano: 1---\n}")).toBe("A comma goes between two settings: with key E, mode minor { ... }")
-    expect(firstError("with set key E {\n  play piano: 1---\n}")).toBe("A with's settings have no set in front: with key E { ... }")
+    expect(firstError("with key E, {\n  play piano: notes 1---\n}")).toBe("A comma goes between two settings: with key E, mode minor { ... }")
+    expect(firstError("with set key E {\n  play piano: notes 1---\n}")).toBe("A with's settings have no set in front: with key E { ... }")
     expect(firstError("with tempo {\n  play kick: x\n}")).toBe("with tempo needs a value after it, e.g. with tempo 90 { ... }")
     expect(firstError("with tempi 90 {\n  play kick: x\n}")).toBe(`"tempi" isn't a setting. Did you mean with tempo?`)
     expect(firstError("with octave 9 {\n  play kick: x\n}")).toBe("octave is a number from 1 to 6")
-    expect(firstError("with key E {\n  play piano: 1---\n")).toBe("This with needs a } to close it")
-    expect(firstError("with key E {\n  play piano: 1---\n} play piano: 1---")).toBe("Nothing can follow a }")
-    expect(firstError("with guitar.electric muted {\n  play guitar.electric: E2---\n}")).toBeUndefined()
+    expect(firstError("with key E {\n  play piano: notes 1---\n")).toBe("This with needs a } to close it")
+    expect(firstError("with key E {\n  play piano: notes 1---\n} play piano: notes 1---")).toBe("Nothing can follow a }")
+    expect(firstError("with guitar.electric muted {\n  play guitar.electric: notes E2---\n}")).toBeUndefined()
   })
 
   it("can't hold an instrument's line at the top, where nothing plays it", () => {
     expect(firstError("with key E {\n  piano: chords I\n}")).toBe(
       "An instrument's line goes inside braces: in a pattern, or play { piano: chords I }",
     )
-    expect(errors("play {\n  with key E {\n    play piano: 1---\n  }\n}")).toContain("play goes at the top, not inside braces")
+    expect(errors("play {\n  with key E {\n    play piano: notes 1---\n  }\n}")).toContain("play goes at the top, not inside braces")
   })
 
   it("goes around an instrument's line, not among its layers or in a value", () => {
@@ -214,7 +214,7 @@ describe("with", () => {
     )
     expect(firstError("with key E { }")).toBe("These braces have nothing in them")
     // a pattern's value can be one line, and that line a with
-    expect(notes(clean("pattern pp = with key E { piano: 1--- }\nplay pp").outputs[0])).toEqual(["piano E3"])
+    expect(notes(clean("pattern pp = with key E { piano: notes 1--- }\nplay pp").outputs[0])).toEqual(["piano E3"])
   })
 
   it("starts each cell from the settings set above it, not a with's", () => {

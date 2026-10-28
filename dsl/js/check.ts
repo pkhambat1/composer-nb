@@ -46,7 +46,7 @@ export function misplaced(name: string, type: Type, use: Use): string | null {
         return `${name} is ${type === "pattern" ? "a pattern" : type}, so it can't be a layer of steps`
       if (type === "sticking") return stickingLine(name)
       if (type === "pattern") return ownLine(name)
-      return `${name} is ${type}, so it goes on a line like piano: ${type === "chords" ? "chords " : ""}${name}, not on a drum's`
+      return `${name} is ${type}, so it goes on a line like piano: ${type} ${name}, not on a drum's`
     case "pitched":
       if (type === "steps")
         return `${name} is steps, so it goes on a drum's line, not on ${use.part}'s`
@@ -55,6 +55,8 @@ export function misplaced(name: string, type: Type, use: Use): string | null {
           ? `${name} is chords, so chords goes in front of it: ${use.part}: chords ${use.text}`
           : `${name} is chords, and the rest of this line is notes. A line plays one or the other`
       }
+      if (type === "notes")
+        return `${name} is notes, so notes goes in front of it: ${use.part}: notes ${name}`
       return type === "sticking" ? stickingLine(name) : ownLine(name)
     case "chart":
       if (type === "steps") return `${name} is steps, so it goes on a drum's line, not among chords`
@@ -67,7 +69,7 @@ export function misplaced(name: string, type: Type, use: Use): string | null {
     case "own":
       if (type === "steps") return `${name} is steps, so it goes on a drum's line: hat: ${name}`
       if (type === "sticking") return stickingLine(name)
-      return `${name} is ${type}, so it goes on an instrument's line: piano: ${type === "chords" ? "chords " : ""}${name}`
+      return `${name} is ${type}, so it goes on an instrument's line: piano: ${type} ${name}`
     default:
       return unhandled(use)
   }

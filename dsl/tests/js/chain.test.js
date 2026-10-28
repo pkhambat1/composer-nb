@@ -36,7 +36,7 @@ describe("parseChain", () => {
       "F",
       "C",
     ])
-    const riff = parseChain(["notes riff = F---G---", "play guitar: riff"])
+    const riff = parseChain(["notes riff = F---G---", "play guitar: notes riff"])
     expect(riff.notes.map((e) => e.label)).toEqual(["F", "G"])
   })
 

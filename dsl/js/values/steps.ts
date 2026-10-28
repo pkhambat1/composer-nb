@@ -685,7 +685,7 @@ export function stepPattern(
       } else if (noteSteps(tok)?.some((s: { cut?: boolean } | null) => s && !s.cut)) {
         err(
           part.ln,
-          `"${tok}"${where} is notes, and ${part.name} is a drum. Notes go on a pitched instrument's line: guitar: ${spaceNotes(tok)}`,
+          `"${tok}"${where} is notes, and ${part.name} is a drum. Notes go on a pitched instrument's line: guitar: notes ${spaceNotes(tok)}`,
         )
       } else if (buildChord(tok, keyOf(st)!)) {
         err(

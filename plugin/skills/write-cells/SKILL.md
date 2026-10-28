@@ -58,8 +58,8 @@ pattern groove = {
 
 pattern walk = {
   groove
-  with octave 4 { piano: scale }
-  with octave 2 { bass: roots }
+  with octave 4 { piano: notes scale }
+  with octave 2 { bass: notes roots }
   guitar: chords i III|v VII|i vidim|IV ii|i
 }
 

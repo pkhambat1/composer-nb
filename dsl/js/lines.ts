@@ -99,7 +99,7 @@ export const EVERY_RE = /^every(\s|$)/
 export const LINE_SHAPES =
   "Each line is a setting (set tempo 90), a name with its type (chords verse = Am F, " +
   "pattern groove = { ... }), play, or inside braces an instrument and what it plays " +
-  "(kick: x--x---, guitar: F---G---) or patterns to play (intro verse)"
+  "(kick: x--x---, guitar: notes F---G---) or patterns to play (intro verse)"
 
 // bar 2 { ... }, bar 2 hat.pedal: 4, bar 3 to 4 fill: what plays in those bars of the
 // block it's in, and nowhere else. Returns { kind: "placed", from, to, lines }, where
@@ -239,7 +239,7 @@ export function classify({ ln, parts }: Line, err: Report, st: State): ReadLine 
     } else if (first === "chords" && after) {
       err(ln, `Chords go on an instrument's line: ${"piano"}: ${text}`)
     } else if (first === "notes" && after) {
-      err(ln, `Notes go on an instrument's line: guitar: ${spaceNotes(after)}`)
+      err(ln, `Notes go on an instrument's line: guitar: notes ${spaceNotes(after)}`)
     } else if (among(SETTINGS, first.toLowerCase())) {
       // tempo 90 is a setting, so it starts with set
       const name = first.toLowerCase()
@@ -256,7 +256,7 @@ export function classify({ ln, parts }: Line, err: Report, st: State): ReadLine 
     ) {
       err(ln, `Chords go on an instrument's line, e.g. ${"piano"}: chords ${text}`)
     } else if (!tokens.some((t) => sections[t]) && tokens.some(drawsNotes)) {
-      err(ln, `Notes go on an instrument's line, e.g. guitar: ${spaceNotes(text)}`)
+      err(ln, `Notes go on an instrument's line, e.g. guitar: notes ${spaceNotes(text)}`)
     } else if (/^[A-Za-z(*\d{]/.test(first)) {
       // intro verse verse: patterns to play, one after another
       const items = readSequence(parts, ln, err, st)

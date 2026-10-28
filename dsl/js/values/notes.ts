@@ -371,7 +371,7 @@ export function noteParts(
     const p = noteRunPeriod(run)
     if (p) {
       const short = spaceNotes(run.replace(/\s/g, "").slice(0, p))
-      const head = part ? `${part.name}: ` : ""
+      const head = part ? `${part.name}: notes ` : ""
       return fail(`${head}${value} repeats ${short}. Write ${head}${short}: a pattern repeats it`)
     }
   }
@@ -414,11 +414,11 @@ export function notNotes(tok: string, st: State, inst: string, chart: string): s
   }
   if (/^[-_x^~d]+$/.test(tok)) {
     return /[xd]/.test(tok)
-      ? `"${tok}" is a drum's steps. On ${inst} a step is a note: ${inst}: F---G---`
+      ? `"${tok}" is a drum's steps. On ${inst} a step is a note: ${inst}: notes F---G---`
       : `"${tok}": ^ and ~ go in front of a note: ^F, ~G`
   }
   if (/^[-_^~a-g#\d']+$/.test(tok) && /[a-g]/.test(tok) && (tok.length === 1 || /[-_]/.test(tok))) {
-    return `"${tok}": notes are capital letters, A to G: ${inst}: F---G---`
+    return `"${tok}": notes are capital letters, A to G: ${inst}: notes F---G---`
   }
   if (st.sections[tok]) {
     return misplaced(tok, "pattern", { line: "pitched", part: inst, text: "", chart: false })!
@@ -582,14 +582,6 @@ function pitchedLayer(
   const here = { ...part, ln: line.ln, value: line.parts }
   const text = textOf(line.parts)
   const tokens = tokenize(text)
-  if (tokens[0] === "notes") {
-    const rest = text.replace(/^\s*notes\s*/, "")
-    err(
-      line.ln,
-      `A line's notes need no word in front: ${part.name}: ${spaceNotes(rest) || "F---G---"}`,
-    )
-    return null
-  }
   if (tokens[0] === "chords") {
     const chart = tokens.slice(1)
     if (bracesIn(line.parts).length) {
@@ -598,11 +590,36 @@ function pitchedLayer(
     }
     return chordPattern(here, chart, st, barTicks, err)
   }
-  const voice = noteVoice(line, part, st, err)
+  if (tokens[0] !== "notes") {
+    // Every instrument line says which type it holds, as a chart does: piano: chords Am F
+    if (tokens.length) {
+      const key = keyOf(st)!
+      const chart = tokens.every(
+        (t) => CHORD_MARKS.includes(t) || st.words[t]?.type === "chords" || buildChord(t, key),
+      )
+      err(
+        line.ln,
+        `${part.name} takes notes or chords, and says which: ` +
+          (chart
+            ? `${part.name}: chords ${text}`
+            : `${part.name}: notes ${spaceNotes(text) || "F---G---"}`),
+      )
+      return null
+    }
+    const voice = noteVoice(line, part, st, err)
+    return voice && notePattern(here, voice, st)
+  }
+  // notes, then what the line plays: the word is dropped and the rest is read as notes
+  const [first, ...others] = line.parts
+  const bare: Line = {
+    ...line,
+    parts: [(first as string).replace(/^\s*notes\s*/, ""), ...others],
+  }
+  const voice = noteVoice(bare, part, st, err)
   return voice && notePattern(here, voice, st)
 }
 
-// A pitched instrument's line: guitar: E---F# E-E--, or piano: chords Am F|C G. A block
+// A pitched instrument's line: guitar: notes E---F# E-E--, or piano: chords Am F|C G. A block
 // holds its layers, one a line, which play together: more notes at once, or chords under a
 // tune. Each layer repeats until they all line up again.
 export function pitchedPattern(

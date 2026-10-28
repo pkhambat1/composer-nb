@@ -5,7 +5,7 @@ vi.mock("tone", () => ({}))
 const { parseSource } = await import("../../js/music-engine.ts")
 
 describe("Cadd9 audio path", () => {
-  it("guitar: plays C E G D", () => {
+  it("guitar: notes plays C E G D", () => {
     const { chords } = parseSource("play guitar: chords Cadd9")
     const c = chords[0].chord
     const pcs = c.notesMidi.map((m) => ((m % 12) + 12) % 12).sort((a, b) => a - b)

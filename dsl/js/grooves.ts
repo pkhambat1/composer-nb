@@ -74,7 +74,7 @@ pattern groove = {
   kick: x--x---
   snare.rim: ----x--
   ride.bell: x--
-  guitar.electric: D---E D-D--
+  guitar.electric: notes D---E D-D--
 }
 
 play 3 bars (
@@ -161,12 +161,12 @@ set octave 3
 
 pattern walk = {
   with octave 4 {
-    piano: 1---2---3---4---|5---6---7---1'---
+    piano: notes 1---2---3---4---|5---6---7---1'---
       |1'---7---6---5---|4---3---2-------|1 bars 1
   }
   guitar: chords I iii|V vii|I vi|ivdim II|I
   with octave 2 {
-    bass: 1-------3-------|5-------7-------
+    bass: notes 1-------3-------|5-------7-------
       |1'-------6-------|4-------2-------|1 bars 1
   }
   hat: x-
@@ -190,12 +190,12 @@ set octave 3
 
 pattern walk = {
   with octave 4 {
-    piano: 1---2---3---4---|5---6---7---1'---
+    piano: notes 1---2---3---4---|5---6---7---1'---
       |1'---7---6---5---|4---3---2-------|1 bars 1
   }
   guitar: chords I iiidim|v VII|I vi|IV ii|I
   with octave 2 {
-    bass: 1-------3-------|5-------7-------
+    bass: notes 1-------3-------|5-------7-------
       |1'-------6-------|4-------2-------|1 bars 1
   }
   hat: x-
@@ -219,12 +219,12 @@ set octave 3
 
 pattern walk = {
   with octave 4 {
-    piano: 1---2---3---4---|5---6---7---1'---
+    piano: notes 1---2---3---4---|5---6---7---1'---
       |1'---7---6---5---|4---3---2-------|1 bars 1
   }
   guitar: chords i III|v VII|i vidim|IV ii|i
   with octave 2 {
-    bass: 1-------3-------|5-------7-------
+    bass: notes 1-------3-------|5-------7-------
       |1'-------6-------|4-------2-------|1 bars 1
   }
   hat: x-
@@ -248,12 +248,12 @@ set octave 3
 
 pattern walk = {
   with octave 4 {
-    piano: 1---2---3---4---|5---6---7---1'---
+    piano: notes 1---2---3---4---|5---6---7---1'---
       |1'---7---6---5---|4---3---2-------|1 bars 1
   }
   guitar: chords i III|v VII|i VI|iv iidim|i
   with octave 2 {
-    bass: 1-------3-------|5-------7-------
+    bass: notes 1-------3-------|5-------7-------
       |1'-------6-------|4-------2-------|1 bars 1
   }
   hat: x-
@@ -277,12 +277,12 @@ set octave 3
 
 pattern walk = {
   with octave 4 {
-    piano: 1---2---3---4---|5---6---7---1'---
+    piano: notes 1---2---3---4---|5---6---7---1'---
       |1'---7---6---5---|4---3---2-------|1 bars 1
   }
   guitar: chords i III|vdim vii|i VI|iv II|i
   with octave 2 {
-    bass: 1-------3-------|5-------7-------
+    bass: notes 1-------3-------|5-------7-------
       |1'-------6-------|4-------2-------|1 bars 1
   }
   hat: x-
@@ -306,12 +306,12 @@ set octave 3
 
 pattern walk = {
   with octave 4 {
-    piano: 1---2---3---4---|5---6---7---1'---
+    piano: notes 1---2---3---4---|5---6---7---1'---
       |1'---7---6---5---|4---3---2-------|1 bars 1
   }
   guitar: chords idim iii|V vii|idim VI|iv II|idim
   with octave 2 {
-    bass: 1-------3-------|5-------7-------
+    bass: notes 1-------3-------|5-------7-------
       |1'-------6-------|4-------2-------|1 bars 1
   }
   hat: x-
@@ -337,7 +337,7 @@ set octave 4
 pattern turnaround = {
   piano: chords ii7 V7|Imaj7 -
   with octave 2 {
-    bass: 2---4---5---7---|1'---3'---5'---6'---
+    bass: notes 2---4---5---7---|1'---3'---5'---6'---
       |2'---4'---5---4---|3---5---6---7---
   }
   ride: x-

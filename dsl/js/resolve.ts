@@ -111,7 +111,7 @@ export function unknownInstrument(name: string): string {
       const sounds = PITCHED.filter((p) => p.startsWith(drum + "."))
       return sounds.length
         ? `"${name}" isn't an instrument. ${drum}'s other sound is ${sounds.join(", ")}`
-        : `"${name}" isn't an instrument. ${drum} has one sound: ${drum}: F---G---`
+        : `"${name}" isn't an instrument. ${drum} has one sound: ${drum}: notes F---G---`
     }
     const close = LANES.find((l) => l.includes(".") && editDistance(name, l) <= 2)
     if (close) return `"${name}" isn't a drum. Did you mean ${close}?`
@@ -137,9 +137,9 @@ export function nameProblem(name: string, value: string): string | null {
       pitched && tokenize(value).some((t) => !noteSteps(t) && buildChord(t, parseKey("C")))
     const plays = value.startsWith("{")
       ? pitched
-        ? "F---G---"
+        ? "notes F---G---"
         : "x--x---"
-      : (chart ? "chords " : "") + value
+      : (chart ? "chords " : pitched ? "notes " : "") + value
     return `${n} is an instrument, so it takes a colon: ${n}: ${plays}`
   }
   if (TAKEN.has(n) || /^x\d+$/.test(name))

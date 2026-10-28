@@ -118,15 +118,19 @@ def _open_blocks(text: str) -> Tuple[List[Tuple[str, Optional[str]]], Optional[s
 
 
 def _pitched(written: List[str], names: Names) -> List[Option]:
-    """What can come next on a pitched instrument's line: notes, or chords and then a chart.
-    A line of notes takes lengths: 3 beats C2, 2 beats rest."""
+    """What can come next on a pitched instrument's line: notes or chords, the word that says
+    which, and then its value. A line of notes takes lengths: 3 beats C2, 2 beats rest."""
     notes = _options(names["notes"], "variable")
     if not written:
-        return [("chords ", "keyword")] + notes
+        return [("notes ", "keyword"), ("chords ", "keyword")]
     last = written[-1]
     if written[0] == "chords":  # the word in front is what makes a line a chart
         of = [("of ", "keyword")] if NUMERAL_RE.fullmatch(last) else []
         return of + _options(names["chords"], "variable")
+    if written[0] != "notes":
+        return []
+    if len(written) == 1:
+        return notes
     of = [("of ", "keyword")] if DEGREE_RE.fullmatch(last) else []
     if NUMBER_RE.search(last) or ARITHMETIC_RE.fullmatch(last):
         # a length, 3 beats C2, or a degree of a note, 3 of C2
