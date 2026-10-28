@@ -19,7 +19,7 @@ import {
   type Key,
   type Part,
 } from "./chart.ts"
-import { barLineProblem, partsOf, tokenize } from "./steps.ts"
+import { barLineProblem, isOf, openParens, partsOf, tokenize } from "./steps.ts"
 
 const UNITS_ANY: readonly string[] = UNITS
 
@@ -103,34 +103,10 @@ const NOTE_AT = /([\^~])?(?:([A-G])([#b])?(\d)?|('*)([#b])?([1-7])('*))/y
 export const NOTE_HELP =
   "Notes are A to G, with # or b after them and an octave when it's needed (F, F#, Bb, E2), or degrees of the key, 1 to 7 (1, b3, 5, 1')"
 
-// X of Y, joined into one token as a cell is read, so that a notes line takes it as one note
-// and a chart as one chord: 5 of C3 is 5@C3, and a chain's brackets become ‹ ›, so
-// 5 of (5 of C3) is 5@‹5@C3› and is never read as a group. An of with nothing after it
-// (5 of) is joined too, to be told what goes there; ofShown says one back as written. A name
-// or a part (notes of = ...) isn't joined, to be told that of is taken. @, ‹ or › typed in a
-// cell becomes a look-alike first, so only of makes them, and 5@C3 isn't a note.
-export function joinOf(text: string): string {
-  let s = text.replace(/@/g, "＠").replace(/‹/g, "〈").replace(/›/g, "〉")
-  s = s.replace(/([^\s:=])\s+of(?:\s+(?=[^\s:=])|\s*$)/g, "$1@")
-  for (let at = s.indexOf("@("); at >= 0; at = s.indexOf("@(")) {
-    let depth = 0
-    let close = -1
-    for (let i = at + 1; i < s.length && close < 0; i++) {
-      if (s[i] === "(") depth++
-      else if (s[i] === ")" && --depth === 0) close = i
-    }
-    if (close < 0) break
-    s = s.slice(0, at + 1) + "‹" + s.slice(at + 2, close) + "›" + s.slice(close + 1)
-  }
-  return s
-}
-export const ofShown = (msg: string) =>
-  msg.replace(/@‹/g, " of (").replace(/›/g, ")").replace(/@/g, " of ")
-
 // One note at `i` in `run`: a note by name, a degree, or a degree of another note, counted on
-// that note's major scale (5@C3, b3@‹5@C3›: 5 of C3, b3 of (5 of C3)), with ^ or ~ in front.
-// Returns { step, end }, or null when there isn't one, or when a chain of of's has no
-// brackets (5@5@C3).
+// that note's major scale (5 of C3, b3 of (5 of C3)), with ^ or ~ in front. Returns
+// { step, end }, or null when there isn't one, or when a chain of of's has no brackets
+// (5 of 5 of C3).
 function noteAt(run: string, i: number): { step: NoteStep; end: number } | null {
   NOTE_AT.lastIndex = i
   const m = NOTE_AT.exec(run)
@@ -149,25 +125,26 @@ function noteAt(run: string, i: number): { step: NoteStep; end: number } | null 
         shift: m[8].length - m[5].length,
         label: m[5] + (m[6] || "") + m[7] + m[8],
       }
-  if (run[end] !== "@") return { step: { ...step, ...mods }, end }
+  if (!/^ of( |$)/.test(run.slice(end))) return { step: { ...step, ...mods }, end }
   if (!step.degree) return null
+  const from = end + 4 // past " of "
   let root: NoteStep
   let rootEnd: number
-  if (run[end + 1] === "‹") {
+  if (run[from] === "(") {
     let depth = 0
     let close = -1
-    for (let j = end + 1; j < run.length && close < 0; j++) {
-      if (run[j] === "‹") depth++
-      else if (run[j] === "›" && --depth === 0) close = j
+    for (let j = from; j < run.length && close < 0; j++) {
+      if (run[j] === "(") depth++
+      else if (run[j] === ")" && --depth === 0) close = j
     }
     if (close < 0) return null
-    const text = run.slice(end + 2, close)
+    const text = run.slice(from + 1, close)
     const inner = noteAt(text, 0)
     if (!inner || inner.end !== text.length) return null
     root = inner.step
     rootEnd = close + 1
   } else {
-    const plain = noteAt(run, end + 1)
+    const plain = noteAt(run, from)
     if (!plain || plain.step.of) return null
     root = plain.step
     rootEnd = plain.end
@@ -403,10 +380,7 @@ export function noteParts(
 // The shortest run of notes `run` repeats, in characters, counted at note boundaries so
 // that C2-C2- repeats C2- and C2-C2-- doesn't. 0 when it isn't a repeat.
 function noteRunPeriod(run: string): number {
-  const steps = run
-    .split(/\s+/)
-    .filter(Boolean)
-    .flatMap((t): Step[] => noteSteps(t) || [{ name: t, label: t }])
+  const steps = tokenize(run).flatMap((t): Step[] => noteSteps(t) || [{ name: t, label: t }])
   if (!steps.length) return 0
   const written = steps.map((s) => (!s ? "-" : s.cut ? "_" : writtenNote(s)))
   for (let p = 1; p <= written.length / 2; p++) {
@@ -418,13 +392,16 @@ function noteRunPeriod(run: string): number {
 
 // Why `tok` isn't notes, on `inst`'s line. `chart` is the line to write if these are chords.
 export function notNotes(tok: string, st: State, inst: string, chart: string): string {
-  if (tok.includes("@")) {
-    const at = tok.indexOf("@")
+  if (isOf(tok)) {
+    const at = tok.indexOf(" of")
+    const right = tok.slice(at + 4)
     if (!/^[\^~]?'*[#b]?[1-7]'*$/.test(tok.slice(0, at))) {
       return "of takes a degree in front of it, counted on the major scale of the note after it: 5 of C3"
     }
-    if (tok[at + 1] === "(") return "The ( after of closes on its line: 5 of (5 of C3)"
-    if (tok[at + 1] !== "‹" && tok.indexOf("@", at + 1) > 0)
+    if (right.startsWith("(") && openParens(right) > 0) {
+      return "The ( after of closes on its line: 5 of (5 of C3)"
+    }
+    if (!right.startsWith("(") && isOf(right))
       return "A chain of of's takes brackets: 5 of (5 of C3)"
     return "After of goes the note to count from: 5 of C3, or a degree of the key: 5 of 1"
   }

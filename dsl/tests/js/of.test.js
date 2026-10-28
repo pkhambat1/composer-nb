@@ -128,3 +128,15 @@ describe("of in the editor", () => {
     expect(painted("play piano: chords of V", "of")).toEqual(["tk-error"])
   })
 })
+
+describe("of is read as written", () => {
+  it("so a message quotes what was written, and @ means nothing", () => {
+    expect(firstError("@tempo 90")).toBe('"@tempo" isn\'t a setting. Did you mean set tempo?')
+    expect(firstError("play piano: 5@C3---")).toMatch(/^"5@C3---" isn't a note/)
+  })
+
+  it("and goes on an instrument's line, never between patterns", () => {
+    const src = "pattern verse = {\n  kick: x---\n}\npattern chorus = {\n  snare: --x-\n}\nplay (verse of chorus)"
+    expect(firstError(src)).toBe("of counts a note or a chord from another: piano: 5 of C3, or piano: chords V7 of V")
+  })
+})

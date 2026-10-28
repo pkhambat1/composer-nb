@@ -25,7 +25,6 @@ import {
 } from "./state.ts"
 import type { Block, Statement, Text } from "./syntax.ts"
 import { fmt, lengthPrefix, MAX_SECONDS, singularLength, TPQ } from "./time.ts"
-import { joinOf, ofShown } from "./values/notes.ts"
 import { SETTINGS } from "./vocab.ts"
 
 // What one play plays
@@ -117,8 +116,7 @@ function gridBlocks(
 // output.
 export function parseCell(src: unknown, inherited: State = initialState()) {
   const errors: { line: number; msg: string }[] = []
-  const err = (line: number, said: string) => {
-    const msg = ofShown(said)
+  const err = (line: number, msg: string) => {
     if (!errors.some((e) => e.line === line && e.msg === msg)) errors.push({ line, msg })
   }
   const state = Scope.forCell(inherited, cloneState)
@@ -138,7 +136,7 @@ export function parseCell(src: unknown, inherited: State = initialState()) {
       .map((e) => at({ span: e.span } as Block)),
   )
   // A line as written, without its comment: what messages quote
-  const lineAt = (ln: number) => joinOf(raws[ln - 1].replace(/\/\/.*$/, "").trim())
+  const lineAt = (ln: number) => raws[ln - 1].replace(/\/\/.*$/, "").trim()
 
   let anonCount = 0
   // A with that transposes, in a block or around one: the line it's on, for the check that
@@ -200,7 +198,7 @@ export function parseCell(src: unknown, inherited: State = initialState()) {
       blocks = { ...(blocks ?? {}), [key]: { key, anon: true, ln, lines: inner.body, bars: 0 } }
       add(key, p.span)
     }
-    const line: Line = { ln, text: joinOf(text), blocks }
+    const line: Line = { ln, text, blocks }
     return { line, dropped }
   }
 

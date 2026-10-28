@@ -86,8 +86,59 @@ export const STEPS: Record<string, Mods> = {
 }
 
 export function tokenize(value: string): string[] {
-  return value.replace(/,/g, " ").replace(/\|/g, " | ").trim().split(/\s+/).filter(Boolean)
+  const words = value.replace(/,/g, " ").replace(/\|/g, " | ").trim().split(/\s+/).filter(Boolean)
+  return joinOf(words)
 }
+
+// How many ( are left open in `text`
+const openIn = (text: string) =>
+  [...text].reduce((depth, c) => depth + (c === "(" ? 1 : c === ")" ? -1 : 0), 0)
+
+// X of Y is one token, written as it reads, so a notes line takes it as one note and a chart
+// as one chord: 5 of C3, V7 of V, and a chain in brackets, 5 of (5 of C3), which runs to
+// its ). An of with nothing after it (5 of) is joined too, to be told what goes there. One
+// after a colon or a bar line, or before an =, isn't joined, to be told that of is taken.
+function joinOf(words: string[]): string[] {
+  const out: string[] = []
+  for (let i = 0; i < words.length; i++) {
+    const prev = out[out.length - 1]
+    const next = words[i + 1]
+    if (
+      words[i] !== "of" ||
+      !prev ||
+      prev === "|" ||
+      /[:=]$/.test(prev) ||
+      /^[:=]/.test(next ?? "")
+    ) {
+      out.push(words[i])
+      continue
+    }
+    let joined = `${prev} of`
+    if (next !== undefined) {
+      let j = i + 1
+      joined += ` ${words[j]}`
+      for (let depth = openIn(words[j]); depth > 0 && j + 1 < words.length; ) {
+        j++
+        joined += ` ${words[j]}`
+        depth += openIn(words[j])
+      }
+      i = j
+    }
+    out[out.length - 1] = joined
+  }
+  return out
+}
+
+// Whether a token is X of Y
+export const isOf = (token: string) => / of( |$)/.test(token)
+// `text` without its X of Y, so the brackets of a chain (5 of (5 of C3)) aren't read as a
+// group of patterns
+export const withoutOf = (text: string) =>
+  tokenize(text)
+    .filter((t) => !isOf(t))
+    .join(" ")
+// How many ( a token leaves open: a chain whose ( doesn't close on its line
+export const openParens = openIn
 
 // Split tokens on bar lines; empty bars (e.g. from a leading |) are dropped.
 export function splitBars(tokens: string[]): string[][] {
