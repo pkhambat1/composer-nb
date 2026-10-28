@@ -960,71 +960,71 @@ from above: none
 length: 7.2727 s
 block startSec=0 durSec=7.2727 bars=4 time=4 over 4 tempo=132 key=C unit=4 barTicks=384 res=2
 drums:
-  0 inst=kick art=hit lane=kick kit=rock tick=0 vel=0.7 line=14 secSwing=0
-  0 inst=ride art=hit lane=ride kit=rock tick=0 vel=0.7 line=12 secSwing=0
-  0.2273 inst=ride art=hit lane=ride kit=rock tick=48 vel=0.7 line=12 secSwing=0.0758
-  0.4545 inst=hat art=pedal lane=hat.pedal kit=rock tick=96 vel=0.7 line=13 secSwing=0
-  0.4545 inst=ride art=hit lane=ride kit=rock tick=96 vel=0.7 line=12 secSwing=0
-  0.6818 inst=ride art=hit lane=ride kit=rock tick=144 vel=0.7 line=12 secSwing=0.0758
-  0.9091 inst=kick art=hit lane=kick kit=rock tick=192 vel=0.7 line=14 secSwing=0
-  0.9091 inst=ride art=hit lane=ride kit=rock tick=192 vel=0.7 line=12 secSwing=0
-  1.1364 inst=ride art=hit lane=ride kit=rock tick=240 vel=0.7 line=12 secSwing=0.0758
-  1.3636 inst=hat art=pedal lane=hat.pedal kit=rock tick=288 vel=0.7 line=13 secSwing=0
-  1.3636 inst=ride art=hit lane=ride kit=rock tick=288 vel=0.7 line=12 secSwing=0
-  1.5909 inst=ride art=hit lane=ride kit=rock tick=336 vel=0.7 line=12 secSwing=0.0758
-  1.8182 inst=kick art=hit lane=kick kit=rock tick=384 vel=0.7 line=14 secSwing=0
-  1.8182 inst=ride art=hit lane=ride kit=rock tick=384 vel=0.7 line=12 secSwing=0
-  2.0455 inst=ride art=hit lane=ride kit=rock tick=432 vel=0.7 line=12 secSwing=0.0758
-  2.2727 inst=hat art=pedal lane=hat.pedal kit=rock tick=480 vel=0.7 line=13 secSwing=0
-  2.2727 inst=ride art=hit lane=ride kit=rock tick=480 vel=0.7 line=12 secSwing=0
-  2.5 inst=ride art=hit lane=ride kit=rock tick=528 vel=0.7 line=12 secSwing=0.0758
-  2.7273 inst=kick art=hit lane=kick kit=rock tick=576 vel=0.7 line=14 secSwing=0
-  2.7273 inst=ride art=hit lane=ride kit=rock tick=576 vel=0.7 line=12 secSwing=0
-  2.9545 inst=ride art=hit lane=ride kit=rock tick=624 vel=0.7 line=12 secSwing=0.0758
-  3.1818 inst=hat art=pedal lane=hat.pedal kit=rock tick=672 vel=0.7 line=13 secSwing=0
-  3.1818 inst=ride art=hit lane=ride kit=rock tick=672 vel=0.7 line=12 secSwing=0
-  3.4091 inst=ride art=hit lane=ride kit=rock tick=720 vel=0.7 line=12 secSwing=0.0758
-  3.6364 inst=kick art=hit lane=kick kit=rock tick=768 vel=0.7 line=14 secSwing=0
-  3.6364 inst=ride art=hit lane=ride kit=rock tick=768 vel=0.7 line=12 secSwing=0
-  3.8636 inst=ride art=hit lane=ride kit=rock tick=816 vel=0.7 line=12 secSwing=0.0758
-  4.0909 inst=hat art=pedal lane=hat.pedal kit=rock tick=864 vel=0.7 line=13 secSwing=0
-  4.0909 inst=ride art=hit lane=ride kit=rock tick=864 vel=0.7 line=12 secSwing=0
-  4.3182 inst=ride art=hit lane=ride kit=rock tick=912 vel=0.7 line=12 secSwing=0.0758
-  4.5455 inst=kick art=hit lane=kick kit=rock tick=960 vel=0.7 line=14 secSwing=0
-  4.5455 inst=ride art=hit lane=ride kit=rock tick=960 vel=0.7 line=12 secSwing=0
-  4.7727 inst=ride art=hit lane=ride kit=rock tick=1008 vel=0.7 line=12 secSwing=0.0758
-  5 inst=hat art=pedal lane=hat.pedal kit=rock tick=1056 vel=0.7 line=13 secSwing=0
-  5 inst=ride art=hit lane=ride kit=rock tick=1056 vel=0.7 line=12 secSwing=0
-  5.2273 inst=ride art=hit lane=ride kit=rock tick=1104 vel=0.7 line=12 secSwing=0.0758
-  5.4545 inst=kick art=hit lane=kick kit=rock tick=1152 vel=0.7 line=14 secSwing=0
-  5.4545 inst=ride art=hit lane=ride kit=rock tick=1152 vel=0.7 line=12 secSwing=0
-  5.6818 inst=ride art=hit lane=ride kit=rock tick=1200 vel=0.7 line=12 secSwing=0.0758
-  5.9091 inst=hat art=pedal lane=hat.pedal kit=rock tick=1248 vel=0.7 line=13 secSwing=0
-  5.9091 inst=ride art=hit lane=ride kit=rock tick=1248 vel=0.7 line=12 secSwing=0
-  6.1364 inst=ride art=hit lane=ride kit=rock tick=1296 vel=0.7 line=12 secSwing=0.0758
-  6.3636 inst=kick art=hit lane=kick kit=rock tick=1344 vel=0.7 line=14 secSwing=0
-  6.3636 inst=ride art=hit lane=ride kit=rock tick=1344 vel=0.7 line=12 secSwing=0
-  6.5909 inst=ride art=hit lane=ride kit=rock tick=1392 vel=0.7 line=12 secSwing=0.0758
-  6.8182 inst=hat art=pedal lane=hat.pedal kit=rock tick=1440 vel=0.7 line=13 secSwing=0
-  6.8182 inst=ride art=hit lane=ride kit=rock tick=1440 vel=0.7 line=12 secSwing=0
-  7.0455 inst=ride art=hit lane=ride kit=rock tick=1488 vel=0.7 line=12 secSwing=0.0758
+  0 inst=kick art=hit lane=kick kit=rock tick=0 vel=0.7 line=16 secSwing=0
+  0 inst=ride art=hit lane=ride kit=rock tick=0 vel=0.7 line=14 secSwing=0
+  0.2273 inst=ride art=hit lane=ride kit=rock tick=48 vel=0.7 line=14 secSwing=0.0758
+  0.4545 inst=hat art=pedal lane=hat.pedal kit=rock tick=96 vel=0.7 line=15 secSwing=0
+  0.4545 inst=ride art=hit lane=ride kit=rock tick=96 vel=0.7 line=14 secSwing=0
+  0.6818 inst=ride art=hit lane=ride kit=rock tick=144 vel=0.7 line=14 secSwing=0.0758
+  0.9091 inst=kick art=hit lane=kick kit=rock tick=192 vel=0.7 line=16 secSwing=0
+  0.9091 inst=ride art=hit lane=ride kit=rock tick=192 vel=0.7 line=14 secSwing=0
+  1.1364 inst=ride art=hit lane=ride kit=rock tick=240 vel=0.7 line=14 secSwing=0.0758
+  1.3636 inst=hat art=pedal lane=hat.pedal kit=rock tick=288 vel=0.7 line=15 secSwing=0
+  1.3636 inst=ride art=hit lane=ride kit=rock tick=288 vel=0.7 line=14 secSwing=0
+  1.5909 inst=ride art=hit lane=ride kit=rock tick=336 vel=0.7 line=14 secSwing=0.0758
+  1.8182 inst=kick art=hit lane=kick kit=rock tick=384 vel=0.7 line=16 secSwing=0
+  1.8182 inst=ride art=hit lane=ride kit=rock tick=384 vel=0.7 line=14 secSwing=0
+  2.0455 inst=ride art=hit lane=ride kit=rock tick=432 vel=0.7 line=14 secSwing=0.0758
+  2.2727 inst=hat art=pedal lane=hat.pedal kit=rock tick=480 vel=0.7 line=15 secSwing=0
+  2.2727 inst=ride art=hit lane=ride kit=rock tick=480 vel=0.7 line=14 secSwing=0
+  2.5 inst=ride art=hit lane=ride kit=rock tick=528 vel=0.7 line=14 secSwing=0.0758
+  2.7273 inst=kick art=hit lane=kick kit=rock tick=576 vel=0.7 line=16 secSwing=0
+  2.7273 inst=ride art=hit lane=ride kit=rock tick=576 vel=0.7 line=14 secSwing=0
+  2.9545 inst=ride art=hit lane=ride kit=rock tick=624 vel=0.7 line=14 secSwing=0.0758
+  3.1818 inst=hat art=pedal lane=hat.pedal kit=rock tick=672 vel=0.7 line=15 secSwing=0
+  3.1818 inst=ride art=hit lane=ride kit=rock tick=672 vel=0.7 line=14 secSwing=0
+  3.4091 inst=ride art=hit lane=ride kit=rock tick=720 vel=0.7 line=14 secSwing=0.0758
+  3.6364 inst=kick art=hit lane=kick kit=rock tick=768 vel=0.7 line=16 secSwing=0
+  3.6364 inst=ride art=hit lane=ride kit=rock tick=768 vel=0.7 line=14 secSwing=0
+  3.8636 inst=ride art=hit lane=ride kit=rock tick=816 vel=0.7 line=14 secSwing=0.0758
+  4.0909 inst=hat art=pedal lane=hat.pedal kit=rock tick=864 vel=0.7 line=15 secSwing=0
+  4.0909 inst=ride art=hit lane=ride kit=rock tick=864 vel=0.7 line=14 secSwing=0
+  4.3182 inst=ride art=hit lane=ride kit=rock tick=912 vel=0.7 line=14 secSwing=0.0758
+  4.5455 inst=kick art=hit lane=kick kit=rock tick=960 vel=0.7 line=16 secSwing=0
+  4.5455 inst=ride art=hit lane=ride kit=rock tick=960 vel=0.7 line=14 secSwing=0
+  4.7727 inst=ride art=hit lane=ride kit=rock tick=1008 vel=0.7 line=14 secSwing=0.0758
+  5 inst=hat art=pedal lane=hat.pedal kit=rock tick=1056 vel=0.7 line=15 secSwing=0
+  5 inst=ride art=hit lane=ride kit=rock tick=1056 vel=0.7 line=14 secSwing=0
+  5.2273 inst=ride art=hit lane=ride kit=rock tick=1104 vel=0.7 line=14 secSwing=0.0758
+  5.4545 inst=kick art=hit lane=kick kit=rock tick=1152 vel=0.7 line=16 secSwing=0
+  5.4545 inst=ride art=hit lane=ride kit=rock tick=1152 vel=0.7 line=14 secSwing=0
+  5.6818 inst=ride art=hit lane=ride kit=rock tick=1200 vel=0.7 line=14 secSwing=0.0758
+  5.9091 inst=hat art=pedal lane=hat.pedal kit=rock tick=1248 vel=0.7 line=15 secSwing=0
+  5.9091 inst=ride art=hit lane=ride kit=rock tick=1248 vel=0.7 line=14 secSwing=0
+  6.1364 inst=ride art=hit lane=ride kit=rock tick=1296 vel=0.7 line=14 secSwing=0.0758
+  6.3636 inst=kick art=hit lane=kick kit=rock tick=1344 vel=0.7 line=16 secSwing=0
+  6.3636 inst=ride art=hit lane=ride kit=rock tick=1344 vel=0.7 line=14 secSwing=0
+  6.5909 inst=ride art=hit lane=ride kit=rock tick=1392 vel=0.7 line=14 secSwing=0.0758
+  6.8182 inst=hat art=pedal lane=hat.pedal kit=rock tick=1440 vel=0.7 line=15 secSwing=0
+  6.8182 inst=ride art=hit lane=ride kit=rock tick=1440 vel=0.7 line=14 secSwing=0
+  7.0455 inst=ride art=hit lane=ride kit=rock tick=1488 vel=0.7 line=14 secSwing=0.0758
 notes:
-  0 tick=0 ticks=96 note={"midi":38,"name":"D2","spell":{"letter":"D","alter":0}} label=D2 instrument=bass voice=0 vel=0.7 line=10 secDur=0.4545 secSwing=0
-  0.4545 tick=96 ticks=96 note={"midi":41,"name":"F2","spell":{"letter":"F","alter":0}} label=F2 instrument=bass voice=0 vel=0.7 line=10 secDur=0.4545 secSwing=0
-  0.9091 tick=192 ticks=96 note={"midi":43,"name":"G2","spell":{"letter":"G","alter":0}} label=G2 instrument=bass voice=0 vel=0.7 line=10 secDur=0.4545 secSwing=0
-  1.3636 tick=288 ticks=96 note={"midi":47,"name":"B2","spell":{"letter":"B","alter":0}} label=B2 instrument=bass voice=0 vel=0.7 line=10 secDur=0.4545 secSwing=0
-  1.8182 tick=384 ticks=96 note={"midi":48,"name":"C3","spell":{"letter":"C","alter":0}} label=C3 instrument=bass voice=0 vel=0.7 line=10 secDur=0.4545 secSwing=0
-  2.2727 tick=480 ticks=96 note={"midi":52,"name":"E3","spell":{"letter":"E","alter":0}} label=E3 instrument=bass voice=0 vel=0.7 line=10 secDur=0.4545 secSwing=0
-  2.7273 tick=576 ticks=96 note={"midi":55,"name":"G3","spell":{"letter":"G","alter":0}} label=G3 instrument=bass voice=0 vel=0.7 line=10 secDur=0.4545 secSwing=0
-  3.1818 tick=672 ticks=96 note={"midi":57,"name":"A3","spell":{"letter":"A","alter":0}} label=A3 instrument=bass voice=0 vel=0.7 line=10 secDur=0.4545 secSwing=0
-  3.6364 tick=768 ticks=96 note={"midi":50,"name":"D3","spell":{"letter":"D","alter":0}} label=D3 instrument=bass voice=0 vel=0.7 line=10 secDur=0.4545 secSwing=0
-  4.0909 tick=864 ticks=96 note={"midi":53,"name":"F3","spell":{"letter":"F","alter":0}} label=F3 instrument=bass voice=0 vel=0.7 line=10 secDur=0.4545 secSwing=0
-  4.5455 tick=960 ticks=96 note={"midi":43,"name":"G2","spell":{"letter":"G","alter":0}} label=G2 instrument=bass voice=0 vel=0.7 line=10 secDur=0.4545 secSwing=0
-  5 tick=1056 ticks=96 note={"midi":41,"name":"F2","spell":{"letter":"F","alter":0}} label=F2 instrument=bass voice=0 vel=0.7 line=10 secDur=0.4545 secSwing=0
-  5.4545 tick=1152 ticks=96 note={"midi":40,"name":"E2","spell":{"letter":"E","alter":0}} label=E2 instrument=bass voice=0 vel=0.7 line=10 secDur=0.4545 secSwing=0
-  5.9091 tick=1248 ticks=96 note={"midi":43,"name":"G2","spell":{"letter":"G","alter":0}} label=G2 instrument=bass voice=0 vel=0.7 line=10 secDur=0.4545 secSwing=0
-  6.3636 tick=1344 ticks=96 note={"midi":45,"name":"A2","spell":{"letter":"A","alter":0}} label=A2 instrument=bass voice=0 vel=0.7 line=10 secDur=0.4545 secSwing=0
-  6.8182 tick=1440 ticks=96 note={"midi":47,"name":"B2","spell":{"letter":"B","alter":0}} label=B2 instrument=bass voice=0 vel=0.7 line=10 secDur=0.4545 secSwing=0
+  0 tick=0 ticks=96 note={"midi":38,"name":"D2","spell":{"letter":"D","alter":0}} label=2 instrument=bass voice=0 vel=0.7 line=11 secDur=0.4545 secSwing=0
+  0.4545 tick=96 ticks=96 note={"midi":41,"name":"F2","spell":{"letter":"F","alter":0}} label=4 instrument=bass voice=0 vel=0.7 line=11 secDur=0.4545 secSwing=0
+  0.9091 tick=192 ticks=96 note={"midi":43,"name":"G2","spell":{"letter":"G","alter":0}} label=5 instrument=bass voice=0 vel=0.7 line=11 secDur=0.4545 secSwing=0
+  1.3636 tick=288 ticks=96 note={"midi":47,"name":"B2","spell":{"letter":"B","alter":0}} label=7 instrument=bass voice=0 vel=0.7 line=11 secDur=0.4545 secSwing=0
+  1.8182 tick=384 ticks=96 note={"midi":48,"name":"C3","spell":{"letter":"C","alter":0}} label=1' instrument=bass voice=0 vel=0.7 line=11 secDur=0.4545 secSwing=0
+  2.2727 tick=480 ticks=96 note={"midi":52,"name":"E3","spell":{"letter":"E","alter":0}} label=3' instrument=bass voice=0 vel=0.7 line=11 secDur=0.4545 secSwing=0
+  2.7273 tick=576 ticks=96 note={"midi":55,"name":"G3","spell":{"letter":"G","alter":0}} label=5' instrument=bass voice=0 vel=0.7 line=11 secDur=0.4545 secSwing=0
+  3.1818 tick=672 ticks=96 note={"midi":57,"name":"A3","spell":{"letter":"A","alter":0}} label=6' instrument=bass voice=0 vel=0.7 line=11 secDur=0.4545 secSwing=0
+  3.6364 tick=768 ticks=96 note={"midi":50,"name":"D3","spell":{"letter":"D","alter":0}} label=2' instrument=bass voice=0 vel=0.7 line=11 secDur=0.4545 secSwing=0
+  4.0909 tick=864 ticks=96 note={"midi":53,"name":"F3","spell":{"letter":"F","alter":0}} label=4' instrument=bass voice=0 vel=0.7 line=11 secDur=0.4545 secSwing=0
+  4.5455 tick=960 ticks=96 note={"midi":43,"name":"G2","spell":{"letter":"G","alter":0}} label=5 instrument=bass voice=0 vel=0.7 line=11 secDur=0.4545 secSwing=0
+  5 tick=1056 ticks=96 note={"midi":41,"name":"F2","spell":{"letter":"F","alter":0}} label=4 instrument=bass voice=0 vel=0.7 line=11 secDur=0.4545 secSwing=0
+  5.4545 tick=1152 ticks=96 note={"midi":40,"name":"E2","spell":{"letter":"E","alter":0}} label=3 instrument=bass voice=0 vel=0.7 line=11 secDur=0.4545 secSwing=0
+  5.9091 tick=1248 ticks=96 note={"midi":43,"name":"G2","spell":{"letter":"G","alter":0}} label=5 instrument=bass voice=0 vel=0.7 line=11 secDur=0.4545 secSwing=0
+  6.3636 tick=1344 ticks=96 note={"midi":45,"name":"A2","spell":{"letter":"A","alter":0}} label=6 instrument=bass voice=0 vel=0.7 line=11 secDur=0.4545 secSwing=0
+  6.8182 tick=1440 ticks=96 note={"midi":47,"name":"B2","spell":{"letter":"B","alter":0}} label=7 instrument=bass voice=0 vel=0.7 line=11 secDur=0.4545 secSwing=0
 chords:
   0 tick=0 ticks=192 chord={"input":"ii7","label":"Dm7","rootPc":2,"bassMidi":50,"notesMidi":[62,65,69,72],"noteNames":["D4","F4","A4","C5"],"bassName":"D3"} label=Dm7 instrument=piano transpose=0 line=9 secDur=0.9091 secSwing=0
   0.9091 tick=192 ticks=192 chord={"input":"V7","label":"G7","rootPc":7,"bassMidi":55,"notesMidi":[67,71,74,77],"noteNames":["G4","B4","D5","F5"],"bassName":"G3"} label=G7 instrument=piano transpose=0 line=9 secDur=0.9091 secSwing=0
