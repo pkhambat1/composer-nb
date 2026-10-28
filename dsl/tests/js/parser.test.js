@@ -35,7 +35,8 @@ describe("on every real cell", () => {
         const declared = all.filter((s) => s.kind === "decl").map((s) => s.name)
         const named = [...Object.keys(old.state.words), ...Object.keys(old.state.sections)]
         const isNew = (n) => !(n in inherited.words) && !(n in inherited.sections)
-        expect(new Set(declared.filter(isNew))).toEqual(new Set(named.filter(isNew)))
+        // (one declared inside a with stays inside it, so the state holds fewer)
+        for (const n of named.filter(isNew)) expect(declared, n).toContain(n)
         // What it plays
         expect(all.filter((s) => s.kind === "play").length).toBe(old.outputs.length)
         // Its brace mistakes
