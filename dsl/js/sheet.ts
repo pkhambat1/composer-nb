@@ -1,7 +1,7 @@
 /* A play's output as sheet music: one block of the grid as ABC notation, for a renderer
    such as abcjs to draw. The drums are a percussion staff with the hands in one voice and
    the feet in another; each pitched instrument's line is a staff of its own, and a guitar's
-   comes with a tab staff. Pure, like grid.js. */
+   comes with a tab staff. Pure, like grid.ts. */
 import type { Tablature } from "abcjs"
 import type { GridBlock } from "./cell.ts"
 import { abcKey, keySignature, parseKey, type Key } from "./chords.ts"

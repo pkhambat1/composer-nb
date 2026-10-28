@@ -3,7 +3,7 @@
    changed in one place, and tsc checks that a code exists and gets what it needs.
    Messages still come out as { line, msg }; the codes are for the code that reports them.
    Moving here so far: settings, defining a name twice, time fitting, and of in a chart. The rest of the
-   engine's messages are still written where they're reported, in language.js. */
+   engine's messages are still written where they're reported. */
 import { KITS, MODES, PITCHED, SETTINGS, SETTING_EXAMPLE, SOUNDS } from "./vocab.ts"
 
 // set, or with in a with's header: how the setting was written, so the fix is written so

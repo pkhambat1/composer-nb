@@ -1872,7 +1872,7 @@ body {
 }
 
 
-/* Music language tokens (see lib/highlight.js) */
+/* Music language tokens (see dsl/js/highlight.ts) */
 .tk-inst {
   color: var(--tk-root-maj);
   font-weight: 600;

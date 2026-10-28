@@ -1,4 +1,4 @@
-/* Music engine: parses music cells (see language.js) and renders them to audio with
+/* Music engine: parses music cells (see language.ts) and renders them to audio with
    Tone.js, plus waveform drawing and WAV export. */
 import * as Tone from "tone"
 import * as ChordLookup from "./chord-lookup.ts"
