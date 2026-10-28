@@ -1,13 +1,22 @@
 /* /api/sheet?src=<cell>&play=1&counts=1&format=png: a play's sheet music as an image, so a
    link to it works anywhere an image does. `after` holds the earlier cells' source. The
    address holds the cell, so the image never changes and can be cached for good. */
-import { parse } from "../mcp/cell.js"
-import { pngOf, sheetOf } from "../mcp/render.js"
+import { parse } from "composer-nb-mcp/cell"
+import { pngOf, sheetOf } from "composer-nb-mcp/render"
+import type { Request, Response } from "./_vercel.ts"
 
 export const config = { maxDuration: 30 }
 
-export default async function handler(req, res) {
-  const { src = "", after, play = "1", counts, format = "png" } = req.query || {}
+// A parameter's value: the first, when it's given more than once
+const one = (value: string | string[] | undefined) => (Array.isArray(value) ? value[0] : value)
+
+export default async function handler(req: Request, res: Response) {
+  const query = req.query || {}
+  const src = one(query.src) ?? ""
+  const after = one(query.after)
+  const play = one(query.play) ?? "1"
+  const counts = one(query.counts)
+  const format = one(query.format) ?? "png"
   const { parsed } = parse(src, after)
   if (parsed.errors.length) {
     res.statusCode = 422

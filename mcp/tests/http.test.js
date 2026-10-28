@@ -3,7 +3,7 @@ import { describe, it, expect, beforeAll, afterAll } from "vitest"
 import { createServer as createHttpServer } from "node:http"
 import { Client } from "@modelcontextprotocol/sdk/client/index.js"
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js"
-import { handleMcp, siteOf } from "../http.js"
+import { handleMcp, siteOf } from "../src/http.ts"
 
 let server
 let url

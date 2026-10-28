@@ -22,33 +22,47 @@
   "license": "MIT",
   "type": "module",
   "bin": {
-    "composer-nb-mcp": "./bin.js"
+    "composer-nb-mcp": "./lib/bin.js"
   },
-  "main": "./server.js",
+  "main": "./lib/server.js",
+  "types": "./lib/server.d.ts",
   "exports": {
-    ".": "./server.js",
-    "./http": "./http.js",
-    "./cell": "./cell.js",
-    "./render": "./render.js"
+    ".": {
+      "composer-nb-source": "./src/server.ts",
+      "types": "./lib/server.d.ts",
+      "default": "./lib/server.js"
+    },
+    "./http": {
+      "composer-nb-source": "./src/http.ts",
+      "types": "./lib/http.d.ts",
+      "default": "./lib/http.js"
+    },
+    "./cell": {
+      "composer-nb-source": "./src/cell.ts",
+      "types": "./lib/cell.d.ts",
+      "default": "./lib/cell.js"
+    },
+    "./render": {
+      "composer-nb-source": "./src/render.ts",
+      "types": "./lib/render.d.ts",
+      "default": "./lib/render.js"
+    }
   },
   "files": [
-    "bin.js",
-    "server.js",
-    "http.js",
-    "cell.js",
-    "render.js",
-    "instructions.js",
-    "reference.js",
+    "lib",
     "fonts"
   ],
   "scripts": {
-    "build": "node scripts/reference.js",
+    "reference": "node scripts/reference.ts",
+    "build": "npm run reference && npm run build:lib",
+    "build:lib": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc -p .",
     "build:app": "vite build --config app/vite.config.js",
     "dev:app": "vite --config app/vite.config.js --port 5184",
     "prepack": "npm run build",
     "pretest": "npm run build:app",
     "test": "vitest run",
-    "start": "node bin.js"
+    "start": "node lib/bin.js"
   },
   "dependencies": {
     "@modelcontextprotocol/ext-apps": "^1.7.5",
@@ -67,6 +81,6 @@
     "vitest": "^2.1.9"
   },
   "engines": {
-    "node": ">=20"
+    "node": ">=22.18"
   }
 }

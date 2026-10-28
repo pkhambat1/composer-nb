@@ -31,6 +31,8 @@ claude mcp add --transport http composer-nb https://composer-nb.vercel.app/mcp
 
 This package is not on npm. To run it from a checkout, `npm run mcp` serves it over stdio and `npm run mcp -- --http 3333` serves it at `localhost:3333/mcp`. `COMPOSER_NB_SITE` sets the playground the links open.
 
+The server is TypeScript, in `src/`. `npm run mcp` runs it as it is (Node 22.18 or later runs TypeScript), and `npm run build:lib -w mcp` compiles it into `lib/`, which the Vercel functions in `api/` run. `src/reference.ts` is written from the docs' reference pages by `npm run reference -w mcp`.
+
 ## Tools
 
 | Tool        | Does                                                                                                                                                                       |

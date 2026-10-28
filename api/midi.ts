@@ -1,10 +1,17 @@
 /* /api/midi?src=<cell>: the cell's plays as a MIDI file to download, one after another.
    `after` holds the earlier cells' source. */
-import { parse } from "../mcp/cell.js"
-import { midiOf } from "../mcp/render.js"
+import { parse } from "composer-nb-mcp/cell"
+import { midiOf } from "composer-nb-mcp/render"
+import type { Request, Response } from "./_vercel.ts"
 
-export default async function handler(req, res) {
-  const { src = "", after, name = "composer-nb" } = req.query || {}
+// A parameter's value: the first, when it's given more than once
+const one = (value: string | string[] | undefined) => (Array.isArray(value) ? value[0] : value)
+
+export default async function handler(req: Request, res: Response) {
+  const query = req.query || {}
+  const src = one(query.src) ?? ""
+  const after = one(query.after)
+  const name = one(query.name) ?? "composer-nb"
   const { parsed } = parse(src, after)
   if (parsed.errors.length) {
     res.statusCode = 422

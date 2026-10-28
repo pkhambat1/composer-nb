@@ -4,7 +4,7 @@
 import { describe, it, expect } from "vitest"
 import { existsSync, readFileSync, readdirSync } from "node:fs"
 import { fileURLToPath } from "node:url"
-import { parse } from "../cell.js"
+import { parse } from "../src/cell.ts"
 
 const root = fileURLToPath(new URL("../../", import.meta.url))
 const json = (path) => JSON.parse(readFileSync(root + path, "utf8"))

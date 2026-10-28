@@ -3,7 +3,7 @@
 import { describe, it, expect, beforeAll } from "vitest"
 import { Client } from "@modelcontextprotocol/sdk/client/index.js"
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js"
-import { createServer } from "../server.js"
+import { createServer } from "../src/server.ts"
 
 const MUZAK = `set time 7 over 8
 set tempo 90

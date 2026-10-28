@@ -1,0 +1,22 @@
+{
+  // The server is TypeScript, run by Node. This checks it against the library's source (the
+  // composer-nb-source condition), so it needs nothing built first. tsconfig.build.json
+  // compiles src/ into lib/, the JavaScript the bin and the Vercel functions (api/) run.
+  "compilerOptions": {
+    "target": "es2022",
+    // abcjs draws into a document, which render.ts makes with linkedom
+    "lib": ["es2023", "dom", "dom.iterable"],
+    "types": ["node"],
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "customConditions": ["composer-nb-source"],
+    "strict": true,
+    // Only types on top of JavaScript, so Node can run the source as is
+    "erasableSyntaxOnly": true,
+    "verbatimModuleSyntax": true,
+    "rewriteRelativeImportExtensions": true,
+    "skipLibCheck": true,
+    "noEmit": true
+  },
+  "include": ["src", "scripts"]
+}
