@@ -364,6 +364,68 @@ play 4 bars pulls`,
   },
   {
     section: "Harmony",
+    title: "Fifth of a chord",
+    byline: "of counts a chord from another chord: V of I is G in C",
+    body: "`V of I` is the V counted from the I's root: in C major the I is C, so `V of I` is G, a major chord a fifth up. `V of V` is D, and `V of (V of V)` is A, so this walks up the circle of fifths on chords, C G D A. The numeral in front says which chord to build and the chord after `of` says where to count from, so it follows `set key` and `set mode`.",
+    link: null,
+    source: `set time 4 over 4
+set tempo 80
+set key C
+set mode major
+set octave 3
+
+pattern fifths = {
+  piano: chords I|V of I|V of V|V of (V of V)
+  hat: x-
+  kick: 1 3
+}
+
+play 4 bars fifths`,
+  },
+  {
+    section: "Harmony",
+    title: "Scopes with with",
+    byline: "with gives a block its own key, mode and tempo",
+    body: "The same line of degrees, `1 2 3 4 5 6 7`, played in three scopes. A `with` gives its block settings that last until its `}` and then put back what was set before, so the first scope is C major, the second C minor, and the third D dorian at a slower tempo. Nothing leaks out of a `with`, and nothing set at the top is lost.",
+    link: null,
+    source: `set time 4 over 4
+set tempo 100
+set key C
+set mode major
+set octave 4
+
+notes scale = 1---2---3---4---|5---6---7---1'---
+
+play (
+  with key C, mode major { piano: notes scale }
+  with key C, mode minor { piano: notes scale }
+  with key D, mode dorian, tempo 80 { piano: notes scale }
+)`,
+  },
+  {
+    section: "Harmony",
+    title: "An octave for each part",
+    byline: "with around one line gives it its own octave, and names stay inside",
+    body: "A `with` in a pattern is a block that sounds with the other lines, so the bass can sit in octave 2 and the piano in octave 4 under one `set octave`. A name declared inside a `with`, like `walk` here, stays inside it: nothing below can use it, and it can't clash with a name of the same spelling elsewhere.",
+    link: null,
+    source: `set time 4 over 4
+set tempo 92
+set key C
+set mode major
+set octave 3
+
+play {
+  with octave 2 {
+    notes walk = 1---5---4---5---
+    bass: notes walk
+  }
+  with octave 4 { piano: chords I V|vi IV }
+  hat: x-
+  kick: 1 3
+}`,
+  },
+  {
+    section: "Harmony",
     title: "ii–V–I",
     byline: "The cadence jazz is built on",
     body: "Dm7 to G7 to Cmaj7: the ii sets up the V, and the V resolves home. Written as numerals, so `key` moves it: change `set key C` to `set key F` and the whole thing follows. The bass walks a quarter note a step, written as degrees so it follows the key too, `set swing on` puts the ride's off-beats late, and `set octave 4` keeps the piano's voicings around middle C.",
