@@ -5,9 +5,9 @@ import { describe, it, expect, vi } from "vitest"
 
 vi.mock("tone", () => ({}))
 
-const { parseSource } = await import("../../js/music-engine.js")
-const { highlightMusic } = await import("../../js/highlight.js")
-const { sheetAbc } = await import("../../js/sheet.js")
+const { parseSource } = await import("../../js/music-engine.ts")
+const { highlightMusic } = await import("../../js/highlight.ts")
+const { sheetAbc } = await import("../../js/sheet.ts")
 
 const names = (src) => {
   const p = parseSource(src)

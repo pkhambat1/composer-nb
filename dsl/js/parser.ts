@@ -2,7 +2,7 @@
    descends recursively, one method per rule, since blocks nest: a statement is everything
    up to the line break that ends it, holding text and blocks; a block is statements up to
    its }. A statement's kind comes from how it starts. What comes after its head stays
-   text, which language.js still reads. */
+   text, which the line readers read (lines.ts, sequence.ts, values/). */
 import { Lexer } from "./lexer.ts"
 import type {
   Block,

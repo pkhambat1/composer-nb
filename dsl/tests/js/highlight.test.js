@@ -7,7 +7,7 @@ import { describe, it, expect, vi } from "vitest"
 
 vi.mock("tone", () => ({}))
 
-const { highlightMusic } = await import("../../js/highlight.js")
+const { highlightMusic } = await import("../../js/highlight.ts")
 const { GROOVES } = await import("../../js/grooves.ts")
 
 const text = (src) =>

@@ -2,7 +2,7 @@ import { describe, it, expect, vi } from "vitest"
 
 vi.mock("tone", () => ({}))
 
-const { parseSource } = await import("../../js/music-engine.js")
+const { parseSource } = await import("../../js/music-engine.ts")
 
 const pitchClasses = (chord) =>
   chord.notesMidi.map((m) => ((m % 12) + 12) % 12).sort((a, b) => a - b)

@@ -1,58 +1,70 @@
 /* The player: parses a chain of cell sources, renders the last one to audio, and shows
    a player, what each block plays, a drum grid, chord chips and parse errors. Shared by
-   the Jupyter widget (index.js) and the JavaScript library (../music.js). */
+   the Jupyter widget (index.ts) and the JavaScript library (../music.ts). */
 import {
   parseChain,
   renderToBuffer,
   drawWaveform,
   bufferDuration,
   bufferToWav,
-} from "../music-engine.js"
-import { TPQ } from "../language.ts"
+} from "../music-engine.ts"
+import { TPQ, type GridBlock, type Output } from "../language.ts"
 import { gridCounts, gridRows } from "../grid.ts"
-import { sheetAbc } from "../sheet.js"
-import abcjs from "abcjs"
+import { sheetAbc } from "../sheet.ts"
+import abcjs, { type NoteTimingEvent, type TuneObject } from "abcjs"
+import type { ToneAudioBuffer } from "tone"
+
+// Moves a view's playhead to `t` seconds, or takes it off when the audio isn't `active`
+type Follow = (t: number, active: boolean) => void
+// Where messages go to be shown once each, under the outputs
+type Messages = { add(msg: string): void }
+// abcjs gives a tune its timings once it's timed
+type TimedTune = TuneObject & { noteTimings: NoteTimingEvent[] }
 
 // Tone.Offline swaps Tone's global context while it renders, so two cells
 // rendering at once (Run All) would trample each other. Render one at a time, and skip
 // any whose output has gone by the time its turn comes.
-let renderQueue = Promise.resolve()
-function queueRender(parsed, gone) {
+let renderQueue: Promise<unknown> = Promise.resolve()
+function queueRender(parsed: Output, gone: () => boolean): Promise<ToneAudioBuffer | null> {
   const job = renderQueue.then(() => (gone() ? null : renderToBuffer(parsed)))
   renderQueue = job.catch(() => {})
   return job
 }
 
 // Only one cell plays at a time, like the playground.
-let nowPlaying = null
+let nowPlaying: HTMLAudioElement | null = null
 
-function h(tag, className, text) {
+function h<K extends keyof HTMLElementTagNameMap>(
+  tag: K,
+  className?: string | null,
+  text?: string | null,
+): HTMLElementTagNameMap[K] {
   const node = document.createElement(tag)
   if (className) node.className = className
   if (text != null) node.textContent = text
   return node
 }
 
-function formatTime(sec) {
+function formatTime(sec: number): string {
   if (!sec || sec < 0) return "0:00"
   return Math.floor(sec / 60) + ":" + String(Math.floor(sec % 60)).padStart(2, "0")
 }
 
-function describeBlock(b) {
+function describeBlock(b: GridBlock): string {
   const bars = `${b.bars} bar${b.bars === 1 ? "" : "s"}${b.times > 1 ? ` × ${b.times}` : ""}`
   return `time ${b.time} · tempo ${b.tempo}${b.swing ? " · swing" : ""} · key ${b.key} ${b.mode} · ${bars}`
 }
 
 // The pitched instruments that play, e.g. "guitar, transpose 2 · bass".
-function describeSounds(output) {
-  const seen = new Map()
+function describeSounds(output: Output): string {
+  const seen = new Map<string, number | undefined>()
   for (const e of output.events) seen.set(e.instrument, e.transpose || seen.get(e.instrument))
   return [...seen].map(([inst, t]) => (t ? `${inst}, transpose ${t}` : inst)).join(" · ")
 }
 
 // --- Grid: each block's drums and notes drawn once, bar by bar, counted 1 e & a ---
 
-function renderDrumGrid(blocks) {
+function renderDrumGrid(blocks: GridBlock[]): { grid: HTMLElement; setTime: Follow } {
   const grid = h("div", "cnb-grid")
   blocks.forEach((block, bi) => {
     if (!block.drumEvents.length && !block.noteEvents.length) return
@@ -61,7 +73,7 @@ function renderDrumGrid(blocks) {
     const labels = Math.max(...rows.map((r) => r.label.length), 5) + 1
     // How the cells are counted, and which groups of beats are shaded
     const counts = gridCounts(block)
-    const shaded = (col) => counts[col].shaded
+    const shaded = (col: number) => counts[col].shaded
 
     if (blocks.length > 1) grid.append(h("div", "cnb-grid-head", describeBlock(block)))
     for (let bar = 0; bar < block.bars; bar++) {
@@ -92,14 +104,14 @@ function renderDrumGrid(blocks) {
 
   // Marks the step playing at `t` seconds. A block that plays more than once is drawn
   // once, so the playhead goes round it again each time.
-  let lastKey = null
-  const setTime = (t, active) => {
-    let key = null
+  let lastKey: string | null = null
+  const setTime: Follow = (t, active) => {
+    let key: string | null = null
     if (active) {
       const bi = blocks.findIndex((b) => b.plays.some((at) => t >= at && t < at + b.durSec))
       if (bi >= 0) {
         const b = blocks[bi]
-        const at = b.plays.find((s) => t >= s && t < s + b.durSec)
+        const at = b.plays.find((s) => t >= s && t < s + b.durSec)!
         const tick = (t - at) / b.secPerTick
         const bar = Math.floor(tick / b.barTicks)
         key = `${bi}-${bar}-${Math.floor((tick - bar * b.barTicks) / (TPQ / b.res))}`
@@ -115,9 +127,9 @@ function renderDrumGrid(blocks) {
 
 // --- Sheet: the same blocks as sheet music, drawn by abcjs, with a playhead ---
 
-function renderSheet(blocks) {
+function renderSheet(blocks: GridBlock[]): { sheet: HTMLElement; setTime: Follow } {
   const sheet = h("div", "cnb-sheet")
-  const timings = new Map() // block index → when each note sounds
+  const timings = new Map<number, NoteTimingEvent[]>() // block index → when each note sounds
   blocks.forEach((block, bi) => {
     const { abc, tablature } = sheetAbc(block)
     if (!abc) return
@@ -139,7 +151,10 @@ function renderSheet(blocks) {
         ...(tablature.some((t) => t.instrument) && { tablature }),
       })
       tune.setTiming(0, 0)
-      timings.set(bi, tune.noteTimings.filter((t) => t.type === "event"))
+      timings.set(
+        bi,
+        (tune as TimedTune).noteTimings.filter((t) => t.type === "event"),
+      )
     }
     if (staff.isConnected) draw()
     else {
@@ -152,13 +167,13 @@ function renderSheet(blocks) {
     }
   })
 
-  let last = null
-  const setTime = (t, active) => {
-    let now = null
+  let last: NoteTimingEvent | null = null
+  const setTime: Follow = (t, active) => {
+    let now: NoteTimingEvent | null = null
     if (active) {
       const bi = blocks.findIndex((b) => b.plays.some((at) => t >= at && t < at + b.durSec))
       if (bi >= 0) {
-        const at = blocks[bi].plays.find((s) => t >= s && t < s + blocks[bi].durSec)
+        const at = blocks[bi].plays.find((s) => t >= s && t < s + blocks[bi].durSec)!
         const ms = (t - at) * 1000
         for (const ev of timings.get(bi) || []) if (ev.milliseconds <= ms + 1) now = ev
       }
@@ -172,13 +187,18 @@ function renderSheet(blocks) {
 }
 
 // How the hits are drawn, for every cell on the page: bricks, or sheet music
-let view = "bricks"
-const views = new Set() // each output's switch, so they change together
+let view: "bricks" | "sheet" = "bricks"
+const views = new Set<() => void>() // each output's switch, so they change together
 
 // --- Player --------------------------------------------------------------------
 
 // With `autoplay`, it starts playing as soon as it's drawn, as after a cell's Play button.
-function renderPlayer(slot, buffer, onTime, autoplay) {
+function renderPlayer(
+  slot: HTMLElement,
+  buffer: ToneAudioBuffer,
+  onTime: Follow,
+  autoplay: boolean,
+): () => void {
   const audioUrl = URL.createObjectURL(bufferToWav(buffer))
   const audio = new Audio(audioUrl)
   const duration = bufferDuration(buffer)
@@ -224,7 +244,7 @@ function renderPlayer(slot, buffer, onTime, autoplay) {
     onTime(audio.currentTime, !audio.paused || audio.currentTime > 0)
     if (!audio.paused) frame = requestAnimationFrame(tick)
   }
-  const setPlaying = (playing) => {
+  const setPlaying = (playing: boolean) => {
     play.classList.toggle("is-playing", playing)
     play.title = playing ? "Pause" : "Play"
     play.setAttribute("aria-label", play.title)
@@ -268,7 +288,11 @@ function renderPlayer(slot, buffer, onTime, autoplay) {
 // --- Cell ----------------------------------------------------------------------
 
 // One play line's output: what it is, its player, drum grid and chords.
-function renderOutput(output, messages, autoplay) {
+function renderOutput(
+  output: Output,
+  messages: Messages,
+  autoplay: boolean,
+): { box: HTMLElement; dispose(): void } {
   const box = h("div", "cnb-output")
   const head = h("div", "cnb-output-head")
   head.append(h("span", "cnb-play-line", output.label))
@@ -285,16 +309,16 @@ function renderOutput(output, messages, autoplay) {
 
   // The hits, as bricks or as sheet music, with a switch when there's anything to draw
   const { grid, setTime: gridTime } = renderDrumGrid(output.blocks)
-  let sheetView = null
+  let sheetView: ReturnType<typeof renderSheet> | null = null
   const drawn = h("div", "cnb-drawn")
-  const setTime = (t, active) => {
+  const setTime: Follow = (t, active) => {
     const follow = view === "sheet" && sheetView ? sheetView.setTime : gridTime
     follow(t, active)
   }
   if (grid.childElementCount) {
     const toggle = h("div", "cnb-view")
-    const buttons = {}
-    for (const v of ["bricks", "sheet"]) {
+    const buttons: Record<string, HTMLButtonElement> = {}
+    for (const v of ["bricks", "sheet"] as const) {
       const b = h("button", "cnb-view-btn", v)
       b.type = "button"
       b.addEventListener("click", () => {
@@ -307,7 +331,7 @@ function renderOutput(output, messages, autoplay) {
     const show = () => {
       for (const [v, b] of Object.entries(buttons)) b.classList.toggle("cnb-view-on", view === v)
       if (view === "sheet" && !sheetView) sheetView = renderSheet(output.blocks)
-      drawn.replaceChildren(view === "sheet" ? sheetView.sheet : grid)
+      drawn.replaceChildren(view === "sheet" ? sheetView!.sheet : grid)
     }
     views.add(show)
     show()
@@ -332,11 +356,11 @@ function renderOutput(output, messages, autoplay) {
     box.append(chips)
   }
 
-  let disposePlayer = null
+  let disposePlayer: (() => void) | null = null
   let disposed = false
   queueRender(output, () => disposed)
     .then((buffer) => {
-      if (disposed) return
+      if (disposed || !buffer) return
       disposePlayer = renderPlayer(slot, buffer, setTime, autoplay)
       for (const msg of output.warnings || []) messages.add(msg)
     })
@@ -360,7 +384,15 @@ function renderOutput(output, messages, autoplay) {
 // `name` and `after` (the name of the song it continues from) are only shown, and `play`
 // starts the first output once its audio is ready. Returns a function that stops the audio
 // and frees it.
-export function renderCell(el, { sources, name, after, play = false }) {
+export function renderCell(
+  el: HTMLElement,
+  {
+    sources,
+    name,
+    after,
+    play = false,
+  }: { sources: string[]; name?: string; after?: string; play?: boolean },
+): () => void {
   const parsed = parseChain(sources)
 
   const root = h("div", "cnb")
@@ -381,8 +413,8 @@ export function renderCell(el, { sources, name, after, play = false }) {
 
   // Errors first come from parsing; drum-sample warnings arrive once audio renders.
   const errors = h("div", "cnb-errors")
-  const shown = []
-  const messages = {
+  const shown: { line?: number; msg: string }[] = []
+  const messages: Messages = {
     add(msg) {
       if (shown.some((m) => m.msg === msg)) return
       shown.push({ msg })

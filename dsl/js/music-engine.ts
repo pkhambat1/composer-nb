@@ -1,24 +1,26 @@
-/* Music engine: parses music cells (see language.js) and renders them to audio with
+/* Music engine: parses music cells (see language.ts) and renders them to audio with
    Tone.js, plus waveform drawing and the audio as a WAV for the players. */
 import * as Tone from "tone"
 import * as ChordLookup from "./chord-lookup.ts"
 import * as Drums from "./drums.ts"
-import { midiToName, spellLike } from "./chords.ts"
-import { initialState, parseCell } from "./language.ts"
+import { midiToName, spellLike, type Voiced } from "./chords.ts"
+import type { ChordSound, NoteSound, SoundEvent } from "./clips.ts"
+import { initialState, parseCell, type Output } from "./language.ts"
+import type { State } from "./state.ts"
 
 export { midiToName, parseKey, buildChord } from "./chords.ts"
 export { initialState } from "./language.ts"
 
 // Parses one music cell. `inherited` is the state (settings and words) left by the cells
 // above it; the result's `state` is what this cell hands on to the cells below.
-export function parseSource(src, inherited) {
+export function parseSource(src: string, inherited?: State) {
   return parseCell(src, inherited)
 }
 
 // Parses the last of `sources`, starting from the settings and words the earlier ones
 // ended with. Only the last one plays; the Jupyter widget uses this for
 // `%%music verse after intro`, where the link is by name rather than by position.
-export function parseChain(sources) {
+export function parseChain(sources: string[]) {
   let state = initialState()
   for (const src of sources.slice(0, -1)) state = parseCell(src, state).state
   return parseCell(sources[sources.length - 1] ?? "", state)
@@ -34,7 +36,15 @@ const SOUNDFONTS = "https://gleitz.github.io/midi-js-soundfonts/MusyngKite/"
 // from the nearest one.
 const SPREAD = ["C2", "E2", "G2", "C3", "E3", "G3", "C4", "E4", "G4", "C5", "E5", "G5", "C6"]
 
-function makeSynth(T, kind) {
+// What plays an instrument's notes and chords
+type Synth = Tone.Sampler | Tone.PolySynth
+// What renderToBuffer plays: a cell's plays back to back, or one of them. It notes on it what
+// it couldn't load, for the player to show.
+export type Playable = Pick<Output, "events" | "drumEvents" | "totalSec"> & { warnings?: string[] }
+// A buffer as Tone renders it, or as the Web Audio API holds it
+type Buffer = Tone.ToneAudioBuffer | AudioBuffer
+
+function makeSynth(T: typeof Tone, kind: string): Synth {
   if (kind === "piano") {
     const s = new T.Sampler({
       urls: {
@@ -163,24 +173,24 @@ function makeSynth(T, kind) {
 }
 
 // A guitar's chords are played as shapes on its neck, whichever guitar it is.
-const isGuitar = (inst) => inst.split(".")[0] === "guitar"
+const isGuitar = (inst: string) => inst.split(".")[0] === "guitar"
 
 // What plays an event: its instrument, and its sound when it was set to another one
 // (guitar.electric muted).
-const voiceOf = (ev) => (ev.sound ? `${ev.instrument} ${ev.sound}` : ev.instrument)
+const voiceOf = (ev: SoundEvent) => (ev.sound ? `${ev.instrument} ${ev.sound}` : ev.instrument)
 
 // Tone.Offline swaps Tone's global context while it renders, so two renders at once would
 // trample each other. They go one at a time, whoever asks.
-let renderQueue = Promise.resolve()
-export function renderToBuffer(parsed) {
+let renderQueue: Promise<unknown> = Promise.resolve()
+export function renderToBuffer(parsed: Playable): Promise<Tone.ToneAudioBuffer> {
   const job = renderQueue.then(() => renderNow(parsed))
   renderQueue = job.catch(() => {})
   return job
 }
 
-async function renderNow(parsed) {
-  const chordEvents = parsed.events.filter((ev) => ev.chord)
-  const noteEvents = parsed.events.filter((ev) => ev.note)
+async function renderNow(parsed: Playable): Promise<Tone.ToneAudioBuffer> {
+  const chordEvents = parsed.events.filter((ev): ev is ChordSound => "chord" in ev)
+  const noteEvents = parsed.events.filter((ev): ev is NoteSound => "note" in ev)
 
   // For guitar, swap Tonal's compact voicing for the chord-db's idiomatic
   // voicing so the audio matches the diagram AND the actual pitches a real
@@ -218,7 +228,7 @@ async function renderNow(parsed) {
   const buffer = await Tone.Offline(
     async () => {
       const master = new Tone.Limiter(-1).toDestination()
-      const synths = {}
+      const synths: Record<string, Synth> = {}
       for (const inst of new Set(parsed.events.map(voiceOf))) {
         const reverb = new Tone.Reverb({
           decay: 2.2,
@@ -238,7 +248,7 @@ async function renderNow(parsed) {
       for (const ev of noteEvents) {
         synths[voiceOf(ev)].triggerAttackRelease(
           ev.note.name,
-          ev.secDur * 0.96,
+          ev.secDur! * 0.96,
           ev.secStart + (ev.secSwing || 0),
           ev.vel,
         )
@@ -256,7 +266,7 @@ async function renderNow(parsed) {
 // short drum hits leave most of that tail silent. Cut it once the sound has faded
 // well below the loudest moment, never before the music's own end, so a cell ending
 // on a rest keeps its length. A short fade-out keeps the cut from clicking.
-function trimSilence(buffer, musicSec) {
+function trimSilence(buffer: Tone.ToneAudioBuffer, musicSec: number): Tone.ToneAudioBuffer {
   const channels = Array.from({ length: buffer.numberOfChannels }, (_, c) =>
     buffer.getChannelData(c),
   )
@@ -278,12 +288,12 @@ function trimSilence(buffer, musicSec) {
   return buffer.slice(0, end / buffer.sampleRate)
 }
 
-function playChord(synth, ev) {
+function playChord(synth: Synth, ev: ChordSound): void {
   const inst = ev.instrument
   const stagger = isGuitar(inst) ? 0.012 : inst === "organ" ? 0 : 0.008
   const bassVel = isGuitar(inst) ? 0.6 : 0.7
   const chordVel = 0.55
-  const dur = ev.secDur * 0.96
+  const dur = ev.secDur! * 0.96
   const at = ev.secStart + (ev.secSwing || 0)
   const usingPos = ev.chord.fromGuitarPosition
   if (!usingPos) {
@@ -309,8 +319,8 @@ function playChord(synth, ev) {
 
 // --- Pitch-class helpers + chord diagrams -------------------------------
 
-export function pitchClassesOf(chord) {
-  const pcs = new Set()
+export function pitchClassesOf(chord: Voiced) {
+  const pcs = new Set<number>()
   for (const m of chord.notesMidi) pcs.add(((m % 12) + 12) % 12)
   pcs.add(((chord.bassMidi % 12) + 12) % 12)
   return {
@@ -322,21 +332,32 @@ export function pitchClassesOf(chord) {
 
 const GUITAR_TUNING_MIDI = [40, 45, 50, 55, 59, 64]
 
-export function computeGuitarFingering(chord) {
+// A guitar shape: the fret on each string from the low E (null muted), and how good it is,
+// lower being better
+type Fingering = {
+  positions: (number | null)[]
+  baseFret: number
+  mutedCount: number
+  hasBass: boolean
+  bassString: number
+  score: number
+}
+
+export function computeGuitarFingering(chord: Voiced): Fingering | null {
   const { pcs, bassPc } = pitchClassesOf(chord)
-  let best = null
+  let best: Fingering | null = null
 
   for (let baseFret = 0; baseFret <= 9; baseFret++) {
-    const positions = new Array(6).fill(null)
+    const positions: (number | null)[] = new Array(6).fill(null)
     let hasBass = false
     let bassString = -1
     let mutedCount = 0
-    let lowestFretted = null
+    let lowestFretted: number | null = null
     let highestFretted = 0
 
     for (let s = 0; s < 6; s++) {
       const open = GUITAR_TUNING_MIDI[s]
-      const candidates = []
+      const candidates: number[] = []
       const pc0 = ((open % 12) + 12) % 12
       if (pcs.has(pc0)) candidates.push(0)
       for (let f = Math.max(1, baseFret); f <= baseFret + 4; f++) {
@@ -349,7 +370,7 @@ export function computeGuitarFingering(chord) {
         continue
       }
 
-      let pick
+      let pick: number
       if (!hasBass) {
         const bm = candidates.find((f) => (((open + f) % 12) + 12) % 12 === bassPc)
         if (bm != null) {
@@ -389,22 +410,29 @@ export function computeGuitarFingering(chord) {
   return best
 }
 
-export function drawWaveform(canvas, buffer, opts = {}) {
+// How a waveform is drawn: its colour, the line through its middle, and whether the loudest
+// moment fills the height
+type WaveStyle = { stroke?: string; midline?: string; normalize?: boolean }
+
+export function drawWaveform(
+  canvas: HTMLCanvasElement,
+  buffer: Buffer | null,
+  opts: WaveStyle = {},
+): void {
   const dpr = window.devicePixelRatio || 1
   const w = canvas.clientWidth
   const h = canvas.clientHeight
   canvas.width = w * dpr
   canvas.height = h * dpr
-  const ctx = canvas.getContext("2d")
+  const ctx = canvas.getContext("2d")!
   ctx.scale(dpr, dpr)
   ctx.clearRect(0, 0, w, h)
 
   const stroke = opts.stroke || "#1a73e8"
   const mid = h / 2
-  let raw
-  if (buffer && buffer.getChannelData) raw = buffer.getChannelData(0)
-  else if (buffer && buffer.get && buffer.get().getChannelData) raw = buffer.get().getChannelData(0)
-  else return
+  const ab = audioBuffer(buffer)
+  if (!ab) return
+  const raw = ab.getChannelData(0)
 
   // `normalize` scales the loudest sample to full height, so quiet
   // instruments (a guitar) still draw a readable shape.
@@ -442,21 +470,26 @@ export function drawWaveform(canvas, buffer, opts = {}) {
   ctx.stroke()
 }
 
-export function bufferDuration(buffer) {
-  if (!buffer) return 0
-  if (typeof buffer.duration === "number" && buffer.duration > 0) return buffer.duration
-  const ab = buffer.get ? buffer.get() : buffer
-  return ab && ab.duration ? ab.duration : 0
+// The Web Audio buffer under a Tone one
+function audioBuffer(buffer: Buffer | null): AudioBuffer | null {
+  if (!buffer) return null
+  return "get" in buffer ? (buffer.get() ?? null) : buffer
 }
 
-export function bufferToObjectUrl(buffer) {
+export function bufferDuration(buffer: Buffer | null): number {
+  if (!buffer) return 0
+  if (buffer.duration > 0) return buffer.duration
+  return audioBuffer(buffer)?.duration || 0
+}
+
+export function bufferToObjectUrl(buffer: Buffer): string {
   return URL.createObjectURL(bufferToWav(buffer))
 }
 
 // --- WAV encoder --------------------------------------------------------
 
-export function bufferToWav(buffer) {
-  const ab = buffer && buffer.get ? buffer.get() : buffer
+export function bufferToWav(buffer: Buffer): Blob {
+  const ab = audioBuffer(buffer)!
   const numCh = ab.numberOfChannels
   const sampleRate = ab.sampleRate
   const len = ab.length
@@ -465,7 +498,7 @@ export function bufferToWav(buffer) {
   const out = new ArrayBuffer(44 + dataSize)
   const view = new DataView(out)
 
-  function writeString(off, s) {
+  function writeString(off: number, s: string) {
     for (let i = 0; i < s.length; i++) view.setUint8(off + i, s.charCodeAt(i))
   }
 
@@ -483,7 +516,7 @@ export function bufferToWav(buffer) {
   writeString(36, "data")
   view.setUint32(40, dataSize, true)
 
-  const channels = []
+  const channels: Float32Array[] = []
   for (let i = 0; i < numCh; i++) channels.push(ab.getChannelData(i))
   let offset = 44
   for (let i = 0; i < len; i++) {

@@ -61,7 +61,7 @@
    This module is the language's public face: parseCell (cell.ts) and the words, times and
    state that code outside the engine imports from here. */
 
-export { parseCell } from "./cell.ts"
+export { parseCell, type GridBlock, type Output, type Parsed } from "./cell.ts"
 export { keyName } from "./settings.ts"
 export { initialState } from "./state.ts"
 export { TPQ, barQuarters, lastCount, timeLabel } from "./time.ts"

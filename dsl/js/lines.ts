@@ -35,6 +35,7 @@ import {
   type DrumClip,
 } from "./values/steps.ts"
 import {
+  among,
   PARTS,
   PITCHED,
   SETTING_EXAMPLE,
@@ -82,8 +83,6 @@ export type SequenceLine = { kind: "sequence"; ln: number; items: Item[]; st?: S
 export type ReadLine = SettingLine | DeclLine | PartLine | Placed | Paced | SequenceLine
 // An instrument's line, read as what it plays
 export type Played = (DrumClip | PitchedClip | ChartClip) & { part: PartLine }
-
-const among = (list: readonly string[], word: string) => list.includes(word)
 
 export const DEF_RE = /^([A-Za-z][A-Za-z0-9]*)\s*=\s*(.*)$/
 // A type, a name and what it holds: steps pair = ^-x-

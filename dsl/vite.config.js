@@ -14,7 +14,7 @@ export default defineConfig(({ mode }) => {
       outDir: npm ? "dist" : "python/composer_nb/static",
       emptyOutDir: true,
       lib: {
-        entry: npm ? "js/music.js" : "js/widget/index.js",
+        entry: npm ? "js/music.ts" : "js/widget/index.ts",
         formats: ["es"],
         fileName: () => (npm ? "composer-nb.js" : "widget.js"),
         cssFileName: "widget",

@@ -7,7 +7,7 @@ import { message } from "./diagnostics.ts"
 import { closest } from "./resolve.ts"
 import { cloneState, type State } from "./state.ts"
 import { evalNumber, nearWhole, sumTerms, type Report } from "./time.ts"
-import { KITS, MODES, PITCHED, SETTINGS, SOUNDS, SWING, type Setting } from "./vocab.ts"
+import { among, KITS, MODES, PITCHED, SETTINGS, SOUNDS, soundsOf, SWING, type Setting } from "./vocab.ts"
 
 // How a setting was written: after set, or in a with's header
 type Verb = "set" | "with"
@@ -15,10 +15,6 @@ type Verb = "set" | "with"
 type Sounding = keyof typeof SOUNDS
 // A setting's name and its value, as written
 export type SettingWords = { name: string; value: string }
-
-const among = (list: readonly string[], word: string) => list.includes(word)
-// The sounds an instrument can be set to, if it has more than one
-const soundsOf = (name: string) => (SOUNDS as Record<string, readonly string[] | undefined>)[name]
 
 // The key a state is in, as the chords and the sheet read it.
 export const keyOf = (st: State) => parseKey(st.key, st.mode)

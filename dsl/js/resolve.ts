@@ -11,14 +11,13 @@ import { message } from "./diagnostics.ts"
 import type { Section, State, Word } from "./state.ts"
 import { noteSteps } from "./values/notes.ts"
 import { tokenize } from "./values/steps.ts"
-import { DRUMS, KEYWORDS, LANES, PARTS, PITCHED, SETTINGS, SPLIT } from "./vocab.ts"
+import { among, DRUMS, KEYWORDS, LANES, PARTS, PITCHED, SETTINGS, SPLIT } from "./vocab.ts"
 
 // A token that reads as a name: a lowercase letter, then letters and digits (riff, partA)
 export const NAME_LIKE = /^[a-z][A-Za-z0-9]+$/
 const ROMAN = ["i", "ii", "iii", "iv", "v", "vi", "vii"]
 // Words that already mean something
 const TAKEN = new Set<string>([...SETTINGS, ...DRUMS, ...PARTS, ...KEYWORDS])
-const among = (list: readonly string[], word: string) => list.includes(word)
 
 // The names a cell or a block can see, and the one way to define one there.
 export class Scope {

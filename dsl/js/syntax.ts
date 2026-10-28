@@ -4,7 +4,7 @@
    misses one when a kind is added: end a switch with `default: return unhandled(node)`.
 
    What a statement holds after its head stays text for now, with its span: steps, notes,
-   charts and sequences are still read by language.js. */
+   charts and sequences are read from it by lines.ts, sequence.ts and values/. */
 
 // Where something was written: lines from 1, columns from 0, the end just past it.
 export type Span = { line: number; col: number; endLine: number; endCol: number }

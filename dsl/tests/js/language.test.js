@@ -2,9 +2,9 @@ import { describe, it, expect, vi } from "vitest"
 
 vi.mock("tone", () => ({}))
 
-const { parseSource } = await import("../../js/music-engine.js")
+const { parseSource } = await import("../../js/music-engine.ts")
 const { LANES, MODES, initialState, parseCell } = await import("../../js/language.ts")
-const { highlightMusic } = await import("../../js/highlight.js")
+const { highlightMusic } = await import("../../js/highlight.ts")
 const { gridRows } = await import("../../js/grid.ts")
 const { prepareKit } = await import("../../js/drums.ts")
 

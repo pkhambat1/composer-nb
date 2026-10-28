@@ -1,6 +1,5 @@
-/* The new front end (lexer.ts, parser.ts) is built beside language.js and not used by it
-   yet. Until it is, it has to read every real cell the way language.js does: the same
-   names declared, the same plays, the same brace mistakes. */
+/* The front end (lexer.ts, parser.ts) has to read every real cell the way parseCell does:
+   the same names declared, the same plays, the same brace mistakes. */
 import { describe, it, expect } from "vitest"
 import { parseCell } from "../../js/language.ts"
 import { Lexer } from "../../js/lexer.ts"

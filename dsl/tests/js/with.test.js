@@ -4,8 +4,8 @@ import { describe, it, expect, vi } from "vitest"
 
 vi.mock("tone", () => ({}))
 
-const { parseSource } = await import("../../js/music-engine.js")
-const { sheetAbc } = await import("../../js/sheet.js")
+const { parseSource } = await import("../../js/music-engine.ts")
+const { sheetAbc } = await import("../../js/sheet.ts")
 const { initialState } = await import("../../js/language.ts")
 
 const clean = (src, inherited) => {

@@ -1,7 +1,7 @@
 /* A play's output as a Standard MIDI File (format 1), for a DAW or a notation program:
    a tempo track, the drums on channel 10 with General MIDI drum notes, and a track per
    pitched instrument. Times come from the events' seconds, so what swings in the audio
-   swings here too. Pure, like grid.js. */
+   swings here too. Pure, like grid.ts. */
 import type { Output } from "./cell.ts"
 import { parseKey } from "./chords.ts"
 import type { SoundEvent } from "./clips.ts"
