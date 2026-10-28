@@ -325,7 +325,7 @@ play walk`,
     section: "Harmony",
     title: "ii–V–I",
     byline: "The cadence jazz is built on",
-    body: "Dm7 to G7 to Cmaj7: the ii sets up the V, and the V resolves home. Written as numerals, so `key` moves it: change `set key C` to `set key F` and the whole thing follows. The bass walks a quarter note a step, `set swing on` puts the ride's off-beats late, and `set octave 4` keeps the piano's voicings around middle C.",
+    body: "Dm7 to G7 to Cmaj7: the ii sets up the V, and the V resolves home. Written as numerals, so `key` moves it: change `set key C` to `set key F` and the whole thing follows. The bass walks a quarter note a step, written as degrees so it follows the key too, `set swing on` puts the ride's off-beats late, and `set octave 4` keeps the piano's voicings around middle C.",
     link: null,
     source: `set time 4 over 4
 set tempo 132
@@ -336,8 +336,10 @@ set octave 4
 
 pattern turnaround = {
   piano: chords ii7 V7|Imaj7 -
-  bass: D2---F2---G2---B2---|C3---E3---G3---A3---
-    |D3---F3---G2---F2---|E2---G2---A2---B2---
+  with octave 2 {
+    bass: 2---4---5---7---|1'---3'---5'---6'---
+      |2'---4'---5---4---|3---5---6---7---
+  }
   ride: x-
   hat.pedal: 2 4
   kick: 1 3
