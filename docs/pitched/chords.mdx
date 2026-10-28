@@ -44,12 +44,12 @@ A 6/9 chord is written as on a lead sheet, `C6/9` or `Cm6/9`. Its `/` is part of
 
 A Roman numeral is written in lowercase, and the key's mode makes its chord. A plain numeral is the triad the scale has on that degree, so it is major, minor or diminished as the scale makes it: in C major `i` is C, `ii` is Dm and `vii` is Bdim, and in C minor `i` is Cm, `iii` is Eb and `ii` is Ddim. A `7` after it is the scale's seventh chord on that degree: `i7` is Cmaj7, `ii7` is Dm7 and `v7` is G7 in C major. The same chart in another mode plays that mode's own chords, which is how to hear what a mode does.
 
-Degrees count on the key's own scale, as [degrees in notes](/pitched/notes#degrees) do: in A minor `iii` is C and `vii` is G, and in A major they're C# and G#. A `b` or `#` in front moves the root off the scale, to a major chord: `bvii` in C major is Bb. To say a chord outright instead of taking the scale's, write its quality after the numeral as you would after a chord's root: `vm`, `vM`, `vdim`, `vmaj7`, `v7alt`, and `vdom7` for a dominant seventh.
+Degrees count on the key's own scale, as [degrees in notes](/pitched/notes#degrees) do: in A minor `iii` is C and `vii` is G, and in A major they're C# and G#. A `b` or `#` in front moves the root off the scale, to a major chord: `bvii` in C major is Bb. A numeral takes `'` marks as a degree does: `i'` is the tonic chord an octave up and `'i` an octave down, so a chart that climbs the scale ends higher than it began. To say a chord outright instead of taking the scale's, write its quality after the numeral as you would after a chord's root: `vm`, `vM`, `vdim`, `vmaj7`, `v7alt`, and `vdom7` for a dominant seventh.
 
 <Cell>
 
 ```composer-nb
-chords chart = i ii|iii iv|v vi|vii i
+chords chart = i ii|iii iv|v vi|vii i'
 
 with key D, mode dorian { play piano: chords chart }
 with key D, mode minor { play piano: chords chart }

@@ -287,3 +287,10 @@ describe("with", () => {
     expect(parseSource("play kick: x", initialState()).fromAbove).toEqual([])
   })
 })
+
+describe("a numeral's octave marks", () => {
+  it("lift the chord an octave, as a degree's do", () => {
+    const low = (src) => clean(src).chords.map((e) => e.chord.notesMidi[0])
+    expect(low("with key D { play piano: chords i i'|'i - }")).toEqual([50, 62, 38])
+  })
+})

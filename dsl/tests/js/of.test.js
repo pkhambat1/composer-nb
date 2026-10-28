@@ -39,8 +39,8 @@ describe("of in notes", () => {
   })
 
   it("counts from a degree of the key", () => {
-    expect(names("set key D\nset octave 3\nplay piano: notes 5 of 1--- 5 of 5---")).toEqual([
-      "A3",
+    expect(names("set key D\nset octave 3\nplay piano: notes 5 of 2--- 5 of 5---")).toEqual([
+      "B3",
       "E4",
     ])
   })

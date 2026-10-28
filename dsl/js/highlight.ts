@@ -62,6 +62,13 @@ function chordToken(token: string): Part[] {
     tail = [part("tk-slash", "/"), part("tk-bass", bass)]
   }
   let rest = ""
+  // a numeral's octave marks, as a degree's: i' an octave up
+  const lift = /^('*)(.*?)('*)$/.exec(core)!
+  if (ROMAN_RE.test(lift[2])) {
+    if (lift[1]) parts.push(part("tk-punct", lift[1]))
+    core = lift[2]
+    if (lift[3]) tail = [part("tk-punct", lift[3]), ...tail]
+  }
   const rm = ROMAN_RE.exec(core)
   if (rm) {
     // a numeral is lowercase: the mode makes the chord major or minor

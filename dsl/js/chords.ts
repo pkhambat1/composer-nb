@@ -148,7 +148,7 @@ export function abcKey(key: Key): string {
 // Strict check: a numeral plus chord-suffix characters only, so words like "intro" or
 // "vibe" aren't mistaken for i and vi chords.
 const ROMAN_TOKEN_RE =
-  /^[#b]?(VII|VI|IV|V|III|II|I|vii|vi|iv|v|iii|ii|i)(?:6\/9|maj|min|sus|add|dim|dom|aug|alt|M|m|b|#|\+|\d)*$/
+  /^'*[#b]?(VII|VI|IV|V|III|II|I|vii|vi|iv|v|iii|ii|i)(?:6\/9|maj|min|sus|add|dim|dom|aug|alt|M|m|b|#|\+|\d)*'*$/
 
 export function isRoman(token: string): boolean {
   return ROMAN_TOKEN_RE.test(chordParts(token)[0])
@@ -220,8 +220,13 @@ function romanToSymbol(main: string, key: Key): string | null {
 // A chord token ("Cmaj7", "C/E", "ii7", "bvii") → voicing, or null if it isn't a chord.
 export function buildChord(token: string, key?: Key | null, octave = 3): Voiced | null {
   if (!token) return null
-  const [main, bassStr, extra] = chordParts(token)
+  const [written, bassStr, extra] = chordParts(token)
   if (extra !== undefined) return null
+  // A numeral takes ' marks as a degree does: i' is the chord an octave up, 'i an octave down
+  const marks = /^('*)(.*?)('*)$/.exec(written)!
+  const lifted = ROMAN_RE.test(marks[2])
+  const main = lifted ? marks[2] : written
+  const octaves = lifted ? marks[3].length - marks[1].length : 0
   let symbol: string | null
   let fromKey: number | null = null // a numeral's root, in semitones up from the key's root
   const numeral = ROMAN_RE.exec(main)
@@ -253,13 +258,17 @@ export function buildChord(token: string, key?: Key | null, octave = 3): Voiced 
   // C3 A3 F3 G3. A symbol's root is in the octave counted from C. The bass is an octave
   // below the root, or a bass note counted up from an octave below the key's root or C.
   const rootMidi =
-    fromKey === null ? (octave + 1) * 12 + tonicPc : (octave + 1) * 12 + key!.tonicSemis + fromKey
+    (fromKey === null
+      ? (octave + 1) * 12 + tonicPc
+      : (octave + 1) * 12 + key!.tonicSemis + fromKey) +
+    octaves * 12
   let bass = rootMidi - 12
   if (bassStr !== undefined) {
     bass =
       fromKey === null
         ? octave * 12 + bassPc
         : octave * 12 + key!.tonicSemis + ((bassPc - key!.tonicPc + 12) % 12)
+    bass += octaves * 12
   }
   const voicing = ch.intervals.map((iv) => rootMidi + Interval.semitones(iv))
   // The notes are spelt from the symbol, as a musician would: A C# E, not A Db E. B# and Cb
