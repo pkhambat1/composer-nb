@@ -1947,9 +1947,10 @@ body {
   position: absolute;
   left: 50%;
   top: 25%;
+  box-sizing: border-box;
   width: 6px;
   height: 50%;
-  margin-left: -3px;
+  transform: translateX(-50%);
   border-left: 1.5px solid var(--paper);
   border-right: 1.5px solid var(--paper);
 }
