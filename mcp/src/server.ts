@@ -147,9 +147,9 @@ export function createServer({ site = SITE }: Options = {}): McpServer {
   server.registerTool(
     "library",
     {
-      title: "Grooves and rudiments to start from",
+      title: "Grooves to start from",
       description:
-        "Searches the grooves library: transcriptions (Porcupine Tree in 7 and 9, Gavin Harrison's paradiddle challenge, a 3 over 4 over 5 polyrhythm, Polyrhythmics), harmony cells (a ii–V–I with a walking bass, a 12-bar blues, and a walk through each mode, from lydian to locrian: its scale up and down with every chord of the mode under it) and the rudiments with their stickings. Each comes as a cell to start from, with its page, where it plays. Search by words (paradiddle, dorian, blues, 7/8, guitar) or leave the query empty for the list.",
+        "Searches the grooves library: transcriptions (Porcupine Tree in 7 and 9, Gavin Harrison's paradiddle challenge, a 3 over 4 over 5 polyrhythm, Polyrhythmics), harmony cells (a ii–V–I with a walking bass, a 12-bar blues, and a walk through each mode, from lydian to locrian: its scale up and down with every chord of the mode under it). Each comes as a cell to start from, with its page, where it plays. Search by words (dorian, blues, 7/8, guitar) or leave the query empty for the list.",
       inputSchema: {
         query: z
           .string()

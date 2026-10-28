@@ -1,11 +1,11 @@
 ---
 name: practice
-description: Turn a groove, rudiment, riff or chart into a practice routine of composer-nb cells. Use when the user wants to practise or drill something, build speed with a tempo ladder, learn a part, or play along with their own part left out.
+description: Turn a groove, riff or chart into a practice routine of composer-nb cells. Use when the user wants to practise or drill something, build speed with a tempo ladder, learn a part, or play along with their own part left out.
 ---
 
 # Practice
 
-1. Get the material: the user's cell, a groove or rudiment from `library` (rudiments come with their stickings), or a cell written as the `write-cells` skill says.
+1. Get the material: the user's cell, a groove from `library`, or a cell written as the `write-cells` skill says.
 2. Write the routine out as cells, each parsed clean:
    - A tempo ladder: the same named pattern played again under each new `set tempo`, slowest first. Start where it plays clean, often 60 to 70 percent of the target, and climb 5 to 10 at a time.
    - A hard part alone first, then in context: the hands, then the feet, then both.
@@ -15,23 +15,25 @@ description: Turn a groove, rudiment, riff or chart into a practice routine of c
 
 ## Examples
 
-A single paradiddle up a ladder from 60 to 80, four bars a rung.
+A funk groove up a ladder from 70 to 90, four bars a rung.
 
 ```composer-nb
-set tempo 60
+set tempo 70
 
-pattern paradiddle = {
-  snare: ^xxx
-  sticking: RLRR LRLL
+pattern funk = {
+  hat: x-
+  snare: 2 4
+  snare.ghost: ---- ---x -x-- --x-
+  kick: x--- --x- --x- ----
 }
 
-play 4 bars paradiddle
-
-set tempo 70
-play 4 bars paradiddle
+play 4 bars funk
 
 set tempo 80
-play 4 bars paradiddle
+play 4 bars funk
+
+set tempo 90
+play 4 bars funk
 ```
 
 A groove, then the same with the kick left out for the user to play, each with a bar of count-in.

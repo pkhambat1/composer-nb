@@ -39,7 +39,7 @@ The server is TypeScript, in `src/`. `npm run mcp` runs it as it is (Node 22.18 
 | ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `parse`     | Checks a cell: the errors with their line numbers, the settings and names in effect, and for each play a grid of every hit and note, bar by bar, with the chords it heard. |
 | `render`    | The sheet music as a PNG, a MIDI file, or the ABC notation.                                                                                                                |
-| `library`   | Searches the grooves: transcriptions and rudiments to start from.                                                                                                          |
+| `library`   | Searches the grooves: transcriptions and harmony to start from.                                                                                                          |
 | `reference` | The language reference, page by page.                                                                                                                                      |
 
 The reference pages and the grooves are resources too.

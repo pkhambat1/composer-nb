@@ -89,7 +89,7 @@ ${foot}`
 
 const index = `${head("Grooves", "Transcriptions and exercises to play and start from: Porcupine Tree, Gavin Harrison's exercises, polyrhythms.", "/grooves/")}
 <h1>Grooves</h1>
-<p>Transcriptions and rudiments, each with the playground on it. Open one, slow it down, change it.</p>
+<p>Transcriptions and harmony, each with the playground on it. Open one and change it.</p>
 ${sections
   .map(
     ([section]) =>

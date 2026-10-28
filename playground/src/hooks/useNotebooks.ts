@@ -65,11 +65,23 @@ export function withIds(cells: SavedCell[]): NotebookCell[] {
   }))
 }
 
+// Notebooks kept from shared links, before sharing was taken out, went by the name a link
+// gave them when nothing in them named it. They go, and if one was open, the first notebook left opens.
+const SHARED_TITLES = ["Shared notebook", "Shared cell"]
+export function dropShared(store: Store): Store {
+  const list = store.list.filter((n) => !SHARED_TITLES.includes(n.title))
+  if (list.length === store.list.length) return store
+  const current = list.some((n) => n.id === store.current) ? store.current : (list[0]?.id ?? null)
+  const next = { current, list }
+  saveStore(next)
+  return next
+}
+
 // What the page opens with: the notebook that was open, else the starters as the first
 // notebook. Returns { store, cells }. A starter notebook nobody has changed gets the current
 // starters first.
 export function openingNotebook(starters: SavedCell[]): { store: Store; cells: SavedCell[] } {
-  let store: Store = loadStore() || { current: null, list: [] }
+  let store = dropShared(loadStore() || { current: null, list: [] })
   const refreshed = refreshStarters(store, starters)
   if (refreshed !== store) {
     store = refreshed
