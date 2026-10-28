@@ -35,18 +35,21 @@ export function usePlayback(armAudio: () => Promise<void>) {
   }, [])
 
   // Play a specific cell (stops previous if different)
-  const playCell = useCallback(async (id: string) => {
-    await armAudio()
+  const playCell = useCallback(
+    async (id: string) => {
+      await armAudio()
 
-    // Stop different cell if playing
-    if (focusedCellId && focusedCellId !== id) {
-      const prevPlayer = playersRef.current[focusedCellId]
-      if (prevPlayer) prevPlayer.stop()
-    }
+      // Stop different cell if playing
+      if (focusedCellId && focusedCellId !== id) {
+        const prevPlayer = playersRef.current[focusedCellId]
+        if (prevPlayer) prevPlayer.stop()
+      }
 
-    setFocusedCellId(id)
-    setIsPlaying(true)
-  }, [armAudio, focusedCellId])
+      setFocusedCellId(id)
+      setIsPlaying(true)
+    },
+    [armAudio, focusedCellId],
+  )
 
   // Pause the focused cell
   const pauseCell = useCallback(() => {
@@ -54,21 +57,24 @@ export function usePlayback(armAudio: () => Promise<void>) {
   }, [])
 
   // Smart toggle: play/pause/switch
-  const togglePlayback = useCallback(async (id: string) => {
-    await armAudio()
+  const togglePlayback = useCallback(
+    async (id: string) => {
+      await armAudio()
 
-    if (focusedCellId === id) {
-      // Same cell: toggle play/pause
-      setIsPlaying((prev) => !prev)
-    } else {
-      // Different cell: stop previous, play new
-      if (focusedCellId && playersRef.current[focusedCellId]) {
-        playersRef.current[focusedCellId].stop()
+      if (focusedCellId === id) {
+        // Same cell: toggle play/pause
+        setIsPlaying((prev) => !prev)
+      } else {
+        // Different cell: stop previous, play new
+        if (focusedCellId && playersRef.current[focusedCellId]) {
+          playersRef.current[focusedCellId].stop()
+        }
+        setFocusedCellId(id)
+        setIsPlaying(true)
       }
-      setFocusedCellId(id)
-      setIsPlaying(true)
-    }
-  }, [armAudio, focusedCellId])
+    },
+    [armAudio, focusedCellId],
+  )
 
   // Stop a specific cell and clear focus if it matches
   const stopCell = useCallback((id: string) => {

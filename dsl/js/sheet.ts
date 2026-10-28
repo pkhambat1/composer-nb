@@ -85,7 +85,8 @@ const LENGTHS = [16, 12, 8, 6, 4, 3, 2, 1]
 const PLAIN = LENGTHS.filter((d) => d % 3 !== 0)
 
 // A length in sixteenths, as ABC writes it after a note: 1 is nothing, 2 is "2", 0.5 is "/".
-const dur = (u: number) => (u === 1 ? "" : Number.isInteger(u) ? String(u) : u === 0.5 ? "/" : `${u * 2}/2`)
+const dur = (u: number) =>
+  u === 1 ? "" : Number.isInteger(u) ? String(u) : u === 0.5 ? "/" : `${u * 2}/2`
 
 // A ghost note is written in parentheses: text to the left and right of it
 const GHOST = '"<("">)"'
@@ -99,14 +100,14 @@ function drumNote(hits: DrumMark[], u: number): string {
     const had = byPitch.get(at.pitch)
     if (!had || h.vel > had.vel) byPitch.set(at.pitch, { ...h, at })
   }
-  const notes = [...byPitch.values()].sort((a, b) => ORDER.indexOf(a.at.pitch) - ORDER.indexOf(b.at.pitch))
+  const notes = [...byPitch.values()].sort(
+    (a, b) => ORDER.indexOf(a.at.pitch) - ORDER.indexOf(b.at.pitch),
+  )
   let deco = ""
   if (notes.some((n) => n.accent)) deco += "!>!"
   if (notes.some((n) => n.at.open)) deco += "!open!"
   if (notes.some((n) => n.span)) deco += "!/!"
   if (notes.every((n) => n.ghost)) deco += GHOST
-  const hand = notes.find((n) => n.hand)?.hand
-  if (hand) deco += `"^${hand}"` // the sticking, above the staff, clear of the feet's rests
   const heads = notes.map((n) => (n.at.head ? `!style=${n.at.head}!` : "") + n.at.pitch)
   return deco + (heads.length === 1 ? heads[0] : `[${heads.join("")}]`) + dur(u)
 }
@@ -128,7 +129,12 @@ function spelling(midi: number, sig: Sig): Spell {
   const alter = spelt[0] === "^" ? 1 : spelt[0] === "_" ? -1 : 0
   return { letter: alter ? spelt[1] : spelt, alter }
 }
-function abcPitch(midi: number, acc: Map<string, string>, sig: Sig, spell = spelling(midi, sig)): string {
+function abcPitch(
+  midi: number,
+  acc: Map<string, string>,
+  sig: Sig,
+  spell = spelling(midi, sig),
+): string {
   const { letter, alter } = spell
   const needed = alter > 0 ? "^".repeat(alter) : "_".repeat(-alter)
   const octave = Math.floor((midi - alter) / 12) - 1
@@ -139,7 +145,10 @@ function abcPitch(midi: number, acc: Map<string, string>, sig: Sig, spell = spel
     mark = needed || "="
     acc.set(at, needed)
   }
-  const name = octave >= 5 ? letter.toLowerCase() + "'".repeat(octave - 5) : letter + ",".repeat(Math.max(0, 4 - octave))
+  const name =
+    octave >= 5
+      ? letter.toLowerCase() + "'".repeat(octave - 5)
+      : letter + ",".repeat(Math.max(0, 4 - octave))
   return mark + name
 }
 
@@ -185,9 +194,14 @@ function longest(lengths: number[], i: number, n: number): number {
 function group<M extends Mark>(hits: Map<number, M[]>, ticks: number, mk: Writer<M>): Piece<M>[] {
   if (!hits.size) return [{ s: "z" + dur(ticks / 24) }]
   // Every hit, and the end of every span inside the group, has to land on the slot
-  const ends = [...hits].flatMap(([t, h]) => h.filter((x) => x.span).map((x) => Math.min(t + x.span!, ticks)))
+  const ends = [...hits].flatMap(([t, h]) =>
+    h.filter((x) => x.span).map((x) => Math.min(t + x.span!, ticks)),
+  )
   const fits = SLOTS.find(
-    (s) => ticks % s === 0 && [...hits.keys()].every((t) => t % s === 0) && ends.every((x) => x % s === 0),
+    (s) =>
+      ticks % s === 0 &&
+      [...hits.keys()].every((t) => t % s === 0) &&
+      ends.every((x) => x % s === 0),
   )
   // Nothing fits as written, so the hits are moved to the nearest thirty-second
   const slot = fits ?? 12
@@ -195,7 +209,12 @@ function group<M extends Mark>(hits: Map<number, M[]>, ticks: number, mk: Writer
     const moved = new Map<number, M[]>()
     for (const [t, h] of hits) {
       const at = Math.min(Math.round(t / slot) * slot, ticks - slot)
-      moved.set(at, [...(moved.get(at) || []), ...h.map((x) => (x.span ? { ...x, span: Math.max(slot, Math.round(x.span / slot) * slot) } : x))])
+      moved.set(at, [
+        ...(moved.get(at) || []),
+        ...h.map((x) =>
+          x.span ? { ...x, span: Math.max(slot, Math.round(x.span / slot) * slot) } : x,
+        ),
+      ])
     }
     hits = moved
   }
@@ -257,7 +276,14 @@ function group<M extends Mark>(hits: Map<number, M[]>, ticks: number, mk: Writer
     while (left > 0) {
       const d = longest(LENGTHS, i, left)
       const tie = left - d > 0 || (past && left - d === 0)
-      out.push({ s: mk(here, (d * slot) / 24, tie, cont), tick: i * slot, cont, len: (d * slot) / 24, hits: here, tie })
+      out.push({
+        s: mk(here, (d * slot) / 24, tie, cont),
+        tick: i * slot,
+        cont,
+        len: (d * slot) / 24,
+        hits: here,
+        tie,
+      })
       i += d
       left -= d
       cont = true
@@ -286,15 +312,27 @@ function countOf(tick: number, block: GridBlock): string {
   }
   const beat = Math.floor(tick / TPQ) + 1
   const pos = tick % TPQ
-  const counts: Record<number, string> = { 0: String(beat), 24: "e", 48: "&", 72: "a", 32: "&", 64: "a" }
+  const counts: Record<number, string> = {
+    0: String(beat),
+    24: "e",
+    48: "&",
+    72: "a",
+    32: "&",
+    64: "a",
+  }
   return counts[pos] || "*"
 }
 
 // A note's lengths that can cross the beats: a quarter, a dotted quarter, a half, a
 // dotted half and a whole, in sixteenths, and where in the bar each may start.
 const LONG = [4, 6, 8, 12, 16]
-const startsLong = (len: number, at: number) => (len === 16 ? at === 0 : len >= 8 ? at % 4 === 0 : at % 2 === 0)
-const midisOf = (hits: NoteMark[]) => hits.map((h) => h.midi).sort((a, b) => a - b).join(",")
+const startsLong = (len: number, at: number) =>
+  len === 16 ? at === 0 : len >= 8 ? at % 4 === 0 : at % 2 === 0
+const midisOf = (hits: NoteMark[]) =>
+  hits
+    .map((h) => h.midi)
+    .sort((a, b) => a - b)
+    .join(",")
 
 // A note written as tied pieces, one a beam group, becomes one note where its length is
 // one that may cross the beats from where it starts: a whole note on the one, not four
@@ -362,7 +400,8 @@ export function sheetAbc(
 ): { abc: string; tablature: Tablature[] } {
   const voices: (DrumVoice | PitchedVoice)[] = []
   const add = (v: DrumVoice | PitchedVoice) => (v.hits.size ? voices.push(v) : null)
-  const put = <M>(map: Map<number, M[]>, tick: number, hit: M) => map.set(tick, [...(map.get(tick) || []), hit])
+  const put = <M>(map: Map<number, M[]>, tick: number, hit: M) =>
+    map.set(tick, [...(map.get(tick) || []), hit])
 
   // Drums. A double stroke is two events, the second hidden: the first is drawn, for as
   // long as the two of them last.
@@ -374,15 +413,11 @@ export function sheetAbc(
   }
   const hands = new Map<number, DrumMark[]>()
   const feet = new Map<number, DrumMark[]>()
-  // A sticking's R or L goes under the hands' hit at the same moment
-  const handAt = new Map<number, string | undefined>()
-  for (const e of block.drumEvents) if (e.lane === "sticking") handAt.set(e.tick, e.hand)
   for (const e of block.drumEvents) {
     const at = STAFF[e.lane]
     if (!at || e.hidden) continue
     const span = spans.get(`${e.lane}@${e.tick}`)
-    const hand = at.foot ? null : handAt.get(e.tick)
-    put(at.foot ? feet : hands, e.tick, { ...e, ...(span && { span }), ...(hand && { hand }) })
+    put(at.foot ? feet : hands, e.tick, { ...e, ...(span && { span }) })
   }
   add({ id: "H", kind: "drum", clef: "perc", stem: "up", name: "drums", hits: hands, counts })
   add({ id: "F", kind: "drum", clef: "perc", stem: "down", hits: feet })
@@ -392,14 +427,25 @@ export function sheetAbc(
   for (const e of block.noteEvents) {
     const key = `${e.instrument}#${e.voice}`
     if (!pitched.has(key)) pitched.set(key, { inst: e.instrument, hits: new Map() })
-    put(pitched.get(key)!.hits, e.tick, { span: e.ticks, midi: e.note.midi, spell: e.note.spell, accent: e.accent, ghost: e.ghost })
+    put(pitched.get(key)!.hits, e.tick, {
+      span: e.ticks,
+      midi: e.note.midi,
+      spell: e.note.spell,
+      accent: e.accent,
+      ghost: e.ghost,
+    })
   }
   for (const e of block.chordEvents || []) {
     const key = `${e.instrument}#chords`
     if (!pitched.has(key)) pitched.set(key, { inst: e.instrument, hits: new Map() })
     e.chord.noteNames.forEach((name, i) => {
       const p = pitchOf(name)
-      if (p) put(pitched.get(key)!.hits, e.tick, { span: e.ticks, ...p, symbol: i === 0 ? e.chord.label : null })
+      if (p)
+        put(pitched.get(key)!.hits, e.tick, {
+          span: e.ticks,
+          ...p,
+          symbol: i === 0 ? e.chord.label : null,
+        })
     })
   }
   let p = 0
@@ -408,7 +454,15 @@ export function sheetAbc(
     const { clef, shift, tab } = clefFor(v.inst, midis)
     const tuning = tab ? tuningFor(midis) : null
     for (const hs of v.hits.values()) for (const h of hs) h.midi += shift
-    add({ id: `P${++p}`, kind: "pitched", clef, name: staffName(v.inst), tab: !!tab, tuning, hits: v.hits })
+    add({
+      id: `P${++p}`,
+      kind: "pitched",
+      clef,
+      name: staffName(v.inst),
+      tab: !!tab,
+      tuning,
+      hits: v.hits,
+    })
   }
   if (!voices.length) return { abc: "", tablature: [] }
 
@@ -458,15 +512,23 @@ export function sheetAbc(
     `%%score ${score.join(" ")}`,
     ...voices.map(
       (v) =>
-        `V:${v.id} clef=${v.clef}` + (v.stem ? ` stem=${v.stem}` : "") + (v.name ? ` name="${v.name}"` : ""),
+        `V:${v.id} clef=${v.clef}` +
+        (v.stem ? ` stem=${v.stem}` : "") +
+        (v.name ? ` name="${v.name}"` : ""),
     ),
     ...lines,
   ].join("\n")
   // abcjs takes the tab staves by staff: a staff a pitched voice, then the drums' one
-  const staves = [...voices.filter((v) => v.kind === "pitched"), ...(drums.length ? [{ kind: "drum" as const }] : [])]
+  const staves = [
+    ...voices.filter((v) => v.kind === "pitched"),
+    ...(drums.length ? [{ kind: "drum" as const }] : []),
+  ]
   const tablature: Tablature[] = staves.map((v) =>
     v.kind === "pitched" && v.tab
-      ? { instrument: "guitar", ...(v.tuning && { tuning: v.tuning.strings!, label: v.tuning.label }) }
+      ? {
+          instrument: "guitar",
+          ...(v.tuning && { tuning: v.tuning.strings!, label: v.tuning.label }),
+        }
       : { instrument: "" },
   )
   return { abc, tablature }
@@ -502,7 +564,11 @@ function writeBars<M extends Mark>(
       )
       start += ticks
     }
-    bars.push(join(pieces).map((x, i) => (i && x.first ? " " : "") + x.s).join(""))
+    bars.push(
+      join(pieces)
+        .map((x, i) => (i && x.first ? " " : "") + x.s)
+        .join(""),
+    )
     said.push(
       pieces
         .filter((x) => x.at != null)

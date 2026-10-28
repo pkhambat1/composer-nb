@@ -102,7 +102,17 @@ export default function NotebookTitle({
             aria-expanded={open}
           >
             <h1 className="panel-title">{title}</h1>
-            <svg className="nb-title-chevron" width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+            <svg
+              className="nb-title-chevron"
+              width="10"
+              height="10"
+              viewBox="0 0 10 10"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
               <path d="M2 3.5l3 3 3-3" />
             </svg>
           </button>

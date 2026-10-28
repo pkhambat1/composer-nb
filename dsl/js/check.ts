@@ -5,15 +5,14 @@ import { unhandled } from "./syntax.ts"
 import type { Type } from "./vocab.ts"
 
 // The kinds of line a name can be used on
-export type LineKind = "drum" | "pitched" | "chart" | "sticking" | "own"
+export type LineKind = "drum" | "pitched" | "chart" | "own"
 
 // What each kind of line takes: a drum's line steps, an instrument's line notes, a chart
-// (after chords) chords, the sticking line a sticking, and a line of its own patterns.
+// (after chords) chords, and a line of its own patterns.
 export const LINE_TAKES = {
   drum: "steps",
   pitched: "notes",
   chart: "chords",
-  sticking: "sticking",
   own: "pattern",
 } as const satisfies Record<LineKind, Type>
 
@@ -22,14 +21,11 @@ export type Use =
   | { line: "drum"; part?: string; layer?: boolean; beats?: boolean }
   | { line: "pitched"; part: string; text: string; chart: boolean }
   | { line: "chart" }
-  | { line: "sticking" }
   | { line: "own" }
 
 // Where a name of each type goes, for a message that sends it there
 const ownLine = (name: string) =>
   `${name} is a pattern, so it goes on a line of its own, not on an instrument's line`
-const stickingLine = (name: string) =>
-  `${name} is a sticking, so it goes on the sticking line: sticking: ${name}`
 
 // Why `name`, which is `type`, can't be used where `use` says, or null when it can.
 export function misplaced(name: string, type: Type, use: Use): string | null {
@@ -44,7 +40,6 @@ export function misplaced(name: string, type: Type, use: Use): string | null {
     case "drum":
       if (use.layer)
         return `${name} is ${type === "pattern" ? "a pattern" : type}, so it can't be a layer of steps`
-      if (type === "sticking") return stickingLine(name)
       if (type === "pattern") return ownLine(name)
       return `${name} is ${type}, so it goes on a line like piano: ${type} ${name}, not on a drum's`
     case "pitched":
@@ -57,18 +52,15 @@ export function misplaced(name: string, type: Type, use: Use): string | null {
       }
       if (type === "notes")
         return `${name} is notes, so notes goes in front of it: ${use.part}: notes ${name}`
-      return type === "sticking" ? stickingLine(name) : ownLine(name)
+      return ownLine(name)
     case "chart":
       if (type === "steps") return `${name} is steps, so it goes on a drum's line, not among chords`
       if (type === "notes") {
         return `${name} is notes, and the rest of this line is chords. A line plays one or the other`
       }
-      return type === "sticking" ? stickingLine(name) : ownLine(name)
-    case "sticking":
-      return `${name} is ${type}, so it can't go in a sticking`
+      return ownLine(name)
     case "own":
       if (type === "steps") return `${name} is steps, so it goes on a drum's line: hat: ${name}`
-      if (type === "sticking") return stickingLine(name)
       return `${name} is ${type}, so it goes on an instrument's line: piano: ${type} ${name}`
     default:
       return unhandled(use)

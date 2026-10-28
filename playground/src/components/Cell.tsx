@@ -236,7 +236,9 @@ function Cell({
       <div className="cell-prompt">
         {cell.type === "music" && runState !== "idle" ? (
           <span
-            className={"prompt-text" + (runState === "running" ? " prompt-running" : " prompt-waiting")}
+            className={
+              "prompt-text" + (runState === "running" ? " prompt-running" : " prompt-waiting")
+            }
             title={runState === "running" ? "Rendering" : "Waiting to render"}
           >
             {runState === "running" ? "●" : "…"}
@@ -258,7 +260,10 @@ function Cell({
               ref={taRef}
               value={cell.source}
               onChange={(v) => onChange(v)}
-              onFocus={() => { onSelect(); onEnterEdit() }}
+              onFocus={() => {
+                onSelect()
+                onEnterEdit()
+              }}
               onBlur={onLeaveEdit}
               onRun={onRun}
               onInterrupt={onInterrupt}
@@ -291,7 +296,10 @@ function Cell({
                   ref={taRef}
                   className="text-area text-area-split"
                   value={cell.source}
-                  onFocus={() => { onSelect(); onEnterEdit() }}
+                  onFocus={() => {
+                    onSelect()
+                    onEnterEdit()
+                  }}
                   onBlur={onLeaveEdit}
                   onChange={(e) => onChange(e.target.value)}
                   onClick={(e) => e.stopPropagation()}
@@ -299,7 +307,10 @@ function Cell({
                 />
                 <button
                   className="cell-run-btn"
-                  onClick={(e) => { e.stopPropagation(); onRun() }}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    onRun()
+                  }}
                   title="Run cell (Shift+Enter)"
                 >
                   <svg width="10" height="10" viewBox="0 0 10 10">
@@ -332,7 +343,10 @@ function Cell({
                 ref={taRef}
                 className="text-area"
                 value={cell.source}
-                onFocus={() => { onSelect(); onEnterEdit() }}
+                onFocus={() => {
+                  onSelect()
+                  onEnterEdit()
+                }}
                 onBlur={onLeaveEdit}
                 onChange={(e) => onChange(e.target.value)}
                 onClick={(e) => e.stopPropagation()}
@@ -340,7 +354,10 @@ function Cell({
               />
               <button
                 className="cell-run-btn"
-                onClick={(e) => { e.stopPropagation(); onRun() }}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onRun()
+                }}
                 title="Run cell (Shift+Enter)"
               >
                 <svg width="10" height="10" viewBox="0 0 10 10">
@@ -371,19 +388,21 @@ function Cell({
   )
 }
 
-export default React.memo(Cell, (prev, next) =>
-  prev.cell === next.cell &&
-  prev.index === next.index &&
-  prev.selected === next.selected &&
-  prev.editing === next.editing &&
-  prev.isActive === next.isActive &&
-  prev.dragging === next.dragging &&
-  prev.theme === next.theme &&
-  prev.accent === next.accent &&
-  prev.drumView === next.drumView &&
-  prev.sheetCounts === next.sheetCounts &&
-  prev.focusedCellId === next.focusedCellId &&
-  prev.isPlaying === next.isPlaying &&
-  prev.first === next.first &&
-  prev.last === next.last,
+export default React.memo(
+  Cell,
+  (prev, next) =>
+    prev.cell === next.cell &&
+    prev.index === next.index &&
+    prev.selected === next.selected &&
+    prev.editing === next.editing &&
+    prev.isActive === next.isActive &&
+    prev.dragging === next.dragging &&
+    prev.theme === next.theme &&
+    prev.accent === next.accent &&
+    prev.drumView === next.drumView &&
+    prev.sheetCounts === next.sheetCounts &&
+    prev.focusedCellId === next.focusedCellId &&
+    prev.isPlaying === next.isPlaying &&
+    prev.first === next.first &&
+    prev.last === next.last,
 )

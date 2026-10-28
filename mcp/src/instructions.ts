@@ -7,7 +7,7 @@ export const INSTRUCTIONS = `composer-nb is a small, typed language for music: d
 HOW A CELL READS. Every line says what it is:
   set tempo 90              a setting, at the top only: set, then the setting and its value
   with octave 2 { ... }     settings for its block only
-  steps pair = ^-x-         a name, its type in front, = its value. Types: steps, sticking, notes, chords, pattern
+  steps pair = ^-x-         a name, its type in front, = its value. Types: steps, notes, chords, pattern
 Names, of every type, start with a lowercase letter, then letters and digits in camelCase (riff, partA, countIn), at least two characters, never a numeral. Two names that differ only in their capitals are an error. A name is defined once in a cell, inside its blocks too; a later cell may define it again.
   kick: x--x---             inside braces: a kit piece or instrument, a colon, what it plays
   play { ... }              plays what follows it. Nothing sounds outside a play
@@ -24,7 +24,7 @@ STEPS, what a kit piece plays: one character per step, a step is a 16th note. x 
   A figure written twice is an error, because a pattern repeats its lines: hat: x-x- x-x- is hat: x-. To play a figure once for a length, put the length in front: hat: 1 bars x-.
   Or beats, one bar's hits counted 1 e & a: snare: 2 4 · kick: 1 3 3& · snare: 2e ^4 (^ ~ d in front say how the beat is hit). A line is beats or steps, never both.
   Parts and lengths: commas separate a line's parts, and a length in front fills one: snare: 2 beats rest, dd, 1 beats rest · hat: 2 beats x-, 2 beats rest. ...rest or ...x- is the rest of the block. Lengths are always plural: 1 bars, 1 beats.
-  3 in 8 spreads 3 hits over 8 steps as evenly as they go (x--x--x-). sticking: RLRR LRLL names the hand on each step (R, L, - for none), on the hands' hits.
+  3 in 8 spreads 3 hits over 8 steps as evenly as they go (x--x--x-).
   A block on a kit piece's line holds layers, one a line, which repeat until they line up; the lower layer wins a step: snare.ghost: { --x- / ------------ddd- } written on separate lines.
 
 An instrument's line says which type it holds, notes or chords, in front of its value. NOTES, what an instrument plays, drawn on the same steps: guitar: notes E---F# E-E-- . A note is A to G, then # or b, then an octave when it needs one (E2, C4 is middle C); without a number it is in octave. - lets the note ring, _ stops it, and a space goes between two notes that would touch (F# E, never F#E). ^ or ~ in front accents or softens. A figure written twice is an error here too.

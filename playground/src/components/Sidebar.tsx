@@ -40,8 +40,10 @@ export default function Sidebar({
     const handler = (e: MouseEvent) => {
       const target = e.target as Node
       if (
-        popRef.current && !popRef.current.contains(target) &&
-        btnRef.current && !btnRef.current.contains(target)
+        popRef.current &&
+        !popRef.current.contains(target) &&
+        btnRef.current &&
+        !btnRef.current.contains(target)
       ) {
         setThemeOpen(false)
       }
@@ -64,7 +66,9 @@ export default function Sidebar({
             <circle cx="18" cy="14" r="3" fill="var(--accent)" />
             <path d="M12 17V5l9-2v12" stroke="var(--accent)" strokeWidth="2" fill="none" />
           </svg>
-          <span className="lhs-brand-title">Composer<span className="lhs-brand-ext">.nb</span></span>
+          <span className="lhs-brand-title">
+            Composer<span className="lhs-brand-ext">.nb</span>
+          </span>
         </button>
         <div className="lhs-theme-wrap">
           <button
@@ -74,7 +78,16 @@ export default function Sidebar({
             onClick={() => setThemeOpen((v) => !v)}
             title="Appearance"
           >
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round">
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 16 16"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.3"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
               <circle cx="11" cy="5" r="2.5" />
               <path d="M1 14l4-6 3 4 2-2 5 4H1z" />
             </svg>
@@ -87,15 +100,36 @@ export default function Sidebar({
                   key={t.id}
                   type="button"
                   className={"theme-opt" + (theme === t.id ? " theme-opt-active" : "")}
-                  onClick={() => { onSetTheme(t.id); setThemeOpen(false) }}
+                  onClick={() => {
+                    onSetTheme(t.id)
+                    setThemeOpen(false)
+                  }}
                 >
                   {t.id === "light" ? (
-                    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round">
+                    <svg
+                      width="14"
+                      height="14"
+                      viewBox="0 0 16 16"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.3"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
                       <circle cx="8" cy="8" r="3" />
                       <path d="M8 1v2M8 13v2M1 8h2M13 8h2M3.05 3.05l1.41 1.41M11.54 11.54l1.41 1.41M3.05 12.95l1.41-1.41M11.54 4.46l1.41-1.41" />
                     </svg>
                   ) : (
-                    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round">
+                    <svg
+                      width="14"
+                      height="14"
+                      viewBox="0 0 16 16"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.3"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
                       <path d="M13.5 8.5a5.5 5.5 0 1 1-6-6 4 4 0 0 0 6 6z" />
                     </svg>
                   )}
@@ -118,7 +152,15 @@ export default function Sidebar({
             title="New notebook"
             aria-label="New notebook"
           >
-            <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+            <svg
+              width="12"
+              height="12"
+              viewBox="0 0 12 12"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+            >
               <path d="M6 1.5v9M1.5 6h9" />
             </svg>
           </button>

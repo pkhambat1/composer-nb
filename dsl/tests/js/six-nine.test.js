@@ -38,7 +38,9 @@ describe("6/9", () => {
   it("has one spelling", () => {
     for (const t of ["C69", "Cm69", "C6add9", "CM69", "Cmaj6/9", "Imaj6/9", "I69", "C6/9/E/G"]) {
       expect(buildChord(t, C)).toBeNull()
-      expect(parseSource(`play piano: chords ${t}`).errors[0].msg).toBe(`"${t}" isn't a chord I know`)
+      expect(parseSource(`play piano: chords ${t}`).errors[0].msg).toBe(
+        `"${t}" isn't a chord I know`,
+      )
     }
   })
 

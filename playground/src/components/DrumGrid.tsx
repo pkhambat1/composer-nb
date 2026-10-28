@@ -18,8 +18,9 @@ function DrumBlock({ block, index }: { block: GridBlock; index: number }) {
   return (
     <div className="dg-block">
       <div className="dg-head">
-        time {block.time} · tempo {block.tempo}{block.swing ? " · swing" : ""} · key {block.key} {block.mode} · {block.bars} bar{block.bars === 1 ? "" : "s"} · counting{" "}
-        {countingOf(block)}
+        time {block.time} · tempo {block.tempo}
+        {block.swing ? " · swing" : ""} · key {block.key} {block.mode} · {block.bars} bar
+        {block.bars === 1 ? "" : "s"} · counting {countingOf(block)}
       </div>
       {Array.from({ length: block.bars }, (_, bar) => (
         <div
@@ -33,8 +34,7 @@ function DrumBlock({ block, index }: { block: GridBlock; index: number }) {
               {Array.from({ length: per }, (_, col) => {
                 const e = row.cells.get(bar * per + col)
                 let cls = "dg-cell" + (shaded(col) ? " dg-alt" : "") + (e?.note ? " dg-note" : "")
-                if (e?.sticking) cls += " dg-stk"
-                else if (e?.hit) {
+                if (e?.hit) {
                   cls += " dg-hit"
                   if (e.accent) cls += " dg-acc"
                   if (e.ghost) cls += " dg-ghost"
@@ -50,7 +50,11 @@ function DrumBlock({ block, index }: { block: GridBlock; index: number }) {
           ))}
           {/* The playhead: one outline around the step playing now, over every row. It sits
               in the bar's grid, and DrumGrid puts it in the step's column */}
-          <div className="dg-now-col" data-bar={`${index}-${bar}`} style={{ gridRow: `1 / ${rows.length + 1}` }} />
+          <div
+            className="dg-now-col"
+            data-bar={`${index}-${bar}`}
+            style={{ gridRow: `1 / ${rows.length + 1}` }}
+          />
           <div className="dg-lane dg-bar-num">{block.bars > 1 ? `bar ${bar + 1}` : ""}</div>
           {counts.map((c, col) => (
             <div
@@ -114,7 +118,9 @@ function DrumGrid({ blocks, getTime, playing }: Follows) {
   return (
     <div className="drum-grid" ref={rootRef}>
       {blocks.map((b, i) =>
-        b.drumEvents.length || b.noteEvents.length ? <DrumBlock key={i} block={b} index={i} /> : null,
+        b.drumEvents.length || b.noteEvents.length ? (
+          <DrumBlock key={i} block={b} index={i} />
+        ) : null,
       )}
     </div>
   )

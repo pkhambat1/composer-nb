@@ -8,16 +8,26 @@
      .tk-note (a note on a pitched line),
      .tk-error
    Whitespace is kept exactly, so the layer lines up with the textarea under it. */
-import { KEYWORDS, LANES, MODES, PARTS, PITCHED, SETTINGS, SWING, TYPES, UNITS } from "./language.ts"
+import {
+  KEYWORDS,
+  LANES,
+  MODES,
+  PARTS,
+  PITCHED,
+  SETTINGS,
+  SWING,
+  TYPES,
+  UNITS,
+} from "./language.ts"
 import { chordParts, isRoman, parseKey } from "./chords.ts"
 import { among, soundsOf } from "./vocab.ts"
 
 // A run of a line's text, and the class it's coloured with (null for none)
 export type Part = { c: string | null; s: string }
 // What a value holds: a drum's steps ("drum"), notes, a chart of chords ("chord"), what a
-// pitched instrument's line holds ("pitched": notes, or chords and then a chart), a
-// sticking, or anything a name could hold ("word")
-type Kind = "drum" | "notes" | "chord" | "pitched" | "sticking" | "word"
+// pitched instrument's line holds ("pitched": notes, or chords and then a chart), or
+// anything a name could hold ("word")
+type Kind = "drum" | "notes" | "chord" | "pitched" | "word"
 // What a block holds: a drum's layers of steps, a pitched instrument's layers, or lines
 type Holds = "steps" | "pitched" | "lines"
 // Where a line stands: how many groups ( ) are open, and whether a thing has been written
@@ -112,13 +122,6 @@ function valueToken(t: string, kind: Kind): Part[] {
   if (t === "{" || t === "}") return [part("tk-punct", t)] // an instrument's block of layers
   // loop is gone: whether something repeats depends on where it is
   if (t === "loop") return [part("tk-error", t)]
-  if (kind === "sticking") {
-    // RLRR LRLL: a hand for each step
-    if (/^[RL-]+$/.test(t)) {
-      return [...t].map((ch) => (ch === "-" ? part("tk-rest", ch) : part("tk-step", ch)))
-    }
-    return [part(OWN_NAME.test(t) ? "tk-word" : "tk-error", t)]
-  }
   if (kind === "notes") {
     if (NOTES_RE.test(t)) return noteRun(t)
     const name = OWN_NAME.test(t) && !isRoman(t) && !among(TYPES, t)
@@ -244,7 +247,8 @@ function values(text: string, kind: Kind): Part[] {
 function ofBrackets(p: string, kind: Kind): Part[] {
   return pieces(p, /([()])/).flatMap((s) => {
     if (s === "(" || s === ")") return [part("tk-punct", s)]
-    if (kind === "chord" && s.startsWith("/")) return [part("tk-slash", "/"), part("tk-bass", s.slice(1))]
+    if (kind === "chord" && s.startsWith("/"))
+      return [part("tk-slash", "/"), part("tk-bass", s.slice(1))]
     return valueToken(s, kind)
   })
 }
@@ -359,8 +363,8 @@ function playable(text: string, st?: Stand): Part[] {
   const track = /^([A-Za-z][A-Za-z0-9]*(?:\.[A-Za-z0-9]+)?)(\s*)(:)(.*)$/.exec(text)
   if (track) {
     const name = track[1].toLowerCase()
-    const known = PARTS.includes(name) || name === "sticking"
-    const kind: Kind = among(PITCHED, name) ? "pitched" : name === "sticking" ? "sticking" : "drum"
+    const known = PARTS.includes(name)
+    const kind: Kind = among(PITCHED, name) ? "pitched" : "drum"
     return [
       part(known ? "tk-inst" : "tk-error", track[1]),
       part(null, track[2]),
@@ -400,13 +404,23 @@ function setting(text: string, bare = false): Part[] {
   const sound = soundsOf(word) && /^(\s+)([a-z]+)(\s*)$/.exec(after)
   if (sound) {
     const ok = soundsOf(word)!.includes(sound[2])
-    return [name, part(null, sound[1]), part(ok ? "tk-directive-val" : "tk-error", sound[2]), part(null, sound[3])]
+    return [
+      name,
+      part(null, sound[1]),
+      part(ok ? "tk-directive-val" : "tk-error", sound[2]),
+      part(null, sound[3]),
+    ]
   }
   if ((word === "key" || word === "mode" || word === "swing") && /^\s/.test(after)) {
     // a key is a note, a mode one of the modes, and swing on or off
     const m = /^(\s+)([\s\S]*?)(\s*)$/.exec(after)!
     const ok = word === "key" ? parseKey(m[2]) : among(word === "mode" ? MODES : SWING, m[2])
-    return [name, part(null, m[1]), part(ok ? "tk-directive-val" : "tk-error", m[2]), part(null, m[3])]
+    return [
+      name,
+      part(null, m[1]),
+      part(ok ? "tk-directive-val" : "tk-error", m[2]),
+      part(null, m[3]),
+    ]
   }
   if (among(SETTINGS, word)) {
     return [
@@ -414,7 +428,14 @@ function setting(text: string, bare = false): Part[] {
       ...pieces(after, /(\s+)/).map((p) =>
         /^\s+$/.test(p)
           ? part(null, p)
-          : part(p === "over" ? "tk-directive-key" : p === "=" || p === ":" ? "tk-error" : "tk-directive-val", p),
+          : part(
+              p === "over"
+                ? "tk-directive-key"
+                : p === "=" || p === ":"
+                  ? "tk-error"
+                  : "tk-directive-val",
+              p,
+            ),
       ),
     ]
   }
@@ -433,7 +454,11 @@ function withHead(text: string, st: Stand): Part[] {
     }
     const lead = /^\s*/.exec(p)![0]
     const body = p.slice(lead.length).replace(/\s+$/, "")
-    out.push(part(null, lead), ...(body ? setting(body) : []), part(null, p.slice(lead.length + body.length)))
+    out.push(
+      part(null, lead),
+      ...(body ? setting(body) : []),
+      part(null, p.slice(lead.length + body.length)),
+    )
   }
   return brace < 0 ? out : [...out, ...braces(text.slice(brace), st)]
 }
@@ -462,7 +487,11 @@ function line(code: string, depth = 0, inside = false): Part[] {
     const [, gap, name, before, , afterEq, value] = typed
     // taken, or not a name: Bridge, a single letter, a numeral
     const taken =
-      among(SETTINGS, name) || PARTS.includes(name) || KEYWORDS.includes(name) || !OWN_NAME.test(name) || /^(i|ii|iii|iv|v|vi|vii)$/.test(name)
+      among(SETTINGS, name) ||
+      PARTS.includes(name) ||
+      KEYWORDS.includes(name) ||
+      !OWN_NAME.test(name) ||
+      /^(i|ii|iii|iv|v|vi|vii)$/.test(name)
     out.push(part("tk-directive-key", word), part(null, gap))
     out.push(part(taken ? "tk-error" : "tk-word", name), part(null, before))
     out.push(part("tk-punct", "="), part(null, afterEq))
@@ -470,10 +499,10 @@ function line(code: string, depth = 0, inside = false): Part[] {
       const len = length(value)
       out.push(...len.parts, ...playable(len.rest, st))
     } else {
-      const holds: Record<string, Kind> = { chords: "chord", notes: "notes", sticking: "sticking" }
+      const holds: Record<string, Kind> = { chords: "chord", notes: "notes" }
       out.push(...values(value, holds[word] || "drum"))
     }
-  } else if (["pattern", "steps", "sticking", "notes"].includes(word) && /^(\s|$)/.test(after)) {
+  } else if (["pattern", "steps", "notes"].includes(word) && /^(\s|$)/.test(after)) {
     // pattern groove {: a type without its name and =
     out.push(part("tk-error", word), ...names(after, st))
   } else if ((word === "bar" || word === "bars") && /^\s+\S/.test(after)) {
@@ -507,7 +536,11 @@ function line(code: string, depth = 0, inside = false): Part[] {
   } else if (word === "set" && /^(\s|$)/.test(after)) {
     // set tempo 90, set key E, set guitar.electric muted: set, then a setting. Only at the top
     const space = /^\s*/.exec(after)![0]
-    out.push(part(inside ? "tk-error" : "tk-directive-key", word), part(null, space), ...setting(after.slice(space.length)))
+    out.push(
+      part(inside ? "tk-error" : "tk-directive-key", word),
+      part(null, space),
+      ...setting(after.slice(space.length)),
+    )
   } else if (word === "with" && /^(\s|\{|$)/.test(after)) {
     // with key E, mode minor { ... }: settings for its block only
     out.push(part("tk-directive-key", word), ...withHead(after, st))

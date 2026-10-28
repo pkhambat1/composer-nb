@@ -62,7 +62,7 @@ def test_tom_is_only_its_three_drums():
 def test_top_of_a_cell_offers_set_types_play_and_with():
     assert texts("%%music\np") == ["pattern ", "play "]
     assert texts("%%music\nw") == ["with "]
-    assert texts("%%music\ns") == ["set ", "steps ", "sticking "]
+    assert texts("%%music\ns") == ["set ", "steps "]
     assert texts("%%music\nn") == ["notes "]
     assert texts("%%music\nc") == ["chords "]
     assert texts("%%music\nt") == []  # a setting comes after set

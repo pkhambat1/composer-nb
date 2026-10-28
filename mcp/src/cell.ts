@@ -53,7 +53,7 @@ export function namesOf(state: State): { type: string; name: string; line?: numb
 // The kit pieces and instruments that play in an output, in the order the grid draws them.
 export function playersOf(output: Output): string[] {
   const drums = new Set<string>()
-  for (const e of output.drumEvents) if (!e.hidden && e.lane !== "sticking") drums.add(e.lane)
+  for (const e of output.drumEvents) if (!e.hidden) drums.add(e.lane)
   const pitched = new Set<string>()
   for (const e of output.events) if ("note" in e || "chord" in e) pitched.add(e.instrument)
   return [...pitched, ...drums]
@@ -68,7 +68,6 @@ export function gridText(block: GridBlock, maxBars = MAX_BARS_SHOWN): string[] {
   if (!rows.length) return []
   const cellText = (e: GridCell | undefined, pitched: boolean): string => {
     if (!e) return pitched ? "." : "-"
-    if (e.sticking) return e.text!
     if (e.hit) {
       if (e.note) return (e.accent ? "^" : e.ghost ? "~" : "") + e.text
       return e.double ? "d" : e.ghost ? "~" : e.accent ? "^" : "x"
@@ -77,7 +76,10 @@ export function gridText(block: GridBlock, maxBars = MAX_BARS_SHOWN): string[] {
   }
   const texts = rows.map((r) => {
     const pitched = r.key.includes(" ")
-    return { label: r.label, cells: Array.from({ length: per * block.bars }, (_, i) => cellText(r.cells.get(i), pitched)) }
+    return {
+      label: r.label,
+      cells: Array.from({ length: per * block.bars }, (_, i) => cellText(r.cells.get(i), pitched)),
+    }
   })
   const width = Math.max(1, ...texts.flatMap((r) => r.cells.map((c) => c.length)))
   const labels = Math.max(5, ...rows.map((r) => r.label.length))
@@ -136,7 +138,9 @@ export function describe(parsed: Parsed, earlier: Parsed | null, source = ""): s
     out.push("")
   }
   if (parsed.errors.length) {
-    out.push(`${plural(parsed.errors.length, "error")}. A cell with errors plays nothing; fix them and parse again:`)
+    out.push(
+      `${plural(parsed.errors.length, "error")}. A cell with errors plays nothing; fix them and parse again:`,
+    )
     say(parsed.errors, "")
   } else out.push("No errors.")
   const settings = settingsOf(parsed.state)

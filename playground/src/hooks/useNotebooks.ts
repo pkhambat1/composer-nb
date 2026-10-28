@@ -10,7 +10,8 @@ const KEY = "composer-nb:notebooks"
 const FILE_KIND = "composer-nb notebook"
 
 const notebookId = () => "n" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6)
-const bare = (cells: SavedCell[]): SavedCell[] => cells.map((c) => ({ type: c.type, source: c.source }))
+const bare = (cells: SavedCell[]): SavedCell[] =>
+  cells.map((c) => ({ type: c.type, source: c.source }))
 const sameCells = (a: SavedCell[], b: SavedCell[]) =>
   a.length === b.length && a.every((c, i) => c.type === b[i].type && c.source === b[i].source)
 
@@ -132,7 +133,9 @@ export function useNotebooks({
         if (!nb) return s
         const next = bare(cells)
         if (sameCells(nb.cells, next)) return s
-        const list = s.list.map((n) => (n.id === id ? { ...n, cells: next, updated: Date.now() } : n))
+        const list = s.list.map((n) =>
+          n.id === id ? { ...n, cells: next, updated: Date.now() } : n,
+        )
         const out = { ...s, list }
         saveStore(out)
         return out
@@ -157,7 +160,13 @@ export function useNotebooks({
   // `fields` are kept with the notebook: `starters` marks one made from the starters
   const add = useCallback(
     (title: string, cells: SavedCell[], fields: Partial<Notebook> = {}) => {
-      const nb: Notebook = { id: notebookId(), title, cells: bare(cells), ...fields, updated: Date.now() }
+      const nb: Notebook = {
+        id: notebookId(),
+        title,
+        cells: bare(cells),
+        ...fields,
+        updated: Date.now(),
+      }
       put({ current: nb.id, list: [nb, ...storeRef.current.list] })
       const fresh = withIds(nb.cells)
       setCells(fresh)
@@ -167,10 +176,7 @@ export function useNotebooks({
     [put, setCells, setSelectedId],
   )
 
-  const create = useCallback(
-    () => add("Untitled", [{ type: "music", source: "" }]),
-    [add],
-  )
+  const create = useCallback(() => add("Untitled", [{ type: "music", source: "" }]), [add])
 
   const duplicate = useCallback(
     (id: string) => {
@@ -183,7 +189,10 @@ export function useNotebooks({
   const rename = useCallback(
     (id: string, title: string) => {
       const s = storeRef.current
-      put({ ...s, list: s.list.map((n) => (n.id === id ? { ...n, title: title.trim() || "Untitled" } : n)) })
+      put({
+        ...s,
+        list: s.list.map((n) => (n.id === id ? { ...n, title: title.trim() || "Untitled" } : n)),
+      })
     },
     [put],
   )
@@ -233,15 +242,23 @@ export function useNotebooks({
       } catch {
         throw new Error("That file isn't a notebook: it doesn't hold JSON")
       }
-      const found: { type?: unknown; source?: unknown }[] | null = Array.isArray(data?.cells) ? data.cells : null
+      const found: { type?: unknown; source?: unknown }[] | null = Array.isArray(data?.cells)
+        ? data.cells
+        : null
       if (!found || !found.every((c) => typeof c.source === "string")) {
         throw new Error("That file isn't a notebook: no cells in it")
       }
       // A cell that isn't text is music
       const cells = found.map(
-        (c): SavedCell => ({ type: c.type === "text" ? "text" : "music", source: c.source as string }),
+        (c): SavedCell => ({
+          type: c.type === "text" ? "text" : "music",
+          source: c.source as string,
+        }),
       )
-      add(typeof data.title === "string" && data.title.trim() ? data.title.trim() : titleOf(cells), cells)
+      add(
+        typeof data.title === "string" && data.title.trim() ? data.title.trim() : titleOf(cells),
+        cells,
+      )
     },
     [add],
   )

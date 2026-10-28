@@ -6,7 +6,7 @@
    tests/python/test_completer.py fail when a copy drifts from this file. */
 
 // The types a name can have. Its type goes in front of it: steps pair = ^-x-
-export const TYPES = ["steps", "sticking", "notes", "chords", "pattern"] as const
+export const TYPES = ["steps", "notes", "chords", "pattern"] as const
 export type Type = (typeof TYPES)[number]
 
 // Words with a meaning of their own, which can't be names

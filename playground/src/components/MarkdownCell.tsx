@@ -37,11 +37,7 @@ function renderMdBlock(tokens: Token[]): React.ReactNode[] {
     switch (tok.type) {
       case "heading": {
         const Tag = `h${tok.depth}` as "h1" | "h2" | "h3" | "h4" | "h5" | "h6"
-        return (
-          <Tag key={key}>
-            {tok.tokens ? renderMdInline(tok.tokens, key) : tok.text}
-          </Tag>
-        )
+        return <Tag key={key}>{tok.tokens ? renderMdInline(tok.tokens, key) : tok.text}</Tag>
       }
       case "paragraph":
         return <p key={key}>{renderMdInline(tok.tokens, key)}</p>
@@ -52,9 +48,7 @@ function renderMdBlock(tokens: Token[]): React.ReactNode[] {
           </pre>
         )
       case "blockquote":
-        return (
-          <blockquote key={key}>{renderMdBlock(tok.tokens || [])}</blockquote>
-        )
+        return <blockquote key={key}>{renderMdBlock(tok.tokens || [])}</blockquote>
       case "list":
         return tok.ordered ? (
           <ol key={key} start={tok.start || 1}>
@@ -70,9 +64,11 @@ function renderMdBlock(tokens: Token[]): React.ReactNode[] {
           </ul>
         )
       case "text":
-        return tok.tokens
-          ? <span key={key}>{renderMdInline(tok.tokens, key)}</span>
-          : <span key={key}>{tok.raw}</span>
+        return tok.tokens ? (
+          <span key={key}>{renderMdInline(tok.tokens, key)}</span>
+        ) : (
+          <span key={key}>{tok.raw}</span>
+        )
       case "hr":
         return <hr key={key} />
       case "space":

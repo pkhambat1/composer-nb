@@ -20,7 +20,17 @@ type Props = {
 }
 
 const CodeEditor = React.forwardRef<HTMLTextAreaElement, Props>(function CodeEditor(props, ref) {
-  const { value, onChange, onFocus, onBlur, placeholder, onRun, onInterrupt, runState, errorLines } = props
+  const {
+    value,
+    onChange,
+    onFocus,
+    onBlur,
+    placeholder,
+    onRun,
+    onInterrupt,
+    runState,
+    errorLines,
+  } = props
   const localRef = React.useRef<HTMLTextAreaElement | null>(null)
   const setRef = (el: HTMLTextAreaElement | null) => {
     localRef.current = el
@@ -106,7 +116,13 @@ const CodeEditor = React.forwardRef<HTMLTextAreaElement, Props>(function CodeEdi
         >
           <svg width="10" height="10" viewBox="0 0 10 10">
             <circle cx="5" cy="5" r="4" stroke="currentColor" strokeWidth="1.2" fill="none" />
-            <path d="M5 3v2.5l1.5 1" stroke="currentColor" strokeWidth="1.2" fill="none" strokeLinecap="round" />
+            <path
+              d="M5 3v2.5l1.5 1"
+              stroke="currentColor"
+              strokeWidth="1.2"
+              fill="none"
+              strokeLinecap="round"
+            />
           </svg>
           <span>Waiting</span>
         </button>
@@ -137,7 +153,13 @@ const CodeEditor = React.forwardRef<HTMLTextAreaElement, Props>(function CodeEdi
         >
           <svg width="10" height="10" viewBox="0 0 10 10">
             <circle cx="5" cy="5" r="4" stroke="currentColor" strokeWidth="1.2" fill="none" />
-            <path d="M5 3v2.5l1.5 1" stroke="currentColor" strokeWidth="1.2" fill="none" strokeLinecap="round" />
+            <path
+              d="M5 3v2.5l1.5 1"
+              stroke="currentColor"
+              strokeWidth="1.2"
+              fill="none"
+              strokeLinecap="round"
+            />
           </svg>
           <span>Rendering</span>
         </button>

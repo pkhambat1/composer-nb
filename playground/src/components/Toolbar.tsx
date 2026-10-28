@@ -3,7 +3,13 @@ import React from "react"
 import type { KernelStatus } from "../shared/types.ts"
 
 // The + menu: a music cell or a text cell, at the end of the notebook
-function AddCellDropdown({ onAddCode, onAddText }: { onAddCode: () => void; onAddText: () => void }) {
+function AddCellDropdown({
+  onAddCode,
+  onAddText,
+}: {
+  onAddCode: () => void
+  onAddText: () => void
+}) {
   const [open, setOpen] = React.useState(false)
   const ref = React.useRef<HTMLDivElement>(null)
 
@@ -32,15 +38,34 @@ function AddCellDropdown({ onAddCode, onAddText }: { onAddCode: () => void; onAd
       >
         <span style={{ fontWeight: 700, fontSize: 16, lineHeight: "14px" }}>+</span>
         <svg width="8" height="8" viewBox="0 0 8 8" fill="currentColor" style={{ marginLeft: 2 }}>
-          <path d="M1 2.5l3 3 3-3" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+          <path
+            d="M1 2.5l3 3 3-3"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.4"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
         </svg>
       </button>
       {open && (
         <div className="tb-dropdown" role="menu">
-          <button className="tb-dropdown-item" onClick={() => { onAddCode(); setOpen(false) }}>
+          <button
+            className="tb-dropdown-item"
+            onClick={() => {
+              onAddCode()
+              setOpen(false)
+            }}
+          >
             Music cell
           </button>
-          <button className="tb-dropdown-item" onClick={() => { onAddText(); setOpen(false) }}>
+          <button
+            className="tb-dropdown-item"
+            onClick={() => {
+              onAddText()
+              setOpen(false)
+            }}
+          >
             Text cell
           </button>
         </div>

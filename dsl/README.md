@@ -117,14 +117,14 @@ Every line starts by saying what it is:
   <img src="https://raw.githubusercontent.com/pkhambat1/composer-nb/main/docs/images/how-a-cell-reads.svg" width="820" alt="A cell with each kind of line labelled: a setting, a named pattern, drum lines, play, chords, and a pattern played by name">
 </p>
 
-| Line                | What it is                                                              |
-| ------------------- | ----------------------------------------------------------------------- |
-| `set tempo 90`      | A setting: `set`, then the setting and its value. At the top only       |
+| Line                 | What it is                                                                         |
+| -------------------- | ---------------------------------------------------------------------------------- |
+| `set tempo 90`       | A setting: `set`, then the setting and its value. At the top only                  |
 | `with key E { ... }` | Settings for its block only: at the top, around statements; inside braces, a block |
-| `steps pair = ^-x-` | A name, with its type in front: `steps`, `notes`, `chords` or `pattern` |
-| `kick: x--x---`     | Inside braces, an instrument and what it plays                          |
-| `bar 2 { ... }`     | Inside braces, what plays in one bar of the pattern or play it's in     |
-| `play { ... }`      | Plays what's after it, a pattern or one line. Nothing else makes sound  |
+| `steps pair = ^-x-`  | A name, with its type in front: `steps`, `notes`, `chords` or `pattern`            |
+| `kick: x--x---`      | Inside braces, an instrument and what it plays                                     |
+| `bar 2 { ... }`      | Inside braces, what plays in one bar of the pattern or play it's in                |
+| `play { ... }`       | Plays what's after it, a pattern or one line. Nothing else makes sound             |
 
 `//` starts a comment. Blank lines and indentation mean nothing. Settings set at the top, and names, carry on into the cells below.
 
@@ -145,16 +145,16 @@ A name of any type starts with a lowercase letter and takes a capital for each n
 
 A setting is `set`, then the setting and its value: `set key A`. It applies from its line to the end of the cell, and on into later cells. `set` goes at the top of a cell only.
 
-| Setting  | Default    | Meaning                                                                      |
-| -------- | ---------- | ---------------------------------------------------------------------------- |
-| `time`   | `4 over 4` | Notes in a bar, over which note: `7 over 8`, or felt in groups: `3+4 over 4` |
-| `tempo`  | `120`      | Quarter notes per minute                                                     |
-| `swing`  | `off`      | Swung eighths, a triplet feel: `on` or `off`                                 |
-| `key`    | `C`        | The root degrees and Roman numerals count from: a note, `E`, `F#`, `Bb`       |
-| `mode`   | `major`    | How the key is written on the sheet: `major`, `minor`, `dorian`, `phrygian`, `lydian`, `mixolydian`, `locrian` |
-| `transpose` | `0`     | Semitones every pitched instrument sounds from what's written, -12 to 12     |
-| `octave` | `3`        | Octave for chords, degrees and notes written without one, 1 to 6             |
-| `kit`    | `rock`     | Drum sound: `rock` or `synth`                                                |
+| Setting     | Default    | Meaning                                                                                                        |
+| ----------- | ---------- | -------------------------------------------------------------------------------------------------------------- |
+| `time`      | `4 over 4` | Notes in a bar, over which note: `7 over 8`, or felt in groups: `3+4 over 4`                                   |
+| `tempo`     | `120`      | Quarter notes per minute                                                                                       |
+| `swing`     | `off`      | Swung eighths, a triplet feel: `on` or `off`                                                                   |
+| `key`       | `C`        | The root degrees and Roman numerals count from: a note, `E`, `F#`, `Bb`                                        |
+| `mode`      | `major`    | How the key is written on the sheet: `major`, `minor`, `dorian`, `phrygian`, `lydian`, `mixolydian`, `locrian` |
+| `transpose` | `0`        | Semitones every pitched instrument sounds from what's written, -12 to 12                                       |
+| `octave`    | `3`        | Octave for chords, degrees and notes written without one, 1 to 6                                               |
+| `kit`       | `rock`     | Drum sound: `rock` or `synth`                                                                                  |
 
 Every number is arithmetic (`set tempo 60*2`, `(1+2) bars groove`), so `*` and `/` only ever multiply and divide. That's why a time is `7 over 8` rather than `7/8`.
 

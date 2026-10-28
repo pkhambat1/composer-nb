@@ -30,7 +30,6 @@ import {
   stepParts,
   stepBlock,
   stepPattern,
-  stickingPattern,
   tokenize,
   type DrumClip,
 } from "./values/steps.ts"
@@ -58,7 +57,6 @@ export type PartLine = {
   name: string
   value: Piece[]
   pitched?: boolean
-  sticking?: boolean
   drum?: string
   art?: string
 }
@@ -280,14 +278,12 @@ export function classify({ ln, parts }: Line, err: Report, st: State): ReadLine 
     )
     return null
   }
-  if (among(PARTS, name) || name === "sticking") {
+  if (among(PARTS, name)) {
     if (!value.length) {
       err(ln, `${name}: needs something after the colon`)
       return null
     }
     if (among(PITCHED, name)) return { kind: "part", ln, name, value, pitched: true }
-    // sticking: RLRR LRLL: which hand plays each step, shown on the hands' hits
-    if (name === "sticking") return { kind: "part", ln, name, value, sticking: true }
     const [drum, art = "hit"] = name.split(".")
     return { kind: "part", ln, name, value, drum, art }
   }
@@ -302,10 +298,6 @@ export function classify({ ln, parts }: Line, err: Report, st: State): ReadLine 
 
 // One instrument's line.
 export function readPart(part: PartLine, st: State, barTicks: number, err: Report): Played | null {
-  if (part.sticking) {
-    const pattern = stickingPattern(part, st, err)
-    return pattern && { ...pattern, part }
-  }
   if (part.pitched) {
     const pattern = pitchedPattern(part, st, barTicks, err)
     return pattern && { ...pattern, part }

@@ -49,7 +49,7 @@ export class Scope {
     return nameProblem(name, value) || nameRule(type, name, this.#st)
   }
 
-  // A name of steps, sticking, notes or chords
+  // A name of steps, notes or chords
   defineWord(name: string, word: Word): void {
     delete this.#st.sections[name]
     this.#st.words[name] = word

@@ -1,14 +1,14 @@
 /* Steps: what a drum's line plays. One character per step (x hit, ^ accent, ~ ghost,
    d double, - nothing), or one bar's beats (2 4, ^4), or parts with lengths in front
    (2 beats rest, ...x-), or hits spread over steps (3 in 8), or a block of layers that
-   repeat until they line up. Also stickings: which hand plays each step. */
+   repeat until they line up. */
 import { buildChord } from "../chords.ts"
 import { misplaced } from "../check.ts"
 import { blockBeside } from "../eval.ts"
 import { TRACK_RE } from "../lines.ts"
 import { keyOf, withInLayers } from "../settings.ts"
 import { NAME_LIKE } from "../resolve.ts"
-import { bracesIn, headOf, isBraces, onlyBraces, pieces, textOf } from "../parts.ts"
+import { bracesIn, headOf, onlyBraces, textOf } from "../parts.ts"
 import type { Braces, Line, Piece, State } from "../state.ts"
 import {
   barQuarters,
@@ -56,7 +56,6 @@ export type DrumHit = {
   line: number
   hidden?: boolean // the second stroke of a double
   gap?: number
-  hand?: string // a sticking's R or L
 }
 // A drum's line, read: how long it is, and its hits for as long as it's played
 export type DrumClip = {
@@ -69,9 +68,6 @@ export type DrumClip = {
 type Beat = { tick: number; mods: Mods; tok: string }
 // One layer of a block of steps
 type Layer = { run: string; toEnd: boolean; fill?: string | null; ln: number }
-
-// The hands of a sticking line: R, L, or - for a step with no hand named
-export const STICKING_RE = /^[RL-]+$/
 
 const SUB: Record<string, number> = { "": 0, e: 0.25, "&": 0.5, a: 0.75 }
 // Steps say how a drum is hit, never which sound (that's the line's name): x hit,
@@ -351,72 +347,6 @@ function bjorklund(hits: number, steps: number): string {
     main = paired
   }
   return main.join("") + rem.join("")
-}
-
-export const STICKING_HELP = "A sticking is a hand for each step, R, L or -: sticking: RLRR LRLL"
-
-// sticking: RLRR LRLL — which hand plays each step. Its events go with the hands' hits at
-// the same moments, which the grid and the sheet show as R and L.
-export function stickingPattern(part: DrumPart, st: State, err: Report): DrumClip | null {
-  const hands: (string | null)[] = []
-  let ok = true
-  for (const tok of pieces(part.value ?? [])) {
-    if (isBraces(tok)) {
-      err(part.ln, `"{ ... }" isn't a sticking. ${STICKING_HELP}`)
-      ok = false
-      continue
-    }
-    const w = st.words[tok]
-    const runs =
-      tok === "|" ? ["|"] : STICKING_RE.test(tok) ? [tok] : w?.type === "sticking" ? w.tokens : null
-    if (!runs) {
-      err(
-        part.ln,
-        w
-          ? misplaced(tok, w.type, { line: "sticking" })!
-          : `"${tok}" isn't a sticking. ${STICKING_HELP}`,
-      )
-      ok = false
-      continue
-    }
-    for (const r of runs) {
-      if (r === "|") {
-        const problem = barLineProblem(hands.length, st)
-        if (problem) {
-          err(part.ln, problem)
-          ok = false
-        }
-      } else hands.push(...[...r].map((c) => (c === "-" ? null : c)))
-    }
-  }
-  if (!ok) return null
-  if (!hands.some(Boolean)) {
-    err(part.ln, "This sticking names no hand. Put R or L on the steps the hands play")
-    return null
-  }
-  const stepTicks = st.stepTicks
-  return {
-    kind: "drum",
-    ticks: hands.length * stepTicks,
-    expand(total: number, loop: boolean) {
-      const out: DrumHit[] = []
-      for (let k = 0; k * stepTicks < total && (loop || k < hands.length); k++) {
-        const hand = hands[k % hands.length]
-        if (hand) {
-          out.push({
-            inst: "sticking",
-            art: "hit",
-            lane: "sticking",
-            hand,
-            tick: k * stepTicks,
-            vel: 0,
-            line: part.ln,
-          })
-        }
-      }
-      return out
-    },
-  }
 }
 
 // A line's parts: what's between its commas. A bar line ends a part too when a length or

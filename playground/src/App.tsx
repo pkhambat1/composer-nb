@@ -114,7 +114,9 @@ export default function App({ host = null }: { host?: Host | null }) {
   const playback = usePlayback(armAudio)
 
   // Play all: every music cell renders, then they play one after another.
-  const playAllRef = React.useRef<{ ids: string[]; rendered: Set<string>; pending: number } | null>(null)
+  const playAllRef = React.useRef<{ ids: string[]; rendered: Set<string>; pending: number } | null>(
+    null,
+  )
 
   // Renders a cell, and plays it when asked (the cell's own button and Shift+Enter).
   const runCell = React.useCallback(
@@ -140,7 +142,8 @@ export default function App({ host = null }: { host?: Host | null }) {
         const after = hostRef.current?.after
         if (after) inherited = MusicEngine.parseSource(after, inherited).state
         for (const prev of cells.slice(0, cells.indexOf(c))) {
-          if (prev.type === "music") inherited = MusicEngine.parseSource(prev.source, inherited).state
+          if (prev.type === "music")
+            inherited = MusicEngine.parseSource(prev.source, inherited).state
         }
         const parsed = MusicEngine.parseSource(c.source, inherited)
         if (abortRef.current !== runId) return
@@ -149,7 +152,12 @@ export default function App({ host = null }: { host?: Host | null }) {
           playback.stopCell(id)
           updateCell(id, {
             status: "idle",
-            output: { kind: "error", error: lines, lines: parsed.errors.map((e) => e.line), source: c.source },
+            output: {
+              kind: "error",
+              error: lines,
+              lines: parsed.errors.map((e) => e.line),
+              source: c.source,
+            },
           })
           return
         }
@@ -159,7 +167,11 @@ export default function App({ host = null }: { host?: Host | null }) {
             "To hear something, add a play, such as play piano: chords C Am|F G."
           playback.stopCell(id)
           setRunCounter(runCounter + 1)
-          updateCell(id, { status: "idle", runCount: runCounter + 1, output: { kind: "info", message } })
+          updateCell(id, {
+            status: "idle",
+            runCount: runCounter + 1,
+            output: { kind: "info", message },
+          })
           return
         }
         const nextCount = runCounter + 1
@@ -211,7 +223,9 @@ export default function App({ host = null }: { host?: Host | null }) {
   const processingRef = React.useRef(false)
   const skipRef = React.useRef<(() => void) | null>(null) // resolve fn to immediately unblock queue
   const runCellRef = React.useRef(runCell)
-  React.useEffect(() => { runCellRef.current = runCell }, [runCell])
+  React.useEffect(() => {
+    runCellRef.current = runCell
+  }, [runCell])
 
   const processQueue = React.useCallback(async () => {
     if (processingRef.current) return
@@ -228,18 +242,24 @@ export default function App({ host = null }: { host?: Host | null }) {
     setKernelStatus("idle")
   }, [])
 
-  const queuedRunCell = React.useCallback((id: string, play = false) => {
-    updateCell(id, { status: "waiting", output: null, runCount: null })
-    setKernelStatus("busy")
-    queueRef.current.push({ id, play })
-    processQueue()
-  }, [updateCell, processQueue])
+  const queuedRunCell = React.useCallback(
+    (id: string, play = false) => {
+      updateCell(id, { status: "waiting", output: null, runCount: null })
+      setKernelStatus("busy")
+      queueRef.current.push({ id, play })
+      processQueue()
+    },
+    [updateCell, processQueue],
+  )
 
   // The cell's own Play button and Shift+Enter: render, then play
-  const playCellNow = React.useCallback((id: string) => {
-    playAllRef.current = null
-    queuedRunCell(id, true)
-  }, [queuedRunCell])
+  const playCellNow = React.useCallback(
+    (id: string) => {
+      playAllRef.current = null
+      queuedRunCell(id, true)
+    },
+    [queuedRunCell],
+  )
 
   const interruptCell = React.useCallback(
     (id: string) => {
@@ -427,7 +447,11 @@ export default function App({ host = null }: { host?: Host | null }) {
   // shows where a dragged cell would land.
   const gap = (key: string, at: string | null, where: Place, place: number) =>
     single ? null : (
-      <CellGap key={key} onAdd={(type) => insertCell(at, where, type)} dropHere={landing === place} />
+      <CellGap
+        key={key}
+        onAdd={(type) => insertCell(at, where, type)}
+        dropHere={landing === place}
+      />
     )
 
   const cellList = (
@@ -503,38 +527,36 @@ export default function App({ host = null }: { host?: Host | null }) {
       />
 
       <div className="app-main">
-        <div className="notebook-root" style={{ display: sideTab === "notebook" ? undefined : "none" }}>
+        <div
+          className="notebook-root"
+          style={{ display: sideTab === "notebook" ? undefined : "none" }}
+        >
           <div className="nb-sticky-header">
-          <NotebookTitle
-            title={notebooks.current?.title || "Notebook"}
-            subtitle="Kept on this device as you write"
-            menu={notebookMenu}
-          />
-          <Toolbar
-            onAddCode={() =>
-              insertCell(
-                cells.length ? cells[cells.length - 1].id : null,
-                "below",
-                "music",
-              )
-            }
-            onAddText={() =>
-              insertCell(
-                cells.length ? cells[cells.length - 1].id : null,
-                "below",
-                "text",
-              )
-            }
-            onRunAll={queuedRunAll}
-            onStop={quiet}
-            kernelStatus={kernelStatus}
-          />
+            <NotebookTitle
+              title={notebooks.current?.title || "Notebook"}
+              subtitle="Kept on this device as you write"
+              menu={notebookMenu}
+            />
+            <Toolbar
+              onAddCode={() =>
+                insertCell(cells.length ? cells[cells.length - 1].id : null, "below", "music")
+              }
+              onAddText={() =>
+                insertCell(cells.length ? cells[cells.length - 1].id : null, "below", "text")
+              }
+              onRunAll={queuedRunAll}
+              onStop={quiet}
+              kernelStatus={kernelStatus}
+            />
           </div>
 
           <main
             className="nb-main"
             onClick={(e) => {
-              if (e.target === e.currentTarget || (e.target as HTMLElement).classList.contains("cells"))
+              if (
+                e.target === e.currentTarget ||
+                (e.target as HTMLElement).classList.contains("cells")
+              )
                 setSelectedId(null)
             }}
           >
@@ -542,7 +564,6 @@ export default function App({ host = null }: { host?: Host | null }) {
           </main>
 
           <StatusBar editingId={editingId} kernelStatus={kernelStatus} />
-
         </div>
         {chordsOpened && (
           <React.Suspense fallback={null}>

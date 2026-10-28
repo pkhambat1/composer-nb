@@ -84,9 +84,7 @@ function load(name: string): Promise<Tone.ToneAudioBuffer | null> {
 export async function prepareKit(events: HitEvent[]): Promise<Kit> {
   const names = [
     ...new Set(
-      events
-        .filter((ev) => ev.kit !== "synth" && ev.lane !== "sticking")
-        .flatMap((ev) => samplesOf(ev).map(([n]) => n)),
+      events.filter((ev) => ev.kit !== "synth").flatMap((ev) => samplesOf(ev).map(([n]) => n)),
     ),
   ]
   const buffers: Kit["buffers"] = {}
@@ -193,7 +191,6 @@ export async function schedule(
   let synth: ReturnType<typeof makeSynthKit> | null = null
   let openHat: { time: number; choke: Choke } | null = null
   for (const ev of events) {
-    if (ev.lane === "sticking") continue // a hand's name, not a sound
     // A little human looseness in timing and force, and the swing, if any.
     const time = Math.max(0, ev.secStart + (ev.secSwing || 0) + (Math.random() - 0.5) * 0.006)
     const vel = Math.min(1, ev.vel * (0.95 + Math.random() * 0.1))
