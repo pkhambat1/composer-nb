@@ -1,8 +1,14 @@
-// components/StatusBar.jsx — Bottom status bar
-import React from "react"
+// components/StatusBar.tsx — Bottom status bar
+import type { KernelStatus } from "../shared/types.ts"
 
-export default function StatusBar({ editingId, kernelStatus }) {
-  const busy = kernelStatus === "busy" || kernelStatus === "rendering"
+export default function StatusBar({
+  editingId,
+  kernelStatus,
+}: {
+  editingId: string | null
+  kernelStatus: KernelStatus
+}) {
+  const busy = kernelStatus === "busy"
   return (
     <footer className="status-bar">
       <span className={"sb-status" + (busy ? " sb-status-busy" : "")}>

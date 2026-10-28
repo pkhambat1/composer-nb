@@ -1,6 +1,6 @@
 /* After vite build: a page for each starter groove, at dist/grooves/<slug>/, and an index
    of them. A page is the groove's text, its code, and the playground embedded on it, so
-   it plays where it's found. Run as `node scripts/grooves.js` from playground/. */
+   it plays where it's found. Run as `node scripts/grooves.ts` from playground/. */
 import { mkdirSync, writeFileSync } from "node:fs"
 import { dirname, join } from "node:path"
 import { fileURLToPath } from "node:url"
@@ -21,7 +21,7 @@ const grooves = GROOVES.map((g) => ({
 }))
 const sections = SECTIONS.map((s) => [s])
 
-const escape = (s) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;")
+const escape = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;")
 
 const style = `
   :root { color-scheme: light; }
@@ -40,7 +40,7 @@ const style = `
   footer { margin-top: 40px; font-size: 13px; color: #8a8a8a; }
 `
 
-const head = (title, description, path) => `<!doctype html>
+const head = (title: string, description: string, path: string) => `<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -65,7 +65,7 @@ const foot = `<footer>composer-nb: a music notebook, in place of paper. Write wh
 `
 
 // The embedded playground sizes itself: it says how tall it is
-const embed = (source) => `<iframe src="/?embed#src=${encodeURIComponent(source)}" title="Play it" loading="lazy"></iframe>
+const embed = (source: string) => `<iframe src="/?embed#src=${encodeURIComponent(source)}" title="Play it" loading="lazy"></iframe>
 <script>
 addEventListener("message", (e) => {
   if (e.data && e.data.type === "composer-nb:height") document.querySelector("iframe").style.height = e.data.height + 16 + "px"

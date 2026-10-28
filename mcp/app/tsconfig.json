@@ -1,0 +1,6 @@
+{
+  // The MCP App's page: the playground's App with the host client, so it's checked as the
+  // playground is
+  "extends": "../../playground/tsconfig.json",
+  "include": ["."]
+}

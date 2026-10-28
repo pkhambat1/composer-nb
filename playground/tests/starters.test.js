@@ -2,7 +2,7 @@
    opens, and one that has been changed is left as it is. */
 import { readFileSync } from "node:fs"
 import { describe, it, expect } from "vitest"
-import { fingerprint, refreshStarters } from "../src/shared/starters.js"
+import { fingerprint, refreshStarters } from "../src/shared/starters.ts"
 
 // The welcome notebook's cells as they first shipped, before notebooks were marked
 const FIRST = JSON.parse(

@@ -6,16 +6,20 @@
    - Cell type conversion (music <-> text)
 */
 import { useState, useCallback } from "react"
+import type { CellType, NotebookCell, SavedCell } from "../shared/types.ts"
+
+// Where a new cell goes: above or below the one it's added next to
+export type Place = "above" | "below"
 
 // Cell ID generator (global counter)
 let _cid = 0
-export function cellId() {
+export function cellId(): string {
   return "c" + ++_cid + "_" + Date.now().toString(36)
 }
 
-export function useCellManager(starterCells) {
+export function useCellManager(starterCells: SavedCell[]) {
   // Initialize cells from starter data - add id, runCount, output, status
-  const initCells = starterCells.map((c) => ({
+  const initCells = starterCells.map((c): NotebookCell => ({
     id: cellId(),
     type: c.type,
     source: c.source,
@@ -26,24 +30,25 @@ export function useCellManager(starterCells) {
 
   // State
   const [cells, setCells] = useState(initCells)
-  const [selectedId, setSelectedId] = useState(initCells[1]?.id || null)
-  const [editingId, setEditingId] = useState(null)
-  const [trash, setTrash] = useState([])
+  const [selectedId, setSelectedId] = useState<string | null>(initCells[1]?.id || null)
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const [trash, setTrash] = useState<{ cell: NotebookCell; idx: number }[]>([])
 
   // Find index of cell by id
-  const findIndex = useCallback((id) => cells.findIndex((c) => c.id === id), [cells])
+  const findIndex = useCallback((id: string) => cells.findIndex((c) => c.id === id), [cells])
 
   // Update a cell with partial data
-  const updateCell = useCallback((id, patch) => {
+  const updateCell = useCallback((id: string, patch: Partial<NotebookCell>) => {
     setCells((cs) => cs.map((c) => (c.id === id ? { ...c, ...patch } : c)))
   }, [])
 
   // Insert a new cell
-  const insertCell = useCallback((afterId, where = "below", type = "music", source) => {
+  const insertCell = useCallback(
+    (afterId: string | null, where: Place = "below", type: CellType = "music", source?: string) => {
     setCells((cs) => {
       const idx = afterId ? cs.findIndex((c) => c.id === afterId) : cs.length - 1
       const insertAt = where === "above" ? Math.max(0, idx) : idx + 1
-      const nc = {
+      const nc: NotebookCell = {
         id: cellId(),
         type,
         source:
@@ -58,10 +63,12 @@ export function useCellManager(starterCells) {
       setEditingId(source ? null : nc.id)
       return next
     })
-  }, [])
+  },
+    [],
+  )
 
   // Delete a cell (moves to trash for undo)
-  const deleteCell = useCallback((id) => {
+  const deleteCell = useCallback((id: string) => {
     setCells((cs) => {
       const idx = cs.findIndex((c) => c.id === id)
       if (idx < 0) return cs
@@ -90,7 +97,7 @@ export function useCellManager(starterCells) {
   }, [])
 
   // Move a cell up or down one place
-  const moveCell = useCallback((id, by) => {
+  const moveCell = useCallback((id: string, by: number) => {
     setCells((cs) => {
       const idx = cs.findIndex((c) => c.id === id)
       const to = idx + by
@@ -102,11 +109,11 @@ export function useCellManager(starterCells) {
   }, [])
 
   // A copy of a cell, right under it, with the same source and no output yet
-  const duplicateCell = useCallback((id) => {
+  const duplicateCell = useCallback((id: string) => {
     setCells((cs) => {
       const idx = cs.findIndex((c) => c.id === id)
       if (idx < 0) return cs
-      const copy = { ...cs[idx], id: cellId(), runCount: null, output: null, status: "idle" }
+      const copy: NotebookCell = { ...cs[idx], id: cellId(), runCount: null, output: null, status: "idle" }
       const next = [...cs]
       next.splice(idx + 1, 0, copy)
       setSelectedId(copy.id)
@@ -115,7 +122,7 @@ export function useCellManager(starterCells) {
   }, [])
 
   // Convert cell type (music <-> text)
-  const convertCell = useCallback((id, type) => {
+  const convertCell = useCallback((id: string, type: CellType) => {
     setCells((cs) =>
       cs.map((c) => (c.id === id ? { ...c, type, output: null, runCount: null } : c)),
     )

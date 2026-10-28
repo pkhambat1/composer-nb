@@ -2,10 +2,11 @@
    as they shipped is given the current starters when the page opens, so a fix to a starter
    reaches people who opened the playground before it. A notebook that has been changed at
    all is left as it is. */
+import type { Notebook, SavedCell, Store } from "./types.ts"
 
 // A short fingerprint of cells' types and sources (cyrb53), to tell starter cells as they
 // shipped from cells someone has changed. Changing it forgets every notebook made so far.
-export function fingerprint(cells) {
+export function fingerprint(cells: SavedCell[]): string {
   const text = JSON.stringify(cells.map((c) => [c.type, c.source]))
   let h1 = 0xdeadbeef
   let h2 = 0x41c6ce57
@@ -36,14 +37,14 @@ const SHIPPED = new Set([
 ])
 
 // A notebook made from the starters and not changed since
-export function untouched(nb) {
+export function untouched(nb: Notebook): boolean {
   const f = fingerprint(nb.cells)
   return f === nb.starters || SHIPPED.has(f)
 }
 
 // The store with every untouched starter notebook holding `starters`, or the same store
 // when there's nothing to change. Titles, ids and when they were last changed stay.
-export function refreshStarters(store, starters) {
+export function refreshStarters(store: Store, starters: SavedCell[]): Store {
   const now = fingerprint(starters)
   const cells = starters.map((c) => ({ type: c.type, source: c.source }))
   let changed = false

@@ -1,19 +1,30 @@
-// components/Cell.jsx — Single cell (music or text)
+// components/Cell.tsx — Single cell (music or text)
 import React from "react"
-import CodeEditor from "./CodeEditor.jsx"
-import MusicOutput from "./MusicOutput.jsx"
-import MarkdownContent from "./MarkdownCell.jsx"
+import type { NotebookCell } from "../shared/types.ts"
+import CodeEditor, { type RunState } from "./CodeEditor.tsx"
+import MusicOutput, { type PlayerProps } from "./MusicOutput.tsx"
+import MarkdownContent from "./MarkdownCell.tsx"
 
-function CellMenu({ onDelete, onMoveUp, onMoveDown, onDuplicate, first, last }) {
+// What the cell's menu does, and whether it's the first or the last cell
+type MenuProps = {
+  onDelete: () => void
+  onMoveUp: () => void
+  onMoveDown: () => void
+  onDuplicate: () => void
+  first: boolean
+  last: boolean
+}
+
+function CellMenu({ onDelete, onMoveUp, onMoveDown, onDuplicate, first, last }: MenuProps) {
   const [open, setOpen] = React.useState(false)
-  const menuRef = React.useRef(null)
+  const menuRef = React.useRef<HTMLDivElement>(null)
 
   React.useEffect(() => {
     if (!open) return
-    const close = (e) => {
-      if (menuRef.current && !menuRef.current.contains(e.target)) setOpen(false)
+    const close = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) setOpen(false)
     }
-    const onKey = (e) => e.key === "Escape" && setOpen(false)
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false)
     document.addEventListener("mousedown", close)
     document.addEventListener("keydown", onKey)
     return () => {
@@ -133,8 +144,22 @@ function Cell({
   registerPlayer,
   unregisterPlayer,
   armAudio,
-}) {
-  const taRef = React.useRef(null)
+}: PlayerProps &
+  MenuProps & {
+    cell: NotebookCell
+    index: number
+    selected: boolean
+    editing: boolean
+    isActive: boolean
+    onSelect: () => void
+    onEnterEdit: () => void
+    onLeaveEdit: () => void
+    onChange: (source: string) => void
+    onRun: () => void
+    onInterrupt: () => void
+    onSetPreview: (preview: boolean) => void
+  }) {
+  const taRef = React.useRef<HTMLTextAreaElement>(null)
 
   React.useEffect(() => {
     if (editing && taRef.current) {
@@ -153,7 +178,7 @@ function Cell({
     ta.style.height = ta.scrollHeight + 2 + "px"
   }, [cell.type, cell.source, editing])
 
-  const runState =
+  const runState: RunState =
     cell.status === "running" || cell.status === "rendering"
       ? "running"
       : cell.status === "waiting"

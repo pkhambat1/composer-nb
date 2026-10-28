@@ -501,7 +501,7 @@ export function grooveText(g: Groove): string {
 }
 
 // A section's grooves as notebook cells: a text cell, then its music cell, for each.
-export function grooveCells(section: string) {
+export function grooveCells(section: string): { type: "text" | "music"; source: string }[] {
   return GROOVES.filter((g) => g.section === section).flatMap((g) => [
     { type: "text", source: grooveText(g) },
     { type: "music", source: g.source },

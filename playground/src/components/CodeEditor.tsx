@@ -1,12 +1,28 @@
-// components/CodeEditor.jsx — Code editor with syntax highlighting overlay
+// components/CodeEditor.tsx — Code editor with syntax highlighting overlay
 import React from "react"
 import { highlightMusic } from "composer-nb/highlight"
 import { editKey } from "composer-nb/editing"
 
-const CodeEditor = React.forwardRef(function CodeEditor(props, ref) {
+// Where a cell is in being run, as its button shows it
+export type RunState = "idle" | "waiting" | "running"
+
+type Props = {
+  value: string
+  onChange: (value: string) => void
+  onFocus?: () => void
+  onBlur?: () => void
+  placeholder?: string
+  onRun?: () => void
+  onInterrupt?: () => void
+  runState: RunState
+  // The lines the last run found mistakes on
+  errorLines: Set<number> | null
+}
+
+const CodeEditor = React.forwardRef<HTMLTextAreaElement, Props>(function CodeEditor(props, ref) {
   const { value, onChange, onFocus, onBlur, placeholder, onRun, onInterrupt, runState, errorLines } = props
-  const localRef = React.useRef(null)
-  const setRef = (el) => {
+  const localRef = React.useRef<HTMLTextAreaElement | null>(null)
+  const setRef = (el: HTMLTextAreaElement | null) => {
     localRef.current = el
     if (typeof ref === "function") ref(el)
     else if (ref) ref.current = el
@@ -35,7 +51,7 @@ const CodeEditor = React.forwardRef(function CodeEditor(props, ref) {
     ta.style.height = ta.scrollHeight + 2 + "px"
   }, [value])
 
-  const handleKeyDown = (e) => {
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (localRef.current) editKey(e, localRef.current, onChange)
   }
 

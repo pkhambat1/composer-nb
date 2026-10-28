@@ -6,9 +6,10 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build && node --conditions=composer-nb-source scripts/grooves.js",
+    "build": "vite build && node --conditions=composer-nb-source scripts/grooves.ts",
     "preview": "vite preview",
-    "test": "vitest run"
+    "test": "vitest run",
+    "typecheck": "tsc -p ."
   },
   "dependencies": {
     "abcjs": "^6.7.1",
@@ -21,6 +22,8 @@
     "wavesurfer.js": "^7.8.8"
   },
   "devDependencies": {
+    "@types/react": "^18.3.31",
+    "@types/react-dom": "^18.3.7",
     "@vitejs/plugin-react": "^4.3.4",
     "vite": "^6.3.5",
     "vitest": "^2.1.9"

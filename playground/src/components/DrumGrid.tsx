@@ -1,15 +1,19 @@
-// components/DrumGrid.jsx — Drum hits and notes bar by bar, counted 1 e & a, with a playhead
+// components/DrumGrid.tsx — Drum hits and notes bar by bar, counted 1 e & a, with a playhead
 import React from "react"
-import { TPQ } from "composer-nb/language"
+import { TPQ, type GridBlock } from "composer-nb/language"
 import { countingOf, gridCounts, gridRows } from "composer-nb/grid"
 
-function DrumBlock({ block, index }) {
+// A view of a play's blocks with a playhead: where the audio is (`getTime`, in seconds), and
+// whether it's playing
+export type Follows = { blocks: GridBlock[]; getTime: () => number; playing: boolean }
+
+function DrumBlock({ block, index }: { block: GridBlock; index: number }) {
   const { per, rows } = gridRows(block)
   // Wide enough for the longest line name, e.g. guitar.electric
   const labels = Math.max(...rows.map((r) => r.label.length), 5) + 1
   // How the cells are counted, and which groups of beats are shaded
   const counts = gridCounts(block)
-  const shaded = (col) => counts[col].shaded
+  const shaded = (col: number) => counts[col].shaded
 
   return (
     <div className="dg-block">
@@ -60,24 +64,24 @@ function DrumBlock({ block, index }) {
   )
 }
 
-function DrumGrid({ blocks, getTime, playing }) {
-  const rootRef = React.useRef(null)
+function DrumGrid({ blocks, getTime, playing }: Follows) {
+  const rootRef = React.useRef<HTMLDivElement>(null)
 
   // Move the playhead with direct DOM updates so playback doesn't re-render the grid.
   React.useEffect(() => {
     const root = rootRef.current
     if (!root) return
     let raf = 0
-    let lastKey
+    let lastKey: string | null | undefined
     const paint = () => {
       const t = getTime()
-      let key = null
+      let key: string | null = null
       // A block that plays more than once is drawn once; the playhead goes round it each time.
-      const playingAt = (b) => b.plays.find((at) => t >= at && t < at + b.durSec)
+      const playingAt = (b: GridBlock) => b.plays.find((at) => t >= at && t < at + b.durSec)
       const bi = blocks.findIndex((b) => playingAt(b) !== undefined)
       if (bi >= 0 && (playing || t > 0)) {
         const b = blocks[bi]
-        const tick = (t - playingAt(b)) / b.secPerTick
+        const tick = (t - playingAt(b)!) / b.secPerTick
         const bar = Math.floor(tick / b.barTicks)
         const col = Math.floor((tick - bar * b.barTicks) / (TPQ / b.res))
         key = `${bi}-${bar}-${col}`

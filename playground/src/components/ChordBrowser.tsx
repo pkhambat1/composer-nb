@@ -1,11 +1,12 @@
-// components/ChordBrowser.jsx — Chord library browser panel
+// components/ChordBrowser.tsx — Chord library browser panel
 import React from "react"
 import { Chord, Note } from "tonal"
 import * as ChordLookup from "composer-nb/chord-lookup"
 import { chordParts, tonalName } from "composer-nb/chords"
-import ChordDiagram from "./ChordDiagram.jsx"
+import ChordDiagram, { type DiagramChord } from "./ChordDiagram.tsx"
 
-function chordStubFromLabel(label) {
+// A chord to draw from its name alone, with no notes voiced
+function chordStubFromLabel(label: string): DiagramChord {
   const head = chordParts(label)[0]
   const ch = Chord.get(tonalName(head))
   if (!ch.empty && ch.tonic) {
@@ -18,22 +19,22 @@ function chordStubFromLabel(label) {
     }
   }
   const m = /^([A-G][#b]?)/.exec(head)
-  const names = { C: 0, "C#": 1, Db: 1, D: 2, "D#": 3, Eb: 3, E: 4, F: 5, "F#": 6, Gb: 6, G: 7, "G#": 8, Ab: 8, A: 9, "A#": 10, Bb: 10, B: 11 }
+  const names: Record<string, number> = { C: 0, "C#": 1, Db: 1, D: 2, "D#": 3, Eb: 3, E: 4, F: 5, "F#": 6, Gb: 6, G: 7, "G#": 8, Ab: 8, A: 9, "A#": 10, Bb: 10, B: 11 }
   return { label, rootPc: m ? names[m[1]] ?? 0 : 0, notesMidi: [], noteNames: [] }
 }
 
 const PAGE_SIZE = 50
 
-const ChordBrowserPanel = React.memo(function ChordBrowserPanel({ style }) {
-  const [catalog, setCatalog] = React.useState(null)
-  const [loadError, setLoadError] = React.useState(null)
+const ChordBrowserPanel = React.memo(function ChordBrowserPanel({ style }: { style?: React.CSSProperties }) {
+  const [catalog, setCatalog] = React.useState<ReturnType<typeof ChordLookup.buildCatalog> | null>(null)
+  const [loadError, setLoadError] = React.useState<string | null>(null)
   const [filter, setFilter] = React.useState("")
   const [page, setPage] = React.useState(0)
-  const [copied, setCopied] = React.useState(null)
-  const gridRef = React.useRef(null)
+  const [copied, setCopied] = React.useState<string | null>(null)
+  const gridRef = React.useRef<HTMLDivElement>(null)
 
   // A click copies the chord's name, to paste into a chart
-  const copy = async (label) => {
+  const copy = async (label: string) => {
     try {
       await navigator.clipboard.writeText(label)
       setCopied(label)

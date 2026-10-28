@@ -39,7 +39,7 @@ export default [
     },
   },
   {
-    files: ["mcp/**/*.js", "api/**/*.js", "playground/scripts/**/*.js"],
+    files: ["mcp/**/*.js", "api/**/*.js"],
     languageOptions: {
       ecmaVersion: 2022,
       sourceType: "module",
@@ -56,23 +56,11 @@ export default [
     },
   },
   {
-    // The MCP App runs in the host's frame, not in Node
-    files: ["mcp/app/**/*.js"],
-    ignores: ["mcp/app/vite.config.js"],
+    // The playground, and the MCP App's page, which holds the playground in the host's frame:
+    // React in TypeScript, in a browser. tsc checks their types (npm run typecheck).
+    files: ["playground/src/**/*.{ts,tsx}", "mcp/app/**/*.ts"],
     languageOptions: {
-      ecmaVersion: 2022,
-      sourceType: "module",
-      globals: { ...globals.browser, __VERSION__: "readonly" },
-    },
-    plugins: { "@stylistic": stylistic },
-    rules: {
-      ...js.configs.recommended.rules,
-      ...sharedStylistic,
-    },
-  },
-  {
-    files: ["playground/src/**/*.{js,jsx}"],
-    languageOptions: {
+      parser: tseslint.parser,
       ecmaVersion: 2022,
       sourceType: "module",
       globals: {
@@ -85,17 +73,20 @@ export default [
     plugins: {
       react,
       "react-hooks": reactHooks,
+      "@typescript-eslint": tseslint.plugin,
       "@stylistic": stylistic,
     },
     settings: { react: { version: "18.3" } },
     rules: {
       ...js.configs.recommended.rules,
+      ...tseslint.configs.eslintRecommended.rules,
       ...reactHooks.configs.recommended.rules,
       ...sharedStylistic,
       // A component used in JSX counts as used
       "react/jsx-uses-vars": "error",
       "react/jsx-uses-react": "error",
-      "no-unused-vars": [
+      "no-unused-vars": "off",
+      "@typescript-eslint/no-unused-vars": [
         "error",
         { argsIgnorePattern: "^_", varsIgnorePattern: "^_", caughtErrorsIgnorePattern: "^_" },
       ],
@@ -106,7 +97,13 @@ export default [
     // The TypeScript: the engine, which runs in a browser, and the MCP server and the Vercel
     // functions, which run in Node. tsc checks their types (npm run typecheck); this checks
     // the rest, as for the JavaScript beside them.
-    files: ["dsl/js/**/*.ts", "mcp/src/**/*.ts", "mcp/scripts/**/*.ts", "api/**/*.ts"],
+    files: [
+      "dsl/js/**/*.ts",
+      "mcp/src/**/*.ts",
+      "mcp/scripts/**/*.ts",
+      "api/**/*.ts",
+      "playground/scripts/**/*.ts",
+    ],
     languageOptions: {
       parser: tseslint.parser,
       ecmaVersion: 2022,
