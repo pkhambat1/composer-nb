@@ -2,8 +2,8 @@
    such as abcjs to draw. The drums are a percussion staff with the hands in one voice and
    the feet in another; each pitched instrument's line is a staff of its own, and a guitar's
    comes with a tab staff. Pure, like grid.js. */
-import { abcKey, keySignature, parseKey } from "./chords.js"
-import { beatGroups, isCompound } from "./grid.js"
+import { abcKey, keySignature, parseKey } from "./chords.ts"
+import { beatGroups, isCompound } from "./grid.ts"
 import { TPQ } from "./language.ts"
 
 // Where each kit piece sits on the staff (its ABC pitch), its notehead, and whether a foot

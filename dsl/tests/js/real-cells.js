@@ -5,7 +5,7 @@
 import { readdirSync, readFileSync } from "node:fs"
 import { fileURLToPath } from "node:url"
 import { initialState, parseCell } from "../../js/language.ts"
-import { GROOVES } from "../../js/grooves.js"
+import { GROOVES } from "../../js/grooves.ts"
 import { examples, pages, read, readMagic } from "./docs-examples.js"
 
 const SKILLS = fileURLToPath(new URL("../../../plugin/skills", import.meta.url))

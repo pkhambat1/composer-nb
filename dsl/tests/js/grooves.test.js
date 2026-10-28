@@ -4,7 +4,7 @@ vi.mock("tone", () => ({}))
 
 const { parseSource } = await import("../../js/music-engine.js")
 const { initialState } = await import("../../js/language.ts")
-const { GROOVES } = await import("../../js/grooves.js")
+const { GROOVES } = await import("../../js/grooves.ts")
 
 // What a cell plays: its notes, chords and hits, with their times
 const plays = (r) => JSON.stringify({ events: r.events, drums: r.drumEvents, total: r.totalSec })

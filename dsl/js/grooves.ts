@@ -3,7 +3,17 @@
    playground's welcome notebook holds them all and its build makes a page for each; the MCP
    server searches them. Pure data, shared so there is one copy. */
 
-export const GROOVES = [
+// A groove: where it's listed, its words, a link to hear the original, and its music cell
+export type Groove = {
+  section: string
+  title: string
+  byline?: string
+  body?: string
+  link?: string | null
+  source: string
+}
+
+export const GROOVES: Groove[] = [
   {
     section: "Transcriptions",
     title: "The Sound of Muzak",
@@ -451,26 +461,26 @@ play 2 bars five`,
 export const SECTIONS = [...new Set(GROOVES.map((g) => g.section))]
 
 // A groove's name in an address: /grooves/the-sound-of-muzak/
-export const slugOf = (title) =>
+export const slugOf = (title: string) =>
   title
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-|-$/g, "")
 
-export const grooveBySlug = (slug) => GROOVES.find((g) => slugOf(g.title) === slug) || null
+export const grooveBySlug = (slug: string) => GROOVES.find((g) => slugOf(g.title) === slug) || null
 
 // A groove's words without their markdown, for a search result or a page's description.
-export const plain = (text) => (text || "").replace(/[`*]/g, "")
+export const plain = (text: string | undefined) => (text || "").replace(/[`*]/g, "")
 
 // The text cell that goes above a groove's music cell: its title, byline, paragraph and link.
-export function grooveText(g) {
+export function grooveText(g: Groove): string {
   return [`## ${g.title}`, g.byline, g.body, g.link && `[YouTube](${g.link})`]
     .filter(Boolean)
     .join("\n\n")
 }
 
 // A section's grooves as notebook cells: a text cell, then its music cell, for each.
-export function grooveCells(section) {
+export function grooveCells(section: string) {
   return GROOVES.filter((g) => g.section === section).flatMap((g) => [
     { type: "text", source: grooveText(g) },
     { type: "music", source: g.source },

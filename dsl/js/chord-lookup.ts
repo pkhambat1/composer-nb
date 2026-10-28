@@ -1,13 +1,41 @@
 /* Guitar chord positions from @tombatossals/chords-db (bundled, lazy-loaded chunk). */
 import { Chord, Interval, Note } from "tonal"
-import { chordParts, tonalName } from "./chords.js"
+import { chordParts, tonalName } from "./chords.ts"
 
-let db = null
-const positionCache = new Map()
+// A shape in the database: a fret per string from the low E (-1 muted, 0 open), counted from
+// `baseFret`, with its fingers, barres and the notes it sounds
+type DbPosition = {
+  frets: number[]
+  fingers?: number[]
+  baseFret?: number
+  barres?: number[]
+  midi?: number[]
+}
+type DbEntry = { suffix: string; positions: DbPosition[] }
+type Db = { keys: string[]; suffixes: string[]; chords: Record<string, DbEntry[]> }
+// A shape as a cell draws it
+export type Position = {
+  frets: number[]
+  fingers: number[] | null
+  baseFret: number
+  barres: number[]
+  midi: number[] | null
+}
+// A chord's pitch classes: the ones a shape must sound, its third, its extensions, and all
+// that belong to it
+type ChordPcs = {
+  required: Set<number>
+  third: number | null
+  extensions: Set<number>
+  tones: Set<number>
+}
 
-const KEY_ALIASES = { "C#": "Csharp", "F#": "Fsharp" }
+let db: Db | null = null
+const positionCache = new Map<string, Position | null>()
 
-const ALIAS_SUFFIX = {
+const KEY_ALIASES: Record<string, string> = { "C#": "Csharp", "F#": "Fsharp" }
+
+const ALIAS_SUFFIX: Record<string, string> = {
   "": "major",
   M: "major",
   maj: "major",
@@ -25,7 +53,7 @@ const ALIAS_SUFFIX = {
   maj7: "maj7",
   m7: "m7",
   m7b5: "m7b5",
-  "ø": "m7b5",
+  ø: "m7b5",
   hdim: "m7b5",
   dim7: "dim7",
   m6: "m6",
@@ -48,32 +76,32 @@ const ALIAS_SUFFIX = {
   alt: "alt",
 }
 
-export function load() {
+export function load(): Promise<Db> {
   if (db) return Promise.resolve(db)
   return import("@tombatossals/chords-db/lib/guitar.json").then((mod) => {
-    db = mod.default
+    db = mod.default as unknown as Db
     return db
   })
 }
 
-function displayKey(key) {
+function displayKey(key: string): string {
   if (key === "Csharp") return "C#"
   if (key === "Fsharp") return "F#"
   return key
 }
 
-function chordListForKey(key) {
+function chordListForKey(key: string): DbEntry[] | null {
   if (!db) return null
   return db.chords[key] || db.chords[KEY_ALIASES[key]] || null
 }
 
-function chordEntryFor(key, suffix) {
+function chordEntryFor(key: string, suffix: string): DbEntry | null {
   const list = chordListForKey(key)
   if (!list) return null
   return list.find((e) => e && e.suffix === suffix) || null
 }
 
-function labelFromKeySuffix(key, suffix) {
+function labelFromKeySuffix(key: string, suffix: string): string {
   const root = displayKey(key)
   if (suffix === "major") return root
   if (suffix === "minor") return root + "m"
@@ -82,11 +110,11 @@ function labelFromKeySuffix(key, suffix) {
   return root + suffix
 }
 
-function absFret(f, base) {
+function absFret(f: number, base: number): number {
   return f > 0 ? f + base - 1 : f
 }
 
-function scorePosition(p) {
+function scorePosition(p: DbPosition): number {
   const frets = p.frets || []
   const base = p.baseFret || 1
   const played = frets.filter((f) => f > 0)
@@ -99,16 +127,11 @@ function scorePosition(p) {
   const maxF = Math.max(...absPlayed)
   const span = maxF - Math.min(...absPlayed)
 
-  const atFret = {}
+  const atFret: Record<number, number> = {}
   for (const f of absPlayed) atFret[f] = (atFret[f] || 0) + 1
   const maxCluster = Math.max(...Object.values(atFret))
 
-  let score =
-    opens * 5 -
-    mutes * 2 -
-    maxF * 0.45 -
-    span * 0.25 -
-    (base > 1 ? (base - 1) * 0.2 : 0)
+  let score = opens * 5 - mutes * 2 - maxF * 0.45 - span * 0.25 - (base > 1 ? (base - 1) * 0.2 : 0)
 
   if (maxCluster >= 4) score -= 12
   else if (maxCluster >= 3) score -= 4
@@ -117,8 +140,8 @@ function scorePosition(p) {
   const barres = p.barres || []
   if (barres.length && fingers.length === 6) {
     const barreAbs = absFret(barres[0], base)
-    const belowBarre = []
-    const onBarre = []
+    const belowBarre: number[] = []
+    const onBarre: number[] = []
     for (let i = 0; i < 6; i++) {
       if (abs[i] === barreAbs && fingers[i] > 0) onBarre.push(fingers[i])
       if (abs[i] > 0 && abs[i] < barreAbs && fingers[i] > 0) belowBarre.push(fingers[i])
@@ -132,8 +155,8 @@ function scorePosition(p) {
 }
 
 // Pitch classes a position's midi notes contain.
-function pcsOfPosition(p) {
-  const out = new Set()
+function pcsOfPosition(p: { midi?: number[] | null }): Set<number> {
+  const out = new Set<number>()
   for (const m of p.midi || []) out.add(((m % 12) + 12) % 12)
   return out
 }
@@ -143,17 +166,17 @@ function pcsOfPosition(p) {
 // must be present in a candidate position. `third` / `extensions` are used to
 // score voicing musicality, and `tones` is every note that belongs: the 5th and a
 // slash chord's bass included.
-function chordPcsForLabel(label) {
+function chordPcsForLabel(label: string): ChordPcs | null {
   if (!label) return null
   const [head, bass] = chordParts(label)
   const ch = Chord.get(tonalName(head))
   if (ch.empty || !ch.intervals?.length || ch.tonic == null) return null
   const tonicPc = Note.chroma(ch.tonic)
   if (tonicPc == null || isNaN(tonicPc)) return null
-  const required = new Set()
-  const extensions = new Set()
-  const tones = new Set()
-  let third = null
+  const required = new Set<number>()
+  const extensions = new Set<number>()
+  const tones = new Set<number>()
+  let third: number | null = null
   // Under an 11th or a 13th a guitar leaves the 9th out, as it does the 5th
   const upper = ch.intervals.some((iv) => /^(11|13)/.test(iv))
   for (const iv of ch.intervals) {
@@ -171,7 +194,7 @@ function chordPcsForLabel(label) {
   return { required, third, extensions, tones }
 }
 
-function positionCoversRequired(p, required) {
+function positionCoversRequired(p: DbPosition, required: Set<number> | null): boolean {
   if (!required) return true
   const pcs = pcsOfPosition(p)
   for (const r of required) if (!pcs.has(r)) return false
@@ -182,7 +205,11 @@ function positionCoversRequired(p, required) {
 // Conventional guitar voicings stack the basic triad below the extensions
 // (e.g. Cadd9 = x32030 puts E on the D string before D on the B string),
 // so reversing that order produces the "wrong" sounding shape.
-function voicingOrderPenalty(p, third, extensions) {
+function voicingOrderPenalty(
+  p: DbPosition,
+  third: number | null,
+  extensions: Set<number> | null,
+): number {
   if (third == null || !extensions || !extensions.size) return 0
   if (!p.midi || !p.midi.length) return 0
   const sorted = p.midi.slice().sort((a, b) => a - b)
@@ -198,14 +225,16 @@ function voicingOrderPenalty(p, third, extensions) {
   return 0
 }
 
-function pickPosition(positions, chordPcs) {
+function pickPosition(positions: DbPosition[], chordPcs: ChordPcs | null): DbPosition | null {
   if (!positions?.length) return null
   const required = chordPcs?.required
   const valid = required ? positions.filter((p) => positionCoversRequired(p, required)) : positions
   // Of those, a shape that sounds nothing outside the chord, when there is one: the
   // database has shapes with stray open strings (an AbM7b5 at the 6th fret rings E and A)
   const tones = chordPcs?.tones
-  const clean = tones ? valid.filter((p) => [...pcsOfPosition(p)].every((pc) => tones.has(pc))) : []
+  const clean: DbPosition[] = tones
+    ? valid.filter((p) => [...pcsOfPosition(p)].every((pc) => tones.has(pc)))
+    : []
   // A chord with tones none of its shapes sound has no shape: tonal's notes play
   if (required && !valid.length) return null
   const pool = clean.length ? clean : valid
@@ -222,7 +251,12 @@ function pickPosition(positions, chordPcs) {
   return best
 }
 
-function normalizeBarreFingers(frets, fingers, barres, baseFret) {
+function normalizeBarreFingers(
+  frets: number[],
+  fingers: number[],
+  barres: number[],
+  baseFret: number,
+): number[] {
   if (!fingers?.length || !barres?.length) return fingers
   const abs = frets.map((f) => absFret(f, baseFret || 1))
   let barreAbs = -1
@@ -237,7 +271,7 @@ function normalizeBarreFingers(frets, fingers, barres, baseFret) {
   }
   if (maxSpan < 2) return fingers
 
-  const onBarre = []
+  const onBarre: number[] = []
   for (let i = 0; i < 6; i++) {
     if (abs[i] === barreAbs && fingers[i] > 0) onBarre.push(fingers[i])
   }
@@ -254,7 +288,7 @@ function normalizeBarreFingers(frets, fingers, barres, baseFret) {
   return out
 }
 
-function exportPosition(pos) {
+function exportPosition(pos: DbPosition | null): Position | null {
   if (!pos?.frets?.length) return null
   const baseFret = pos.baseFret || 1
   const frets = pos.frets.slice()
@@ -266,12 +300,12 @@ function exportPosition(pos) {
   return { frets, fingers, baseFret, barres, midi }
 }
 
-function positionFromEntry(entry, required) {
+function positionFromEntry(entry: DbEntry | null, required: ChordPcs | null): Position | null {
   if (!entry?.positions?.length) return null
   return exportPosition(pickPosition(entry.positions, required))
 }
 
-function maxAbsoluteFret(position) {
+function maxAbsoluteFret(position: Position): number {
   const played = position.frets.filter((f) => f > 0)
   if (!played.length) return 0
   const base = position.baseFret || 1
@@ -281,14 +315,20 @@ function maxAbsoluteFret(position) {
 // Chords whose tonal names the database doesn't share. Without these a minor-major
 // seventh fell through to the major seventh's shape (E natural in CmMaj7), a minor-major
 // ninth to the minor triad, and 9#5 and M7b5 found no shape.
-const TONAL_SUFFIX = { mMaj7: "mmaj7", mMaj9: "mmaj9", "9#5": "aug9", M7b5: "maj7b5" }
+const TONAL_SUFFIX: Record<string, string> = {
+  mMaj7: "mmaj7",
+  mMaj9: "mmaj9",
+  "9#5": "aug9",
+  M7b5: "maj7b5",
+}
 
-function symbolToSuffix(symbol) {
+function symbolToSuffix(symbol: string): string | null {
   if (!symbol) return null
   const ch = Chord.get(symbol)
   if (ch.empty) return null
   for (const alias of ch.aliases || []) {
-    if (TONAL_SUFFIX[alias] && db?.suffixes?.includes(TONAL_SUFFIX[alias])) return TONAL_SUFFIX[alias]
+    if (TONAL_SUFFIX[alias] && db?.suffixes?.includes(TONAL_SUFFIX[alias]))
+      return TONAL_SUFFIX[alias]
     if (db?.suffixes?.includes(alias)) return alias
   }
   const type = (ch.type || "").toLowerCase()
@@ -303,10 +343,10 @@ function symbolToSuffix(symbol) {
   if (type.includes("augmented")) return "aug"
   if (type.includes("suspended fourth")) return "sus4"
   if (type.includes("suspended second")) return "sus2"
-  return ALIAS_SUFFIX[ch.aliases && ch.aliases[0]] || null
+  return ALIAS_SUFFIX[ch.aliases?.[0] ?? ""] || null
 }
 
-function resolveKeySuffix(label) {
+function resolveKeySuffix(label: string): { key: string; suffix: string } | null {
   const [head, slash] = chordParts(label)
 
   const ch = Chord.get(tonalName(head))
@@ -321,7 +361,7 @@ function resolveKeySuffix(label) {
       const pc = Note.get(slash).pc || slash
       const names = [pc, Note.enharmonic(pc)]
       const prefix = suffix === "major" ? "/" : suffix === "minor" ? "m/" : null
-      const found = prefix && names.map((n) => prefix + n).find((sx) => db.suffixes.includes(sx))
+      const found = prefix && names.map((n) => prefix + n).find((sx) => db!.suffixes.includes(sx))
       if (!found) return null
       suffix = found
     }
@@ -343,9 +383,9 @@ function resolveKeySuffix(label) {
   return { key, suffix }
 }
 
-export function lookupPosition(label) {
+export function lookupPosition(label: string): Position | null {
   if (!db || !label) return null
-  if (positionCache.has(label)) return positionCache.get(label)
+  if (positionCache.has(label)) return positionCache.get(label)!
 
   const ks = resolveKeySuffix(label)
   if (!ks) {
@@ -379,24 +419,25 @@ export function lookupPosition(label) {
   return pos
 }
 
-function soundsRootAndThird(pos, label, chordPcs) {
+function soundsRootAndThird(pos: Position, label: string, chordPcs: ChordPcs): boolean {
   const pcs = pcsOfPosition(pos)
-  const root = Note.chroma(Chord.get(tonalName(chordParts(label)[0])).tonic)
+  // a label that reached here has a shape, so tonal reads it and it has a root
+  const root = Note.chroma(Chord.get(tonalName(chordParts(label)[0])).tonic!)!
   return pcs.has(root) && (chordPcs.third == null || pcs.has(chordPcs.third))
 }
 
-export function lookupBySymbol(symbol) {
+export function lookupBySymbol(symbol: string): Position | null {
   return lookupPosition(symbol)
 }
 
-function isBrowserChordLabel(label) {
+function isBrowserChordLabel(label: string): boolean {
   if (!/^[A-G][#b]?/.test(label)) return false
   const parts = chordParts(label)
   if (parts.length > 2) return false
   if (parts.length === 2) {
     const bass = parts[1]
     if (!/^[A-G][#b]?$/.test(bass)) return false
-    const root = parts[0].match(/^[A-G][#b]?/)[0]
+    const root = parts[0].match(/^[A-G][#b]?/)![0]
     if (bass === root) return false
   }
   return true
@@ -405,28 +446,35 @@ function isBrowserChordLabel(label) {
 // The database's names that the language spells another way: a minor-major seventh is
 // mMaj7 (tonal reads mmaj7 as nothing), an augmented ninth is 9#5, and a major seventh
 // flat five is M7b5, and a 6/9 is written as on a lead sheet.
-const LIBRARY_SUFFIX = { mmaj7: "mMaj7", mmaj9: "mMaj9", aug9: "9#5", maj7b5: "M7b5", "69": "6/9", m69: "m6/9" }
+const LIBRARY_SUFFIX: Record<string, string> = {
+  mmaj7: "mMaj7",
+  mmaj9: "mMaj9",
+  aug9: "9#5",
+  maj7b5: "M7b5",
+  "69": "6/9",
+  m69: "m6/9",
+}
 
 // A slash chord's bass, spelt as the chord's own note when it is one (E/G#, not E/Ab), and
 // otherwise by its interval above the root: F/Eb (the flat seventh), not the database's F/D#.
 const BASS_INTERVAL = ["1P", "2m", "2M", "3m", "3M", "4P", "4A", "5P", "6m", "6M", "7m", "7M"]
-function spellBass(label) {
+function spellBass(label: string): string {
   const [head, bass] = chordParts(label)
   if (!bass) return label
   const ch = Chord.get(tonalName(head))
   const own = ch.notes.find((n) => Note.chroma(n) === Note.chroma(bass))
   if (own) return `${head}/${own}`
-  const step = (Note.chroma(bass) - Note.chroma(ch.tonic) + 12) % 12
-  return `${head}/${Note.pitchClass(Note.transpose(ch.tonic, BASS_INTERVAL[step]))}`
+  const step = (Note.chroma(bass)! - Note.chroma(ch.tonic!)! + 12) % 12
+  return `${head}/${Note.pitchClass(Note.transpose(ch.tonic!, BASS_INTERVAL[step]))}`
 }
 
 // Every chord the language plays on a guitar, named as it's written in a cell and drawn
 // with the shape a cell plays and draws for it. The database's names the language has no
 // chord for are left out: alt (its shapes have no seventh), 7sg, maj11, mmaj11, mmaj7b5.
-export function buildCatalog() {
+export function buildCatalog(): { label: string; position: Position }[] {
   if (!db) return []
-  const items = []
-  const seen = new Set()
+  const items: { label: string; position: Position }[] = []
+  const seen = new Set<string>()
   for (const key of db.keys) {
     const list = chordListForKey(key)
     if (!list) continue

@@ -6,7 +6,14 @@ const INDENT = "  "
 
 // Replaces ta.value[from, to) the way typing would, so Cmd+Z can undo it. Falls back
 // to setting the value when the browser won't insert text for us.
-function replaceRange(ta, from, to, text, onChange, select) {
+function replaceRange(
+  ta: HTMLTextAreaElement,
+  from: number,
+  to: number,
+  text: string,
+  onChange: (value: string) => void,
+  select?: () => void,
+): void {
   ta.setSelectionRange(from, to)
   const typed = document.execCommand(text ? "insertText" : "delete", false, text)
   if (!typed) onChange(ta.value.slice(0, from) + text + ta.value.slice(to))
@@ -17,7 +24,11 @@ function replaceRange(ta, from, to, text, onChange, select) {
 
 // Handles a keydown in `ta`. `onChange(value)` is called with the new text when the
 // browser can't make the edit itself.
-export function editKey(e, ta, onChange) {
+export function editKey(
+  e: KeyboardEvent,
+  ta: HTMLTextAreaElement,
+  onChange: (value: string) => void,
+): void {
   const plain = !e.metaKey && !e.ctrlKey && !e.altKey
   if (e.key === "Tab" && plain) {
     e.preventDefault()
@@ -44,7 +55,7 @@ export function editKey(e, ta, onChange) {
   if (e.key === "Enter" && plain && !e.shiftKey) {
     const { selectionStart: start, selectionEnd: end, value: text } = ta
     const before = text.slice(text.lastIndexOf("\n", start - 1) + 1, start)
-    let indent = /^[ \t]*/.exec(before)[0]
+    let indent = /^[ \t]*/.exec(before)![0]
     // The line after an opening brace goes one level in.
     if (/\{\s*(\/\/.*)?$/.test(before)) indent += INDENT
     if (!indent) return

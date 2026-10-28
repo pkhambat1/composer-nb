@@ -2,7 +2,7 @@
    chord before for another slot, _ rests, % plays the bar before again. A chord is a name
    (Am7, C6/9/E), a numeral counted from the key's root (V7, bVII), or a numeral of another
    chord's root (V7 of V). */
-import { applyTranspose, buildChord, isRoman, midiToName, parseKey } from "../chords.js"
+import { applyTranspose, buildChord, isRoman, midiToName, parseKey } from "../chords.ts"
 import { misplaced } from "../check.ts"
 import { message } from "../diagnostics.ts"
 import { keyOf } from "../settings.ts"
@@ -114,7 +114,7 @@ function chordSlot(tok: string, part: Part, st: State, key: Key, err: Report): S
   }
   if (isOf(tok)) {
     const of = ofChord(tok, key, st.octave)
-    if (of.error) {
+    if (of.error !== undefined) {
       err(part.ln, of.error)
       return null
     }

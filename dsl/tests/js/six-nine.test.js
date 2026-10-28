@@ -4,7 +4,7 @@ import { describe, it, expect, vi } from "vitest"
 
 vi.mock("tone", () => ({}))
 
-const { buildChord, parseKey, isRoman } = await import("../../js/chords.js")
+const { buildChord, parseKey, isRoman } = await import("../../js/chords.ts")
 const { parseSource } = await import("../../js/music-engine.js")
 const { highlightMusic } = await import("../../js/highlight.js")
 
@@ -43,7 +43,7 @@ describe("6/9", () => {
   })
 
   it("has a guitar shape, and the chord library lists it as written", async () => {
-    const lib = await import("../../js/chord-lookup.js")
+    const lib = await import("../../js/chord-lookup.ts")
     await lib.load()
     expect(lib.lookupPosition("C6/9")).toBeTruthy()
     expect(lib.lookupPosition("Cm6/9")).toBeTruthy()

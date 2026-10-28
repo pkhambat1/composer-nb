@@ -9,7 +9,7 @@
      .tk-error
    Whitespace is kept exactly, so the layer lines up with the textarea under it. */
 import { KEYWORDS, LANES, MODES, PARTS, PITCHED, SETTINGS, SOUNDS, TYPES, UNITS } from "./language.ts"
-import { chordParts, isRoman, parseKey } from "./chords.js"
+import { chordParts, isRoman, parseKey } from "./chords.ts"
 
 const ROMAN_RE = /^([#b])?(VII|VI|IV|V|III|II|I|vii|vi|iv|v|iii|ii|i)(.*)$/
 const STEPS_RE = /^[-x^~d]+$/

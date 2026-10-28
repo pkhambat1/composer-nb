@@ -2,10 +2,15 @@
    GPL-3, fetched on demand); kit: synth, or any sample that fails to load, uses a
    synthesized kit instead. */
 import * as Tone from "tone"
+import type { HitEvent } from "./clips.ts"
 
-const SAMPLES =
-  "https://cdn.jsdelivr.net/gh/hydrogen-music/hydrogen@1.2.4/data/drumkits/GMRockKit/"
-const FILES = {
+// The samples a kit has loaded, by name, and the ones that wouldn't load
+export type Kit = { buffers: Record<string, Tone.ToneAudioBuffer | null>; missing: string[] }
+// Stops a hit that's still sounding (an open hi-hat), at a time
+type Choke = (time: number) => void
+
+const SAMPLES = "https://cdn.jsdelivr.net/gh/hydrogen-music/hydrogen@1.2.4/data/drumkits/GMRockKit/"
+const FILES: Record<string, string> = {
   kick: "Kick",
   snare: "Snare",
   hat: "HatClosed",
@@ -21,7 +26,7 @@ const FILES = {
 }
 // [level, pan]: hats and crash to the left, ride and floor tom to the right, the toms
 // stepping from left to right as they get lower (drummer's view).
-const MIX = {
+const MIX: Record<string, [number, number]> = {
   kick: [1, 0],
   snare: [0.8, 0.05],
   hat: [0.42, -0.3],
@@ -31,17 +36,17 @@ const MIX = {
   "tom low": [0.75, 0.1],
   "tom floor": [0.8, 0.3],
 }
-const loading = new Map()
+const loading = new Map<string, Promise<Tone.ToneAudioBuffer | null>>()
 
 const LAYERS = ["Soft", "Med", "Hard", "Hardest"]
-const layer = (vel) => (vel < 0.45 ? 0 : vel < 0.85 ? 1 : 2)
+const layer = (vel: number) => (vel < 0.45 ? 0 : vel < 0.85 ? 1 : 2)
 // How loud a hit is next to a normal one (velocity 0.7). Squared, like MIDI's usual
 // velocity curve, so an accent (1) is about 6 dB louder and a ghost note (0.3) about
 // 15 dB softer: far enough apart to hear.
-const loudness = (vel) => (vel / 0.7) ** 2
+const loudness = (vel: number) => (vel / 0.7) ** 2
 // The samples a hit plays, each with its level. A rimshot is the rim sample a layer harder,
 // with the snare under it for body: the kit's rimshot on its own is thin.
-function samplesOf(ev) {
+function samplesOf(ev: HitEvent): [string, number][] {
   const at = layer(ev.vel)
   if (ev.inst === "snare" && ev.art === "rim") {
     return [
@@ -52,18 +57,18 @@ function samplesOf(ev) {
   return [[(FILES[ev.inst + " " + ev.art] || FILES[ev.inst]) + "-" + LAYERS[at], 1]]
 }
 // Where a hit sits in the mix: its own sound's place if it has one (each tom), else its drum's.
-const mixKey = (ev) => (MIX[ev.inst + " " + ev.art] ? ev.inst + " " + ev.art : ev.inst)
+const mixKey = (ev: HitEvent) => (MIX[ev.inst + " " + ev.art] ? ev.inst + " " + ev.art : ev.inst)
 
 // Fetched by hand: ToneAudioBuffer.fromUrl encodes the "@" in the CDN path, which the CDN
 // rejects.
-async function fetchSample(name) {
+async function fetchSample(name: string): Promise<Tone.ToneAudioBuffer> {
   const res = await fetch(SAMPLES + name + ".wav")
   if (!res.ok) throw new Error(`${name}: ${res.status}`)
   const audio = await Tone.getContext().decodeAudioData(await res.arrayBuffer())
   return new Tone.ToneAudioBuffer(audio)
 }
 
-function load(name) {
+function load(name: string): Promise<Tone.ToneAudioBuffer | null> {
   if (!loading.has(name)) {
     const pending = fetchSample(name).catch(() => {
       loading.delete(name) // try again next render
@@ -71,12 +76,12 @@ function load(name) {
     })
     loading.set(name, pending)
   }
-  return loading.get(name)
+  return loading.get(name)!
 }
 
 // Fetches every sample the events need (in the online context, before rendering).
 // `missing` lists samples that couldn't load; those hits use the synthesized kit.
-export async function prepareKit(events) {
+export async function prepareKit(events: HitEvent[]): Promise<Kit> {
   const names = [
     ...new Set(
       events
@@ -84,7 +89,7 @@ export async function prepareKit(events) {
         .flatMap((ev) => samplesOf(ev).map(([n]) => n)),
     ),
   ]
-  const buffers = {}
+  const buffers: Kit["buffers"] = {}
   await Promise.all(
     names.map(async (n) => {
       buffers[n] = await load(n)
@@ -93,8 +98,8 @@ export async function prepareKit(events) {
   return { buffers, missing: names.filter((n) => !buffers[n]) }
 }
 
-function makeSynthKit(output) {
-  const highpass = (freq) => new Tone.Filter(freq, "highpass").connect(output)
+function makeSynthKit(output: Tone.ToneAudioNode) {
+  const highpass = (freq: number) => new Tone.Filter(freq, "highpass").connect(output)
   const kick = new Tone.MembraneSynth({
     pitchDecay: 0.05,
     octaves: 6,
@@ -144,7 +149,7 @@ function makeSynthKit(output) {
   bell.volume.value = -20
 
   // Plays one hit; returns a function that chokes it (used for the open hi-hat).
-  return function play(ev, time, vel) {
+  return function play(ev: HitEvent, time: number, vel: number): Choke | null {
     if (ev.inst === "kick") kick.triggerAttackRelease("C1", 0.3, time, vel)
     else if (ev.inst === "tom" && ev.art === "high") toms.triggerAttackRelease("G2", 0.3, time, vel)
     else if (ev.inst === "tom" && ev.art === "low") toms.triggerAttackRelease("E2", 0.35, time, vel)
@@ -154,31 +159,39 @@ function makeSynthKit(output) {
     else if (ev.inst === "snare" && ev.art === "rim") {
       snare.triggerAttackRelease(0.15, time, vel)
       rim.triggerAttackRelease("A5", 0.08, time, vel)
-    }
-    else if (ev.inst === "snare") snare.triggerAttackRelease(0.15, time, vel)
+    } else if (ev.inst === "snare") snare.triggerAttackRelease(0.15, time, vel)
     else if (ev.inst === "crash") cymbal.triggerAttackRelease(300, 1.5, time, vel)
     else if (ev.inst === "ride" && ev.art === "bell") bell.triggerAttackRelease(900, 0.5, time, vel)
     else if (ev.inst === "ride") cymbal.triggerAttackRelease(400, 0.5, time, vel * 0.7)
     else if (ev.art === "open") {
       openHat.triggerAttackRelease(0.4, time, vel)
-      return (t) => openHat.triggerRelease(t)
-    } else hat.triggerAttackRelease(ev.art === "pedal" ? 0.02 : 0.04, time, vel * (ev.art === "pedal" ? 0.6 : 1))
+      return (t: number) => openHat.triggerRelease(t)
+    } else
+      hat.triggerAttackRelease(
+        ev.art === "pedal" ? 0.02 : 0.04,
+        time,
+        vel * (ev.art === "pedal" ? 0.6 : 1),
+      )
     return null
   }
 }
 
 // Schedules every hit inside a Tone.Offline callback. Events must be in time order.
-export async function schedule(kit, events, output) {
+export async function schedule(
+  kit: Kit,
+  events: HitEvent[],
+  output: Tone.ToneAudioNode,
+): Promise<void> {
   const bus = new Tone.Gain(0.9).connect(output)
   const room = new Tone.Reverb({ decay: 1.1, preDelay: 0.004 })
   await room.generate()
   room.connect(output)
   bus.connect(new Tone.Gain(0.12).connect(room))
 
-  const channels = {}
-  const channel = (key) => (channels[key] ||= new Tone.Panner(MIX[key][1]).connect(bus))
-  let synth = null
-  let openHat = null
+  const channels: Record<string, Tone.Panner> = {}
+  const channel = (key: string) => (channels[key] ||= new Tone.Panner(MIX[key][1]).connect(bus))
+  let synth: ReturnType<typeof makeSynthKit> | null = null
+  let openHat: { time: number; choke: Choke } | null = null
   for (const ev of events) {
     if (ev.lane === "sticking") continue // a hand's name, not a sound
     // A little human looseness in timing and force, and the swing, if any.
@@ -190,16 +203,16 @@ export async function schedule(kit, events, output) {
       openHat = null
     }
     const samples = ev.kit !== "synth" ? samplesOf(ev) : []
-    let choke = null
+    let choke: Choke | null = null
     if (samples.length && samples.every(([n]) => kit.buffers[n])) {
       const key = mixKey(ev)
       const srcs = samples.map(([n, level]) => {
         const gain = new Tone.Gain(MIX[key][0] * level * loudness(vel)).connect(channel(key))
-        const src = new Tone.ToneBufferSource({ url: kit.buffers[n], fadeOut: 0.03 }).connect(gain)
+        const src = new Tone.ToneBufferSource({ url: kit.buffers[n]!, fadeOut: 0.03 }).connect(gain)
         src.start(time)
         return src
       })
-      choke = (t) => srcs.forEach((src) => src.stop(t))
+      choke = (t: number) => srcs.forEach((src) => src.stop(t))
     } else {
       synth ||= makeSynthKit(bus)
       choke = synth(ev, time, 0.7 * loudness(vel))

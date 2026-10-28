@@ -2,7 +2,7 @@
    or a degree of the key (b3, 5'), or a degree of another note (5 of C3); - lets it ring
    and _ stops it. Parts with lengths hold one note (3 beats C2), and ... holds one to the
    end. A block holds layers that sound together, each a voice of its own. */
-import { buildChord, degreeSemitones, isRoman, midiToName } from "../chords.js"
+import { buildChord, degreeSemitones, isRoman, midiToName } from "../chords.ts"
 import { misplaced } from "../check.ts"
 import { CHORDS_BLOCK } from "../declare.ts"
 import { bracesIn, headOf, onlyBraces, textOf } from "../parts.ts"
@@ -517,7 +517,7 @@ function notePattern(
   // What's written, and what sounds: set transpose moves the sound, not the writing
   const written = (s: NoteStep): number =>
     s.of
-      ? written(s.of) + 12 * s.shift! + degreeSemitones(s.degree, s.acc)
+      ? written(s.of) + 12 * s.shift! + degreeSemitones(s.degree!, s.acc)
       : s.degree
         ? 12 * (octave + 1 + s.shift!) + key.tonicSemis + degreeSemitones(s.degree, s.acc)
         : 12 * ((s.octave ?? octave) + 1) + NOTE_BASE[s.name![0]] + (sharp[s.name![1]] || 0)

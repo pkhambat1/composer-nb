@@ -3,8 +3,12 @@
    are put back to back into one timeline, with the blocks the grid and the sheet draw. */
 import {
   checkStickings,
+  isChord,
+  isNote,
   outputCtx,
+  type ChordSound,
   type HitEvent,
+  type NoteSound,
   type SoundEvent,
   type Span,
   type Timed,
@@ -22,7 +26,10 @@ import { fmt, lengthPrefix, MAX_SECONDS, singularLength, TPQ } from "./time.ts"
 import { SETTINGS } from "./vocab.ts"
 
 // What one play plays
-type Output = {
+// One block of a play's output, as the grid and the sheet draw it
+export type GridBlock = ReturnType<typeof gridBlocks>[number]
+
+export type Output = {
   line: number
   label: string
   durSec: number
@@ -38,7 +45,7 @@ type Output = {
 // note stops.
 function gridResolution(
   drumEvents: HitEvent[],
-  noteEvents: SoundEvent[],
+  noteEvents: NoteSound[],
   barTicks: number,
 ): number {
   const ticks = [
@@ -57,8 +64,8 @@ function gridResolution(
 function gridBlocks(
   spans: Span[],
   drumEvents: HitEvent[],
-  noteEvents: SoundEvent[],
-  chordEvents: SoundEvent[] = [],
+  noteEvents: NoteSound[],
+  chordEvents: ChordSound[] = [],
 ) {
   const merged: Span[] = []
   for (const s of [...spans].sort((a, b) => a.startSec - b.startSec)) {
@@ -78,7 +85,7 @@ function gridBlocks(
     const inside = drumEvents
       .filter((e) => e.secStart >= s.startSec - 1e-9 && e.secStart < s.startSec + s.durSec - 1e-9)
       .map((e) => ({ ...e, tick: Math.round((e.secStart - s.startSec) / s.secPerTick) }))
-    const within = (events: SoundEvent[]) =>
+    const within = <E extends SoundEvent>(events: E[]): E[] =>
       events
         .filter((e) => e.secStart >= s.startSec - 1e-9 && e.secStart < s.startSec + s.durSec - 1e-9)
         .map((e) => ({
@@ -367,14 +374,14 @@ export function parseCell(src: unknown, inherited: State = initialState()) {
             durSec: out.durSec,
             totalSec: out.durSec,
             events: out.events,
-            chords: out.events.filter((e) => "chord" in e),
-            notes: out.events.filter((e) => "note" in e),
+            chords: out.events.filter(isChord),
+            notes: out.events.filter(isNote),
             drumEvents: out.drumEvents,
             blocks: gridBlocks(
               out.spans,
               out.drumEvents,
-              out.events.filter((e) => "note" in e),
-              out.events.filter((e) => "chord" in e),
+              out.events.filter(isNote),
+              out.events.filter(isChord),
             ),
           })
         }
@@ -519,8 +526,8 @@ export function parseCell(src: unknown, inherited: State = initialState()) {
     outputs,
     blocks,
     events,
-    chords: events.filter((e) => "chord" in e),
-    notes: events.filter((e) => "note" in e),
+    chords: events.filter(isChord),
+    notes: events.filter(isNote),
     drumEvents,
     totalSec: t,
     errors,

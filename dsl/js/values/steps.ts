@@ -2,7 +2,7 @@
    d double, - nothing), or one bar's beats (2 4, ^4), or parts with lengths in front
    (2 beats rest, ...x-), or hits spread over steps (3 in 8), or a block of layers that
    repeat until they line up. Also stickings: which hand plays each step. */
-import { buildChord } from "../chords.js"
+import { buildChord } from "../chords.ts"
 import { misplaced } from "../check.ts"
 import { blockBeside } from "../eval.ts"
 import { TRACK_RE } from "../lines.ts"

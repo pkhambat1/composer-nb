@@ -24,6 +24,10 @@ import type { DrumHit } from "./values/steps.ts"
 // Where an event sounds, in seconds from its clip's start
 export type Timed = { secStart: number; secDur?: number; secSwing?: number; gapSec?: number }
 export type SoundEvent = (NoteEvent | ChordEvent) & Timed
+export type NoteSound = NoteEvent & Timed
+export type ChordSound = ChordEvent & Timed
+export const isNote = (e: SoundEvent): e is NoteSound => "note" in e
+export const isChord = (e: SoundEvent): e is ChordSound => "chord" in e
 export type HitEvent = DrumHit & Timed
 // A stretch of a clip with one meter and tempo: the bar grid over it
 export type Span = ReturnType<typeof meterOf> & { startSec: number; durSec: number }

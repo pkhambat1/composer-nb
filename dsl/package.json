@@ -35,17 +35,17 @@
     },
     "./chord-lookup": {
       "types": "./lib/chord-lookup.d.ts",
-      "composer-nb-source": "./js/chord-lookup.js",
+      "composer-nb-source": "./js/chord-lookup.ts",
       "default": "./lib/chord-lookup.js"
     },
     "./editing": {
       "types": "./lib/editing.d.ts",
-      "composer-nb-source": "./js/editing.js",
+      "composer-nb-source": "./js/editing.ts",
       "default": "./lib/editing.js"
     },
     "./grid": {
       "types": "./lib/grid.d.ts",
-      "composer-nb-source": "./js/grid.js",
+      "composer-nb-source": "./js/grid.ts",
       "default": "./lib/grid.js"
     },
     "./sheet": {
@@ -55,7 +55,7 @@
     },
     "./midi": {
       "types": "./lib/midi.d.ts",
-      "composer-nb-source": "./js/midi.js",
+      "composer-nb-source": "./js/midi.ts",
       "default": "./lib/midi.js"
     },
     "./highlight": {
@@ -65,17 +65,17 @@
     },
     "./chords": {
       "types": "./lib/chords.d.ts",
-      "composer-nb-source": "./js/chords.js",
+      "composer-nb-source": "./js/chords.ts",
       "default": "./lib/chords.js"
     },
     "./grooves": {
       "types": "./lib/grooves.d.ts",
-      "composer-nb-source": "./js/grooves.js",
+      "composer-nb-source": "./js/grooves.ts",
       "default": "./lib/grooves.js"
     },
     "./links": {
       "types": "./lib/links.d.ts",
-      "composer-nb-source": "./js/links.js",
+      "composer-nb-source": "./js/links.ts",
       "default": "./lib/links.js"
     }
   },
