@@ -5,6 +5,7 @@
 import { readFile } from "node:fs/promises"
 import { createRequire } from "node:module"
 import { parseHTML } from "linkedom"
+import type { GridBlock, Output, Parsed } from "composer-nb/language"
 import { midiFile } from "composer-nb/midi"
 import { sheetAbc } from "composer-nb/sheet"
 
@@ -13,31 +14,39 @@ const require = createRequire(import.meta.url)
 export const STAFF_WIDTH = 760
 const PAD = 10
 
-let abcjsLoading = null
+// Sheet music to look at: its ABC, and the SVG abcjs draws of it with its size
+export type Sheet = { abc: string; svg: string; width: number; height: number }
+type Abcjs = typeof import("abcjs")
+
+let abcjsLoading: Promise<Abcjs> | null = null
 // abcjs reads `window` and `document` when it loads, so they exist before it does.
-function abcjs() {
+function abcjs(): Promise<Abcjs> {
   if (!abcjsLoading) {
     if (typeof globalThis.document === "undefined") {
       const { window } = parseHTML("<!doctype html><html><head></head><body></body></html>")
       // abcjs measures text by drawing it and asking for its box, which the shim can't do:
       // an estimate from the font size keeps staff names, chord symbols and counts spaced
-      if (window.SVGElement && !window.SVGElement.prototype.getBBox) {
-        window.SVGElement.prototype.getBBox = function () {
-          const size = parseFloat(this.getAttribute("font-size")) || 16
+      const svg = window.SVGElement?.prototype as unknown as SVGGraphicsElement | undefined
+      if (svg && !svg.getBBox) {
+        svg.getBBox = function (this: SVGGraphicsElement) {
+          const size = parseFloat(this.getAttribute("font-size") || "") || 16
           const text = this.textContent || ""
-          return { x: 0, y: 0, width: text.length * size * 0.56, height: size * 1.15 }
+          return { x: 0, y: 0, width: text.length * size * 0.56, height: size * 1.15 } as DOMRect
         }
       }
-      globalThis.window = window
-      globalThis.document = window.document
+      globalThis.window = window as unknown as Window & typeof globalThis
+      globalThis.document = window.document as unknown as Document
     }
-    abcjsLoading = import("abcjs").then((m) => m.default ?? m)
+    abcjsLoading = import("abcjs").then((m) => ((m as { default?: Abcjs }).default ?? m) as Abcjs)
   }
   return abcjsLoading
 }
 
 // One block of a play as sheet music: its ABC and the SVG abcjs draws of it.
-export async function sheetSvg(block, { counts = false, width = STAFF_WIDTH } = {}) {
+export async function sheetSvg(
+  block: GridBlock,
+  { counts = false, width = STAFF_WIDTH } = {},
+): Promise<Sheet | null> {
   const { abc, tablature } = sheetAbc(block, { counts })
   if (!abc) return null
   const lib = await abcjs()
@@ -75,8 +84,8 @@ export async function sheetSvg(block, { counts = false, width = STAFF_WIDTH } = 
 }
 
 // A whole play as one sheet: its blocks stacked, each a system of its own.
-export async function sheetOf(output, options = {}) {
-  const parts = []
+export async function sheetOf(output: Output, options: { counts?: boolean } = {}): Promise<Sheet | null> {
+  const parts: Sheet[] = []
   for (const block of output.blocks) {
     const part = await sheetSvg(block, options)
     if (part) parts.push(part)
@@ -99,14 +108,16 @@ export async function sheetOf(output, options = {}) {
   }
 }
 
-let resvgLoading = null
+type Resvg = typeof import("@resvg/resvg-wasm").Resvg
+let resvgLoading: Promise<{ Resvg: Resvg; fonts: Buffer[] }> | null = null
+// The fonts are in fonts/, one folder up from both src/ and lib/
 function resvg() {
   if (!resvgLoading) {
     resvgLoading = import("@resvg/resvg-wasm").then(async (m) => {
       await m.initWasm(await readFile(require.resolve("@resvg/resvg-wasm/index_bg.wasm")))
       const fonts = await Promise.all(
         ["DejaVuSerif.ttf", "DejaVuSerif-Bold.ttf", "DejaVuSans.ttf"].map((f) =>
-          readFile(new URL(`./fonts/${f}`, import.meta.url)),
+          readFile(new URL(`../fonts/${f}`, import.meta.url)),
         ),
       )
       return { Resvg: m.Resvg, fonts }
@@ -116,7 +127,10 @@ function resvg() {
 }
 
 // An SVG as a PNG, `scale` times its size, on white.
-export async function pngOf(svg, { width, scale = 2 } = {}) {
+export async function pngOf(
+  svg: string,
+  { width, scale = 2 }: { width?: number; scale?: number } = {},
+): Promise<Buffer> {
   const { Resvg, fonts } = await resvg()
   const r = new Resvg(svg, {
     fitTo: { mode: "width", value: Math.round((width || STAFF_WIDTH) * scale) },
@@ -137,6 +151,6 @@ export async function pngOf(svg, { width, scale = 2 } = {}) {
 }
 
 // A parsed cell's plays as a MIDI file, one after another.
-export function midiOf(parsed) {
+export function midiOf(parsed: Parsed): Buffer {
   return Buffer.from(midiFile(parsed.outputs))
 }

@@ -1,12 +1,23 @@
 /* A cell for an assistant: parse it, and say what came of it in text a model can read and
    act on: the errors with their lines, the settings and names in effect, and for each play
    a grid of every hit and note, bar by bar, which is the playground's grid as text. Pure. */
-import { countingOf, gridCounts, gridRows } from "composer-nb/grid"
-import { initialState, parseCell, timeLabel } from "composer-nb/language"
+import { countingOf, gridCounts, gridRows, type GridCell } from "composer-nb/grid"
+import {
+  initialState,
+  parseCell,
+  timeLabel,
+  type GridBlock,
+  type Output,
+  type Parsed,
+  type State,
+} from "composer-nb/language"
 
 // Parses `source` after `after`, the earlier cells it continues from. Returns the cell's
 // parse and the earlier cells', so their mistakes can be reported too.
-export function parse(source, after) {
+export function parse(
+  source: string | undefined,
+  after?: string,
+): { parsed: Parsed; earlier: Parsed | null } {
   let state = initialState()
   const earlier = after ? parseCell(after, state) : null
   if (earlier) state = earlier.state
@@ -17,8 +28,8 @@ const MAX_BARS_SHOWN = 16
 const LEGEND =
   "x hit · ^ accent · ~ ghost · d double · - nothing. On an instrument's row: the note where it starts, - while it sounds, . silence"
 
-export function settingsOf(state) {
-  const out = {
+export function settingsOf(state: State): Record<string, string | number> {
+  const out: Record<string, string | number> = {
     time: timeLabel(state),
     tempo: state.tempo,
     swing: state.swing,
@@ -32,7 +43,7 @@ export function settingsOf(state) {
   return out
 }
 
-export function namesOf(state) {
+export function namesOf(state: State): { type: string; name: string; line?: number }[] {
   return [
     ...Object.entries(state.words).map(([name, w]) => ({ type: w.type, name, line: w.line })),
     ...Object.entries(state.sections).map(([name, s]) => ({ type: "pattern", name, line: s.ln })),
@@ -40,24 +51,24 @@ export function namesOf(state) {
 }
 
 // The kit pieces and instruments that play in an output, in the order the grid draws them.
-export function playersOf(output) {
-  const drums = new Set()
+export function playersOf(output: Output): string[] {
+  const drums = new Set<string>()
   for (const e of output.drumEvents) if (!e.hidden && e.lane !== "sticking") drums.add(e.lane)
-  const pitched = new Set()
-  for (const e of output.events) if (e.note || e.chord) pitched.add(e.instrument)
+  const pitched = new Set<string>()
+  for (const e of output.events) if ("note" in e || "chord" in e) pitched.add(e.instrument)
   return [...pitched, ...drums]
 }
 
-const pad = (s, n) => String(s).padEnd(n)
+const pad = (s: string, n: number) => String(s).padEnd(n)
 
 // One block of a play as rows of text: a count row, then a row per kit piece and
 // instrument, a cell a step, bar by bar.
-export function gridText(block, maxBars = MAX_BARS_SHOWN) {
+export function gridText(block: GridBlock, maxBars = MAX_BARS_SHOWN): string[] {
   const { per, rows } = gridRows(block)
   if (!rows.length) return []
-  const cellText = (e, pitched) => {
+  const cellText = (e: GridCell | undefined, pitched: boolean): string => {
     if (!e) return pitched ? "." : "-"
-    if (e.sticking) return e.text
+    if (e.sticking) return e.text!
     if (e.hit) {
       if (e.note) return (e.accent ? "^" : e.ghost ? "~" : "") + e.text
       return e.double ? "d" : e.ghost ? "~" : e.accent ? "^" : "x"
@@ -70,7 +81,7 @@ export function gridText(block, maxBars = MAX_BARS_SHOWN) {
   })
   const width = Math.max(1, ...texts.flatMap((r) => r.cells.map((c) => c.length)))
   const labels = Math.max(5, ...rows.map((r) => r.label.length))
-  const out = []
+  const out: string[] = []
   const bars = Math.min(block.bars, maxBars)
   const counts = gridCounts(block).map((c) => c.label)
   for (let bar = 0; bar < bars; bar++) {
@@ -87,9 +98,9 @@ export function gridText(block, maxBars = MAX_BARS_SHOWN) {
 
 // The chords a block plays, by bar: "bar 1: Am (A C E) · F (F A C)". A chord's notes are
 // named the first time it plays.
-export function chordsText(block) {
-  const byBar = new Map()
-  const named = new Set()
+export function chordsText(block: GridBlock): string[] {
+  const byBar = new Map<number, string[]>()
+  const named = new Set<string>()
   for (const e of block.chordEvents || []) {
     const bar = Math.floor(e.tick / block.barTicks) + 1
     let label = e.chord.label
@@ -102,18 +113,18 @@ export function chordsText(block) {
   return [...byBar].map(([bar, chords]) => `bar ${bar}: ${chords.join(" · ")}`)
 }
 
-const plural = (n, word) => `${n} ${word}${n === 1 ? "" : "s"}`
-const secs = (s) => `${Math.round(s * 10) / 10} s`
+const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? "" : "s"}`
+const secs = (s: number) => `${Math.round(s * 10) / 10} s`
 
-function blockHead(b) {
+function blockHead(b: GridBlock): string {
   return `time ${b.time} · tempo ${b.tempo} · key ${b.key} ${b.mode} · ${plural(b.bars, "bar")} · counting ${countingOf(b)}`
 }
 
 // What came of parsing `source`: a report in text, for the assistant to read.
-export function describe(parsed, earlier, source = "") {
+export function describe(parsed: Parsed, earlier: Parsed | null, source = ""): string {
   const lines = String(source).split("\n")
-  const out = []
-  const say = (errors, where) => {
+  const out: string[] = []
+  const say = (errors: Parsed["errors"], where: string) => {
     for (const e of errors) {
       const text = lines[e.line - 1]?.trim()
       out.push(`  line ${e.line}${where}: ${e.msg}` + (text ? `\n      ${text}` : ""))

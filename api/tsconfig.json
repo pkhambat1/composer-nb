@@ -1,0 +1,6 @@
+{
+  // The Vercel functions. Vercel compiles them itself, and they run the server's build
+  // (mcp/lib); this checks them against its source, as mcp/tsconfig.json does.
+  "extends": "../mcp/tsconfig.json",
+  "include": ["."]
+}

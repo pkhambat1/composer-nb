@@ -1,24 +1,32 @@
 /* The composer-nb MCP server: the language for any assistant that speaks MCP. Five tools
    wrap what the library does already (parse, render, link, library, reference), and the
    reference pages and the grooves are resources too, for clients that read those. One
-   server is one McpServer; the transports are in bin.js (stdio) and http.js. */
+   server is one McpServer; the transports are in bin.ts (stdio) and http.ts. */
 import { createRequire } from "node:module"
 import { registerAppTool } from "@modelcontextprotocol/ext-apps/server"
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
+import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js"
 import { z } from "zod"
-import { GROOVES, grooveText, plain, searchGrooves, slugOf } from "composer-nb/grooves"
+import { GROOVES, grooveText, plain, searchGrooves, slugOf, type Groove } from "composer-nb/grooves"
+import type { Output, Parsed } from "composer-nb/language"
 import { SITE, notebookUrl, openUrl } from "composer-nb/links"
-import { CELL_UI, registerCellApp } from "./app.js"
-import { describe, parse, playersOf } from "./cell.js"
-import { INSTRUCTIONS } from "./instructions.js"
-import { REFERENCE } from "./reference.js"
-import { midiOf, pngOf, sheetOf } from "./render.js"
+import { CELL_UI, registerCellApp } from "./app.ts"
+import { describe, parse, playersOf } from "./cell.ts"
+import { INSTRUCTIONS } from "./instructions.ts"
+import { REFERENCE } from "./reference.ts"
+import { midiOf, pngOf, sheetOf } from "./render.ts"
 
-const { version: VERSION } = createRequire(import.meta.url)("./package.json")
+// The package's own file, one folder up from both src/ and lib/
+const { version: VERSION } = createRequire(import.meta.url)("../package.json") as {
+  version: string
+}
 
-const text = (t) => ({ type: "text", text: t })
-const plural = (n, word) => `${n} ${word}${n === 1 ? "" : "s"}`
-const fence = (code) => "```composer-nb\n" + code + "\n```"
+// What a server is made with: the playground its links open
+export type Options = { site?: string }
+
+const text = (t: string) => ({ type: "text" as const, text: t })
+const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? "" : "s"}`
+const fence = (code: string) => "```composer-nb\n" + code + "\n```"
 
 const SOURCE = z.string().describe("The cell: composer-nb source, a line per statement")
 // What parse says of an empty cell, which is one for the user to write in.
@@ -33,12 +41,12 @@ const AFTER = z
   )
 
 // The errors of a cell that can't be rendered, as a tool result.
-function failed(parsed, earlier, source) {
+function failed(parsed: Parsed, earlier: Parsed | null, source: string): CallToolResult {
   return { isError: true, content: [text(describe(parsed, earlier, source))] }
 }
 
 // What a play is, in a line: "Play 1 (line 9): play groove · 2 bars · 4.7 s · kick, snare".
-function playLine(o, i) {
+function playLine(o: Output, i: number): string {
   const bars = o.blocks.reduce((a, b) => a + b.bars, 0)
   const who = playersOf(o)
   return (
@@ -47,13 +55,13 @@ function playLine(o, i) {
   )
 }
 
-export function createServer({ site = SITE } = {}) {
+export function createServer({ site = SITE }: Options = {}): McpServer {
   const server = new McpServer(
     { name: "composer-nb", version: VERSION },
     { instructions: INSTRUCTIONS },
   )
-  const grooveUrl = (g) => `${site}/grooves/${slugOf(g.title)}/`
-  const query = (source, after) =>
+  const grooveUrl = (g: Groove) => `${site}/grooves/${slugOf(g.title)}/`
+  const query = (source: string, after?: string) =>
     `src=${encodeURIComponent(source)}` + (after ? `&after=${encodeURIComponent(after)}` : "")
 
   // parse and link name the MCP App (app.js): a host that renders MCP Apps draws the
@@ -118,7 +126,7 @@ export function createServer({ site = SITE } = {}) {
           ],
         }
       }
-      const content = []
+      const content: CallToolResult["content"] = []
       for (const [i, o] of parsed.outputs.entries()) {
         const sheet = await sheetOf(o, { counts })
         if (!sheet) continue
@@ -207,7 +215,7 @@ export function createServer({ site = SITE } = {}) {
       }
       const full = q ? found.slice(0, 3) : []
       const rest = q ? found.slice(3) : found
-      const out = []
+      const out: string[] = []
       for (const g of full) {
         out.push(
           `## ${g.title}\n${plain(g.byline)}\n\n${plain(g.body)}\n\n${fence(g.source)}\n\nPage: ${grooveUrl(g)}\nPlays at: ${openUrl(site, g.source)}`,
@@ -234,7 +242,7 @@ export function createServer({ site = SITE } = {}) {
     {
       title: "The language reference",
       description: `The language reference, page by page: ${REFERENCE.map((p) => `${p.id} (${p.description.replace(/\.$/, "").toLowerCase()})`).join(", ")}. Read the page before writing something you haven't written before; "all" is the whole reference.`,
-      inputSchema: { topic: z.enum(topics).default("all") },
+      inputSchema: { topic: z.enum(topics as [string, ...string[]]).default("all") },
     },
     async ({ topic }) => {
       const pages = topic === "all" ? REFERENCE : REFERENCE.filter((p) => p.id === topic)

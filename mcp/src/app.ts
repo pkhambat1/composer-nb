@@ -7,6 +7,7 @@
    as before: the page is only fetched by a host that asks for it. */
 import { readFile } from "node:fs/promises"
 import { RESOURCE_MIME_TYPE, registerAppResource } from "@modelcontextprotocol/ext-apps/server"
+import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 
 export const CELL_UI = "ui://composer-nb/cell"
 
@@ -22,19 +23,22 @@ export const FONT_HOSTS = ["https://fonts.googleapis.com", "https://fonts.gstati
 const FONTS =
   "https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Serif:wght@400;600&display=swap"
 
-let scriptLoading = null
-function script() {
+let scriptLoading: Promise<string> | null = null
+// The build is in app/dist/, one folder up from both src/ and lib/
+function script(): Promise<string> {
   if (!scriptLoading) {
-    scriptLoading = readFile(new URL("./app/dist/app.js", import.meta.url), "utf8").catch((err) => {
-      scriptLoading = null
-      throw new Error(`The MCP App isn't built. Run: npm run build:app -w mcp (${err.message})`)
-    })
+    scriptLoading = readFile(new URL("../app/dist/app.js", import.meta.url), "utf8").catch(
+      (err) => {
+        scriptLoading = null
+        throw new Error(`The MCP App isn't built. Run: npm run build:app -w mcp (${err.message})`)
+      },
+    )
   }
   return scriptLoading
 }
 
 // The page the host renders.
-export async function cellHtml() {
+export async function cellHtml(): Promise<string> {
   // Inline JS must not close its own tag; "<\/" is the same string to JavaScript.
   const js = (await script()).replace(/<\/script/gi, "<\\/script")
   return `<!doctype html>
@@ -56,7 +60,7 @@ export async function cellHtml() {
 }
 
 // Registers the page as the resource parse and link name in their _meta.ui.resourceUri.
-export function registerCellApp(server) {
+export function registerCellApp(server: McpServer): void {
   registerAppResource(
     server,
     "The cell, played",

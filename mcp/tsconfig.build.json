@@ -1,0 +1,13 @@
+{
+  // Compiles src/ into lib/, against the library's build (dsl/lib), which is built first:
+  // npm run build:lib -w dsl, then npm run build:lib -w mcp
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "customConditions": [],
+    "noEmit": false,
+    "declaration": true,
+    "rootDir": "src",
+    "outDir": "lib"
+  },
+  "include": ["src"]
+}
