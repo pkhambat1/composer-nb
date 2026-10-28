@@ -75,8 +75,9 @@ verse  # shows the player
 Songs are ordinary Python values, so you can generate them with loops and functions:
 
 ```python
-blues = "|".join(["A7", "D7", "A7", "A7", "D7", "D7", "A7", "A7", "E7", "D7", "A7", "E7"])
-Song("set tempo 120\nplay piano.electric: chords " + blues)
+groove = "pattern groove = {\n  hat: x-\n  kick: 1 3\n  snare: 2 4\n}\n"
+rungs = "\n".join(f"with tempo {t} {{ play 2 bars groove }}" for t in (70, 80, 90))
+Song(groove + rungs, name="ladder")
 ```
 
 ## From JavaScript

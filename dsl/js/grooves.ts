@@ -255,11 +255,11 @@ with tempo 84 { play 4 bars pulls }`,
   {
     section: "Harmony",
     title: "Fifth of a chord",
-    byline: "of counts a chord from another chord: V of I is G in C",
-    body: "`v of i` is the V counted from the I's root: in C major the I is C, so `v of i` is G, a major chord a fifth up. `v of v` is D, and `v of (v of v)` is A, so this walks up the circle of fifths on chords, C G D A. The numeral in front says which chord to build and the chord after `of` says where to count from, so it follows `set key` and `set mode`.",
+    byline: "of counts a chord from another chord: v of v is D in C",
+    body: "`v` is the chord on the key's 5th: in C, G. `v of v` counts that numeral from G instead of from the key, so it is the 5th of G, D, and `v of (v of v)` is the 5th of D, A. This walks up the circle of fifths on chords, C G D A, and it follows the key and the mode. (`v of i` would be the 5th of the key's own root, which is just `v`.)",
     link: null,
     source: `pattern fifths = {
-  piano: chords i|v of i|v of v|v of (v of v)
+  piano: chords i|v|v of v|v of (v of v)
   hat: x-
   kick: 1 3
 }
