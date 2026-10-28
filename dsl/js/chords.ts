@@ -59,10 +59,15 @@ export function midiToName(m: number, flats = false): string {
   return (flats ? FLAT_NAMES : SHARP_NAMES)[pc] + oct
 }
 
-// Semitones from a root to a degree of its major scale, moved by b or # in front: 3 is 4
-// semitones, b3 is 3. Shared by a chord's numeral and a note written as a degree.
-export function degreeSemitones(degree: number, acc = ""): number {
-  return MODE_SCALES.major[degree - 1] + (acc === "#" ? 1 : acc === "b" ? -1 : 0)
+// Semitones from a root to a degree of a scale, major unless another is given, moved by b
+// or # in front: in major 3 is 4 semitones and b3 is 3; in minor 3 is 3. Shared by a chord's
+// numeral and a note written as a degree.
+export function degreeSemitones(
+  degree: number,
+  acc = "",
+  scale: readonly number[] = MODE_SCALES.major,
+): number {
+  return scale[degree - 1] + (acc === "#" ? 1 : acc === "b" ? -1 : 0)
 }
 
 // The modes a key can be in: semitones above the tonic. major and minor are the two common
@@ -162,16 +167,16 @@ export function chordParts(token: string): string[] {
 // The name tonal knows a chord by: it has a minor 6/9 as m69, not m6/9.
 export const tonalName = (head: string) => head.replace(/m6\/9$/, "m69")
 
-// A degree, 1 to 7, counted on the major scale of the key's root whatever the key's mode,
-// which is how a scale is described: natural minor is 1 2 b3 4 5 b6 b7. b and # in front
-// move it a semitone. Shared by a chord's numeral and a note written as a degree.
+// A degree, 1 to 7, counted on the key's own scale, its mode's: in D minor 3 is F, and in D
+// dorian 6 is B. b and # in front move it a semitone. Shared by a chord's numeral and a note
+// written as a degree.
 export function degreePc(key: Key, degree: number, acc = ""): number {
-  return (key.tonicPc + degreeSemitones(degree, acc) + 12) % 12
+  return (key.tonicPc + degreeSemitones(degree, acc, key.scale) + 12) % 12
 }
 
 // A degree's name: the letter of its place in the scale, counted from the key's root, raised
-// or lowered to its pitch. So the 7th of G minor is F#, not Gb, the 3rd of C# is E#, and
-// bVII in A is G.
+// or lowered to its pitch. So #7 in G minor is F#, not Gb, the 3rd of C# major is E#, and
+// VII in A minor is G.
 const LETTERS = "CDEFGAB"
 export function degreeName(key: Key, degree: number, acc = ""): string {
   const letter = LETTERS[(LETTERS.indexOf(key.root[0]) + degree - 1) % 7]
@@ -181,7 +186,7 @@ export function degreeName(key: Key, degree: number, acc = ""): string {
 
 // Case sets the third: V is major and v minor. What follows is the quality, written as it
 // is after a chord's root: V7, ii7, IVmaj7, viidim, viidim7, viim7b5. The degree is counted
-// on the major scale of the root, so bVII in Am is G and III is C#.
+// on the key's own scale, so in A minor VII is G and III is C.
 function romanToSymbol(main: string, key: Key): string | null {
   const m = ROMAN_RE.exec(main)
   if (!m) return null
@@ -205,7 +210,7 @@ export function buildChord(token: string, key?: Key | null, octave = 3): Voiced 
   if (numeral) {
     key = key || parseKey("C")!
     symbol = romanToSymbol(main, key)
-    fromKey = degreeSemitones(DEGREE[numeral[2].toLowerCase()] + 1, numeral[1])
+    fromKey = degreeSemitones(DEGREE[numeral[2].toLowerCase()] + 1, numeral[1], key.scale)
   } else if (/^[A-G][#b]?/.test(main)) symbol = main
   else return null
   if (!symbol) return null

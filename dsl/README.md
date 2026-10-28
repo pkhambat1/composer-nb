@@ -161,7 +161,7 @@ Every number is arithmetic (`set tempo 60*2`, `(1+2) bars groove`), so `*` and `
 `with` gives settings to a block only, with commas between them, and puts back what was set at its `}`: `with key E, mode minor { ... }`. At the top of a cell its block holds statements, such as `play`. In a play or a pattern its block plays together with the other lines, and in brackets it's one part in order, so the bass can sit an octave below the chart, or one chart can play in two keys:
 
 ```
-chords walk = i iidim|bIII iv|v bVI|bVII i
+chords walk = i iidim|III iv|v VI|VII i
 chords prog = I vi|IV V
 
 with key E, mode minor {
@@ -200,15 +200,16 @@ play groove
 
 A note is a capital letter, `A` to `G`, with `#` or `b` after it and an octave when it needs one: `F`, `F#`, `Bb`, `E2`. Without a number it's in the `octave` setting, so `set octave 2` above puts the riff on the guitar's low E string. One note is one step, however many characters it takes, and two notes never touch: a space goes between them (`F# E`). `-` means nothing new happens, so the note rings on, and `_` stops it. `^` in front accents a note and `~` softens it.
 
-A degree goes where a note goes: a digit from `1` to `7`, counted on the major scale of the `key`'s root, with `b` or `#` in front. A scale is written as it's described, so natural minor is `1 2 b3 4 5 b6 b7`, and a name that holds degrees plays in whichever key is set. `1` is the root in the `octave` setting; `'` after the digit is an octave up and `'` before it an octave down:
+A degree goes where a note goes: a digit from `1` to `7`, counted on the scale of the `key` and its `mode`, with `b` or `#` in front to move it off the scale. In C major `3` is E and in C minor it's Eb, and a name that holds degrees plays in whichever key and mode are set. `1` is the root in the `octave` setting; `'` after the digit is an octave up and `'` before it an octave down:
 
 ```
 set key A
+set mode minor
 set octave 3
 
-notes minor = 1---2---b3---4---|5---b6---b7---1'---
+notes scale = 1---2---3---4---|5---6---7---1'---
 
-play piano: minor
+play piano: scale
 ```
 
 `of` counts a degree from another note instead of from the key, on that note's major scale: `5 of C3` is `G3` and `b3 of C3` is `Eb3`. A note counted that way goes in brackets to count from it, so the circle of fifths from C3 is `C3--- 5 of C3--- 5 of (5 of C3)--- 5 of (5 of (5 of C3))---`.

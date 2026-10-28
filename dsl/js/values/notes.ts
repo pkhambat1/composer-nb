@@ -98,8 +98,8 @@ function spelledName(s: NoteStep, midi: number, key: Key): string {
 }
 // A note (F#4), or a degree ('b3'): ^ or ~ in front; then for a note the letter, # or b and
 // the octave; for a degree ' for each octave below, b or # and the digit, 1 to 7, and ' for
-// each octave above. A degree is counted on the major scale of the key's root, whatever the
-// key's mode, which is how a scale is described: natural minor is 1 2 b3 4 5 b6 b7.
+// each octave above. A degree is counted on the key's own scale, its mode's: in minor 1 to 7
+// is the natural minor scale, and b or # moves a degree off it.
 const NOTE_AT = /([\^~])?(?:([A-G])([#b])?(\d)?|('*)([#b])?([1-7])('*))/y
 export const NOTE_HELP =
   "Notes are A to G, with # or b after them and an octave when it's needed (F, F#, Bb, E2), or degrees of the key, 1 to 7 (1, b3, 5, 1')"
@@ -410,7 +410,7 @@ export function notNotes(tok: string, st: State, inst: string, chart: string): s
     return `"${tok}": octaves run from 0 to 8`
   }
   if (/^[-_^~'#b]*[089]/.test(tok)) {
-    return `"${tok}": degrees run from 1 to 7, counted on the key's major scale. The octave above 1 is 1'`
+    return `"${tok}": degrees run from 1 to 7, counted on the key's scale. The octave above 1 is 1'`
   }
   if (/^[-_x^~d]+$/.test(tok)) {
     return /[xd]/.test(tok)
@@ -519,7 +519,7 @@ function notePattern(
     s.of
       ? written(s.of) + 12 * s.shift! + degreeSemitones(s.degree!, s.acc)
       : s.degree
-        ? 12 * (octave + 1 + s.shift!) + key.tonicSemis + degreeSemitones(s.degree, s.acc)
+        ? 12 * (octave + 1 + s.shift!) + key.tonicSemis + degreeSemitones(s.degree, s.acc, key.scale)
         : 12 * ((s.octave ?? octave) + 1) + NOTE_BASE[s.name![0]] + (sharp[s.name![1]] || 0)
   const transpose = st.transpose
   const midiOf = (s: NoteStep) => written(s) + transpose
