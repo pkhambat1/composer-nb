@@ -730,7 +730,13 @@ describe("names", () => {
   })
 
   it("say what's wrong with a name, the same for every type", () => {
-    const values = { steps: "x-", notes: "C4---", chords: "Am F", pattern: "{ kick: x }" }
+    const values = {
+      steps: "x-",
+      sticking: "RL",
+      notes: "C4---",
+      chords: "Am F",
+      pattern: "{ kick: x }",
+    }
     for (const [type, value] of Object.entries(values)) {
       expect(firstError(`${type} Verse = ${value}`)).toBe(
         `Names start with a lowercase letter: ${type} verse`,

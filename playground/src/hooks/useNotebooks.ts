@@ -7,7 +7,6 @@ import { fingerprint, refreshStarters } from "../shared/starters.ts"
 import type { Notebook, NotebookCell, SavedCell, Store } from "../shared/types.ts"
 
 const KEY = "composer-nb:notebooks"
-const FILE_KIND = "composer-nb notebook"
 
 const notebookId = () => "n" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6)
 const bare = (cells: SavedCell[]): SavedCell[] =>
@@ -216,55 +215,8 @@ export function useNotebooks({
     [put, setCells, setSelectedId, create],
   )
 
-  // A notebook as a file, and back
-  const exportFile = useCallback((id: string) => {
-    const nb = storeRef.current.list.find((n) => n.id === id)
-    if (!nb) return
-    const json = JSON.stringify({ kind: FILE_KIND, title: nb.title, cells: nb.cells }, null, 2)
-    const url = URL.createObjectURL(new Blob([json], { type: "application/json" }))
-    const a = document.createElement("a")
-    a.href = url
-    a.download = `${nb.title.replace(/[^\w.-]+/g, "-") || "notebook"}.composer-nb.json`
-    document.body.appendChild(a)
-    a.click()
-    setTimeout(() => {
-      document.body.removeChild(a)
-      URL.revokeObjectURL(url)
-    }, 0)
-  }, [])
-
-  const importFile = useCallback(
-    async (file: File) => {
-      const text = await file.text()
-      let data
-      try {
-        data = JSON.parse(text)
-      } catch {
-        throw new Error("That file isn't a notebook: it doesn't hold JSON")
-      }
-      const found: { type?: unknown; source?: unknown }[] | null = Array.isArray(data?.cells)
-        ? data.cells
-        : null
-      if (!found || !found.every((c) => typeof c.source === "string")) {
-        throw new Error("That file isn't a notebook: no cells in it")
-      }
-      // A cell that isn't text is music
-      const cells = found.map(
-        (c): SavedCell => ({
-          type: c.type === "text" ? "text" : "music",
-          source: c.source as string,
-        }),
-      )
-      add(
-        typeof data.title === "string" && data.title.trim() ? data.title.trim() : titleOf(cells),
-        cells,
-      )
-    },
-    [add],
-  )
-
   const current = useMemo(() => store.list.find((n) => n.id === store.current) || null, [store])
   const list = useMemo(() => [...store.list].sort((a, b) => b.updated - a.updated), [store])
 
-  return { list, current, open, create, duplicate, rename, remove, exportFile, importFile }
+  return { list, current, open, create, duplicate, rename, remove }
 }

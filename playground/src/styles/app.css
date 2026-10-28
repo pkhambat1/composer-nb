@@ -713,9 +713,6 @@ body {
   background: var(--border-soft);
   margin: 4px 2px;
 }
-.panel-subtitle-problem {
-  color: var(--traceback);
-}
 .kernel-status-label {
   color: var(--text-dim);
   font-size: 11px;

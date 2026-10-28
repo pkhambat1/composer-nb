@@ -4,3 +4,8 @@ dist
 package-lock.json
 dsl/python/composer_nb/static
 .claude
+# generated from the docs by mcp/scripts/reference.ts
+mcp/src/reference.ts
+# the docs site's pages and components, which Mintlify reads as written
+docs
+.pytest_cache

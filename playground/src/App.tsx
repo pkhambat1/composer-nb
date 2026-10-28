@@ -1,5 +1,5 @@
 /* Notebook React app — Jupyter-style cells, music DSL + Tone.js.
-   Features: syntax-highlighted code cells, piano roll output, WAV export,
+   Features: syntax-highlighted code cells, piano roll output,
    chord palette sidebar, theme panel.
 */
 import React from "react"
@@ -373,12 +373,6 @@ export default function App({ host = null }: { host?: Host | null }) {
               quiet()
               notebooks.duplicate(current.id)
             },
-            exportFile: () => notebooks.exportFile(current.id),
-            importFile: async (file) => {
-              await notebooks.importFile(file)
-              quiet()
-              openTab("notebook")
-            },
             remove: () => {
               if (!window.confirm(`Delete "${current.title}"? This can't be undone.`)) return
               quiet()
@@ -386,7 +380,7 @@ export default function App({ host = null }: { host?: Host | null }) {
             },
           }
         : null,
-    [current, notebooks, quiet, openTab],
+    [current, notebooks, quiet],
   )
 
   // Keyboard shortcuts hook
