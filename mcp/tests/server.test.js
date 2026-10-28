@@ -30,7 +30,7 @@ set key A
 set mode minor
 
 play piano: {
-  chords i VI|III VII
+  chords i vi|iii vii
   notes E5-------C5-------|E5---D5---C5---B4---
 }`
 

@@ -63,11 +63,10 @@ function chordToken(token: string): Part[] {
   }
   let rest = ""
   const rm = ROMAN_RE.exec(core)
-  if (/^[1-7]$/.test(core)) {
-    parts.push(part("tk-root tk-root-maj", core))
-  } else if (rm) {
-    const lower = rm[2] === rm[2].toLowerCase()
-    parts.push(part("tk-root " + (lower ? "tk-root-min" : "tk-root-maj"), (rm[1] || "") + rm[2]))
+  if (rm) {
+    // a numeral is lowercase: the mode makes the chord major or minor
+    if (rm[2] !== rm[2].toLowerCase()) return [part("tk-error", token)]
+    parts.push(part("tk-root tk-root-abs", (rm[1] || "") + rm[2]))
     rest = rm[3] || ""
   } else {
     const am = /^([A-G][b#]?)(.*)$/.exec(core)

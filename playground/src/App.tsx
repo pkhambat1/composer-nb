@@ -14,14 +14,11 @@ import NotebookTitle, { type NotebookMenu } from "./components/NotebookTitle.tsx
 import { usePlayback } from "./hooks/usePlayback.ts"
 import { useKeyboard } from "./hooks/useKeyboard.ts"
 import { useTheme } from "./components/theme-panel.tsx"
-import Sidebar, { type SideTab } from "./components/Sidebar.tsx"
+import Sidebar from "./components/Sidebar.tsx"
 import Toolbar from "./components/Toolbar.tsx"
 import Cell from "./components/Cell.tsx"
 import CellGap from "./components/CellGap.tsx"
 import StatusBar from "./components/StatusBar.tsx"
-
-// The chord library brings every chord shape with it, so it loads when first opened
-const ChordBrowserPanel = React.lazy(() => import("./components/ChordBrowser.tsx"))
 
 // ============================================================================
 // App
@@ -35,12 +32,6 @@ export default function App({ host = null }: { host?: Host | null }) {
   const single = EMBED || !!host // only cells, with nothing around them
   const hostRef = React.useRef(host)
   hostRef.current = host
-  const [sideTab, setSideTab] = React.useState<SideTab>("notebook")
-  const [chordsOpened, setChordsOpened] = React.useState(false)
-  const openTab = React.useCallback((tab: SideTab) => {
-    if (tab === "chords") setChordsOpened(true)
-    setSideTab(tab)
-  }, [])
   const [kernelStatus, setKernelStatus] = React.useState<KernelStatus>("idle")
   const [activeCellId, setActiveCellId] = React.useState<string | null>(null)
   const [runCounter, setRunCounter] = React.useState(0)
@@ -252,11 +243,11 @@ export default function App({ host = null }: { host?: Host | null }) {
     [updateCell, processQueue],
   )
 
-  // The cell's own Play button and Shift+Enter: render, then play
-  const playCellNow = React.useCallback(
+  // The cell's own Run button and Shift+Enter: render it, and leave playing to its player
+  const runCellNow = React.useCallback(
     (id: string) => {
       playAllRef.current = null
-      queuedRunCell(id, true)
+      queuedRunCell(id)
     },
     [queuedRunCell],
   )
@@ -350,18 +341,16 @@ export default function App({ host = null }: { host?: Host | null }) {
   }, [playback, stopAll])
   const openNotebook = React.useCallback(
     (id: string) => {
-      if (notebooks.current?.id === id) return openTab("notebook")
+      if (notebooks.current?.id === id) return
       quiet()
       notebooks.open(id)
-      openTab("notebook")
     },
-    [notebooks, quiet, openTab],
+    [notebooks, quiet],
   )
   const newNotebook = React.useCallback(() => {
     quiet()
     notebooks.create()
-    openTab("notebook")
-  }, [notebooks, quiet, openTab])
+  }, [notebooks, quiet])
   // The title's menu, for the open notebook
   const current = notebooks.current
   const notebookMenu = React.useMemo<NotebookMenu | null>(
@@ -389,7 +378,7 @@ export default function App({ host = null }: { host?: Host | null }) {
     editingId,
     cells,
     findIndex,
-    runCell: playCellNow,
+    runCell: runCellNow,
     insertCell,
     deleteCell,
     undoDelete,
@@ -475,7 +464,7 @@ export default function App({ host = null }: { host?: Host | null }) {
             onEnterEdit={() => setEditingId(c.id)}
             onLeaveEdit={() => setEditingId((cur) => (cur === c.id ? null : cur))}
             onChange={(v) => updateCell(c.id, { source: v })}
-            onRun={() => playCellNow(c.id)}
+            onRun={() => runCellNow(c.id)}
             onInterrupt={() => interruptCell(c.id)}
             onDelete={() => deleteCell(c.id)}
             onMoveUp={() => moveCell(c.id, -1)}
@@ -514,17 +503,12 @@ export default function App({ host = null }: { host?: Host | null }) {
         notebooks={notebooks}
         onOpenNotebook={openNotebook}
         onNewNotebook={newNotebook}
-        sideTab={sideTab}
-        onTabChange={openTab}
         theme={theme}
         onSetTheme={(v) => setSetting("theme", v)}
       />
 
       <div className="app-main">
-        <div
-          className="notebook-root"
-          style={{ display: sideTab === "notebook" ? undefined : "none" }}
-        >
+        <div className="notebook-root">
           <div className="nb-sticky-header">
             <NotebookTitle
               title={notebooks.current?.title || "Notebook"}
@@ -559,11 +543,6 @@ export default function App({ host = null }: { host?: Host | null }) {
 
           <StatusBar editingId={editingId} kernelStatus={kernelStatus} />
         </div>
-        {chordsOpened && (
-          <React.Suspense fallback={null}>
-            <ChordBrowserPanel style={{ display: sideTab === "chords" ? undefined : "none" }} />
-          </React.Suspense>
-        )}
       </div>
     </div>
   )

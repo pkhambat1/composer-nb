@@ -17,7 +17,7 @@ export default function StatusBar({
       <span className="sb-spacer" />
       <span className="sb-shortcuts sb-dim">
         {editingId
-          ? "Shift+Enter play \u00b7 Esc leave the cell"
+          ? "Shift+Enter run \u00b7 Esc leave the cell"
           : "Enter edit \u00b7 A/B add a cell above/below \u00b7 DD delete \u00b7 Z undo"}
       </span>
     </footer>

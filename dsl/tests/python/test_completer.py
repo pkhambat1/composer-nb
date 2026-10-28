@@ -240,7 +240,7 @@ def test_a_degree_or_a_numeral_offers_of():
     cell = "%%music\nnotes riff = F---\nchords verse = Am F\nplay {\n  "
     assert texts(cell + "piano: notes b3 ") == ["of ", "riff"]
     assert texts(cell + "piano: notes C3 ") == ["riff"]
-    assert texts(cell + "piano: chords V7 ") == ["of ", "verse"]
+    assert texts(cell + "piano: chords v7 ") == ["of ", "verse"]
     assert texts(cell + "piano: chords Am ") == ["verse"]
 
 

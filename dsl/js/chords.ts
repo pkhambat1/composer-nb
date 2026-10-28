@@ -96,7 +96,7 @@ const MODE_FIFTHS: Record<string, number> = {
 const LETTER_FIFTHS: Record<string, number> = { F: -1, C: 0, G: 1, D: 2, A: 3, E: 4, B: 5 }
 const DEGREE: Record<string, number> = { i: 0, ii: 1, iii: 2, iv: 3, v: 4, vi: 5, vii: 6 }
 const LETTER_PC: Record<string, number> = { C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, B: 11 }
-const ROMAN_RE = /^([#b]?)(VII|VI|IV|V|III|II|I|vii|vi|iv|v|iii|ii|i)(.*)$/
+const ROMAN_RE = /^([#b]?)(vii|vi|iv|v|iii|ii|i)(.*)$/
 
 // A root ("E", "F#", "Bb") in a mode ("minor") → the key: its root, mode and scale, the
 // sharps in its signature (negative for flats) and whether its black keys are spelt with
@@ -148,7 +148,7 @@ export function abcKey(key: Key): string {
 // Strict check: a numeral plus chord-suffix characters only, so words like "intro" or
 // "vibe" aren't mistaken for i and vi chords.
 const ROMAN_TOKEN_RE =
-  /^[#b]?(VII|VI|IV|V|III|II|I|vii|vi|iv|v|iii|ii|i)(?:6\/9|maj|min|sus|add|dim|aug|M|m|b|#|\+|\d)*$/
+  /^[#b]?(VII|VI|IV|V|III|II|I|vii|vi|iv|v|iii|ii|i)(?:6\/9|maj|min|sus|add|dim|dom|aug|alt|M|m|b|#|\+|\d)*$/
 
 export function isRoman(token: string): boolean {
   return ROMAN_TOKEN_RE.test(chordParts(token)[0])
@@ -184,64 +184,48 @@ export function degreeName(key: Key, degree: number, acc = ""): string {
   return letter + (alter > 0 ? "#".repeat(alter) : "b".repeat(-alter))
 }
 
-// Case sets the third: V is major and v minor. A plain lowercase numeral takes the scale's own
-// fifth too, so vii is diminished in major and iv in lydian, without saying so. What follows
-// is the quality, written as it is after a chord's root: V7, ii7, IVmaj7, viidim, viim7b5.
-// The degree is counted on the key's own scale, so in A minor VII is G and III is C.
+// A numeral is lowercase, and the mode makes its chord: a plain one is the triad the key's scale
+// has on that degree (major, minor or diminished), and one with a 7 is its seventh chord, so
+// ii7 is Dm7 in C and i7 is Cmaj7. A b or # in front is a chord off the scale, major. What
+// follows can say the chord outright, as it does after a chord's root: vm, vM, vdim, vmaj7,
+// v7alt, vdom7 (a dominant seventh). The degree is counted on the key's own scale, so in A
+// minor iii is C and vii is G.
 function romanToSymbol(main: string, key: Key): string | null {
   const m = ROMAN_RE.exec(main)
   if (!m) return null
   const [, acc, numeral, rest] = m
-  const root = degreeName(key, DEGREE[numeral.toLowerCase()] + 1, acc)
-  let quality: string
-  const degree = DEGREE[numeral.toLowerCase()]
-  // The fifth the scale has above this degree: a flat one makes a plain lowercase numeral dim
-  const flatFifth =
-    !acc && key.scale[(degree + 4) % 7] + (degree + 4 >= 7 ? 12 : 0) - key.scale[degree] === 6
-  if (!rest && numeral === numeral.toLowerCase() && flatFifth) quality = "dim"
-  else if (/^(dim|m7b5)/.test(rest)) quality = rest
-  else if (numeral === numeral.toUpperCase() || rest.startsWith("sus")) quality = rest
-  else quality = rest.startsWith("maj") ? "mMaj" + rest.slice(3) : "m" + rest
-  return root + quality
-}
-
-// A digit, 1 to 7, is the scale's own chord on that degree: in D lydian 4 is G#dim and in D
-// dorian it's G. This is how a chart follows the mode, where a numeral's case sets its third
-// whatever the mode is. A chord off the scale is a numeral with a b or # in front.
-const DEGREE_CHORD_RE = /^[1-7]$/
-function degreeChord(main: string, key: Key): { symbol: string; fromKey: number } | null {
-  if (!DEGREE_CHORD_RE.test(main)) return null
-  const d = Number(main) - 1
-  const at = (k: number) => key.scale[(d + k) % 7] + (d + k >= 7 ? 12 : 0) - key.scale[d]
-  const [third, fifth] = [at(2), at(4)]
-  const quality = third === 3 ? (fifth === 6 ? "dim" : "m") : fifth === 8 ? "aug" : ""
-  return {
-    symbol: degreeName(key, d + 1) + quality,
-    fromKey: degreeSemitones(d + 1, "", key.scale),
+  const degree = DEGREE[numeral]
+  const root = degreeName(key, degree + 1, acc)
+  // ° and ø are drawn, not typed: the chart says dim and m7b5
+  if (/^[°ø]/.test(rest)) return null
+  const above = (k: number) =>
+    key.scale[(degree + k) % 7] + (degree + k >= 7 ? 12 : 0) - key.scale[degree]
+  const [third, fifth, seventh] = [above(2), above(4), above(6)]
+  const triad = acc ? "" : third === 3 ? (fifth === 6 ? "dim" : "m") : fifth === 8 ? "aug" : ""
+  // What follows the numeral: nothing is the scale's triad, a 7 its seventh chord, a number
+  // (6/9, 9, 11) goes on the triad, and anything else says the chord outright
+  if (!rest) return root + triad
+  if (rest === "7" && !acc) {
+    if (third === 4) return root + (fifth === 8 ? "7#5" : seventh === 11 ? "maj7" : "7")
+    if (fifth === 6) return root + (seventh === 10 ? "m7b5" : "dim7")
+    return root + (seventh === 10 ? "m7" : "mMaj7")
   }
+  if (/^\d/.test(rest) && !rest.startsWith("7")) return root + triad + rest
+  if (rest === "M") return root
+  if (rest === "dom7") return root + "7"
+  if (rest.startsWith("mmaj")) return root + "mMaj" + rest.slice(4)
+  return root + rest
 }
 
-// A chord token ("Cmaj7", "C/E", "ii7", "bVII", 4) → voicing, or null if it isn't a chord.
-export function buildChord(
-  token: string,
-  key?: Key | null,
-  octave = 3,
-  degrees = false,
-): Voiced | null {
+// A chord token ("Cmaj7", "C/E", "ii7", "bvii") → voicing, or null if it isn't a chord.
+export function buildChord(token: string, key?: Key | null, octave = 3): Voiced | null {
   if (!token) return null
   const [main, bassStr, extra] = chordParts(token)
   if (extra !== undefined) return null
   let symbol: string | null
   let fromKey: number | null = null // a numeral's root, in semitones up from the key's root
   const numeral = ROMAN_RE.exec(main)
-  // A digit is only a chord in a chart: anywhere else it's a number
-  const digit =
-    degrees && DEGREE_CHORD_RE.test(main) ? degreeChord(main, key || parseKey("C")!) : null
-  if (digit) {
-    key = key || parseKey("C")!
-    symbol = digit.symbol
-    fromKey = digit.fromKey
-  } else if (numeral) {
+  if (numeral) {
     key = key || parseKey("C")!
     symbol = romanToSymbol(main, key)
     fromKey = degreeSemitones(DEGREE[numeral[2].toLowerCase()] + 1, numeral[1], key.scale)

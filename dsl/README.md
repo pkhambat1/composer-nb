@@ -161,8 +161,8 @@ Every number is arithmetic (`set tempo 60*2`, `(1+2) bars groove`), so `*` and `
 `with` gives settings to a block only, with commas between them, and puts back what was set at its `}`: `with key E, mode minor { ... }`. At the top of a cell its block holds statements, such as `play`. In a play or a pattern its block plays together with the other lines, and in brackets it's one part in order, so the bass can sit an octave below the chart, or one chart can play in two keys:
 
 ```
-chords walk = i ii|III iv|v VI|VII i
-chords prog = I vi|IV V
+chords walk = i ii|iii iv|v vi|vii i
+chords prog = i vi|iv v
 
 with key E, mode minor {
   play {
@@ -228,7 +228,7 @@ Chords are written by the bar, with `chords` in front:
 play guitar: chords C - - G|Am - F G|%|F - _ -
 ```
 
-`|` is a bar line, and the chords in a bar split it evenly. `-` holds the chord before for another slot, `_` is silence and `%` repeats the bar before. Chords can be names (`Cmaj7`, `F#m`, `Bb7`, `C6/9`, `C/E`) or Roman numerals that follow `key` (`I vi IV V7`). `of` counts a numeral from another one's root, so in C, `V7 of V` is `D7`, and a chain takes brackets: `V7 of (V of V)` is `A7`.
+`|` is a bar line, and the chords in a bar split it evenly. `-` holds the chord before for another slot, `_` is silence and `%` repeats the bar before. Chords can be names (`Cmaj7`, `F#m`, `Bb7`, `C6/9`, `C/E`) or Roman numerals that follow `key` (`i vi iv v7`). `of` counts a numeral from another one's root, so in C, `v7 of v` is `D7`, and a chain takes brackets: `v7 of (v of v)` is `A7`.
 
 ### Drums
 

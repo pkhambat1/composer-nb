@@ -55,7 +55,7 @@ describe("parseChain", () => {
   })
 
   it("matches parseSource for a single cell", () => {
-    const src = "set key A\nplay piano: chords I V"
+    const src = "set key A\nplay piano: chords i v"
     expect(labels(parseChain([src]))).toEqual(labels(parseSource(src)))
   })
 })

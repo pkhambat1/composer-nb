@@ -433,21 +433,21 @@ drums:
   22.1429 inst=snare art=cross lane=snare.cross kit=rock tick=2976 vel=0.7 line=4
   22.5 inst=hat art=hit lane=hat kit=rock tick=3024 vel=0.7 line=3
 chords:
-  0 tick=0 ticks=192 chord={"input":"1","label":"D","rootPc":2,"bassMidi":38,"notesMidi":[50,54,57],"noteNames":["D3","F#3","A3"],"bassName":"D2"} label=D instrument=piano transpose=0 line=2 secDur=1.4286
-  1.4286 tick=192 ticks=192 chord={"input":"2","label":"E","rootPc":4,"bassMidi":40,"notesMidi":[52,56,59],"noteNames":["E3","G#3","B3"],"bassName":"E2"} label=E instrument=piano transpose=0 line=2 secDur=1.4286
-  2.8571 tick=384 ticks=192 chord={"input":"3","label":"F#m","rootPc":6,"bassMidi":42,"notesMidi":[54,57,61],"noteNames":["F#3","A3","C#4"],"bassName":"F#2"} label=F#m instrument=piano transpose=0 line=2 secDur=1.4286
-  4.2857 tick=576 ticks=192 chord={"input":"4","label":"G#dim","rootPc":8,"bassMidi":44,"notesMidi":[56,59,62],"noteNames":["G#3","B3","D4"],"bassName":"G#2"} label=G#dim instrument=piano transpose=0 line=2 secDur=1.4286
-  5.7143 tick=768 ticks=192 chord={"input":"5","label":"A","rootPc":9,"bassMidi":45,"notesMidi":[57,61,64],"noteNames":["A3","C#4","E4"],"bassName":"A2"} label=A instrument=piano transpose=0 line=2 secDur=1.4286
-  7.1429 tick=960 ticks=192 chord={"input":"6","label":"Bm","rootPc":11,"bassMidi":47,"notesMidi":[59,62,66],"noteNames":["B3","D4","F#4"],"bassName":"B2"} label=Bm instrument=piano transpose=0 line=2 secDur=1.4286
-  8.5714 tick=1152 ticks=192 chord={"input":"7","label":"C#m","rootPc":1,"bassMidi":49,"notesMidi":[61,64,68],"noteNames":["C#4","E4","G#4"],"bassName":"C#3"} label=C#m instrument=piano transpose=0 line=2 secDur=1.4286
-  10 tick=1344 ticks=192 chord={"input":"1","label":"D","rootPc":2,"bassMidi":38,"notesMidi":[50,54,57],"noteNames":["D3","F#3","A3"],"bassName":"D2"} label=D instrument=piano transpose=0 line=2 secDur=1.4286
-  11.4286 tick=1536 ticks=192 chord={"input":"7","label":"C#m","rootPc":1,"bassMidi":49,"notesMidi":[61,64,68],"noteNames":["C#4","E4","G#4"],"bassName":"C#3"} label=C#m instrument=piano transpose=0 line=2 secDur=1.4286
-  12.8571 tick=1728 ticks=192 chord={"input":"6","label":"Bm","rootPc":11,"bassMidi":47,"notesMidi":[59,62,66],"noteNames":["B3","D4","F#4"],"bassName":"B2"} label=Bm instrument=piano transpose=0 line=2 secDur=1.4286
-  14.2857 tick=1920 ticks=192 chord={"input":"5","label":"A","rootPc":9,"bassMidi":45,"notesMidi":[57,61,64],"noteNames":["A3","C#4","E4"],"bassName":"A2"} label=A instrument=piano transpose=0 line=2 secDur=1.4286
-  15.7143 tick=2112 ticks=192 chord={"input":"4","label":"G#dim","rootPc":8,"bassMidi":44,"notesMidi":[56,59,62],"noteNames":["G#3","B3","D4"],"bassName":"G#2"} label=G#dim instrument=piano transpose=0 line=2 secDur=1.4286
-  17.1429 tick=2304 ticks=192 chord={"input":"3","label":"F#m","rootPc":6,"bassMidi":42,"notesMidi":[54,57,61],"noteNames":["F#3","A3","C#4"],"bassName":"F#2"} label=F#m instrument=piano transpose=0 line=2 secDur=1.4286
-  18.5714 tick=2496 ticks=192 chord={"input":"2","label":"E","rootPc":4,"bassMidi":40,"notesMidi":[52,56,59],"noteNames":["E3","G#3","B3"],"bassName":"E2"} label=E instrument=piano transpose=0 line=2 secDur=1.4286
-  20 tick=2688 ticks=384 chord={"input":"1","label":"D","rootPc":2,"bassMidi":38,"notesMidi":[50,54,57],"noteNames":["D3","F#3","A3"],"bassName":"D2"} label=D instrument=piano transpose=0 line=2 secDur=2.8571
+  0 tick=0 ticks=192 chord={"input":"i","label":"D","rootPc":2,"bassMidi":38,"notesMidi":[50,54,57],"noteNames":["D3","F#3","A3"],"bassName":"D2"} label=D instrument=piano transpose=0 line=2 secDur=1.4286
+  1.4286 tick=192 ticks=192 chord={"input":"ii","label":"E","rootPc":4,"bassMidi":40,"notesMidi":[52,56,59],"noteNames":["E3","G#3","B3"],"bassName":"E2"} label=E instrument=piano transpose=0 line=2 secDur=1.4286
+  2.8571 tick=384 ticks=192 chord={"input":"iii","label":"F#m","rootPc":6,"bassMidi":42,"notesMidi":[54,57,61],"noteNames":["F#3","A3","C#4"],"bassName":"F#2"} label=F#m instrument=piano transpose=0 line=2 secDur=1.4286
+  4.2857 tick=576 ticks=192 chord={"input":"iv","label":"G#dim","rootPc":8,"bassMidi":44,"notesMidi":[56,59,62],"noteNames":["G#3","B3","D4"],"bassName":"G#2"} label=G#dim instrument=piano transpose=0 line=2 secDur=1.4286
+  5.7143 tick=768 ticks=192 chord={"input":"v","label":"A","rootPc":9,"bassMidi":45,"notesMidi":[57,61,64],"noteNames":["A3","C#4","E4"],"bassName":"A2"} label=A instrument=piano transpose=0 line=2 secDur=1.4286
+  7.1429 tick=960 ticks=192 chord={"input":"vi","label":"Bm","rootPc":11,"bassMidi":47,"notesMidi":[59,62,66],"noteNames":["B3","D4","F#4"],"bassName":"B2"} label=Bm instrument=piano transpose=0 line=2 secDur=1.4286
+  8.5714 tick=1152 ticks=192 chord={"input":"vii","label":"C#m","rootPc":1,"bassMidi":49,"notesMidi":[61,64,68],"noteNames":["C#4","E4","G#4"],"bassName":"C#3"} label=C#m instrument=piano transpose=0 line=2 secDur=1.4286
+  10 tick=1344 ticks=192 chord={"input":"i","label":"D","rootPc":2,"bassMidi":38,"notesMidi":[50,54,57],"noteNames":["D3","F#3","A3"],"bassName":"D2"} label=D instrument=piano transpose=0 line=2 secDur=1.4286
+  11.4286 tick=1536 ticks=192 chord={"input":"vii","label":"C#m","rootPc":1,"bassMidi":49,"notesMidi":[61,64,68],"noteNames":["C#4","E4","G#4"],"bassName":"C#3"} label=C#m instrument=piano transpose=0 line=2 secDur=1.4286
+  12.8571 tick=1728 ticks=192 chord={"input":"vi","label":"Bm","rootPc":11,"bassMidi":47,"notesMidi":[59,62,66],"noteNames":["B3","D4","F#4"],"bassName":"B2"} label=Bm instrument=piano transpose=0 line=2 secDur=1.4286
+  14.2857 tick=1920 ticks=192 chord={"input":"v","label":"A","rootPc":9,"bassMidi":45,"notesMidi":[57,61,64],"noteNames":["A3","C#4","E4"],"bassName":"A2"} label=A instrument=piano transpose=0 line=2 secDur=1.4286
+  15.7143 tick=2112 ticks=192 chord={"input":"iv","label":"G#dim","rootPc":8,"bassMidi":44,"notesMidi":[56,59,62],"noteNames":["G#3","B3","D4"],"bassName":"G#2"} label=G#dim instrument=piano transpose=0 line=2 secDur=1.4286
+  17.1429 tick=2304 ticks=192 chord={"input":"iii","label":"F#m","rootPc":6,"bassMidi":42,"notesMidi":[54,57,61],"noteNames":["F#3","A3","C#4"],"bassName":"F#2"} label=F#m instrument=piano transpose=0 line=2 secDur=1.4286
+  18.5714 tick=2496 ticks=192 chord={"input":"ii","label":"E","rootPc":4,"bassMidi":40,"notesMidi":[52,56,59],"noteNames":["E3","G#3","B3"],"bassName":"E2"} label=E instrument=piano transpose=0 line=2 secDur=1.4286
+  20 tick=2688 ticks=384 chord={"input":"i","label":"D","rootPc":2,"bassMidi":38,"notesMidi":[50,54,57],"noteNames":["D3","F#3","A3"],"bassName":"D2"} label=D instrument=piano transpose=0 line=2 secDur=2.8571
 
 ## Mixolydian walk
 errors: none
@@ -553,21 +553,21 @@ drums:
   17.8846 inst=snare art=cross lane=snare.cross kit=rock tick=2976 vel=0.7 line=4
   18.1731 inst=hat art=hit lane=hat kit=rock tick=3024 vel=0.7 line=3
 chords:
-  0 tick=0 ticks=192 chord={"input":"1","label":"D","rootPc":2,"bassMidi":38,"notesMidi":[50,54,57],"noteNames":["D3","F#3","A3"],"bassName":"D2"} label=D instrument=piano transpose=0 line=2 secDur=1.1538
-  1.1538 tick=192 ticks=192 chord={"input":"2","label":"Em","rootPc":4,"bassMidi":40,"notesMidi":[52,55,59],"noteNames":["E3","G3","B3"],"bassName":"E2"} label=Em instrument=piano transpose=0 line=2 secDur=1.1538
-  2.3077 tick=384 ticks=192 chord={"input":"3","label":"F#dim","rootPc":6,"bassMidi":42,"notesMidi":[54,57,60],"noteNames":["F#3","A3","C4"],"bassName":"F#2"} label=F#dim instrument=piano transpose=0 line=2 secDur=1.1538
-  3.4615 tick=576 ticks=192 chord={"input":"4","label":"G","rootPc":7,"bassMidi":43,"notesMidi":[55,59,62],"noteNames":["G3","B3","D4"],"bassName":"G2"} label=G instrument=piano transpose=0 line=2 secDur=1.1538
-  4.6154 tick=768 ticks=192 chord={"input":"5","label":"Am","rootPc":9,"bassMidi":45,"notesMidi":[57,60,64],"noteNames":["A3","C4","E4"],"bassName":"A2"} label=Am instrument=piano transpose=0 line=2 secDur=1.1538
-  5.7692 tick=960 ticks=192 chord={"input":"6","label":"Bm","rootPc":11,"bassMidi":47,"notesMidi":[59,62,66],"noteNames":["B3","D4","F#4"],"bassName":"B2"} label=Bm instrument=piano transpose=0 line=2 secDur=1.1538
-  6.9231 tick=1152 ticks=192 chord={"input":"7","label":"C","rootPc":0,"bassMidi":48,"notesMidi":[60,64,67],"noteNames":["C4","E4","G4"],"bassName":"C3"} label=C instrument=piano transpose=0 line=2 secDur=1.1538
-  8.0769 tick=1344 ticks=192 chord={"input":"1","label":"D","rootPc":2,"bassMidi":38,"notesMidi":[50,54,57],"noteNames":["D3","F#3","A3"],"bassName":"D2"} label=D instrument=piano transpose=0 line=2 secDur=1.1538
-  9.2308 tick=1536 ticks=192 chord={"input":"7","label":"C","rootPc":0,"bassMidi":48,"notesMidi":[60,64,67],"noteNames":["C4","E4","G4"],"bassName":"C3"} label=C instrument=piano transpose=0 line=2 secDur=1.1538
-  10.3846 tick=1728 ticks=192 chord={"input":"6","label":"Bm","rootPc":11,"bassMidi":47,"notesMidi":[59,62,66],"noteNames":["B3","D4","F#4"],"bassName":"B2"} label=Bm instrument=piano transpose=0 line=2 secDur=1.1538
-  11.5385 tick=1920 ticks=192 chord={"input":"5","label":"Am","rootPc":9,"bassMidi":45,"notesMidi":[57,60,64],"noteNames":["A3","C4","E4"],"bassName":"A2"} label=Am instrument=piano transpose=0 line=2 secDur=1.1538
-  12.6923 tick=2112 ticks=192 chord={"input":"4","label":"G","rootPc":7,"bassMidi":43,"notesMidi":[55,59,62],"noteNames":["G3","B3","D4"],"bassName":"G2"} label=G instrument=piano transpose=0 line=2 secDur=1.1538
-  13.8462 tick=2304 ticks=192 chord={"input":"3","label":"F#dim","rootPc":6,"bassMidi":42,"notesMidi":[54,57,60],"noteNames":["F#3","A3","C4"],"bassName":"F#2"} label=F#dim instrument=piano transpose=0 line=2 secDur=1.1538
-  15 tick=2496 ticks=192 chord={"input":"2","label":"Em","rootPc":4,"bassMidi":40,"notesMidi":[52,55,59],"noteNames":["E3","G3","B3"],"bassName":"E2"} label=Em instrument=piano transpose=0 line=2 secDur=1.1538
-  16.1538 tick=2688 ticks=384 chord={"input":"1","label":"D","rootPc":2,"bassMidi":38,"notesMidi":[50,54,57],"noteNames":["D3","F#3","A3"],"bassName":"D2"} label=D instrument=piano transpose=0 line=2 secDur=2.3077
+  0 tick=0 ticks=192 chord={"input":"i","label":"D","rootPc":2,"bassMidi":38,"notesMidi":[50,54,57],"noteNames":["D3","F#3","A3"],"bassName":"D2"} label=D instrument=piano transpose=0 line=2 secDur=1.1538
+  1.1538 tick=192 ticks=192 chord={"input":"ii","label":"Em","rootPc":4,"bassMidi":40,"notesMidi":[52,55,59],"noteNames":["E3","G3","B3"],"bassName":"E2"} label=Em instrument=piano transpose=0 line=2 secDur=1.1538
+  2.3077 tick=384 ticks=192 chord={"input":"iii","label":"F#dim","rootPc":6,"bassMidi":42,"notesMidi":[54,57,60],"noteNames":["F#3","A3","C4"],"bassName":"F#2"} label=F#dim instrument=piano transpose=0 line=2 secDur=1.1538
+  3.4615 tick=576 ticks=192 chord={"input":"iv","label":"G","rootPc":7,"bassMidi":43,"notesMidi":[55,59,62],"noteNames":["G3","B3","D4"],"bassName":"G2"} label=G instrument=piano transpose=0 line=2 secDur=1.1538
+  4.6154 tick=768 ticks=192 chord={"input":"v","label":"Am","rootPc":9,"bassMidi":45,"notesMidi":[57,60,64],"noteNames":["A3","C4","E4"],"bassName":"A2"} label=Am instrument=piano transpose=0 line=2 secDur=1.1538
+  5.7692 tick=960 ticks=192 chord={"input":"vi","label":"Bm","rootPc":11,"bassMidi":47,"notesMidi":[59,62,66],"noteNames":["B3","D4","F#4"],"bassName":"B2"} label=Bm instrument=piano transpose=0 line=2 secDur=1.1538
+  6.9231 tick=1152 ticks=192 chord={"input":"vii","label":"C","rootPc":0,"bassMidi":48,"notesMidi":[60,64,67],"noteNames":["C4","E4","G4"],"bassName":"C3"} label=C instrument=piano transpose=0 line=2 secDur=1.1538
+  8.0769 tick=1344 ticks=192 chord={"input":"i","label":"D","rootPc":2,"bassMidi":38,"notesMidi":[50,54,57],"noteNames":["D3","F#3","A3"],"bassName":"D2"} label=D instrument=piano transpose=0 line=2 secDur=1.1538
+  9.2308 tick=1536 ticks=192 chord={"input":"vii","label":"C","rootPc":0,"bassMidi":48,"notesMidi":[60,64,67],"noteNames":["C4","E4","G4"],"bassName":"C3"} label=C instrument=piano transpose=0 line=2 secDur=1.1538
+  10.3846 tick=1728 ticks=192 chord={"input":"vi","label":"Bm","rootPc":11,"bassMidi":47,"notesMidi":[59,62,66],"noteNames":["B3","D4","F#4"],"bassName":"B2"} label=Bm instrument=piano transpose=0 line=2 secDur=1.1538
+  11.5385 tick=1920 ticks=192 chord={"input":"v","label":"Am","rootPc":9,"bassMidi":45,"notesMidi":[57,60,64],"noteNames":["A3","C4","E4"],"bassName":"A2"} label=Am instrument=piano transpose=0 line=2 secDur=1.1538
+  12.6923 tick=2112 ticks=192 chord={"input":"iv","label":"G","rootPc":7,"bassMidi":43,"notesMidi":[55,59,62],"noteNames":["G3","B3","D4"],"bassName":"G2"} label=G instrument=piano transpose=0 line=2 secDur=1.1538
+  13.8462 tick=2304 ticks=192 chord={"input":"iii","label":"F#dim","rootPc":6,"bassMidi":42,"notesMidi":[54,57,60],"noteNames":["F#3","A3","C4"],"bassName":"F#2"} label=F#dim instrument=piano transpose=0 line=2 secDur=1.1538
+  15 tick=2496 ticks=192 chord={"input":"ii","label":"Em","rootPc":4,"bassMidi":40,"notesMidi":[52,55,59],"noteNames":["E3","G3","B3"],"bassName":"E2"} label=Em instrument=piano transpose=0 line=2 secDur=1.1538
+  16.1538 tick=2688 ticks=384 chord={"input":"i","label":"D","rootPc":2,"bassMidi":38,"notesMidi":[50,54,57],"noteNames":["D3","F#3","A3"],"bassName":"D2"} label=D instrument=piano transpose=0 line=2 secDur=2.3077
 
 ## Dorian walk
 errors: none
@@ -673,21 +673,21 @@ drums:
   19.375 inst=snare art=cross lane=snare.cross kit=rock tick=2976 vel=0.7 line=4
   19.6875 inst=hat art=hit lane=hat kit=rock tick=3024 vel=0.7 line=3
 chords:
-  0 tick=0 ticks=192 chord={"input":"1","label":"Dm","rootPc":2,"bassMidi":38,"notesMidi":[50,53,57],"noteNames":["D3","F3","A3"],"bassName":"D2"} label=Dm instrument=piano transpose=0 line=2 secDur=1.25
-  1.25 tick=192 ticks=192 chord={"input":"2","label":"Em","rootPc":4,"bassMidi":40,"notesMidi":[52,55,59],"noteNames":["E3","G3","B3"],"bassName":"E2"} label=Em instrument=piano transpose=0 line=2 secDur=1.25
-  2.5 tick=384 ticks=192 chord={"input":"3","label":"F","rootPc":5,"bassMidi":41,"notesMidi":[53,57,60],"noteNames":["F3","A3","C4"],"bassName":"F2"} label=F instrument=piano transpose=0 line=2 secDur=1.25
-  3.75 tick=576 ticks=192 chord={"input":"4","label":"G","rootPc":7,"bassMidi":43,"notesMidi":[55,59,62],"noteNames":["G3","B3","D4"],"bassName":"G2"} label=G instrument=piano transpose=0 line=2 secDur=1.25
-  5 tick=768 ticks=192 chord={"input":"5","label":"Am","rootPc":9,"bassMidi":45,"notesMidi":[57,60,64],"noteNames":["A3","C4","E4"],"bassName":"A2"} label=Am instrument=piano transpose=0 line=2 secDur=1.25
-  6.25 tick=960 ticks=192 chord={"input":"6","label":"Bdim","rootPc":11,"bassMidi":47,"notesMidi":[59,62,65],"noteNames":["B3","D4","F4"],"bassName":"B2"} label=Bdim instrument=piano transpose=0 line=2 secDur=1.25
-  7.5 tick=1152 ticks=192 chord={"input":"7","label":"C","rootPc":0,"bassMidi":48,"notesMidi":[60,64,67],"noteNames":["C4","E4","G4"],"bassName":"C3"} label=C instrument=piano transpose=0 line=2 secDur=1.25
-  8.75 tick=1344 ticks=192 chord={"input":"1","label":"Dm","rootPc":2,"bassMidi":38,"notesMidi":[50,53,57],"noteNames":["D3","F3","A3"],"bassName":"D2"} label=Dm instrument=piano transpose=0 line=2 secDur=1.25
-  10 tick=1536 ticks=192 chord={"input":"7","label":"C","rootPc":0,"bassMidi":48,"notesMidi":[60,64,67],"noteNames":["C4","E4","G4"],"bassName":"C3"} label=C instrument=piano transpose=0 line=2 secDur=1.25
-  11.25 tick=1728 ticks=192 chord={"input":"6","label":"Bdim","rootPc":11,"bassMidi":47,"notesMidi":[59,62,65],"noteNames":["B3","D4","F4"],"bassName":"B2"} label=Bdim instrument=piano transpose=0 line=2 secDur=1.25
-  12.5 tick=1920 ticks=192 chord={"input":"5","label":"Am","rootPc":9,"bassMidi":45,"notesMidi":[57,60,64],"noteNames":["A3","C4","E4"],"bassName":"A2"} label=Am instrument=piano transpose=0 line=2 secDur=1.25
-  13.75 tick=2112 ticks=192 chord={"input":"4","label":"G","rootPc":7,"bassMidi":43,"notesMidi":[55,59,62],"noteNames":["G3","B3","D4"],"bassName":"G2"} label=G instrument=piano transpose=0 line=2 secDur=1.25
-  15 tick=2304 ticks=192 chord={"input":"3","label":"F","rootPc":5,"bassMidi":41,"notesMidi":[53,57,60],"noteNames":["F3","A3","C4"],"bassName":"F2"} label=F instrument=piano transpose=0 line=2 secDur=1.25
-  16.25 tick=2496 ticks=192 chord={"input":"2","label":"Em","rootPc":4,"bassMidi":40,"notesMidi":[52,55,59],"noteNames":["E3","G3","B3"],"bassName":"E2"} label=Em instrument=piano transpose=0 line=2 secDur=1.25
-  17.5 tick=2688 ticks=384 chord={"input":"1","label":"Dm","rootPc":2,"bassMidi":38,"notesMidi":[50,53,57],"noteNames":["D3","F3","A3"],"bassName":"D2"} label=Dm instrument=piano transpose=0 line=2 secDur=2.5
+  0 tick=0 ticks=192 chord={"input":"i","label":"Dm","rootPc":2,"bassMidi":38,"notesMidi":[50,53,57],"noteNames":["D3","F3","A3"],"bassName":"D2"} label=Dm instrument=piano transpose=0 line=2 secDur=1.25
+  1.25 tick=192 ticks=192 chord={"input":"ii","label":"Em","rootPc":4,"bassMidi":40,"notesMidi":[52,55,59],"noteNames":["E3","G3","B3"],"bassName":"E2"} label=Em instrument=piano transpose=0 line=2 secDur=1.25
+  2.5 tick=384 ticks=192 chord={"input":"iii","label":"F","rootPc":5,"bassMidi":41,"notesMidi":[53,57,60],"noteNames":["F3","A3","C4"],"bassName":"F2"} label=F instrument=piano transpose=0 line=2 secDur=1.25
+  3.75 tick=576 ticks=192 chord={"input":"iv","label":"G","rootPc":7,"bassMidi":43,"notesMidi":[55,59,62],"noteNames":["G3","B3","D4"],"bassName":"G2"} label=G instrument=piano transpose=0 line=2 secDur=1.25
+  5 tick=768 ticks=192 chord={"input":"v","label":"Am","rootPc":9,"bassMidi":45,"notesMidi":[57,60,64],"noteNames":["A3","C4","E4"],"bassName":"A2"} label=Am instrument=piano transpose=0 line=2 secDur=1.25
+  6.25 tick=960 ticks=192 chord={"input":"vi","label":"Bdim","rootPc":11,"bassMidi":47,"notesMidi":[59,62,65],"noteNames":["B3","D4","F4"],"bassName":"B2"} label=Bdim instrument=piano transpose=0 line=2 secDur=1.25
+  7.5 tick=1152 ticks=192 chord={"input":"vii","label":"C","rootPc":0,"bassMidi":48,"notesMidi":[60,64,67],"noteNames":["C4","E4","G4"],"bassName":"C3"} label=C instrument=piano transpose=0 line=2 secDur=1.25
+  8.75 tick=1344 ticks=192 chord={"input":"i","label":"Dm","rootPc":2,"bassMidi":38,"notesMidi":[50,53,57],"noteNames":["D3","F3","A3"],"bassName":"D2"} label=Dm instrument=piano transpose=0 line=2 secDur=1.25
+  10 tick=1536 ticks=192 chord={"input":"vii","label":"C","rootPc":0,"bassMidi":48,"notesMidi":[60,64,67],"noteNames":["C4","E4","G4"],"bassName":"C3"} label=C instrument=piano transpose=0 line=2 secDur=1.25
+  11.25 tick=1728 ticks=192 chord={"input":"vi","label":"Bdim","rootPc":11,"bassMidi":47,"notesMidi":[59,62,65],"noteNames":["B3","D4","F4"],"bassName":"B2"} label=Bdim instrument=piano transpose=0 line=2 secDur=1.25
+  12.5 tick=1920 ticks=192 chord={"input":"v","label":"Am","rootPc":9,"bassMidi":45,"notesMidi":[57,60,64],"noteNames":["A3","C4","E4"],"bassName":"A2"} label=Am instrument=piano transpose=0 line=2 secDur=1.25
+  13.75 tick=2112 ticks=192 chord={"input":"iv","label":"G","rootPc":7,"bassMidi":43,"notesMidi":[55,59,62],"noteNames":["G3","B3","D4"],"bassName":"G2"} label=G instrument=piano transpose=0 line=2 secDur=1.25
+  15 tick=2304 ticks=192 chord={"input":"iii","label":"F","rootPc":5,"bassMidi":41,"notesMidi":[53,57,60],"noteNames":["F3","A3","C4"],"bassName":"F2"} label=F instrument=piano transpose=0 line=2 secDur=1.25
+  16.25 tick=2496 ticks=192 chord={"input":"ii","label":"Em","rootPc":4,"bassMidi":40,"notesMidi":[52,55,59],"noteNames":["E3","G3","B3"],"bassName":"E2"} label=Em instrument=piano transpose=0 line=2 secDur=1.25
+  17.5 tick=2688 ticks=384 chord={"input":"i","label":"Dm","rootPc":2,"bassMidi":38,"notesMidi":[50,53,57],"noteNames":["D3","F3","A3"],"bassName":"D2"} label=Dm instrument=piano transpose=0 line=2 secDur=2.5
 
 ## Minor walk
 errors: none
@@ -793,21 +793,21 @@ drums:
   20.2174 inst=snare art=cross lane=snare.cross kit=rock tick=2976 vel=0.7 line=4
   20.5435 inst=hat art=hit lane=hat kit=rock tick=3024 vel=0.7 line=3
 chords:
-  0 tick=0 ticks=192 chord={"input":"1","label":"Dm","rootPc":2,"bassMidi":38,"notesMidi":[50,53,57],"noteNames":["D3","F3","A3"],"bassName":"D2"} label=Dm instrument=piano transpose=0 line=2 secDur=1.3043
-  1.3043 tick=192 ticks=192 chord={"input":"2","label":"Edim","rootPc":4,"bassMidi":40,"notesMidi":[52,55,58],"noteNames":["E3","G3","Bb3"],"bassName":"E2"} label=Edim instrument=piano transpose=0 line=2 secDur=1.3043
-  2.6087 tick=384 ticks=192 chord={"input":"3","label":"F","rootPc":5,"bassMidi":41,"notesMidi":[53,57,60],"noteNames":["F3","A3","C4"],"bassName":"F2"} label=F instrument=piano transpose=0 line=2 secDur=1.3043
-  3.913 tick=576 ticks=192 chord={"input":"4","label":"Gm","rootPc":7,"bassMidi":43,"notesMidi":[55,58,62],"noteNames":["G3","Bb3","D4"],"bassName":"G2"} label=Gm instrument=piano transpose=0 line=2 secDur=1.3043
-  5.2174 tick=768 ticks=192 chord={"input":"5","label":"Am","rootPc":9,"bassMidi":45,"notesMidi":[57,60,64],"noteNames":["A3","C4","E4"],"bassName":"A2"} label=Am instrument=piano transpose=0 line=2 secDur=1.3043
-  6.5217 tick=960 ticks=192 chord={"input":"6","label":"Bb","rootPc":10,"bassMidi":46,"notesMidi":[58,62,65],"noteNames":["Bb3","D4","F4"],"bassName":"Bb2"} label=Bb instrument=piano transpose=0 line=2 secDur=1.3043
-  7.8261 tick=1152 ticks=192 chord={"input":"7","label":"C","rootPc":0,"bassMidi":48,"notesMidi":[60,64,67],"noteNames":["C4","E4","G4"],"bassName":"C3"} label=C instrument=piano transpose=0 line=2 secDur=1.3043
-  9.1304 tick=1344 ticks=192 chord={"input":"1","label":"Dm","rootPc":2,"bassMidi":38,"notesMidi":[50,53,57],"noteNames":["D3","F3","A3"],"bassName":"D2"} label=Dm instrument=piano transpose=0 line=2 secDur=1.3043
-  10.4348 tick=1536 ticks=192 chord={"input":"7","label":"C","rootPc":0,"bassMidi":48,"notesMidi":[60,64,67],"noteNames":["C4","E4","G4"],"bassName":"C3"} label=C instrument=piano transpose=0 line=2 secDur=1.3043
-  11.7391 tick=1728 ticks=192 chord={"input":"6","label":"Bb","rootPc":10,"bassMidi":46,"notesMidi":[58,62,65],"noteNames":["Bb3","D4","F4"],"bassName":"Bb2"} label=Bb instrument=piano transpose=0 line=2 secDur=1.3043
-  13.0435 tick=1920 ticks=192 chord={"input":"5","label":"Am","rootPc":9,"bassMidi":45,"notesMidi":[57,60,64],"noteNames":["A3","C4","E4"],"bassName":"A2"} label=Am instrument=piano transpose=0 line=2 secDur=1.3043
-  14.3478 tick=2112 ticks=192 chord={"input":"4","label":"Gm","rootPc":7,"bassMidi":43,"notesMidi":[55,58,62],"noteNames":["G3","Bb3","D4"],"bassName":"G2"} label=Gm instrument=piano transpose=0 line=2 secDur=1.3043
-  15.6522 tick=2304 ticks=192 chord={"input":"3","label":"F","rootPc":5,"bassMidi":41,"notesMidi":[53,57,60],"noteNames":["F3","A3","C4"],"bassName":"F2"} label=F instrument=piano transpose=0 line=2 secDur=1.3043
-  16.9565 tick=2496 ticks=192 chord={"input":"2","label":"Edim","rootPc":4,"bassMidi":40,"notesMidi":[52,55,58],"noteNames":["E3","G3","Bb3"],"bassName":"E2"} label=Edim instrument=piano transpose=0 line=2 secDur=1.3043
-  18.2609 tick=2688 ticks=384 chord={"input":"1","label":"Dm","rootPc":2,"bassMidi":38,"notesMidi":[50,53,57],"noteNames":["D3","F3","A3"],"bassName":"D2"} label=Dm instrument=piano transpose=0 line=2 secDur=2.6087
+  0 tick=0 ticks=192 chord={"input":"i","label":"Dm","rootPc":2,"bassMidi":38,"notesMidi":[50,53,57],"noteNames":["D3","F3","A3"],"bassName":"D2"} label=Dm instrument=piano transpose=0 line=2 secDur=1.3043
+  1.3043 tick=192 ticks=192 chord={"input":"ii","label":"Edim","rootPc":4,"bassMidi":40,"notesMidi":[52,55,58],"noteNames":["E3","G3","Bb3"],"bassName":"E2"} label=Edim instrument=piano transpose=0 line=2 secDur=1.3043
+  2.6087 tick=384 ticks=192 chord={"input":"iii","label":"F","rootPc":5,"bassMidi":41,"notesMidi":[53,57,60],"noteNames":["F3","A3","C4"],"bassName":"F2"} label=F instrument=piano transpose=0 line=2 secDur=1.3043
+  3.913 tick=576 ticks=192 chord={"input":"iv","label":"Gm","rootPc":7,"bassMidi":43,"notesMidi":[55,58,62],"noteNames":["G3","Bb3","D4"],"bassName":"G2"} label=Gm instrument=piano transpose=0 line=2 secDur=1.3043
+  5.2174 tick=768 ticks=192 chord={"input":"v","label":"Am","rootPc":9,"bassMidi":45,"notesMidi":[57,60,64],"noteNames":["A3","C4","E4"],"bassName":"A2"} label=Am instrument=piano transpose=0 line=2 secDur=1.3043
+  6.5217 tick=960 ticks=192 chord={"input":"vi","label":"Bb","rootPc":10,"bassMidi":46,"notesMidi":[58,62,65],"noteNames":["Bb3","D4","F4"],"bassName":"Bb2"} label=Bb instrument=piano transpose=0 line=2 secDur=1.3043
+  7.8261 tick=1152 ticks=192 chord={"input":"vii","label":"C","rootPc":0,"bassMidi":48,"notesMidi":[60,64,67],"noteNames":["C4","E4","G4"],"bassName":"C3"} label=C instrument=piano transpose=0 line=2 secDur=1.3043
+  9.1304 tick=1344 ticks=192 chord={"input":"i","label":"Dm","rootPc":2,"bassMidi":38,"notesMidi":[50,53,57],"noteNames":["D3","F3","A3"],"bassName":"D2"} label=Dm instrument=piano transpose=0 line=2 secDur=1.3043
+  10.4348 tick=1536 ticks=192 chord={"input":"vii","label":"C","rootPc":0,"bassMidi":48,"notesMidi":[60,64,67],"noteNames":["C4","E4","G4"],"bassName":"C3"} label=C instrument=piano transpose=0 line=2 secDur=1.3043
+  11.7391 tick=1728 ticks=192 chord={"input":"vi","label":"Bb","rootPc":10,"bassMidi":46,"notesMidi":[58,62,65],"noteNames":["Bb3","D4","F4"],"bassName":"Bb2"} label=Bb instrument=piano transpose=0 line=2 secDur=1.3043
+  13.0435 tick=1920 ticks=192 chord={"input":"v","label":"Am","rootPc":9,"bassMidi":45,"notesMidi":[57,60,64],"noteNames":["A3","C4","E4"],"bassName":"A2"} label=Am instrument=piano transpose=0 line=2 secDur=1.3043
+  14.3478 tick=2112 ticks=192 chord={"input":"iv","label":"Gm","rootPc":7,"bassMidi":43,"notesMidi":[55,58,62],"noteNames":["G3","Bb3","D4"],"bassName":"G2"} label=Gm instrument=piano transpose=0 line=2 secDur=1.3043
+  15.6522 tick=2304 ticks=192 chord={"input":"iii","label":"F","rootPc":5,"bassMidi":41,"notesMidi":[53,57,60],"noteNames":["F3","A3","C4"],"bassName":"F2"} label=F instrument=piano transpose=0 line=2 secDur=1.3043
+  16.9565 tick=2496 ticks=192 chord={"input":"ii","label":"Edim","rootPc":4,"bassMidi":40,"notesMidi":[52,55,58],"noteNames":["E3","G3","Bb3"],"bassName":"E2"} label=Edim instrument=piano transpose=0 line=2 secDur=1.3043
+  18.2609 tick=2688 ticks=384 chord={"input":"i","label":"Dm","rootPc":2,"bassMidi":38,"notesMidi":[50,53,57],"noteNames":["D3","F3","A3"],"bassName":"D2"} label=Dm instrument=piano transpose=0 line=2 secDur=2.6087
 
 ## Phrygian walk
 errors: none
@@ -913,21 +913,21 @@ drums:
   21.1364 inst=snare art=cross lane=snare.cross kit=rock tick=2976 vel=0.7 line=4
   21.4773 inst=hat art=hit lane=hat kit=rock tick=3024 vel=0.7 line=3
 chords:
-  0 tick=0 ticks=192 chord={"input":"1","label":"Dm","rootPc":2,"bassMidi":38,"notesMidi":[50,53,57],"noteNames":["D3","F3","A3"],"bassName":"D2"} label=Dm instrument=piano transpose=0 line=2 secDur=1.3636
-  1.3636 tick=192 ticks=192 chord={"input":"2","label":"Eb","rootPc":3,"bassMidi":39,"notesMidi":[51,55,58],"noteNames":["Eb3","G3","Bb3"],"bassName":"Eb2"} label=Eb instrument=piano transpose=0 line=2 secDur=1.3636
-  2.7273 tick=384 ticks=192 chord={"input":"3","label":"F","rootPc":5,"bassMidi":41,"notesMidi":[53,57,60],"noteNames":["F3","A3","C4"],"bassName":"F2"} label=F instrument=piano transpose=0 line=2 secDur=1.3636
-  4.0909 tick=576 ticks=192 chord={"input":"4","label":"Gm","rootPc":7,"bassMidi":43,"notesMidi":[55,58,62],"noteNames":["G3","Bb3","D4"],"bassName":"G2"} label=Gm instrument=piano transpose=0 line=2 secDur=1.3636
-  5.4545 tick=768 ticks=192 chord={"input":"5","label":"Adim","rootPc":9,"bassMidi":45,"notesMidi":[57,60,63],"noteNames":["A3","C4","Eb4"],"bassName":"A2"} label=Adim instrument=piano transpose=0 line=2 secDur=1.3636
-  6.8182 tick=960 ticks=192 chord={"input":"6","label":"Bb","rootPc":10,"bassMidi":46,"notesMidi":[58,62,65],"noteNames":["Bb3","D4","F4"],"bassName":"Bb2"} label=Bb instrument=piano transpose=0 line=2 secDur=1.3636
-  8.1818 tick=1152 ticks=192 chord={"input":"7","label":"Cm","rootPc":0,"bassMidi":48,"notesMidi":[60,63,67],"noteNames":["C4","Eb4","G4"],"bassName":"C3"} label=Cm instrument=piano transpose=0 line=2 secDur=1.3636
-  9.5455 tick=1344 ticks=192 chord={"input":"1","label":"Dm","rootPc":2,"bassMidi":38,"notesMidi":[50,53,57],"noteNames":["D3","F3","A3"],"bassName":"D2"} label=Dm instrument=piano transpose=0 line=2 secDur=1.3636
-  10.9091 tick=1536 ticks=192 chord={"input":"7","label":"Cm","rootPc":0,"bassMidi":48,"notesMidi":[60,63,67],"noteNames":["C4","Eb4","G4"],"bassName":"C3"} label=Cm instrument=piano transpose=0 line=2 secDur=1.3636
-  12.2727 tick=1728 ticks=192 chord={"input":"6","label":"Bb","rootPc":10,"bassMidi":46,"notesMidi":[58,62,65],"noteNames":["Bb3","D4","F4"],"bassName":"Bb2"} label=Bb instrument=piano transpose=0 line=2 secDur=1.3636
-  13.6364 tick=1920 ticks=192 chord={"input":"5","label":"Adim","rootPc":9,"bassMidi":45,"notesMidi":[57,60,63],"noteNames":["A3","C4","Eb4"],"bassName":"A2"} label=Adim instrument=piano transpose=0 line=2 secDur=1.3636
-  15 tick=2112 ticks=192 chord={"input":"4","label":"Gm","rootPc":7,"bassMidi":43,"notesMidi":[55,58,62],"noteNames":["G3","Bb3","D4"],"bassName":"G2"} label=Gm instrument=piano transpose=0 line=2 secDur=1.3636
-  16.3636 tick=2304 ticks=192 chord={"input":"3","label":"F","rootPc":5,"bassMidi":41,"notesMidi":[53,57,60],"noteNames":["F3","A3","C4"],"bassName":"F2"} label=F instrument=piano transpose=0 line=2 secDur=1.3636
-  17.7273 tick=2496 ticks=192 chord={"input":"2","label":"Eb","rootPc":3,"bassMidi":39,"notesMidi":[51,55,58],"noteNames":["Eb3","G3","Bb3"],"bassName":"Eb2"} label=Eb instrument=piano transpose=0 line=2 secDur=1.3636
-  19.0909 tick=2688 ticks=384 chord={"input":"1","label":"Dm","rootPc":2,"bassMidi":38,"notesMidi":[50,53,57],"noteNames":["D3","F3","A3"],"bassName":"D2"} label=Dm instrument=piano transpose=0 line=2 secDur=2.7273
+  0 tick=0 ticks=192 chord={"input":"i","label":"Dm","rootPc":2,"bassMidi":38,"notesMidi":[50,53,57],"noteNames":["D3","F3","A3"],"bassName":"D2"} label=Dm instrument=piano transpose=0 line=2 secDur=1.3636
+  1.3636 tick=192 ticks=192 chord={"input":"ii","label":"Eb","rootPc":3,"bassMidi":39,"notesMidi":[51,55,58],"noteNames":["Eb3","G3","Bb3"],"bassName":"Eb2"} label=Eb instrument=piano transpose=0 line=2 secDur=1.3636
+  2.7273 tick=384 ticks=192 chord={"input":"iii","label":"F","rootPc":5,"bassMidi":41,"notesMidi":[53,57,60],"noteNames":["F3","A3","C4"],"bassName":"F2"} label=F instrument=piano transpose=0 line=2 secDur=1.3636
+  4.0909 tick=576 ticks=192 chord={"input":"iv","label":"Gm","rootPc":7,"bassMidi":43,"notesMidi":[55,58,62],"noteNames":["G3","Bb3","D4"],"bassName":"G2"} label=Gm instrument=piano transpose=0 line=2 secDur=1.3636
+  5.4545 tick=768 ticks=192 chord={"input":"v","label":"Adim","rootPc":9,"bassMidi":45,"notesMidi":[57,60,63],"noteNames":["A3","C4","Eb4"],"bassName":"A2"} label=Adim instrument=piano transpose=0 line=2 secDur=1.3636
+  6.8182 tick=960 ticks=192 chord={"input":"vi","label":"Bb","rootPc":10,"bassMidi":46,"notesMidi":[58,62,65],"noteNames":["Bb3","D4","F4"],"bassName":"Bb2"} label=Bb instrument=piano transpose=0 line=2 secDur=1.3636
+  8.1818 tick=1152 ticks=192 chord={"input":"vii","label":"Cm","rootPc":0,"bassMidi":48,"notesMidi":[60,63,67],"noteNames":["C4","Eb4","G4"],"bassName":"C3"} label=Cm instrument=piano transpose=0 line=2 secDur=1.3636
+  9.5455 tick=1344 ticks=192 chord={"input":"i","label":"Dm","rootPc":2,"bassMidi":38,"notesMidi":[50,53,57],"noteNames":["D3","F3","A3"],"bassName":"D2"} label=Dm instrument=piano transpose=0 line=2 secDur=1.3636
+  10.9091 tick=1536 ticks=192 chord={"input":"vii","label":"Cm","rootPc":0,"bassMidi":48,"notesMidi":[60,63,67],"noteNames":["C4","Eb4","G4"],"bassName":"C3"} label=Cm instrument=piano transpose=0 line=2 secDur=1.3636
+  12.2727 tick=1728 ticks=192 chord={"input":"vi","label":"Bb","rootPc":10,"bassMidi":46,"notesMidi":[58,62,65],"noteNames":["Bb3","D4","F4"],"bassName":"Bb2"} label=Bb instrument=piano transpose=0 line=2 secDur=1.3636
+  13.6364 tick=1920 ticks=192 chord={"input":"v","label":"Adim","rootPc":9,"bassMidi":45,"notesMidi":[57,60,63],"noteNames":["A3","C4","Eb4"],"bassName":"A2"} label=Adim instrument=piano transpose=0 line=2 secDur=1.3636
+  15 tick=2112 ticks=192 chord={"input":"iv","label":"Gm","rootPc":7,"bassMidi":43,"notesMidi":[55,58,62],"noteNames":["G3","Bb3","D4"],"bassName":"G2"} label=Gm instrument=piano transpose=0 line=2 secDur=1.3636
+  16.3636 tick=2304 ticks=192 chord={"input":"iii","label":"F","rootPc":5,"bassMidi":41,"notesMidi":[53,57,60],"noteNames":["F3","A3","C4"],"bassName":"F2"} label=F instrument=piano transpose=0 line=2 secDur=1.3636
+  17.7273 tick=2496 ticks=192 chord={"input":"ii","label":"Eb","rootPc":3,"bassMidi":39,"notesMidi":[51,55,58],"noteNames":["Eb3","G3","Bb3"],"bassName":"Eb2"} label=Eb instrument=piano transpose=0 line=2 secDur=1.3636
+  19.0909 tick=2688 ticks=384 chord={"input":"i","label":"Dm","rootPc":2,"bassMidi":38,"notesMidi":[50,53,57],"noteNames":["D3","F3","A3"],"bassName":"D2"} label=Dm instrument=piano transpose=0 line=2 secDur=2.7273
 
 ## Locrian walk
 errors: none
@@ -1033,21 +1033,21 @@ drums:
   23.25 inst=snare art=cross lane=snare.cross kit=rock tick=2976 vel=0.7 line=4
   23.625 inst=hat art=hit lane=hat kit=rock tick=3024 vel=0.7 line=3
 chords:
-  0 tick=0 ticks=192 chord={"input":"1","label":"Ddim","rootPc":2,"bassMidi":38,"notesMidi":[50,53,56],"noteNames":["D3","F3","Ab3"],"bassName":"D2"} label=Ddim instrument=piano transpose=0 line=2 secDur=1.5
-  1.5 tick=192 ticks=192 chord={"input":"2","label":"Eb","rootPc":3,"bassMidi":39,"notesMidi":[51,55,58],"noteNames":["Eb3","G3","Bb3"],"bassName":"Eb2"} label=Eb instrument=piano transpose=0 line=2 secDur=1.5
-  3 tick=384 ticks=192 chord={"input":"3","label":"Fm","rootPc":5,"bassMidi":41,"notesMidi":[53,56,60],"noteNames":["F3","Ab3","C4"],"bassName":"F2"} label=Fm instrument=piano transpose=0 line=2 secDur=1.5
-  4.5 tick=576 ticks=192 chord={"input":"4","label":"Gm","rootPc":7,"bassMidi":43,"notesMidi":[55,58,62],"noteNames":["G3","Bb3","D4"],"bassName":"G2"} label=Gm instrument=piano transpose=0 line=2 secDur=1.5
-  6 tick=768 ticks=192 chord={"input":"5","label":"Ab","rootPc":8,"bassMidi":44,"notesMidi":[56,60,63],"noteNames":["Ab3","C4","Eb4"],"bassName":"Ab2"} label=Ab instrument=piano transpose=0 line=2 secDur=1.5
-  7.5 tick=960 ticks=192 chord={"input":"6","label":"Bb","rootPc":10,"bassMidi":46,"notesMidi":[58,62,65],"noteNames":["Bb3","D4","F4"],"bassName":"Bb2"} label=Bb instrument=piano transpose=0 line=2 secDur=1.5
-  9 tick=1152 ticks=192 chord={"input":"7","label":"Cm","rootPc":0,"bassMidi":48,"notesMidi":[60,63,67],"noteNames":["C4","Eb4","G4"],"bassName":"C3"} label=Cm instrument=piano transpose=0 line=2 secDur=1.5
-  10.5 tick=1344 ticks=192 chord={"input":"1","label":"Ddim","rootPc":2,"bassMidi":38,"notesMidi":[50,53,56],"noteNames":["D3","F3","Ab3"],"bassName":"D2"} label=Ddim instrument=piano transpose=0 line=2 secDur=1.5
-  12 tick=1536 ticks=192 chord={"input":"7","label":"Cm","rootPc":0,"bassMidi":48,"notesMidi":[60,63,67],"noteNames":["C4","Eb4","G4"],"bassName":"C3"} label=Cm instrument=piano transpose=0 line=2 secDur=1.5
-  13.5 tick=1728 ticks=192 chord={"input":"6","label":"Bb","rootPc":10,"bassMidi":46,"notesMidi":[58,62,65],"noteNames":["Bb3","D4","F4"],"bassName":"Bb2"} label=Bb instrument=piano transpose=0 line=2 secDur=1.5
-  15 tick=1920 ticks=192 chord={"input":"5","label":"Ab","rootPc":8,"bassMidi":44,"notesMidi":[56,60,63],"noteNames":["Ab3","C4","Eb4"],"bassName":"Ab2"} label=Ab instrument=piano transpose=0 line=2 secDur=1.5
-  16.5 tick=2112 ticks=192 chord={"input":"4","label":"Gm","rootPc":7,"bassMidi":43,"notesMidi":[55,58,62],"noteNames":["G3","Bb3","D4"],"bassName":"G2"} label=Gm instrument=piano transpose=0 line=2 secDur=1.5
-  18 tick=2304 ticks=192 chord={"input":"3","label":"Fm","rootPc":5,"bassMidi":41,"notesMidi":[53,56,60],"noteNames":["F3","Ab3","C4"],"bassName":"F2"} label=Fm instrument=piano transpose=0 line=2 secDur=1.5
-  19.5 tick=2496 ticks=192 chord={"input":"2","label":"Eb","rootPc":3,"bassMidi":39,"notesMidi":[51,55,58],"noteNames":["Eb3","G3","Bb3"],"bassName":"Eb2"} label=Eb instrument=piano transpose=0 line=2 secDur=1.5
-  21 tick=2688 ticks=384 chord={"input":"1","label":"Ddim","rootPc":2,"bassMidi":38,"notesMidi":[50,53,56],"noteNames":["D3","F3","Ab3"],"bassName":"D2"} label=Ddim instrument=piano transpose=0 line=2 secDur=3
+  0 tick=0 ticks=192 chord={"input":"i","label":"Ddim","rootPc":2,"bassMidi":38,"notesMidi":[50,53,56],"noteNames":["D3","F3","Ab3"],"bassName":"D2"} label=Ddim instrument=piano transpose=0 line=2 secDur=1.5
+  1.5 tick=192 ticks=192 chord={"input":"ii","label":"Eb","rootPc":3,"bassMidi":39,"notesMidi":[51,55,58],"noteNames":["Eb3","G3","Bb3"],"bassName":"Eb2"} label=Eb instrument=piano transpose=0 line=2 secDur=1.5
+  3 tick=384 ticks=192 chord={"input":"iii","label":"Fm","rootPc":5,"bassMidi":41,"notesMidi":[53,56,60],"noteNames":["F3","Ab3","C4"],"bassName":"F2"} label=Fm instrument=piano transpose=0 line=2 secDur=1.5
+  4.5 tick=576 ticks=192 chord={"input":"iv","label":"Gm","rootPc":7,"bassMidi":43,"notesMidi":[55,58,62],"noteNames":["G3","Bb3","D4"],"bassName":"G2"} label=Gm instrument=piano transpose=0 line=2 secDur=1.5
+  6 tick=768 ticks=192 chord={"input":"v","label":"Ab","rootPc":8,"bassMidi":44,"notesMidi":[56,60,63],"noteNames":["Ab3","C4","Eb4"],"bassName":"Ab2"} label=Ab instrument=piano transpose=0 line=2 secDur=1.5
+  7.5 tick=960 ticks=192 chord={"input":"vi","label":"Bb","rootPc":10,"bassMidi":46,"notesMidi":[58,62,65],"noteNames":["Bb3","D4","F4"],"bassName":"Bb2"} label=Bb instrument=piano transpose=0 line=2 secDur=1.5
+  9 tick=1152 ticks=192 chord={"input":"vii","label":"Cm","rootPc":0,"bassMidi":48,"notesMidi":[60,63,67],"noteNames":["C4","Eb4","G4"],"bassName":"C3"} label=Cm instrument=piano transpose=0 line=2 secDur=1.5
+  10.5 tick=1344 ticks=192 chord={"input":"i","label":"Ddim","rootPc":2,"bassMidi":38,"notesMidi":[50,53,56],"noteNames":["D3","F3","Ab3"],"bassName":"D2"} label=Ddim instrument=piano transpose=0 line=2 secDur=1.5
+  12 tick=1536 ticks=192 chord={"input":"vii","label":"Cm","rootPc":0,"bassMidi":48,"notesMidi":[60,63,67],"noteNames":["C4","Eb4","G4"],"bassName":"C3"} label=Cm instrument=piano transpose=0 line=2 secDur=1.5
+  13.5 tick=1728 ticks=192 chord={"input":"vi","label":"Bb","rootPc":10,"bassMidi":46,"notesMidi":[58,62,65],"noteNames":["Bb3","D4","F4"],"bassName":"Bb2"} label=Bb instrument=piano transpose=0 line=2 secDur=1.5
+  15 tick=1920 ticks=192 chord={"input":"v","label":"Ab","rootPc":8,"bassMidi":44,"notesMidi":[56,60,63],"noteNames":["Ab3","C4","Eb4"],"bassName":"Ab2"} label=Ab instrument=piano transpose=0 line=2 secDur=1.5
+  16.5 tick=2112 ticks=192 chord={"input":"iv","label":"Gm","rootPc":7,"bassMidi":43,"notesMidi":[55,58,62],"noteNames":["G3","Bb3","D4"],"bassName":"G2"} label=Gm instrument=piano transpose=0 line=2 secDur=1.5
+  18 tick=2304 ticks=192 chord={"input":"iii","label":"Fm","rootPc":5,"bassMidi":41,"notesMidi":[53,56,60],"noteNames":["F3","Ab3","C4"],"bassName":"F2"} label=Fm instrument=piano transpose=0 line=2 secDur=1.5
+  19.5 tick=2496 ticks=192 chord={"input":"ii","label":"Eb","rootPc":3,"bassMidi":39,"notesMidi":[51,55,58],"noteNames":["Eb3","G3","Bb3"],"bassName":"Eb2"} label=Eb instrument=piano transpose=0 line=2 secDur=1.5
+  21 tick=2688 ticks=384 chord={"input":"i","label":"Ddim","rootPc":2,"bassMidi":38,"notesMidi":[50,53,56],"noteNames":["D3","F3","Ab3"],"bassName":"D2"} label=Ddim instrument=piano transpose=0 line=2 secDur=3
 
 ## Fifth of a fifth
 errors: none
@@ -1142,10 +1142,10 @@ drums:
   10.7143 inst=snare art=hit lane=snare kit=rock tick=1440 vel=0.7 line=4
   11.0714 inst=hat art=hit lane=hat kit=rock tick=1488 vel=0.7 line=3
 chords:
-  0 tick=0 ticks=384 chord={"input":"V7","label":"A7","rootPc":9,"bassMidi":57,"notesMidi":[69,73,76,79],"noteNames":["A4","C#5","E5","G5"],"bassName":"A3"} label=A7 instrument=piano transpose=0 line=2 secDur=2.8571
-  2.8571 tick=384 ticks=384 chord={"input":"V7","label":"D7","rootPc":2,"bassMidi":50,"notesMidi":[62,66,69,72],"noteNames":["D4","F#4","A4","C5"],"bassName":"D3"} label=D7 instrument=piano transpose=0 line=2 secDur=2.8571
-  5.7143 tick=768 ticks=384 chord={"input":"V7","label":"G7","rootPc":7,"bassMidi":43,"notesMidi":[55,59,62,65],"noteNames":["G3","B3","D4","F4"],"bassName":"G2"} label=G7 instrument=piano transpose=0 line=2 secDur=2.8571
-  8.5714 tick=1152 ticks=384 chord={"input":"I","label":"C","rootPc":0,"bassMidi":36,"notesMidi":[48,52,55],"noteNames":["C3","E3","G3"],"bassName":"C2"} label=C instrument=piano transpose=0 line=2 secDur=2.8571
+  0 tick=0 ticks=384 chord={"input":"v","label":"A","rootPc":9,"bassMidi":57,"notesMidi":[69,73,76],"noteNames":["A4","C#5","E5"],"bassName":"A3"} label=A instrument=piano transpose=0 line=2 secDur=2.8571
+  2.8571 tick=384 ticks=384 chord={"input":"v","label":"D","rootPc":2,"bassMidi":50,"notesMidi":[62,66,69],"noteNames":["D4","F#4","A4"],"bassName":"D3"} label=D instrument=piano transpose=0 line=2 secDur=2.8571
+  5.7143 tick=768 ticks=384 chord={"input":"v","label":"G","rootPc":7,"bassMidi":43,"notesMidi":[55,59,62],"noteNames":["G3","B3","D4"],"bassName":"G2"} label=G instrument=piano transpose=0 line=2 secDur=2.8571
+  8.5714 tick=1152 ticks=384 chord={"input":"i","label":"C","rootPc":0,"bassMidi":36,"notesMidi":[48,52,55],"noteNames":["C3","E3","G3"],"bassName":"C2"} label=C instrument=piano transpose=0 line=2 secDur=2.8571
 
 ## Fifth of a chord
 errors: none
@@ -1195,10 +1195,10 @@ drums:
   11.25 inst=hat art=hit lane=hat kit=rock tick=1440 vel=0.7 line=3
   11.625 inst=hat art=hit lane=hat kit=rock tick=1488 vel=0.7 line=3
 chords:
-  0 tick=0 ticks=384 chord={"input":"I","label":"C","rootPc":0,"bassMidi":36,"notesMidi":[48,52,55],"noteNames":["C3","E3","G3"],"bassName":"C2"} label=C instrument=piano transpose=0 line=2 secDur=3
-  3 tick=384 ticks=384 chord={"input":"V","label":"G","rootPc":7,"bassMidi":43,"notesMidi":[55,59,62],"noteNames":["G3","B3","D4"],"bassName":"G2"} label=G instrument=piano transpose=0 line=2 secDur=3
-  6 tick=768 ticks=384 chord={"input":"V","label":"D","rootPc":2,"bassMidi":50,"notesMidi":[62,66,69],"noteNames":["D4","F#4","A4"],"bassName":"D3"} label=D instrument=piano transpose=0 line=2 secDur=3
-  9 tick=1152 ticks=384 chord={"input":"V","label":"A","rootPc":9,"bassMidi":57,"notesMidi":[69,73,76],"noteNames":["A4","C#5","E5"],"bassName":"A3"} label=A instrument=piano transpose=0 line=2 secDur=3
+  0 tick=0 ticks=384 chord={"input":"i","label":"C","rootPc":0,"bassMidi":36,"notesMidi":[48,52,55],"noteNames":["C3","E3","G3"],"bassName":"C2"} label=C instrument=piano transpose=0 line=2 secDur=3
+  3 tick=384 ticks=384 chord={"input":"v","label":"G","rootPc":7,"bassMidi":43,"notesMidi":[55,59,62],"noteNames":["G3","B3","D4"],"bassName":"G2"} label=G instrument=piano transpose=0 line=2 secDur=3
+  6 tick=768 ticks=384 chord={"input":"v","label":"D","rootPc":2,"bassMidi":50,"notesMidi":[62,66,69],"noteNames":["D4","F#4","A4"],"bassName":"D3"} label=D instrument=piano transpose=0 line=2 secDur=3
+  9 tick=1152 ticks=384 chord={"input":"v","label":"A","rootPc":9,"bassMidi":57,"notesMidi":[69,73,76],"noteNames":["A4","C#5","E5"],"bassName":"A3"} label=A instrument=piano transpose=0 line=2 secDur=3
 
 ## Scopes with with
 errors: none
@@ -1209,51 +1209,51 @@ block startSec=0 durSec=16 bars=8 time=4 over 4 tempo=120 key=C unit=4 barTicks=
 block startSec=16 durSec=16 bars=8 time=4 over 4 tempo=120 key=C unit=4 barTicks=384 res=1
 block startSec=32 durSec=24 bars=8 time=4 over 4 tempo=80 key=D unit=4 barTicks=384 res=1
 chords:
-  0 tick=0 ticks=192 chord={"input":"1","label":"C","rootPc":0,"bassMidi":36,"notesMidi":[48,52,55],"noteNames":["C3","E3","G3"],"bassName":"C2"} label=C instrument=piano transpose=0 line=4 secDur=1
-  1 tick=192 ticks=192 chord={"input":"2","label":"Dm","rootPc":2,"bassMidi":38,"notesMidi":[50,53,57],"noteNames":["D3","F3","A3"],"bassName":"D2"} label=Dm instrument=piano transpose=0 line=4 secDur=1
-  2 tick=384 ticks=192 chord={"input":"3","label":"Em","rootPc":4,"bassMidi":40,"notesMidi":[52,55,59],"noteNames":["E3","G3","B3"],"bassName":"E2"} label=Em instrument=piano transpose=0 line=4 secDur=1
-  3 tick=576 ticks=192 chord={"input":"4","label":"F","rootPc":5,"bassMidi":41,"notesMidi":[53,57,60],"noteNames":["F3","A3","C4"],"bassName":"F2"} label=F instrument=piano transpose=0 line=4 secDur=1
-  4 tick=768 ticks=192 chord={"input":"5","label":"G","rootPc":7,"bassMidi":43,"notesMidi":[55,59,62],"noteNames":["G3","B3","D4"],"bassName":"G2"} label=G instrument=piano transpose=0 line=4 secDur=1
-  5 tick=960 ticks=192 chord={"input":"6","label":"Am","rootPc":9,"bassMidi":45,"notesMidi":[57,60,64],"noteNames":["A3","C4","E4"],"bassName":"A2"} label=Am instrument=piano transpose=0 line=4 secDur=1
-  6 tick=1152 ticks=192 chord={"input":"7","label":"Bdim","rootPc":11,"bassMidi":47,"notesMidi":[59,62,65],"noteNames":["B3","D4","F4"],"bassName":"B2"} label=Bdim instrument=piano transpose=0 line=4 secDur=1
-  7 tick=1344 ticks=192 chord={"input":"1","label":"C","rootPc":0,"bassMidi":36,"notesMidi":[48,52,55],"noteNames":["C3","E3","G3"],"bassName":"C2"} label=C instrument=piano transpose=0 line=4 secDur=1
-  8 tick=1536 ticks=192 chord={"input":"7","label":"Bdim","rootPc":11,"bassMidi":47,"notesMidi":[59,62,65],"noteNames":["B3","D4","F4"],"bassName":"B2"} label=Bdim instrument=piano transpose=0 line=4 secDur=1
-  9 tick=1728 ticks=192 chord={"input":"6","label":"Am","rootPc":9,"bassMidi":45,"notesMidi":[57,60,64],"noteNames":["A3","C4","E4"],"bassName":"A2"} label=Am instrument=piano transpose=0 line=4 secDur=1
-  10 tick=1920 ticks=192 chord={"input":"5","label":"G","rootPc":7,"bassMidi":43,"notesMidi":[55,59,62],"noteNames":["G3","B3","D4"],"bassName":"G2"} label=G instrument=piano transpose=0 line=4 secDur=1
-  11 tick=2112 ticks=192 chord={"input":"4","label":"F","rootPc":5,"bassMidi":41,"notesMidi":[53,57,60],"noteNames":["F3","A3","C4"],"bassName":"F2"} label=F instrument=piano transpose=0 line=4 secDur=1
-  12 tick=2304 ticks=192 chord={"input":"3","label":"Em","rootPc":4,"bassMidi":40,"notesMidi":[52,55,59],"noteNames":["E3","G3","B3"],"bassName":"E2"} label=Em instrument=piano transpose=0 line=4 secDur=1
-  13 tick=2496 ticks=192 chord={"input":"2","label":"Dm","rootPc":2,"bassMidi":38,"notesMidi":[50,53,57],"noteNames":["D3","F3","A3"],"bassName":"D2"} label=Dm instrument=piano transpose=0 line=4 secDur=1
-  14 tick=2688 ticks=384 chord={"input":"1","label":"C","rootPc":0,"bassMidi":36,"notesMidi":[48,52,55],"noteNames":["C3","E3","G3"],"bassName":"C2"} label=C instrument=piano transpose=0 line=4 secDur=2
-  16 tick=0 ticks=192 chord={"input":"1","label":"Cm","rootPc":0,"bassMidi":36,"notesMidi":[48,51,55],"noteNames":["C3","Eb3","G3"],"bassName":"C2"} label=Cm instrument=piano transpose=0 line=5 secDur=1
-  17 tick=192 ticks=192 chord={"input":"2","label":"Ddim","rootPc":2,"bassMidi":38,"notesMidi":[50,53,56],"noteNames":["D3","F3","Ab3"],"bassName":"D2"} label=Ddim instrument=piano transpose=0 line=5 secDur=1
-  18 tick=384 ticks=192 chord={"input":"3","label":"Eb","rootPc":3,"bassMidi":39,"notesMidi":[51,55,58],"noteNames":["Eb3","G3","Bb3"],"bassName":"Eb2"} label=Eb instrument=piano transpose=0 line=5 secDur=1
-  19 tick=576 ticks=192 chord={"input":"4","label":"Fm","rootPc":5,"bassMidi":41,"notesMidi":[53,56,60],"noteNames":["F3","Ab3","C4"],"bassName":"F2"} label=Fm instrument=piano transpose=0 line=5 secDur=1
-  20 tick=768 ticks=192 chord={"input":"5","label":"Gm","rootPc":7,"bassMidi":43,"notesMidi":[55,58,62],"noteNames":["G3","Bb3","D4"],"bassName":"G2"} label=Gm instrument=piano transpose=0 line=5 secDur=1
-  21 tick=960 ticks=192 chord={"input":"6","label":"Ab","rootPc":8,"bassMidi":44,"notesMidi":[56,60,63],"noteNames":["Ab3","C4","Eb4"],"bassName":"Ab2"} label=Ab instrument=piano transpose=0 line=5 secDur=1
-  22 tick=1152 ticks=192 chord={"input":"7","label":"Bb","rootPc":10,"bassMidi":46,"notesMidi":[58,62,65],"noteNames":["Bb3","D4","F4"],"bassName":"Bb2"} label=Bb instrument=piano transpose=0 line=5 secDur=1
-  23 tick=1344 ticks=192 chord={"input":"1","label":"Cm","rootPc":0,"bassMidi":36,"notesMidi":[48,51,55],"noteNames":["C3","Eb3","G3"],"bassName":"C2"} label=Cm instrument=piano transpose=0 line=5 secDur=1
-  24 tick=1536 ticks=192 chord={"input":"7","label":"Bb","rootPc":10,"bassMidi":46,"notesMidi":[58,62,65],"noteNames":["Bb3","D4","F4"],"bassName":"Bb2"} label=Bb instrument=piano transpose=0 line=5 secDur=1
-  25 tick=1728 ticks=192 chord={"input":"6","label":"Ab","rootPc":8,"bassMidi":44,"notesMidi":[56,60,63],"noteNames":["Ab3","C4","Eb4"],"bassName":"Ab2"} label=Ab instrument=piano transpose=0 line=5 secDur=1
-  26 tick=1920 ticks=192 chord={"input":"5","label":"Gm","rootPc":7,"bassMidi":43,"notesMidi":[55,58,62],"noteNames":["G3","Bb3","D4"],"bassName":"G2"} label=Gm instrument=piano transpose=0 line=5 secDur=1
-  27 tick=2112 ticks=192 chord={"input":"4","label":"Fm","rootPc":5,"bassMidi":41,"notesMidi":[53,56,60],"noteNames":["F3","Ab3","C4"],"bassName":"F2"} label=Fm instrument=piano transpose=0 line=5 secDur=1
-  28 tick=2304 ticks=192 chord={"input":"3","label":"Eb","rootPc":3,"bassMidi":39,"notesMidi":[51,55,58],"noteNames":["Eb3","G3","Bb3"],"bassName":"Eb2"} label=Eb instrument=piano transpose=0 line=5 secDur=1
-  29 tick=2496 ticks=192 chord={"input":"2","label":"Ddim","rootPc":2,"bassMidi":38,"notesMidi":[50,53,56],"noteNames":["D3","F3","Ab3"],"bassName":"D2"} label=Ddim instrument=piano transpose=0 line=5 secDur=1
-  30 tick=2688 ticks=384 chord={"input":"1","label":"Cm","rootPc":0,"bassMidi":36,"notesMidi":[48,51,55],"noteNames":["C3","Eb3","G3"],"bassName":"C2"} label=Cm instrument=piano transpose=0 line=5 secDur=2
-  32 tick=0 ticks=192 chord={"input":"1","label":"Dm","rootPc":2,"bassMidi":38,"notesMidi":[50,53,57],"noteNames":["D3","F3","A3"],"bassName":"D2"} label=Dm instrument=piano transpose=0 line=6 secDur=1.5
-  33.5 tick=192 ticks=192 chord={"input":"2","label":"Em","rootPc":4,"bassMidi":40,"notesMidi":[52,55,59],"noteNames":["E3","G3","B3"],"bassName":"E2"} label=Em instrument=piano transpose=0 line=6 secDur=1.5
-  35 tick=384 ticks=192 chord={"input":"3","label":"F","rootPc":5,"bassMidi":41,"notesMidi":[53,57,60],"noteNames":["F3","A3","C4"],"bassName":"F2"} label=F instrument=piano transpose=0 line=6 secDur=1.5
-  36.5 tick=576 ticks=192 chord={"input":"4","label":"G","rootPc":7,"bassMidi":43,"notesMidi":[55,59,62],"noteNames":["G3","B3","D4"],"bassName":"G2"} label=G instrument=piano transpose=0 line=6 secDur=1.5
-  38 tick=768 ticks=192 chord={"input":"5","label":"Am","rootPc":9,"bassMidi":45,"notesMidi":[57,60,64],"noteNames":["A3","C4","E4"],"bassName":"A2"} label=Am instrument=piano transpose=0 line=6 secDur=1.5
-  39.5 tick=960 ticks=192 chord={"input":"6","label":"Bdim","rootPc":11,"bassMidi":47,"notesMidi":[59,62,65],"noteNames":["B3","D4","F4"],"bassName":"B2"} label=Bdim instrument=piano transpose=0 line=6 secDur=1.5
-  41 tick=1152 ticks=192 chord={"input":"7","label":"C","rootPc":0,"bassMidi":48,"notesMidi":[60,64,67],"noteNames":["C4","E4","G4"],"bassName":"C3"} label=C instrument=piano transpose=0 line=6 secDur=1.5
-  42.5 tick=1344 ticks=192 chord={"input":"1","label":"Dm","rootPc":2,"bassMidi":38,"notesMidi":[50,53,57],"noteNames":["D3","F3","A3"],"bassName":"D2"} label=Dm instrument=piano transpose=0 line=6 secDur=1.5
-  44 tick=1536 ticks=192 chord={"input":"7","label":"C","rootPc":0,"bassMidi":48,"notesMidi":[60,64,67],"noteNames":["C4","E4","G4"],"bassName":"C3"} label=C instrument=piano transpose=0 line=6 secDur=1.5
-  45.5 tick=1728 ticks=192 chord={"input":"6","label":"Bdim","rootPc":11,"bassMidi":47,"notesMidi":[59,62,65],"noteNames":["B3","D4","F4"],"bassName":"B2"} label=Bdim instrument=piano transpose=0 line=6 secDur=1.5
-  47 tick=1920 ticks=192 chord={"input":"5","label":"Am","rootPc":9,"bassMidi":45,"notesMidi":[57,60,64],"noteNames":["A3","C4","E4"],"bassName":"A2"} label=Am instrument=piano transpose=0 line=6 secDur=1.5
-  48.5 tick=2112 ticks=192 chord={"input":"4","label":"G","rootPc":7,"bassMidi":43,"notesMidi":[55,59,62],"noteNames":["G3","B3","D4"],"bassName":"G2"} label=G instrument=piano transpose=0 line=6 secDur=1.5
-  50 tick=2304 ticks=192 chord={"input":"3","label":"F","rootPc":5,"bassMidi":41,"notesMidi":[53,57,60],"noteNames":["F3","A3","C4"],"bassName":"F2"} label=F instrument=piano transpose=0 line=6 secDur=1.5
-  51.5 tick=2496 ticks=192 chord={"input":"2","label":"Em","rootPc":4,"bassMidi":40,"notesMidi":[52,55,59],"noteNames":["E3","G3","B3"],"bassName":"E2"} label=Em instrument=piano transpose=0 line=6 secDur=1.5
-  53 tick=2688 ticks=384 chord={"input":"1","label":"Dm","rootPc":2,"bassMidi":38,"notesMidi":[50,53,57],"noteNames":["D3","F3","A3"],"bassName":"D2"} label=Dm instrument=piano transpose=0 line=6 secDur=3
+  0 tick=0 ticks=192 chord={"input":"i","label":"C","rootPc":0,"bassMidi":36,"notesMidi":[48,52,55],"noteNames":["C3","E3","G3"],"bassName":"C2"} label=C instrument=piano transpose=0 line=4 secDur=1
+  1 tick=192 ticks=192 chord={"input":"ii","label":"Dm","rootPc":2,"bassMidi":38,"notesMidi":[50,53,57],"noteNames":["D3","F3","A3"],"bassName":"D2"} label=Dm instrument=piano transpose=0 line=4 secDur=1
+  2 tick=384 ticks=192 chord={"input":"iii","label":"Em","rootPc":4,"bassMidi":40,"notesMidi":[52,55,59],"noteNames":["E3","G3","B3"],"bassName":"E2"} label=Em instrument=piano transpose=0 line=4 secDur=1
+  3 tick=576 ticks=192 chord={"input":"iv","label":"F","rootPc":5,"bassMidi":41,"notesMidi":[53,57,60],"noteNames":["F3","A3","C4"],"bassName":"F2"} label=F instrument=piano transpose=0 line=4 secDur=1
+  4 tick=768 ticks=192 chord={"input":"v","label":"G","rootPc":7,"bassMidi":43,"notesMidi":[55,59,62],"noteNames":["G3","B3","D4"],"bassName":"G2"} label=G instrument=piano transpose=0 line=4 secDur=1
+  5 tick=960 ticks=192 chord={"input":"vi","label":"Am","rootPc":9,"bassMidi":45,"notesMidi":[57,60,64],"noteNames":["A3","C4","E4"],"bassName":"A2"} label=Am instrument=piano transpose=0 line=4 secDur=1
+  6 tick=1152 ticks=192 chord={"input":"vii","label":"Bdim","rootPc":11,"bassMidi":47,"notesMidi":[59,62,65],"noteNames":["B3","D4","F4"],"bassName":"B2"} label=Bdim instrument=piano transpose=0 line=4 secDur=1
+  7 tick=1344 ticks=192 chord={"input":"i","label":"C","rootPc":0,"bassMidi":36,"notesMidi":[48,52,55],"noteNames":["C3","E3","G3"],"bassName":"C2"} label=C instrument=piano transpose=0 line=4 secDur=1
+  8 tick=1536 ticks=192 chord={"input":"vii","label":"Bdim","rootPc":11,"bassMidi":47,"notesMidi":[59,62,65],"noteNames":["B3","D4","F4"],"bassName":"B2"} label=Bdim instrument=piano transpose=0 line=4 secDur=1
+  9 tick=1728 ticks=192 chord={"input":"vi","label":"Am","rootPc":9,"bassMidi":45,"notesMidi":[57,60,64],"noteNames":["A3","C4","E4"],"bassName":"A2"} label=Am instrument=piano transpose=0 line=4 secDur=1
+  10 tick=1920 ticks=192 chord={"input":"v","label":"G","rootPc":7,"bassMidi":43,"notesMidi":[55,59,62],"noteNames":["G3","B3","D4"],"bassName":"G2"} label=G instrument=piano transpose=0 line=4 secDur=1
+  11 tick=2112 ticks=192 chord={"input":"iv","label":"F","rootPc":5,"bassMidi":41,"notesMidi":[53,57,60],"noteNames":["F3","A3","C4"],"bassName":"F2"} label=F instrument=piano transpose=0 line=4 secDur=1
+  12 tick=2304 ticks=192 chord={"input":"iii","label":"Em","rootPc":4,"bassMidi":40,"notesMidi":[52,55,59],"noteNames":["E3","G3","B3"],"bassName":"E2"} label=Em instrument=piano transpose=0 line=4 secDur=1
+  13 tick=2496 ticks=192 chord={"input":"ii","label":"Dm","rootPc":2,"bassMidi":38,"notesMidi":[50,53,57],"noteNames":["D3","F3","A3"],"bassName":"D2"} label=Dm instrument=piano transpose=0 line=4 secDur=1
+  14 tick=2688 ticks=384 chord={"input":"i","label":"C","rootPc":0,"bassMidi":36,"notesMidi":[48,52,55],"noteNames":["C3","E3","G3"],"bassName":"C2"} label=C instrument=piano transpose=0 line=4 secDur=2
+  16 tick=0 ticks=192 chord={"input":"i","label":"Cm","rootPc":0,"bassMidi":36,"notesMidi":[48,51,55],"noteNames":["C3","Eb3","G3"],"bassName":"C2"} label=Cm instrument=piano transpose=0 line=5 secDur=1
+  17 tick=192 ticks=192 chord={"input":"ii","label":"Ddim","rootPc":2,"bassMidi":38,"notesMidi":[50,53,56],"noteNames":["D3","F3","Ab3"],"bassName":"D2"} label=Ddim instrument=piano transpose=0 line=5 secDur=1
+  18 tick=384 ticks=192 chord={"input":"iii","label":"Eb","rootPc":3,"bassMidi":39,"notesMidi":[51,55,58],"noteNames":["Eb3","G3","Bb3"],"bassName":"Eb2"} label=Eb instrument=piano transpose=0 line=5 secDur=1
+  19 tick=576 ticks=192 chord={"input":"iv","label":"Fm","rootPc":5,"bassMidi":41,"notesMidi":[53,56,60],"noteNames":["F3","Ab3","C4"],"bassName":"F2"} label=Fm instrument=piano transpose=0 line=5 secDur=1
+  20 tick=768 ticks=192 chord={"input":"v","label":"Gm","rootPc":7,"bassMidi":43,"notesMidi":[55,58,62],"noteNames":["G3","Bb3","D4"],"bassName":"G2"} label=Gm instrument=piano transpose=0 line=5 secDur=1
+  21 tick=960 ticks=192 chord={"input":"vi","label":"Ab","rootPc":8,"bassMidi":44,"notesMidi":[56,60,63],"noteNames":["Ab3","C4","Eb4"],"bassName":"Ab2"} label=Ab instrument=piano transpose=0 line=5 secDur=1
+  22 tick=1152 ticks=192 chord={"input":"vii","label":"Bb","rootPc":10,"bassMidi":46,"notesMidi":[58,62,65],"noteNames":["Bb3","D4","F4"],"bassName":"Bb2"} label=Bb instrument=piano transpose=0 line=5 secDur=1
+  23 tick=1344 ticks=192 chord={"input":"i","label":"Cm","rootPc":0,"bassMidi":36,"notesMidi":[48,51,55],"noteNames":["C3","Eb3","G3"],"bassName":"C2"} label=Cm instrument=piano transpose=0 line=5 secDur=1
+  24 tick=1536 ticks=192 chord={"input":"vii","label":"Bb","rootPc":10,"bassMidi":46,"notesMidi":[58,62,65],"noteNames":["Bb3","D4","F4"],"bassName":"Bb2"} label=Bb instrument=piano transpose=0 line=5 secDur=1
+  25 tick=1728 ticks=192 chord={"input":"vi","label":"Ab","rootPc":8,"bassMidi":44,"notesMidi":[56,60,63],"noteNames":["Ab3","C4","Eb4"],"bassName":"Ab2"} label=Ab instrument=piano transpose=0 line=5 secDur=1
+  26 tick=1920 ticks=192 chord={"input":"v","label":"Gm","rootPc":7,"bassMidi":43,"notesMidi":[55,58,62],"noteNames":["G3","Bb3","D4"],"bassName":"G2"} label=Gm instrument=piano transpose=0 line=5 secDur=1
+  27 tick=2112 ticks=192 chord={"input":"iv","label":"Fm","rootPc":5,"bassMidi":41,"notesMidi":[53,56,60],"noteNames":["F3","Ab3","C4"],"bassName":"F2"} label=Fm instrument=piano transpose=0 line=5 secDur=1
+  28 tick=2304 ticks=192 chord={"input":"iii","label":"Eb","rootPc":3,"bassMidi":39,"notesMidi":[51,55,58],"noteNames":["Eb3","G3","Bb3"],"bassName":"Eb2"} label=Eb instrument=piano transpose=0 line=5 secDur=1
+  29 tick=2496 ticks=192 chord={"input":"ii","label":"Ddim","rootPc":2,"bassMidi":38,"notesMidi":[50,53,56],"noteNames":["D3","F3","Ab3"],"bassName":"D2"} label=Ddim instrument=piano transpose=0 line=5 secDur=1
+  30 tick=2688 ticks=384 chord={"input":"i","label":"Cm","rootPc":0,"bassMidi":36,"notesMidi":[48,51,55],"noteNames":["C3","Eb3","G3"],"bassName":"C2"} label=Cm instrument=piano transpose=0 line=5 secDur=2
+  32 tick=0 ticks=192 chord={"input":"i","label":"Dm","rootPc":2,"bassMidi":38,"notesMidi":[50,53,57],"noteNames":["D3","F3","A3"],"bassName":"D2"} label=Dm instrument=piano transpose=0 line=6 secDur=1.5
+  33.5 tick=192 ticks=192 chord={"input":"ii","label":"Em","rootPc":4,"bassMidi":40,"notesMidi":[52,55,59],"noteNames":["E3","G3","B3"],"bassName":"E2"} label=Em instrument=piano transpose=0 line=6 secDur=1.5
+  35 tick=384 ticks=192 chord={"input":"iii","label":"F","rootPc":5,"bassMidi":41,"notesMidi":[53,57,60],"noteNames":["F3","A3","C4"],"bassName":"F2"} label=F instrument=piano transpose=0 line=6 secDur=1.5
+  36.5 tick=576 ticks=192 chord={"input":"iv","label":"G","rootPc":7,"bassMidi":43,"notesMidi":[55,59,62],"noteNames":["G3","B3","D4"],"bassName":"G2"} label=G instrument=piano transpose=0 line=6 secDur=1.5
+  38 tick=768 ticks=192 chord={"input":"v","label":"Am","rootPc":9,"bassMidi":45,"notesMidi":[57,60,64],"noteNames":["A3","C4","E4"],"bassName":"A2"} label=Am instrument=piano transpose=0 line=6 secDur=1.5
+  39.5 tick=960 ticks=192 chord={"input":"vi","label":"Bdim","rootPc":11,"bassMidi":47,"notesMidi":[59,62,65],"noteNames":["B3","D4","F4"],"bassName":"B2"} label=Bdim instrument=piano transpose=0 line=6 secDur=1.5
+  41 tick=1152 ticks=192 chord={"input":"vii","label":"C","rootPc":0,"bassMidi":48,"notesMidi":[60,64,67],"noteNames":["C4","E4","G4"],"bassName":"C3"} label=C instrument=piano transpose=0 line=6 secDur=1.5
+  42.5 tick=1344 ticks=192 chord={"input":"i","label":"Dm","rootPc":2,"bassMidi":38,"notesMidi":[50,53,57],"noteNames":["D3","F3","A3"],"bassName":"D2"} label=Dm instrument=piano transpose=0 line=6 secDur=1.5
+  44 tick=1536 ticks=192 chord={"input":"vii","label":"C","rootPc":0,"bassMidi":48,"notesMidi":[60,64,67],"noteNames":["C4","E4","G4"],"bassName":"C3"} label=C instrument=piano transpose=0 line=6 secDur=1.5
+  45.5 tick=1728 ticks=192 chord={"input":"vi","label":"Bdim","rootPc":11,"bassMidi":47,"notesMidi":[59,62,65],"noteNames":["B3","D4","F4"],"bassName":"B2"} label=Bdim instrument=piano transpose=0 line=6 secDur=1.5
+  47 tick=1920 ticks=192 chord={"input":"v","label":"Am","rootPc":9,"bassMidi":45,"notesMidi":[57,60,64],"noteNames":["A3","C4","E4"],"bassName":"A2"} label=Am instrument=piano transpose=0 line=6 secDur=1.5
+  48.5 tick=2112 ticks=192 chord={"input":"iv","label":"G","rootPc":7,"bassMidi":43,"notesMidi":[55,59,62],"noteNames":["G3","B3","D4"],"bassName":"G2"} label=G instrument=piano transpose=0 line=6 secDur=1.5
+  50 tick=2304 ticks=192 chord={"input":"iii","label":"F","rootPc":5,"bassMidi":41,"notesMidi":[53,57,60],"noteNames":["F3","A3","C4"],"bassName":"F2"} label=F instrument=piano transpose=0 line=6 secDur=1.5
+  51.5 tick=2496 ticks=192 chord={"input":"ii","label":"Em","rootPc":4,"bassMidi":40,"notesMidi":[52,55,59],"noteNames":["E3","G3","B3"],"bassName":"E2"} label=Em instrument=piano transpose=0 line=6 secDur=1.5
+  53 tick=2688 ticks=384 chord={"input":"i","label":"Dm","rootPc":2,"bassMidi":38,"notesMidi":[50,53,57],"noteNames":["D3","F3","A3"],"bassName":"D2"} label=Dm instrument=piano transpose=0 line=6 secDur=3
 
 ## An octave for each part
 errors: none
@@ -1275,10 +1275,10 @@ notes:
   3.913 tick=576 ticks=96 note={"midi":41,"name":"F2","spell":{"letter":"F","alter":0}} label=4 instrument=bass voice=0 vel=0.7 repeat=true line=5 secDur=0.6522
   4.5652 tick=672 ticks=96 note={"midi":43,"name":"G2","spell":{"letter":"G","alter":0}} label=5 instrument=bass voice=0 vel=0.7 repeat=true line=5 secDur=0.6522
 chords:
-  0 tick=0 ticks=192 chord={"input":"I","label":"C","rootPc":0,"bassMidi":48,"notesMidi":[60,64,67],"noteNames":["C4","E4","G4"],"bassName":"C3"} label=C instrument=piano transpose=0 line=7 secDur=1.3043
-  1.3043 tick=192 ticks=192 chord={"input":"V","label":"G","rootPc":7,"bassMidi":55,"notesMidi":[67,71,74],"noteNames":["G4","B4","D5"],"bassName":"G3"} label=G instrument=piano transpose=0 line=7 secDur=1.3043
+  0 tick=0 ticks=192 chord={"input":"i","label":"C","rootPc":0,"bassMidi":48,"notesMidi":[60,64,67],"noteNames":["C4","E4","G4"],"bassName":"C3"} label=C instrument=piano transpose=0 line=7 secDur=1.3043
+  1.3043 tick=192 ticks=192 chord={"input":"v","label":"G","rootPc":7,"bassMidi":55,"notesMidi":[67,71,74],"noteNames":["G4","B4","D5"],"bassName":"G3"} label=G instrument=piano transpose=0 line=7 secDur=1.3043
   2.6087 tick=384 ticks=192 chord={"input":"vi","label":"Am","rootPc":9,"bassMidi":57,"notesMidi":[69,72,76],"noteNames":["A4","C5","E5"],"bassName":"A3"} label=Am instrument=piano transpose=0 line=7 secDur=1.3043
-  3.913 tick=576 ticks=192 chord={"input":"IV","label":"F","rootPc":5,"bassMidi":53,"notesMidi":[65,69,72],"noteNames":["F4","A4","C5"],"bassName":"F3"} label=F instrument=piano transpose=0 line=7 secDur=1.3043
+  3.913 tick=576 ticks=192 chord={"input":"iv","label":"F","rootPc":5,"bassMidi":53,"notesMidi":[65,69,72],"noteNames":["F4","A4","C5"],"bassName":"F3"} label=F instrument=piano transpose=0 line=7 secDur=1.3043
 
 ## ii–V–I
 errors: none
@@ -1354,173 +1354,8 @@ notes:
   6.8182 tick=1440 ticks=96 note={"midi":47,"name":"B2","spell":{"letter":"B","alter":0}} label=7 instrument=bass voice=0 vel=0.7 line=4 secDur=0.4545 secSwing=0
 chords:
   0 tick=0 ticks=192 chord={"input":"ii7","label":"Dm7","rootPc":2,"bassMidi":50,"notesMidi":[62,65,69,72],"noteNames":["D4","F4","A4","C5"],"bassName":"D3"} label=Dm7 instrument=piano transpose=0 line=2 secDur=0.9091 secSwing=0
-  0.9091 tick=192 ticks=192 chord={"input":"V7","label":"G7","rootPc":7,"bassMidi":55,"notesMidi":[67,71,74,77],"noteNames":["G4","B4","D5","F5"],"bassName":"G3"} label=G7 instrument=piano transpose=0 line=2 secDur=0.9091 secSwing=0
-  1.8182 tick=384 ticks=384 chord={"input":"Imaj7","label":"Cmaj7","rootPc":0,"bassMidi":48,"notesMidi":[60,64,67,71],"noteNames":["C4","E4","G4","B4"],"bassName":"C3"} label=Cmaj7 instrument=piano transpose=0 line=2 secDur=1.8182 secSwing=0
+  0.9091 tick=192 ticks=192 chord={"input":"v7","label":"G7","rootPc":7,"bassMidi":55,"notesMidi":[67,71,74,77],"noteNames":["G4","B4","D5","F5"],"bassName":"G3"} label=G7 instrument=piano transpose=0 line=2 secDur=0.9091 secSwing=0
+  1.8182 tick=384 ticks=384 chord={"input":"imaj7","label":"Cmaj7","rootPc":0,"bassMidi":48,"notesMidi":[60,64,67,71],"noteNames":["C4","E4","G4","B4"],"bassName":"C3"} label=Cmaj7 instrument=piano transpose=0 line=2 secDur=1.8182 secSwing=0
   3.6364 tick=768 ticks=192 chord={"input":"ii7","label":"Dm7","rootPc":2,"bassMidi":50,"notesMidi":[62,65,69,72],"noteNames":["D4","F4","A4","C5"],"bassName":"D3"} label=Dm7 instrument=piano transpose=0 repeat=true line=2 secDur=0.9091 secSwing=0
-  4.5455 tick=960 ticks=192 chord={"input":"V7","label":"G7","rootPc":7,"bassMidi":55,"notesMidi":[67,71,74,77],"noteNames":["G4","B4","D5","F5"],"bassName":"G3"} label=G7 instrument=piano transpose=0 repeat=true line=2 secDur=0.9091 secSwing=0
-  5.4545 tick=1152 ticks=384 chord={"input":"Imaj7","label":"Cmaj7","rootPc":0,"bassMidi":48,"notesMidi":[60,64,67,71],"noteNames":["C4","E4","G4","B4"],"bassName":"C3"} label=Cmaj7 instrument=piano transpose=0 repeat=true line=2 secDur=1.8182 secSwing=0
-
-## 12-bar blues
-errors: none
-names: blues pattern line 1
-from above: none
-length: 24 s
-block startSec=0 durSec=24 bars=12 time=4 over 4 tempo=120 key=A unit=4 barTicks=384 res=2
-drums:
-  0 inst=kick art=hit lane=kick kit=rock tick=0 vel=0.7 line=5 secSwing=0
-  0 inst=ride art=hit lane=ride kit=rock tick=0 vel=0.7 line=3 secSwing=0
-  0.25 inst=ride art=hit lane=ride kit=rock tick=48 vel=0.7 line=3 secSwing=0.0833
-  0.5 inst=ride art=hit lane=ride kit=rock tick=96 vel=0.7 line=3 secSwing=0
-  0.5 inst=snare art=hit lane=snare kit=rock tick=96 vel=0.7 line=4 secSwing=0
-  0.75 inst=ride art=hit lane=ride kit=rock tick=144 vel=0.7 line=3 secSwing=0.0833
-  1 inst=kick art=hit lane=kick kit=rock tick=192 vel=0.7 line=5 secSwing=0
-  1 inst=ride art=hit lane=ride kit=rock tick=192 vel=0.7 line=3 secSwing=0
-  1.25 inst=ride art=hit lane=ride kit=rock tick=240 vel=0.7 line=3 secSwing=0.0833
-  1.5 inst=ride art=hit lane=ride kit=rock tick=288 vel=0.7 line=3 secSwing=0
-  1.5 inst=snare art=hit lane=snare kit=rock tick=288 vel=0.7 line=4 secSwing=0
-  1.75 inst=ride art=hit lane=ride kit=rock tick=336 vel=0.7 line=3 secSwing=0.0833
-  2 inst=kick art=hit lane=kick kit=rock tick=384 vel=0.7 line=5 secSwing=0
-  2 inst=ride art=hit lane=ride kit=rock tick=384 vel=0.7 line=3 secSwing=0
-  2.25 inst=ride art=hit lane=ride kit=rock tick=432 vel=0.7 line=3 secSwing=0.0833
-  2.5 inst=ride art=hit lane=ride kit=rock tick=480 vel=0.7 line=3 secSwing=0
-  2.5 inst=snare art=hit lane=snare kit=rock tick=480 vel=0.7 line=4 secSwing=0
-  2.75 inst=ride art=hit lane=ride kit=rock tick=528 vel=0.7 line=3 secSwing=0.0833
-  3 inst=kick art=hit lane=kick kit=rock tick=576 vel=0.7 line=5 secSwing=0
-  3 inst=ride art=hit lane=ride kit=rock tick=576 vel=0.7 line=3 secSwing=0
-  3.25 inst=ride art=hit lane=ride kit=rock tick=624 vel=0.7 line=3 secSwing=0.0833
-  3.5 inst=ride art=hit lane=ride kit=rock tick=672 vel=0.7 line=3 secSwing=0
-  3.5 inst=snare art=hit lane=snare kit=rock tick=672 vel=0.7 line=4 secSwing=0
-  3.75 inst=ride art=hit lane=ride kit=rock tick=720 vel=0.7 line=3 secSwing=0.0833
-  4 inst=kick art=hit lane=kick kit=rock tick=768 vel=0.7 line=5 secSwing=0
-  4 inst=ride art=hit lane=ride kit=rock tick=768 vel=0.7 line=3 secSwing=0
-  4.25 inst=ride art=hit lane=ride kit=rock tick=816 vel=0.7 line=3 secSwing=0.0833
-  4.5 inst=ride art=hit lane=ride kit=rock tick=864 vel=0.7 line=3 secSwing=0
-  4.5 inst=snare art=hit lane=snare kit=rock tick=864 vel=0.7 line=4 secSwing=0
-  4.75 inst=ride art=hit lane=ride kit=rock tick=912 vel=0.7 line=3 secSwing=0.0833
-  5 inst=kick art=hit lane=kick kit=rock tick=960 vel=0.7 line=5 secSwing=0
-  5 inst=ride art=hit lane=ride kit=rock tick=960 vel=0.7 line=3 secSwing=0
-  5.25 inst=ride art=hit lane=ride kit=rock tick=1008 vel=0.7 line=3 secSwing=0.0833
-  5.5 inst=ride art=hit lane=ride kit=rock tick=1056 vel=0.7 line=3 secSwing=0
-  5.5 inst=snare art=hit lane=snare kit=rock tick=1056 vel=0.7 line=4 secSwing=0
-  5.75 inst=ride art=hit lane=ride kit=rock tick=1104 vel=0.7 line=3 secSwing=0.0833
-  6 inst=kick art=hit lane=kick kit=rock tick=1152 vel=0.7 line=5 secSwing=0
-  6 inst=ride art=hit lane=ride kit=rock tick=1152 vel=0.7 line=3 secSwing=0
-  6.25 inst=ride art=hit lane=ride kit=rock tick=1200 vel=0.7 line=3 secSwing=0.0833
-  6.5 inst=ride art=hit lane=ride kit=rock tick=1248 vel=0.7 line=3 secSwing=0
-  6.5 inst=snare art=hit lane=snare kit=rock tick=1248 vel=0.7 line=4 secSwing=0
-  6.75 inst=ride art=hit lane=ride kit=rock tick=1296 vel=0.7 line=3 secSwing=0.0833
-  7 inst=kick art=hit lane=kick kit=rock tick=1344 vel=0.7 line=5 secSwing=0
-  7 inst=ride art=hit lane=ride kit=rock tick=1344 vel=0.7 line=3 secSwing=0
-  7.25 inst=ride art=hit lane=ride kit=rock tick=1392 vel=0.7 line=3 secSwing=0.0833
-  7.5 inst=ride art=hit lane=ride kit=rock tick=1440 vel=0.7 line=3 secSwing=0
-  7.5 inst=snare art=hit lane=snare kit=rock tick=1440 vel=0.7 line=4 secSwing=0
-  7.75 inst=ride art=hit lane=ride kit=rock tick=1488 vel=0.7 line=3 secSwing=0.0833
-  8 inst=kick art=hit lane=kick kit=rock tick=1536 vel=0.7 line=5 secSwing=0
-  8 inst=ride art=hit lane=ride kit=rock tick=1536 vel=0.7 line=3 secSwing=0
-  8.25 inst=ride art=hit lane=ride kit=rock tick=1584 vel=0.7 line=3 secSwing=0.0833
-  8.5 inst=ride art=hit lane=ride kit=rock tick=1632 vel=0.7 line=3 secSwing=0
-  8.5 inst=snare art=hit lane=snare kit=rock tick=1632 vel=0.7 line=4 secSwing=0
-  8.75 inst=ride art=hit lane=ride kit=rock tick=1680 vel=0.7 line=3 secSwing=0.0833
-  9 inst=kick art=hit lane=kick kit=rock tick=1728 vel=0.7 line=5 secSwing=0
-  9 inst=ride art=hit lane=ride kit=rock tick=1728 vel=0.7 line=3 secSwing=0
-  9.25 inst=ride art=hit lane=ride kit=rock tick=1776 vel=0.7 line=3 secSwing=0.0833
-  9.5 inst=ride art=hit lane=ride kit=rock tick=1824 vel=0.7 line=3 secSwing=0
-  9.5 inst=snare art=hit lane=snare kit=rock tick=1824 vel=0.7 line=4 secSwing=0
-  9.75 inst=ride art=hit lane=ride kit=rock tick=1872 vel=0.7 line=3 secSwing=0.0833
-  10 inst=kick art=hit lane=kick kit=rock tick=1920 vel=0.7 line=5 secSwing=0
-  10 inst=ride art=hit lane=ride kit=rock tick=1920 vel=0.7 line=3 secSwing=0
-  10.25 inst=ride art=hit lane=ride kit=rock tick=1968 vel=0.7 line=3 secSwing=0.0833
-  10.5 inst=ride art=hit lane=ride kit=rock tick=2016 vel=0.7 line=3 secSwing=0
-  10.5 inst=snare art=hit lane=snare kit=rock tick=2016 vel=0.7 line=4 secSwing=0
-  10.75 inst=ride art=hit lane=ride kit=rock tick=2064 vel=0.7 line=3 secSwing=0.0833
-  11 inst=kick art=hit lane=kick kit=rock tick=2112 vel=0.7 line=5 secSwing=0
-  11 inst=ride art=hit lane=ride kit=rock tick=2112 vel=0.7 line=3 secSwing=0
-  11.25 inst=ride art=hit lane=ride kit=rock tick=2160 vel=0.7 line=3 secSwing=0.0833
-  11.5 inst=ride art=hit lane=ride kit=rock tick=2208 vel=0.7 line=3 secSwing=0
-  11.5 inst=snare art=hit lane=snare kit=rock tick=2208 vel=0.7 line=4 secSwing=0
-  11.75 inst=ride art=hit lane=ride kit=rock tick=2256 vel=0.7 line=3 secSwing=0.0833
-  12 inst=kick art=hit lane=kick kit=rock tick=2304 vel=0.7 line=5 secSwing=0
-  12 inst=ride art=hit lane=ride kit=rock tick=2304 vel=0.7 line=3 secSwing=0
-  12.25 inst=ride art=hit lane=ride kit=rock tick=2352 vel=0.7 line=3 secSwing=0.0833
-  12.5 inst=ride art=hit lane=ride kit=rock tick=2400 vel=0.7 line=3 secSwing=0
-  12.5 inst=snare art=hit lane=snare kit=rock tick=2400 vel=0.7 line=4 secSwing=0
-  12.75 inst=ride art=hit lane=ride kit=rock tick=2448 vel=0.7 line=3 secSwing=0.0833
-  13 inst=kick art=hit lane=kick kit=rock tick=2496 vel=0.7 line=5 secSwing=0
-  13 inst=ride art=hit lane=ride kit=rock tick=2496 vel=0.7 line=3 secSwing=0
-  13.25 inst=ride art=hit lane=ride kit=rock tick=2544 vel=0.7 line=3 secSwing=0.0833
-  13.5 inst=ride art=hit lane=ride kit=rock tick=2592 vel=0.7 line=3 secSwing=0
-  13.5 inst=snare art=hit lane=snare kit=rock tick=2592 vel=0.7 line=4 secSwing=0
-  13.75 inst=ride art=hit lane=ride kit=rock tick=2640 vel=0.7 line=3 secSwing=0.0833
-  14 inst=kick art=hit lane=kick kit=rock tick=2688 vel=0.7 line=5 secSwing=0
-  14 inst=ride art=hit lane=ride kit=rock tick=2688 vel=0.7 line=3 secSwing=0
-  14.25 inst=ride art=hit lane=ride kit=rock tick=2736 vel=0.7 line=3 secSwing=0.0833
-  14.5 inst=ride art=hit lane=ride kit=rock tick=2784 vel=0.7 line=3 secSwing=0
-  14.5 inst=snare art=hit lane=snare kit=rock tick=2784 vel=0.7 line=4 secSwing=0
-  14.75 inst=ride art=hit lane=ride kit=rock tick=2832 vel=0.7 line=3 secSwing=0.0833
-  15 inst=kick art=hit lane=kick kit=rock tick=2880 vel=0.7 line=5 secSwing=0
-  15 inst=ride art=hit lane=ride kit=rock tick=2880 vel=0.7 line=3 secSwing=0
-  15.25 inst=ride art=hit lane=ride kit=rock tick=2928 vel=0.7 line=3 secSwing=0.0833
-  15.5 inst=ride art=hit lane=ride kit=rock tick=2976 vel=0.7 line=3 secSwing=0
-  15.5 inst=snare art=hit lane=snare kit=rock tick=2976 vel=0.7 line=4 secSwing=0
-  15.75 inst=ride art=hit lane=ride kit=rock tick=3024 vel=0.7 line=3 secSwing=0.0833
-  16 inst=kick art=hit lane=kick kit=rock tick=3072 vel=0.7 line=5 secSwing=0
-  16 inst=ride art=hit lane=ride kit=rock tick=3072 vel=0.7 line=3 secSwing=0
-  16.25 inst=ride art=hit lane=ride kit=rock tick=3120 vel=0.7 line=3 secSwing=0.0833
-  16.5 inst=ride art=hit lane=ride kit=rock tick=3168 vel=0.7 line=3 secSwing=0
-  16.5 inst=snare art=hit lane=snare kit=rock tick=3168 vel=0.7 line=4 secSwing=0
-  16.75 inst=ride art=hit lane=ride kit=rock tick=3216 vel=0.7 line=3 secSwing=0.0833
-  17 inst=kick art=hit lane=kick kit=rock tick=3264 vel=0.7 line=5 secSwing=0
-  17 inst=ride art=hit lane=ride kit=rock tick=3264 vel=0.7 line=3 secSwing=0
-  17.25 inst=ride art=hit lane=ride kit=rock tick=3312 vel=0.7 line=3 secSwing=0.0833
-  17.5 inst=ride art=hit lane=ride kit=rock tick=3360 vel=0.7 line=3 secSwing=0
-  17.5 inst=snare art=hit lane=snare kit=rock tick=3360 vel=0.7 line=4 secSwing=0
-  17.75 inst=ride art=hit lane=ride kit=rock tick=3408 vel=0.7 line=3 secSwing=0.0833
-  18 inst=kick art=hit lane=kick kit=rock tick=3456 vel=0.7 line=5 secSwing=0
-  18 inst=ride art=hit lane=ride kit=rock tick=3456 vel=0.7 line=3 secSwing=0
-  18.25 inst=ride art=hit lane=ride kit=rock tick=3504 vel=0.7 line=3 secSwing=0.0833
-  18.5 inst=ride art=hit lane=ride kit=rock tick=3552 vel=0.7 line=3 secSwing=0
-  18.5 inst=snare art=hit lane=snare kit=rock tick=3552 vel=0.7 line=4 secSwing=0
-  18.75 inst=ride art=hit lane=ride kit=rock tick=3600 vel=0.7 line=3 secSwing=0.0833
-  19 inst=kick art=hit lane=kick kit=rock tick=3648 vel=0.7 line=5 secSwing=0
-  19 inst=ride art=hit lane=ride kit=rock tick=3648 vel=0.7 line=3 secSwing=0
-  19.25 inst=ride art=hit lane=ride kit=rock tick=3696 vel=0.7 line=3 secSwing=0.0833
-  19.5 inst=ride art=hit lane=ride kit=rock tick=3744 vel=0.7 line=3 secSwing=0
-  19.5 inst=snare art=hit lane=snare kit=rock tick=3744 vel=0.7 line=4 secSwing=0
-  19.75 inst=ride art=hit lane=ride kit=rock tick=3792 vel=0.7 line=3 secSwing=0.0833
-  20 inst=kick art=hit lane=kick kit=rock tick=3840 vel=0.7 line=5 secSwing=0
-  20 inst=ride art=hit lane=ride kit=rock tick=3840 vel=0.7 line=3 secSwing=0
-  20.25 inst=ride art=hit lane=ride kit=rock tick=3888 vel=0.7 line=3 secSwing=0.0833
-  20.5 inst=ride art=hit lane=ride kit=rock tick=3936 vel=0.7 line=3 secSwing=0
-  20.5 inst=snare art=hit lane=snare kit=rock tick=3936 vel=0.7 line=4 secSwing=0
-  20.75 inst=ride art=hit lane=ride kit=rock tick=3984 vel=0.7 line=3 secSwing=0.0833
-  21 inst=kick art=hit lane=kick kit=rock tick=4032 vel=0.7 line=5 secSwing=0
-  21 inst=ride art=hit lane=ride kit=rock tick=4032 vel=0.7 line=3 secSwing=0
-  21.25 inst=ride art=hit lane=ride kit=rock tick=4080 vel=0.7 line=3 secSwing=0.0833
-  21.5 inst=ride art=hit lane=ride kit=rock tick=4128 vel=0.7 line=3 secSwing=0
-  21.5 inst=snare art=hit lane=snare kit=rock tick=4128 vel=0.7 line=4 secSwing=0
-  21.75 inst=ride art=hit lane=ride kit=rock tick=4176 vel=0.7 line=3 secSwing=0.0833
-  22 inst=kick art=hit lane=kick kit=rock tick=4224 vel=0.7 line=5 secSwing=0
-  22 inst=ride art=hit lane=ride kit=rock tick=4224 vel=0.7 line=3 secSwing=0
-  22.25 inst=ride art=hit lane=ride kit=rock tick=4272 vel=0.7 line=3 secSwing=0.0833
-  22.5 inst=ride art=hit lane=ride kit=rock tick=4320 vel=0.7 line=3 secSwing=0
-  22.5 inst=snare art=hit lane=snare kit=rock tick=4320 vel=0.7 line=4 secSwing=0
-  22.75 inst=ride art=hit lane=ride kit=rock tick=4368 vel=0.7 line=3 secSwing=0.0833
-  23 inst=kick art=hit lane=kick kit=rock tick=4416 vel=0.7 line=5 secSwing=0
-  23 inst=ride art=hit lane=ride kit=rock tick=4416 vel=0.7 line=3 secSwing=0
-  23.25 inst=ride art=hit lane=ride kit=rock tick=4464 vel=0.7 line=3 secSwing=0.0833
-  23.5 inst=ride art=hit lane=ride kit=rock tick=4512 vel=0.7 line=3 secSwing=0
-  23.5 inst=snare art=hit lane=snare kit=rock tick=4512 vel=0.7 line=4 secSwing=0
-  23.75 inst=ride art=hit lane=ride kit=rock tick=4560 vel=0.7 line=3 secSwing=0.0833
-chords:
-  0 tick=0 ticks=384 chord={"input":"I7","label":"A7","rootPc":9,"bassMidi":45,"notesMidi":[57,61,64,67],"noteNames":["A3","C#4","E4","G4"],"bassName":"A2"} label=A7 instrument=guitar.electric transpose=0 line=2 secDur=2 secSwing=0
-  2 tick=384 ticks=384 chord={"input":"I7","label":"A7","rootPc":9,"bassMidi":45,"notesMidi":[57,61,64,67],"noteNames":["A3","C#4","E4","G4"],"bassName":"A2"} label=A7 instrument=guitar.electric transpose=0 line=2 secDur=2 secSwing=0
-  4 tick=768 ticks=384 chord={"input":"I7","label":"A7","rootPc":9,"bassMidi":45,"notesMidi":[57,61,64,67],"noteNames":["A3","C#4","E4","G4"],"bassName":"A2"} label=A7 instrument=guitar.electric transpose=0 line=2 secDur=2 secSwing=0
-  6 tick=1152 ticks=384 chord={"input":"I7","label":"A7","rootPc":9,"bassMidi":45,"notesMidi":[57,61,64,67],"noteNames":["A3","C#4","E4","G4"],"bassName":"A2"} label=A7 instrument=guitar.electric transpose=0 line=2 secDur=2 secSwing=0
-  8 tick=1536 ticks=384 chord={"input":"IV7","label":"D7","rootPc":2,"bassMidi":50,"notesMidi":[62,66,69,72],"noteNames":["D4","F#4","A4","C5"],"bassName":"D3"} label=D7 instrument=guitar.electric transpose=0 line=2 secDur=2 secSwing=0
-  10 tick=1920 ticks=384 chord={"input":"IV7","label":"D7","rootPc":2,"bassMidi":50,"notesMidi":[62,66,69,72],"noteNames":["D4","F#4","A4","C5"],"bassName":"D3"} label=D7 instrument=guitar.electric transpose=0 line=2 secDur=2 secSwing=0
-  12 tick=2304 ticks=384 chord={"input":"I7","label":"A7","rootPc":9,"bassMidi":45,"notesMidi":[57,61,64,67],"noteNames":["A3","C#4","E4","G4"],"bassName":"A2"} label=A7 instrument=guitar.electric transpose=0 line=2 secDur=2 secSwing=0
-  14 tick=2688 ticks=384 chord={"input":"I7","label":"A7","rootPc":9,"bassMidi":45,"notesMidi":[57,61,64,67],"noteNames":["A3","C#4","E4","G4"],"bassName":"A2"} label=A7 instrument=guitar.electric transpose=0 line=2 secDur=2 secSwing=0
-  16 tick=3072 ticks=384 chord={"input":"V7","label":"E7","rootPc":4,"bassMidi":52,"notesMidi":[64,68,71,74],"noteNames":["E4","G#4","B4","D5"],"bassName":"E3"} label=E7 instrument=guitar.electric transpose=0 line=2 secDur=2 secSwing=0
-  18 tick=3456 ticks=384 chord={"input":"IV7","label":"D7","rootPc":2,"bassMidi":50,"notesMidi":[62,66,69,72],"noteNames":["D4","F#4","A4","C5"],"bassName":"D3"} label=D7 instrument=guitar.electric transpose=0 line=2 secDur=2 secSwing=0
-  20 tick=3840 ticks=384 chord={"input":"I7","label":"A7","rootPc":9,"bassMidi":45,"notesMidi":[57,61,64,67],"noteNames":["A3","C#4","E4","G4"],"bassName":"A2"} label=A7 instrument=guitar.electric transpose=0 line=2 secDur=2 secSwing=0
-  22 tick=4224 ticks=384 chord={"input":"V7","label":"E7","rootPc":4,"bassMidi":52,"notesMidi":[64,68,71,74],"noteNames":["E4","G#4","B4","D5"],"bassName":"E3"} label=E7 instrument=guitar.electric transpose=0 line=2 secDur=2 secSwing=0
+  4.5455 tick=960 ticks=192 chord={"input":"v7","label":"G7","rootPc":7,"bassMidi":55,"notesMidi":[67,71,74,77],"noteNames":["G4","B4","D5","F5"],"bassName":"G3"} label=G7 instrument=piano transpose=0 repeat=true line=2 secDur=0.9091 secSwing=0
+  5.4545 tick=1152 ticks=384 chord={"input":"imaj7","label":"Cmaj7","rootPc":0,"bassMidi":48,"notesMidi":[60,64,67,71],"noteNames":["C4","E4","G4","B4"],"bassName":"C3"} label=Cmaj7 instrument=piano transpose=0 repeat=true line=2 secDur=1.8182 secSwing=0

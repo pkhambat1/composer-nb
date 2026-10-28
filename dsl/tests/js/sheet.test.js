@@ -221,10 +221,10 @@ describe("the key signature", () => {
       "[V:P1] c4 f4 z4 z4 |",
     )
     // a chord's notes as the chord spells them: B# major is B# D## F##, not C E G
-    expect(voice("set key C#\nset mode minor\nplay piano: chords #VII")).toBe(
+    expect(voice("set key C#\nset mode minor\nplay piano: chords #vii")).toBe(
       '[V:P1] "B#"[^B,^^D^^F]16 |',
     )
-    expect(voice("set key Gb\nplay piano: chords IV")).toBe('[V:P1] "Cb"[CEG]16 |')
+    expect(voice("set key Gb\nplay piano: chords iv")).toBe('[V:P1] "Cb"[CEG]16 |')
     // a 6/9 keeps its 9: abcjs drops what follows a / unless it's a bass note
     expect(voice("play piano: chords C6/9")).toMatch(/^\[V:P1\] "C6\u20449"/)
     expect(voice("play piano: chords Cm6/9/E")).toMatch(/^\[V:P1\] "Cm6\u20449\/E"/)
