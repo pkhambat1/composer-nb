@@ -1848,13 +1848,21 @@ body {
   border: 1px dashed var(--border);
   line-height: 14px;
 }
+/* A double stroke: a full brick like any hit, with two thin strokes in it, one a stroke */
 .dg-dbl {
-  background: linear-gradient(
-    90deg,
-    var(--accent) 0 42%,
-    transparent 42% 58%,
-    var(--accent) 58% 100%
-  );
+  position: relative;
+  background: var(--accent);
+}
+.dg-dbl::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 25%;
+  width: 6px;
+  height: 50%;
+  margin-left: -3px;
+  border-left: 1.5px solid var(--paper);
+  border-right: 1.5px solid var(--paper);
 }
 /* The playhead: one outline around the column of the step playing now, every row of it.
    Placed in the bar's grid, over the step's column, it takes that column's size. */
