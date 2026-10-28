@@ -8,7 +8,10 @@ const labels = (p) => p.chords.map((e) => e.label)
 
 describe("parseChain", () => {
   it("starts from the settings the earlier cells ended on", () => {
-    const p = parseChain(["set tempo 90\nset transpose 2\nplay guitar: chords Am", "play guitar: chords G D"])
+    const p = parseChain([
+      "set tempo 90\nset transpose 2\nplay guitar: chords Am",
+      "play guitar: chords G D",
+    ])
     expect(p.errors).toEqual([])
     expect(p.blocks[0].tempo).toBe(90)
     expect(p.chords.map((e) => `${e.instrument} transpose ${e.transpose}`)).toEqual([
@@ -18,9 +21,9 @@ describe("parseChain", () => {
   })
 
   it("won't take a name that differs from one carried in only in its capitals", () => {
-    expect(parseChain(["pattern partA = { kick: x }", "pattern parta = { snare: x }"]).errors[0]?.msg).toBe(
-      "parta differs from partA only in its capitals, so pick another name or write partA",
-    )
+    expect(
+      parseChain(["pattern partA = { kick: x }", "pattern parta = { snare: x }"]).errors[0]?.msg,
+    ).toBe("parta differs from partA only in its capitals, so pick another name or write partA")
   })
 
   it("carries named chords, notes and patterns as well as settings", () => {
@@ -46,8 +49,8 @@ describe("parseChain", () => {
 
   it("lets the last cell change what it inherits", () => {
     expect(
-      parseChain(["set tempo 120\nplay piano: chords C", "set tempo 80\nplay piano: chords F"]).blocks[0]
-        .tempo,
+      parseChain(["set tempo 120\nplay piano: chords C", "set tempo 80\nplay piano: chords F"])
+        .blocks[0].tempo,
     ).toBe(80)
   })
 

@@ -19,14 +19,16 @@ export function cellId(): string {
 
 export function useCellManager(starterCells: SavedCell[]) {
   // Initialize cells from starter data - add id, runCount, output, status
-  const initCells = starterCells.map((c): NotebookCell => ({
-    id: cellId(),
-    type: c.type,
-    source: c.source,
-    runCount: null,
-    output: null,
-    status: "idle",
-  }))
+  const initCells = starterCells.map(
+    (c): NotebookCell => ({
+      id: cellId(),
+      type: c.type,
+      source: c.source,
+      runCount: null,
+      output: null,
+      status: "idle",
+    }),
+  )
 
   // State
   const [cells, setCells] = useState(initCells)
@@ -45,25 +47,24 @@ export function useCellManager(starterCells: SavedCell[]) {
   // Insert a new cell
   const insertCell = useCallback(
     (afterId: string | null, where: Place = "below", type: CellType = "music", source?: string) => {
-    setCells((cs) => {
-      const idx = afterId ? cs.findIndex((c) => c.id === afterId) : cs.length - 1
-      const insertAt = where === "above" ? Math.max(0, idx) : idx + 1
-      const nc: NotebookCell = {
-        id: cellId(),
-        type,
-        source:
-          source != null ? source : "",
-        runCount: null,
-        output: null,
-        status: "idle",
-      }
-      const next = [...cs]
-      next.splice(insertAt, 0, nc)
-      setSelectedId(nc.id)
-      setEditingId(source ? null : nc.id)
-      return next
-    })
-  },
+      setCells((cs) => {
+        const idx = afterId ? cs.findIndex((c) => c.id === afterId) : cs.length - 1
+        const insertAt = where === "above" ? Math.max(0, idx) : idx + 1
+        const nc: NotebookCell = {
+          id: cellId(),
+          type,
+          source: source != null ? source : "",
+          runCount: null,
+          output: null,
+          status: "idle",
+        }
+        const next = [...cs]
+        next.splice(insertAt, 0, nc)
+        setSelectedId(nc.id)
+        setEditingId(source ? null : nc.id)
+        return next
+      })
+    },
     [],
   )
 
@@ -125,7 +126,13 @@ export function useCellManager(starterCells: SavedCell[]) {
     setCells((cs) => {
       const idx = cs.findIndex((c) => c.id === id)
       if (idx < 0) return cs
-      const copy: NotebookCell = { ...cs[idx], id: cellId(), runCount: null, output: null, status: "idle" }
+      const copy: NotebookCell = {
+        ...cs[idx],
+        id: cellId(),
+        runCount: null,
+        output: null,
+        status: "idle",
+      }
       const next = [...cs]
       next.splice(idx + 1, 0, copy)
       setSelectedId(copy.id)

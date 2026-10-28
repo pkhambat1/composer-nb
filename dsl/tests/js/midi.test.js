@@ -87,8 +87,12 @@ describe("MIDI export", () => {
     const on = events(chart.body).filter((e) => (e[1] & 0xf0) === 0x90)
     expect(on.length).toBeGreaterThanOrEqual(6)
     expect(on.slice(0, 3).every((e) => e[0] === 0)).toBe(true) // the first chord's notes at once
-    const straight = events(chunks(file("play hat: 4 steps x-"))[2].body).filter((e) => (e[1] & 0xf0) === 0x90)
-    const swung = events(chunks(file("set swing on\nplay hat: 4 steps x-"))[2].body).filter((e) => (e[1] & 0xf0) === 0x90)
+    const straight = events(chunks(file("play hat: 4 steps x-"))[2].body).filter(
+      (e) => (e[1] & 0xf0) === 0x90,
+    )
+    const swung = events(chunks(file("set swing on\nplay hat: 4 steps x-"))[2].body).filter(
+      (e) => (e[1] & 0xf0) === 0x90,
+    )
     expect(straight[1][0]).toBe(48 - 12) // the & at 48 ticks, after the first hit's 12-tick note-off
     expect(swung[1][0]).toBe(64 - 12) // two thirds of the way through the beat
   })

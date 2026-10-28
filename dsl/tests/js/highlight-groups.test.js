@@ -158,7 +158,10 @@ describe("whitespace", () => {
 })
 
 describe("settings, and with", () => {
-  const colours = (src) => parts(src).filter((p) => p.s.trim()).map((p) => [p.s, p.c])
+  const colours = (src) =>
+    parts(src)
+      .filter((p) => p.s.trim())
+      .map((p) => [p.s, p.c])
   it("paints with, its settings and its block", () => {
     expect(colours("with key E, mode minor {")).toEqual([
       ["with", "tk-directive-key"],

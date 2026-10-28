@@ -45,11 +45,7 @@ export type Output = {
 
 // Grid cells per quarter note: the coarsest that still shows every hit, and where every
 // note stops.
-function gridResolution(
-  drumEvents: HitEvent[],
-  noteEvents: NoteSound[],
-  barTicks: number,
-): number {
+function gridResolution(drumEvents: HitEvent[], noteEvents: NoteSound[], barTicks: number): number {
   const ticks = [
     ...drumEvents.filter((e) => !e.hidden).map((e) => e.tick),
     ...noteEvents.flatMap((e) => [e.tick, e.tick + e.ticks]),

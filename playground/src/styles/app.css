@@ -95,12 +95,13 @@
   --tk-bass: #aab1bf;
 }
 
-
 * {
   box-sizing: border-box;
 }
 html {
-  transition: background-color 200ms ease, color 200ms ease;
+  transition:
+    background-color 200ms ease,
+    color 200ms ease;
 }
 html,
 body {
@@ -576,7 +577,7 @@ body {
   background: var(--paper);
   border: 1px solid var(--border);
   border-radius: 4px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   z-index: 30;
   min-width: 100px;
   overflow: hidden;
@@ -711,9 +712,6 @@ body {
   height: 1px;
   background: var(--border-soft);
   margin: 4px 2px;
-}
-.panel-subtitle-problem {
-  color: var(--traceback);
 }
 .kernel-status-label {
   color: var(--text-dim);
@@ -1188,7 +1186,6 @@ body {
   box-shadow: -6px 0 0 0 var(--tk-error-bg);
 }
 
-
 .cell-output {
   display: grid;
   grid-template-columns: 62px 1fr;
@@ -1320,7 +1317,6 @@ body {
   min-width: 4.5em;
   text-align: center;
 }
-
 
 .music-meta {
   display: flex;
@@ -1631,7 +1627,9 @@ body {
   overflow: hidden;
   opacity: 0;
   white-space: nowrap;
-  transition: max-width 300ms ease, opacity 200ms ease;
+  transition:
+    max-width 300ms ease,
+    opacity 200ms ease;
 }
 .status-bar:hover .sb-shortcuts {
   max-width: 500px;
@@ -1751,7 +1749,6 @@ body {
     display: none;
   }
 }
-
 
 /* Music language tokens (see dsl/js/highlight.ts) */
 .tk-inst {

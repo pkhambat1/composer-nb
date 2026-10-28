@@ -100,13 +100,17 @@ describe("drum sheet music", () => {
     expect(voices("play {\n  snare: ^---\n  hat.open: x---\n  snare.ghost: -x--\n}")).toEqual([
       `[V:H] !>!!open![c${X}]"<("">)"cz2 z4 z4 z4 |`,
     ])
-    expect(voices("play {\n  crash: x---\n  ride: -x--\n  ride.bell: --x-\n  tom.high: ---x\n}")).toEqual([
-      "[V:H] !style=x!a!style=x!f!style=harmonic!fe z4 z4 z4 |",
+    expect(
+      voices("play {\n  crash: x---\n  ride: -x--\n  ride.bell: --x-\n  tom.high: ---x\n}"),
+    ).toEqual(["[V:H] !style=x!a!style=x!f!style=harmonic!fe z4 z4 z4 |"])
+    expect(
+      voices(
+        "play {\n  tom.low: x---\n  tom.floor: -x--\n  snare.rim: --x-\n  snare.cross: ---x\n}",
+      ),
+    ).toEqual(["[V:H] dA!style=triangle!c!style=x!c z4 z4 z4 |"])
+    expect(voices("play {\n  kick: x---\n  hat.pedal: --x-\n}")).toEqual([
+      "[V:F] F2!style=x!D2 z4 z4 z4 |",
     ])
-    expect(voices("play {\n  tom.low: x---\n  tom.floor: -x--\n  snare.rim: --x-\n  snare.cross: ---x\n}")).toEqual([
-      "[V:H] dA!style=triangle!c!style=x!c z4 z4 z4 |",
-    ])
-    expect(voices("play {\n  kick: x---\n  hat.pedal: --x-\n}")).toEqual(["[V:F] F2!style=x!D2 z4 z4 z4 |"])
   })
 
   it("writes the sticking above the hands' notes", () => {
@@ -148,7 +152,9 @@ describe("pitched lines on the sheet", () => {
   })
 
   it("puts each instrument on its own staff, and the drums at the bottom", () => {
-    const { abc, tablature } = sheet("play {\n  kick: x---\n  bass: notes C---\n  piano: notes C---\n}")
+    const { abc, tablature } = sheet(
+      "play {\n  kick: x---\n  bass: notes C---\n  piano: notes C---\n}",
+    )
     expect(abc).toContain("%%score P1 P2 F\n")
     expect(abc).toContain('V:P1 clef=bass name="bass"')
     expect(abc).toContain('V:P2 clef=bass name="piano"')
@@ -172,7 +178,9 @@ describe("pitched lines on the sheet", () => {
     // A quarter from the & of 1 is one note; from the & of 2, an eighth tied over the middle
     expect(voices("play piano: notes _-C4--- E4---------")).toEqual(["[V:P1] z2C4 E2- E8 |"])
     // In 3 over 4 there is no middle to show: a half from beat 2
-    expect(voices("set time 3 over 4\nplay piano: notes C4--- E4-------")).toEqual(["[V:P1] C4 E8 |"])
+    expect(voices("set time 3 over 4\nplay piano: notes C4--- E4-------")).toEqual([
+      "[V:P1] C4 E8 |",
+    ])
     // A note that starts off the beat is tied, as before
     expect(voices("play piano: notes _C4-- E4-----------")).toEqual(["[V:P1] zC-C2 E4- E8 |"])
     expect(voices("play guitar: notes C-F#-C---")).toEqual(["[V:P1] C2^F2 C4 z4 z4 |"])
@@ -185,7 +193,7 @@ describe("pitched lines on the sheet", () => {
   })
 
   it("marks accents and ghost notes on a riff", () => {
-    expect(voices("play guitar: notes ^C-~E-")).toEqual(["[V:P1] !>!C2\"<(\"\">)\"E2 z4 z4 z4 |"])
+    expect(voices("play guitar: notes ^C-~E-")).toEqual(['[V:P1] !>!C2"<("">)"E2 z4 z4 z4 |'])
   })
 })
 
@@ -205,24 +213,36 @@ describe("the key signature", () => {
     expect(voice("set key D\nplay piano: notes F4--- F#4---")).toBe("[V:P1] =F4 ^F4 z4 z4 |")
     expect(voice("set key F\nplay piano: notes Bb3--- B3---")).toBe("[V:P1] B,4 =B,4 z4 z4 |")
     // Once in a bar, an accidental holds for the bar
-    expect(voice("play piano: notes F#4--- F#4--- _-------|F#4---------------")).toBe("[V:P1] ^F4 F4 z4 z4 | ^F16 |")
+    expect(voice("play piano: notes F#4--- F#4--- _-------|F#4---------------")).toBe(
+      "[V:P1] ^F4 F4 z4 z4 | ^F16 |",
+    )
   })
   it("spells a note as written, and a degree by its place in the scale", () => {
     expect(voice("play piano: notes Db4--- C#4---")).toBe("[V:P1] _D4 ^C4 z4 z4 |")
     // b3, b6 and b7 in C are Eb, Ab and Bb, not D#, G# and A#
-    expect(voice("set key C\nset octave 4\nplay piano: notes b3---b6---b7---")).toBe("[V:P1] _E4 _A4 _B4 z4 |")
+    expect(voice("set key C\nset octave 4\nplay piano: notes b3---b6---b7---")).toBe(
+      "[V:P1] _E4 _A4 _B4 z4 |",
+    )
     // F# major's seventh is E#, and Gb major's fourth is Cb: both in the signature already
-    expect(voice("set key F#\nset octave 4\nplay piano: notes 7---1'---")).toBe("[V:P1] e4 f4 z4 z4 |")
-    expect(voice("set key Gb\nset octave 4\nplay piano: notes 4---7---")).toBe("[V:P1] c4 f4 z4 z4 |")
+    expect(voice("set key F#\nset octave 4\nplay piano: notes 7---1'---")).toBe(
+      "[V:P1] e4 f4 z4 z4 |",
+    )
+    expect(voice("set key Gb\nset octave 4\nplay piano: notes 4---7---")).toBe(
+      "[V:P1] c4 f4 z4 z4 |",
+    )
     // a chord's notes as the chord spells them: B# major is B# D## F##, not C E G
-    expect(voice("set key C#\nset mode minor\nplay piano: chords #VII")).toBe('[V:P1] "B#"[^B,^^D^^F]16 |')
+    expect(voice("set key C#\nset mode minor\nplay piano: chords #VII")).toBe(
+      '[V:P1] "B#"[^B,^^D^^F]16 |',
+    )
     expect(voice("set key Gb\nplay piano: chords IV")).toBe('[V:P1] "Cb"[CEG]16 |')
     // a 6/9 keeps its 9: abcjs drops what follows a / unless it's a bass note
     expect(voice("play piano: chords C6/9")).toMatch(/^\[V:P1\] "C6\u20449"/)
     expect(voice("play piano: chords Cm6/9/E")).toMatch(/^\[V:P1\] "Cm6\u20449\/E"/)
   })
   it("stays off the percussion staff", () => {
-    const lines = voices("set key D\nplay {\n  hat: 1 bars x-\n  kick: x--- ---- x-x- ----\n  piano: notes F#4--- C#4---\n}")
+    const lines = voices(
+      "set key D\nplay {\n  hat: 1 bars x-\n  kick: x--- ---- x-x- ----\n  piano: notes F#4--- C#4---\n}",
+    )
     expect(lines[0]).toMatch(/^\[V:H\] \[K:none\] /)
     expect(lines[1]).toBe("[V:F] [K:none] F4 z4 F2F2 z4 |")
     expect(lines[2]).toBe("[V:P1] F4 C4 z4 z4 |")
@@ -230,7 +250,9 @@ describe("the key signature", () => {
   })
   it("spells a flat key's black keys with flats, but a minor key's leading tone sharp", () => {
     expect(voice("set key Bb\nplay piano: notes Eb4--- Db4---")).toBe("[V:P1] E4 _D4 z4 z4 |")
-    expect(voice("set key G\nset mode minor\nplay piano: notes F#4--- Eb4---")).toBe("[V:P1] ^F4 E4 z4 z4 |")
+    expect(voice("set key G\nset mode minor\nplay piano: notes F#4--- Eb4---")).toBe(
+      "[V:P1] ^F4 E4 z4 z4 |",
+    )
   })
 })
 
@@ -243,7 +265,9 @@ describe("the tab staff", () => {
     expect(sheet("play guitar: notes E2---").tablature).toEqual([{ instrument: "guitar" }])
   })
   it("goes with the guitar's staff, counted by staff: the drums are one, at the bottom", () => {
-    const { abc, tablature } = sheet("play {\n  kick: x---\n  hat: 4 steps x-\n  guitar.electric: notes E2---\n}")
+    const { abc, tablature } = sheet(
+      "play {\n  kick: x---\n  hat: 4 steps x-\n  guitar.electric: notes E2---\n}",
+    )
     expect(abc).toContain("%%score P1 (H F)\n")
     expect(tablature).toEqual([{ instrument: "guitar" }, { instrument: "" }])
     expect(sheet("play {\n  bass: notes E2---\n  guitar: notes E2---\n}").tablature).toEqual([
@@ -267,7 +291,9 @@ describe("systems", () => {
 
 describe("compound meters", () => {
   it("beams 6 over 8 in two groups of three eighths, and counts the eighths", () => {
-    const lines = voices("set time 6 over 8\nplay {\n  hat: 1 bars x-\n  kick: 1 bars x-----\n}", { counts: true })
+    const lines = voices("set time 6 over 8\nplay {\n  hat: 1 bars x-\n  kick: 1 bars x-----\n}", {
+      counts: true,
+    })
     expect(lines[0]).toBe(`[V:H] ${X}2${X}2${X}2 ${X}2${X}2${X}2 |`)
     expect(lines[1]).toBe("w: 1 2 3 4 5 6 |")
     expect(lines[2]).toBe("[V:F] F6 F6 |")

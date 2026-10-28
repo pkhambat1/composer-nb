@@ -519,7 +519,9 @@ function notePattern(
     s.of
       ? written(s.of) + 12 * s.shift! + degreeSemitones(s.degree!, s.acc)
       : s.degree
-        ? 12 * (octave + 1 + s.shift!) + key.tonicSemis + degreeSemitones(s.degree, s.acc, key.scale)
+        ? 12 * (octave + 1 + s.shift!) +
+          key.tonicSemis +
+          degreeSemitones(s.degree, s.acc, key.scale)
         : 12 * ((s.octave ?? octave) + 1) + NOTE_BASE[s.name![0]] + (sharp[s.name![1]] || 0)
   const transpose = st.transpose
   const midiOf = (s: NoteStep) => written(s) + transpose

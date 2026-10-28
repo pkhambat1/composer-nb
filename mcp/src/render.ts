@@ -73,7 +73,10 @@ export async function sheetSvg(
       .replace(/^<svg\b[^>]*>/, (tag) =>
         tag
           .replace(/\s(width|height|viewBox|style)="[^"]*"/g, "")
-          .replace(/^<svg/, `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}"`),
+          .replace(
+            /^<svg/,
+            `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}"`,
+          ),
       )
       .replace(/<style>[\s\S]*?<\/style>/, "")
       .replace(/currentColor/g, "#000000")
@@ -84,7 +87,10 @@ export async function sheetSvg(
 }
 
 // A whole play as one sheet: its blocks stacked, each a system of its own.
-export async function sheetOf(output: Output, options: { counts?: boolean } = {}): Promise<Sheet | null> {
+export async function sheetOf(
+  output: Output,
+  options: { counts?: boolean } = {},
+): Promise<Sheet | null> {
   const parts: Sheet[] = []
   for (const block of output.blocks) {
     const part = await sheetSvg(block, options)

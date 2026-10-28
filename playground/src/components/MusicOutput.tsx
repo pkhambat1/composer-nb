@@ -78,7 +78,10 @@ function CellDetails({
   onSetSheetCounts,
   getTime = noTime,
   playing = false,
-}: Pick<PlayerProps, "accent" | "drumView" | "onSetDrumView" | "sheetCounts" | "onSetSheetCounts"> & {
+}: Pick<
+  PlayerProps,
+  "accent" | "drumView" | "onSetDrumView" | "sheetCounts" | "onSetSheetCounts"
+> & {
   parsed: Parsed
   getTime?: () => number
   playing?: boolean
@@ -167,7 +170,12 @@ function CellDetails({
           {sheet ? (
             <React.Suspense fallback={<div className="dg-head">Drawing the staff…</div>}>
               <div className="sheet-print" ref={sheetRef}>
-                <DrumSheet blocks={parsed.blocks} counts={sheetCounts} getTime={getTime} playing={playing} />
+                <DrumSheet
+                  blocks={parsed.blocks}
+                  counts={sheetCounts}
+                  getTime={getTime}
+                  playing={playing}
+                />
               </div>
             </React.Suspense>
           ) : (
@@ -432,7 +440,9 @@ export default function MusicOutput({
     return (
       <div className="cell-output cell-output-error">
         <div className="traceback">
-          <span className="tb-name">{lines.length === 1 ? "1 mistake" : `${lines.length} mistakes`}</span>
+          <span className="tb-name">
+            {lines.length === 1 ? "1 mistake" : `${lines.length} mistakes`}
+          </span>
           <div className="tb-msg-block">
             {lines.map((l, i) => (
               <div key={i} className="tb-msg-line">
@@ -472,9 +482,7 @@ export default function MusicOutput({
             <button
               type="button"
               className={
-                "play-btn" +
-                (displayPlaying ? " playing" : "") +
-                (displayPaused ? " paused" : "")
+                "play-btn" + (displayPlaying ? " playing" : "") + (displayPaused ? " paused" : "")
               }
               onClick={async (e) => {
                 e.stopPropagation()

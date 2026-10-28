@@ -7,7 +7,17 @@ import { message } from "./diagnostics.ts"
 import { closest } from "./resolve.ts"
 import { cloneState, type State } from "./state.ts"
 import { evalNumber, nearWhole, sumTerms, type Report } from "./time.ts"
-import { among, KITS, MODES, PITCHED, SETTINGS, SOUNDS, soundsOf, SWING, type Setting } from "./vocab.ts"
+import {
+  among,
+  KITS,
+  MODES,
+  PITCHED,
+  SETTINGS,
+  SOUNDS,
+  soundsOf,
+  SWING,
+  type Setting,
+} from "./vocab.ts"
 
 // How a setting was written: after set, or in a with's header
 type Verb = "set" | "with"

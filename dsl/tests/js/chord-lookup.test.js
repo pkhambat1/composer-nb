@@ -98,7 +98,9 @@ describe("the chord library", () => {
   it("names the database's chords as a cell writes them", async () => {
     const { buildCatalog } = await loadLib()
     const labels = new Set(buildCatalog().map((c) => c.label))
-    for (const l of ["CmMaj7", "C9#5", "CM7b5", "Em/B", "F/Eb", "E/G#"]) expect(labels.has(l), l).toBe(true)
-    for (const l of ["Cmmaj7", "Caug9", "Cmaj7b5", "Calt", "C7sg", "F/D#"]) expect(labels.has(l), l).toBe(false)
+    for (const l of ["CmMaj7", "C9#5", "CM7b5", "Em/B", "F/Eb", "E/G#"])
+      expect(labels.has(l), l).toBe(true)
+    for (const l of ["Cmmaj7", "Caug9", "Cmaj7b5", "Calt", "C7sg", "F/D#"])
+      expect(labels.has(l), l).toBe(false)
   })
 })

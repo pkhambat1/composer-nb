@@ -42,14 +42,18 @@ function SheetBlock({
     })
     // When each note sounds, at the tempo in the ABC, so the playhead can find it
     tune.setTiming(0, 0)
-    setTimings(index, (tune as TimedTune).noteTimings.filter((t) => t.type === "event"))
+    setTimings(
+      index,
+      (tune as TimedTune).noteTimings.filter((t) => t.type === "event"),
+    )
     return () => setTimings(index, null)
   }, [abc, tablature, index, setTimings])
 
   return (
     <div className="ds-block">
       <div className="dg-head">
-        time {block.time} · tempo {block.tempo} · key {block.key} {block.mode} · {block.bars} bar{block.bars === 1 ? "" : "s"}
+        time {block.time} · tempo {block.tempo} · key {block.key} {block.mode} · {block.bars} bar
+        {block.bars === 1 ? "" : "s"}
       </div>
       <div ref={mountRef} className="ds-staff" />
     </div>
@@ -91,11 +95,14 @@ function DrumSheet({ blocks, counts, getTime, playing }: Follows & { counts: boo
     return () => cancelAnimationFrame(raf)
   }, [blocks, getTime, playing])
 
-  const drawn = (b: GridBlock) => b.drumEvents.length || b.noteEvents.length || b.chordEvents?.length
+  const drawn = (b: GridBlock) =>
+    b.drumEvents.length || b.noteEvents.length || b.chordEvents?.length
   return (
     <div className="drum-sheet" ref={rootRef}>
       {blocks.map((b, i) =>
-        drawn(b) ? <SheetBlock key={i} block={b} index={i} counts={counts} setTimings={setTimings} /> : null,
+        drawn(b) ? (
+          <SheetBlock key={i} block={b} index={i} counts={counts} setTimings={setTimings} />
+        ) : null,
       )}
     </div>
   )

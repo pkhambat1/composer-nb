@@ -9,9 +9,17 @@ describe("notebooks from shared links", () => {
   it("go, and the first one left opens in place of one that was open", () => {
     const store = {
       current: "b",
-      list: [nb("a", "Welcome"), nb("b", "Shared notebook"), nb("c", "Shared cell"), nb("d", "waltz")],
+      list: [
+        nb("a", "Welcome"),
+        nb("b", "Shared notebook"),
+        nb("c", "Shared cell"),
+        nb("d", "waltz"),
+      ],
     }
-    expect(dropShared(store)).toEqual({ current: "a", list: [nb("a", "Welcome"), nb("d", "waltz")] })
+    expect(dropShared(store)).toEqual({
+      current: "a",
+      list: [nb("a", "Welcome"), nb("d", "waltz")],
+    })
   })
 
   it("leave a store without them as it is", () => {
