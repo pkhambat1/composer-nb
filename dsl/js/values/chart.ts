@@ -9,7 +9,7 @@ import { keyOf } from "../settings.ts"
 import { NAME_LIKE } from "../resolve.ts"
 import type { State } from "../state.ts"
 import { drawsNotes, spaceNotes } from "./notes.ts"
-import { splitBars } from "./steps.ts"
+import { isOf, openParens, splitBars } from "./steps.ts"
 import { TPQ, timeLabel, type Report } from "../time.ts"
 
 export type Key = NonNullable<ReturnType<typeof parseKey>>
@@ -52,29 +52,29 @@ export function dimMarkProblem(tok: string): string | null {
   return `"${tok}": a diminished numeral takes dim, as a chord does: ${written} (viidim, viidim7, or viim7b5 for half-diminished)`
 }
 
-// V7 of V (V7@V): a numeral counted on the major scale of the root of the chord after of, so
+// V7 of V: a numeral counted on the major scale of the root of the chord after of, so
 // in C it's D7, the V7 of G. A chain takes brackets: V7 of (V of V). The chord after of gives
 // only its root, and a bass note goes at the end: V7 of V/F#. Returns { chord } or { error }.
 // Each side is a numeral, with whatever a chart takes after one (V7alt).
 const numeral = (t: string) => /^[#b]?[IViv]/.test(t)
 export function ofChord(tok: string, key: Key, octave: number): Of {
-  const at = tok.indexOf("@")
+  const at = tok.indexOf(" of")
   // the last / is a bass's unless it's a 6/9's own: V7 of V/F#, V of I6/9
   const slash = tok.lastIndexOf("/")
   const own = tok.slice(slash - 1, slash + 2) === "6/9"
-  const bass = slash > Math.max(at, tok.lastIndexOf("›")) && !own ? tok.slice(slash + 1) : null
+  const bass = slash > Math.max(at, tok.lastIndexOf(")")) && !own ? tok.slice(slash + 1) : null
   const main = bass === null ? tok : tok.slice(0, slash)
   const left = main.slice(0, at)
-  const right = main.slice(at + 1)
+  const right = main.slice(at + 4) // past " of "
   if (!numeral(left)) {
     return { error: message("of.leftNumeral") }
   }
-  if (right.startsWith("(")) return { error: message("of.openBracket") }
+  if (right.startsWith("(") && openParens(right) > 0) return { error: message("of.openBracket") }
   let root: Chord | null
-  if (right.startsWith("‹")) {
-    if (!right.endsWith("›")) return { error: message("of.chainBrackets") }
+  if (right.startsWith("(")) {
+    if (!right.endsWith(")")) return { error: message("of.chainBrackets") }
     const inner = right.slice(1, -1)
-    const r: { chord?: Chord | null; error?: string } | null = inner.includes("@")
+    const r: { chord?: Chord | null; error?: string } | null = isOf(inner)
       ? ofChord(inner, key, octave)
       : numeral(inner)
         ? { chord: buildChord(inner, key, octave) }
@@ -83,7 +83,7 @@ export function ofChord(tok: string, key: Key, octave: number): Of {
     if (!r?.chord) return { error: message("of.rightNumeral") }
     root = r.chord
   } else {
-    if (right.includes("@")) return { error: message("of.chainBrackets") }
+    if (isOf(right)) return { error: message("of.chainBrackets") }
     if (!numeral(right)) {
       return {
         error: buildChord(right, key, octave)
@@ -112,7 +112,7 @@ function chordSlot(tok: string, part: Part, st: State, key: Key, err: Report): S
     err(part.ln, "% stands for a whole bar, so it goes between bar lines on its own: Am F|%")
     return null
   }
-  if (tok.includes("@")) {
+  if (isOf(tok)) {
     const of = ofChord(tok, key, st.octave)
     if (of.error) {
       err(part.ln, of.error)

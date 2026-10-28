@@ -145,6 +145,12 @@ export function readSequence(
       )
       return null
     }
+    // of counts a note or a chord from another, so it's on an instrument's line, never
+    // between patterns
+    if (name[0] === "of") {
+      fail("of counts a note or a chord from another: piano: 5 of C3, or piano: chords V7 of V")
+      return null
+    }
     i += name[0].length
     return { name: name[0], bars }
   }

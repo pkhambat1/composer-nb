@@ -30,7 +30,9 @@ import {
   stepParts,
   STICKING_HELP,
   STICKING_RE,
+  isOf,
   tokenize,
+  withoutOf,
   type Blocks,
 } from "./values/steps.ts"
 import { SETTINGS, TYPES, type Type } from "./vocab.ts"
@@ -182,7 +184,7 @@ export function defineWord(
       tokens.push(t)
     } else if (NAME_LIKE.test(t) && !isRoman(t) && !/^[-xd]+$/.test(t)) {
       return err(ln, `"${t}" isn't defined above. Name it first: ${type} ${t} = ...`)
-    } else if (type === "chords" && t.includes("@")) {
+    } else if (type === "chords" && isOf(t)) {
       const of = ofChord(t, key, state.octave)
       if (of.error) return err(ln, of.error)
       tokens.push(t)
@@ -231,7 +233,8 @@ export function readDecl(
 // Whether a value is written as a pattern: braces, a length, or an instrument's line.
 export function patternText(value: string): boolean {
   const len = lengthPrefix(value)
-  if (len.has || /[{(]/.test(len.rest) || PLACE_RE.test(value) || EVERY_RE.test(value)) return true
+  if (len.has || /[{(]/.test(withoutOf(len.rest)) || PLACE_RE.test(value) || EVERY_RE.test(value))
+    return true
   const track = TRACK_RE.exec(value)
   return !!track && !/\s/.test(track[1])
 }
@@ -383,7 +386,10 @@ export function classifyDecl(
   } else if (
     type !== shape &&
     (type === "notes"
-      ? /[{(]/.test(value) || PLACE_RE.test(value) || EVERY_RE.test(value) || TRACK_RE.test(value)
+      ? /[{(]/.test(withoutOf(value)) ||
+        PLACE_RE.test(value) ||
+        EVERY_RE.test(value) ||
+        TRACK_RE.test(value)
       : patternText(value))
   ) {
     // Anything else that isn't the declared type is said more exactly by defineWord. A
