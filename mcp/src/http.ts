@@ -28,7 +28,10 @@ export async function handleMcp(
 // The playground's address for links, from the request when it was made to a deployment.
 export function siteOf(req: IncomingMessage, fallback?: string): string | undefined {
   // Node joins a header sent twice into one string, apart from a few it keeps as a list
-  const header = (name: string) => [req.headers[name]].flat()[0]
+  const header = (name: string) => {
+    const value = req.headers[name]
+    return Array.isArray(value) ? value[0] : value
+  }
   const host = header("x-forwarded-host") || req.headers.host
   if (!host) return fallback
   const proto = header("x-forwarded-proto") || (host.startsWith("localhost") ? "http" : "https")
