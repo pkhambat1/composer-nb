@@ -96,6 +96,12 @@ export const MODES = [
 export const SOUNDS: Readonly<Partial<Record<Pitched, readonly string[]>>> = {
   "guitar.electric": ["clean", "muted"],
 }
+// The sounds an instrument can be set to, if it has more than one
+export const soundsOf = (name: string) =>
+  (SOUNDS as Record<string, readonly string[] | undefined>)[name]
+
+// Whether a word is one of a list's, for any word: a list typed by its words only takes those
+export const among = (list: readonly string[], word: string) => list.includes(word)
 
 // What steps can be measured in. Always plural, whatever the number.
 export const UNITS = ["steps", "beats", "bars"] as const

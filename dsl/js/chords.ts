@@ -14,7 +14,8 @@ export type Key = {
   sharps: number
   flats: boolean
 }
-// A chord as it sounds: its name as written, its root, its bass and notes, and their names
+// A chord as it sounds: its name as written, its root, its bass and notes, and their names.
+// On a guitar the audio plays it as a shape on the neck, and marks it so.
 export type Voiced = {
   input: string
   label: string
@@ -23,6 +24,7 @@ export type Voiced = {
   notesMidi: number[]
   noteNames: string[]
   bassName: string
+  fromGuitarPosition?: boolean
 }
 
 export const NOTE_TO_PC: Record<string, number> = {

@@ -86,7 +86,7 @@ describe("a chord's guitar shape sounds that chord", () => {
 describe("the chord library", () => {
   it("lists only names the language plays, drawn with the shape a cell plays", async () => {
     const { buildCatalog, lookupPosition } = await loadLib()
-    const { parseSource } = await import("../../js/music-engine.js")
+    const { parseSource } = await import("../../js/music-engine.ts")
     const catalog = buildCatalog()
     expect(catalog.length).toBeGreaterThan(400)
     for (const { label, position } of catalog) {

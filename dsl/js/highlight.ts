@@ -1,4 +1,4 @@
-/* Syntax highlighter for music cells (see language.js).
+/* Syntax highlighter for music cells (see language.ts).
    Exposes highlightMusic(src) -> lines of token parts for React rendering.
    Each part: { c: className | null, s: text }
    Token classes (used by CSS):
@@ -8,8 +8,21 @@
      .tk-note (a note on a pitched line),
      .tk-error
    Whitespace is kept exactly, so the layer lines up with the textarea under it. */
-import { KEYWORDS, LANES, MODES, PARTS, PITCHED, SETTINGS, SOUNDS, TYPES, UNITS } from "./language.ts"
+import { KEYWORDS, LANES, MODES, PARTS, PITCHED, SETTINGS, TYPES, UNITS } from "./language.ts"
 import { chordParts, isRoman, parseKey } from "./chords.ts"
+import { among, soundsOf } from "./vocab.ts"
+
+// A run of a line's text, and the class it's coloured with (null for none)
+export type Part = { c: string | null; s: string }
+// What a value holds: a drum's steps ("drum"), notes, a chart of chords ("chord"), what a
+// pitched instrument's line holds ("pitched": notes, or chords and then a chart), a
+// sticking, or anything a name could hold ("word")
+type Kind = "drum" | "notes" | "chord" | "pitched" | "sticking" | "word"
+// What a block holds: a drum's layers of steps, a pitched instrument's layers, or lines
+type Holds = "steps" | "pitched" | "lines"
+// Where a line stands: how many groups ( ) are open, and whether a thing has been written
+// outside them (see names)
+type Stand = { depth: number; took: boolean }
 
 const ROMAN_RE = /^([#b])?(VII|VI|IV|V|III|II|I|vii|vi|iv|v|iii|ii|i)(.*)$/
 const STEPS_RE = /^[-x^~d]+$/
@@ -27,12 +40,12 @@ const OWN_NAME = /^[a-z][A-Za-z0-9]+$/
 const SUM_RE = /^[\d\s./+*()-]*\d[\d\s./+*()-]*$/
 const TRACK_RE = /^[A-Za-z][A-Za-z0-9]*(?:\.[A-Za-z0-9]+)?\s*:/
 
-const part = (c, s) => ({ c, s })
+const part = (c: string | null, s: string): Part => ({ c, s })
 
-function chordToken(token) {
-  const parts = []
+function chordToken(token: string): Part[] {
+  const parts: Part[] = []
   let core = token
-  let tail = []
+  let tail: Part[] = []
   if (chordParts(core).length > 1) {
     const [main, bass] = chordParts(core)
     core = main
@@ -71,7 +84,7 @@ function chordToken(token) {
 }
 
 // x--^-~-: each step coloured on its own.
-function stepRun(t) {
+function stepRun(t: string): Part[] {
   return [...t].map((ch) =>
     ch === "-" ? part("tk-rest", ch) : part(ch === "^" ? "tk-step tk-step-acc" : "tk-step", ch),
   )
@@ -79,9 +92,9 @@ function stepRun(t) {
 
 // F---G~F-^E2, 1---b3---: each note coloured as the step it is, with its mark and octave.
 // A note straight after another one is a mistake: notes don't touch.
-function noteRun(t) {
+function noteRun(t: string): Part[] {
   let afterNote = false
-  return t.match(NOTE_AT).map((n) => {
+  return t.match(NOTE_AT)!.map((n) => {
     if (n === "-" || n === "_") {
       afterNote = false
       return part("tk-rest", n)
@@ -94,7 +107,7 @@ function noteRun(t) {
 }
 
 // One token of what an instrument plays (or of what a steps, notes or chords name holds).
-function valueToken(t, kind) {
+function valueToken(t: string, kind: Kind): Part[] {
   if (t === "|" || t === "%") return [part("tk-bar", t)]
   if (t === "{" || t === "}") return [part("tk-punct", t)] // an instrument's block of layers
   // loop is gone: whether something repeats depends on where it is
@@ -108,7 +121,7 @@ function valueToken(t, kind) {
   }
   if (kind === "notes") {
     if (NOTES_RE.test(t)) return noteRun(t)
-    const name = OWN_NAME.test(t) && !isRoman(t) && !TYPES.includes(t)
+    const name = OWN_NAME.test(t) && !isRoman(t) && !among(TYPES, t)
     return [part(name ? "tk-word" : "tk-error", t)]
   }
   if (t === "-" || t === "_" || t === "rest") return [part("tk-rest", t)]
@@ -122,7 +135,7 @@ function valueToken(t, kind) {
 }
 
 // Splits text into tokens and the whitespace between them, keeping both.
-function pieces(text, re) {
+function pieces(text: string, re: RegExp): string[] {
   return text.split(re).filter((p) => p !== "")
 }
 
@@ -130,8 +143,8 @@ function pieces(text, re) {
 // anything beside one is a mistake: kick: x--- { x- }. Which of the line's `words` are
 // beside a block: the second thing on the line and after it, a block or a run of steps,
 // once there's a block among them.
-function beside(words) {
-  const marked = new Set()
+function beside(words: string[]): Set<number> {
+  const marked = new Set<number>()
   let depth = 0 // how deep in a block opened on this line
   let things = 0 // the blocks and runs of steps at the top level so far
   let run = false // whether the last of them is a run of steps
@@ -167,22 +180,22 @@ function beside(words) {
 
 // The kind of value the last line held, so a line that starts with | (which continues it)
 // is coloured the same way. Set by values().
-let lastKind = null
+let lastKind: Kind | null = null
 
 // A number written as a length's count: 2, 1.5, (1+2).
-const isCount = (w) => /^[\d(][\d.()+*/-]*$/.test(w || "")
+const isCount = (w: string | undefined) => /^[\d(][\d.()+*/-]*$/.test(w || "")
 
 // `kind` is what the value is: a drum's steps ("drum"), notes, a chart of chords ("chord"),
 // what a pitched instrument's line holds ("pitched": notes, or chords and then a chart),
 // or anything a name could hold ("word").
-function values(text, kind) {
+function values(text: string, kind: Kind): Part[] {
   const all = pieces(text, /(\s+|\||[{},])/)
   const words = all.filter((p) => !/^\s+$/.test(p))
   // piano: chords Am F|C G: the word, then the chart
   const chart = kind === "pitched" && words[0] === "chords"
   if (kind === "pitched") kind = chart ? "chord" : "notes"
   lastKind = kind
-  const mistakes = kind === "drum" ? beside(words) : new Set()
+  const mistakes = kind === "drum" ? beside(words) : new Set<number>()
   const timed = kind === "drum" || kind === "notes" // lines that take lengths and ...
   const ofs = (kind === "notes" || kind === "chord") && words.includes("of")
   let k = -1 // which word this is
@@ -213,8 +226,8 @@ function values(text, kind) {
         return [part("tk-directive-val", p)]
       }
       // 2 beats rest, 3 beats C2: a length in front of what fills it
-      if (UNITS.includes(p)) return [part("tk-directive-key", p)]
-      if (isCount(p) && UNITS.includes(words[k + 1])) return [part("tk-directive-val", p)]
+      if (among(UNITS, p)) return [part("tk-directive-key", p)]
+      if (isCount(p) && among(UNITS, words[k + 1])) return [part("tk-directive-val", p)]
       // after a length's count only its unit can follow: 2 beatz, 2 pair
       if (kind === "drum" && isCount(words[k - 1]) && !/^[\d(,|{}]/.test(p) && !BEAT_RE.test(p)) {
         return [part("tk-error", p)]
@@ -228,7 +241,7 @@ function values(text, kind) {
 }
 
 // (5, C3)---, V)/F#: the brackets of a chain of of's, and what's inside and after them.
-function ofBrackets(p, kind) {
+function ofBrackets(p: string, kind: Kind): Part[] {
   return pieces(p, /([()])/).flatMap((s) => {
     if (s === "(" || s === ")") return [part("tk-punct", s)]
     if (kind === "chord" && s.startsWith("/")) return [part("tk-slash", "/"), part("tk-bass", s.slice(1))]
@@ -237,7 +250,7 @@ function ofBrackets(p, kind) {
 }
 
 // Whether the ( at `at` holds a length's arithmetic, (1+2) bars, and not a group of names.
-function sum(text, at) {
+function sum(text: string, at: number): boolean {
   let depth = 0
   let end = text.length
   for (let i = at; i < end; i++) {
@@ -253,9 +266,9 @@ function sum(text, at) {
 // is where the line stands: how many groups are open (`depth`), and whether a thing has
 // been written outside them (`took`). It carries on through a block on the line, and a
 // group that runs over several lines starts its later lines inside it.
-function names(text, st = { depth: 0, took: false }) {
-  const out = []
-  const open = [] // each ( still open on this line: whether it holds a length's arithmetic
+function names(text: string, st: Stand = { depth: 0, took: false }): Part[] {
+  const out: Part[] = []
+  const open: boolean[] = [] // each ( still open on this line: whether it holds a length's arithmetic
   let number = false // whether the last thing was a number, which * can multiply
   let at = 0
   // A second thing outside brackets is a mistake; marks that one is written
@@ -310,10 +323,10 @@ function names(text, st = { depth: 0, took: false }) {
 // A length in front of something: "3 bars " → its parts, and what's left, which starts
 // at its first character so that an instrument's line or every after the length is read
 // as one.
-function length(text) {
+function length(text: string): { parts: Part[]; rest: string } {
   const m = /^(\S+)(\s+)(bars?)(?![A-Za-z0-9])(\s*)/.exec(text)
   // A count's brackets close in it: ((1+2) bars a b) is a group that starts with a length
-  const balanced = (n) => (n.match(/\(/g) || []).length === (n.match(/\)/g) || []).length
+  const balanced = (n: string) => (n.match(/\(/g) || []).length === (n.match(/\)/g) || []).length
   if (!m || !/^[\d(]/.test(m[1]) || !balanced(m[1])) return { parts: [], rest: text }
   return {
     parts: [
@@ -328,7 +341,7 @@ function length(text) {
 }
 
 // What can follow play, or sit inside braces: an instrument's line, or names to play.
-function playable(text, st) {
+function playable(text: string, st?: Stand): Part[] {
   // every 3 steps { ... }: how long a step lasts, then what plays at that pace
   const pace = /^(every)(\s+)([^\s{]+)(\s*)([A-Za-z]*)(\s*)(.*)$/.exec(text)
   if (pace) {
@@ -338,7 +351,7 @@ function playable(text, st) {
       part(null, a),
       part(/^[\d(]/.test(n) ? "tk-directive-val" : "tk-error", n),
       part(null, b),
-      part(UNITS.includes(unit) ? "tk-directive-key" : "tk-error", unit),
+      part(among(UNITS, unit) ? "tk-directive-key" : "tk-error", unit),
       part(null, c),
       ...(rest.startsWith("{") ? braces(rest) : rest ? playable(rest, st) : []),
     ]
@@ -347,7 +360,7 @@ function playable(text, st) {
   if (track) {
     const name = track[1].toLowerCase()
     const known = PARTS.includes(name) || name === "sticking"
-    const kind = PITCHED.includes(name) ? "pitched" : name === "sticking" ? "sticking" : "drum"
+    const kind: Kind = among(PITCHED, name) ? "pitched" : name === "sticking" ? "sticking" : "drum"
     return [
       part(known ? "tk-inst" : "tk-error", track[1]),
       part(null, track[2]),
@@ -360,7 +373,7 @@ function playable(text, st) {
 
 // { ... } on one line: the brace, what's inside, the closing brace and anything after.
 // `st` is where the line stands (see names): a block is a thing of its own.
-function braces(text, st = { depth: 0, took: false }) {
+function braces(text: string, st: Stand = { depth: 0, took: false }): Part[] {
   const extra = st.depth === 0 && st.took
   if (st.depth === 0) st.took = true
   const out = [part(extra ? "tk-error" : "tk-punct", "{")]
@@ -380,22 +393,22 @@ function braces(text, st = { depth: 0, took: false }) {
 
 // A setting after set or with: tempo 90, time 7 over 8, key E, mode minor, or
 // guitar.electric muted (an instrument and its sound). `bare` marks one written without set.
-function setting(text, bare = false) {
+function setting(text: string, bare = false): Part[] {
   const word = /^[A-Za-z][A-Za-z0-9.]*/.exec(text)?.[0] || ""
   const after = text.slice(word.length)
   const name = part(bare ? "tk-error" : "tk-directive-key", word)
-  const sound = SOUNDS[word] && /^(\s+)([a-z]+)(\s*)$/.exec(after)
+  const sound = soundsOf(word) && /^(\s+)([a-z]+)(\s*)$/.exec(after)
   if (sound) {
-    const ok = SOUNDS[word].includes(sound[2])
+    const ok = soundsOf(word)!.includes(sound[2])
     return [name, part(null, sound[1]), part(ok ? "tk-directive-val" : "tk-error", sound[2]), part(null, sound[3])]
   }
   if ((word === "key" || word === "mode") && /^\s/.test(after)) {
     // a key is a note, and a mode one of the modes
-    const m = /^(\s+)([\s\S]*?)(\s*)$/.exec(after)
-    const ok = word === "key" ? parseKey(m[2]) : MODES.includes(m[2])
+    const m = /^(\s+)([\s\S]*?)(\s*)$/.exec(after)!
+    const ok = word === "key" ? parseKey(m[2]) : among(MODES, m[2])
     return [name, part(null, m[1]), part(ok ? "tk-directive-val" : "tk-error", m[2]), part(null, m[3])]
   }
-  if (SETTINGS.includes(word)) {
+  if (among(SETTINGS, word)) {
     return [
       name,
       ...pieces(after, /(\s+)/).map((p) =>
@@ -409,16 +422,16 @@ function setting(text, bare = false) {
 }
 
 // What follows with: its settings, with commas between them, then its block.
-function withHead(text, st) {
+function withHead(text: string, st: Stand): Part[] {
   const brace = text.indexOf("{")
   const head = brace < 0 ? text : text.slice(0, brace)
-  const out = []
+  const out: Part[] = []
   for (const p of pieces(head, /(,)/)) {
     if (p === ",") {
       out.push(part("tk-punct", p))
       continue
     }
-    const lead = /^\s*/.exec(p)[0]
+    const lead = /^\s*/.exec(p)![0]
     const body = p.slice(lead.length).replace(/\s+$/, "")
     out.push(part(null, lead), ...(body ? setting(body) : []), part(null, p.slice(lead.length + body.length)))
   }
@@ -428,9 +441,9 @@ function withHead(text, st) {
 // One line of code, without its comment. `depth` is how many groups ( ) are open where it
 // starts, from the lines above, and `inside` whether it's inside braces, where a setting
 // goes on a with rather than after set.
-function line(code, depth = 0, inside = false) {
+function line(code: string, depth = 0, inside = false): Part[] {
   const st = { depth, took: false }
-  const lead = /^\s*/.exec(code)[0]
+  const lead = /^\s*/.exec(code)![0]
   const body = code.slice(lead.length)
   const out = lead ? [part(null, lead)] : []
   if (!body) return out
@@ -438,8 +451,8 @@ function line(code, depth = 0, inside = false) {
   const after = body.slice(word.length)
 
   let soundSetting = /^([a-z.]+)(\s+)([a-z]+)(\s*)$/.exec(body)
-  if (soundSetting && !SOUNDS[soundSetting[1]]) soundSetting = null
-  const typed = TYPES.includes(word) && /^(\s+)([A-Za-z][A-Za-z0-9]*)(\s*)(=)(\s*)(.*)$/.exec(after)
+  if (soundSetting && !soundsOf(soundSetting[1])) soundSetting = null
+  const typed = among(TYPES, word) && /^(\s+)([A-Za-z][A-Za-z0-9]*)(\s*)(=)(\s*)(.*)$/.exec(after)
   if (body.startsWith("}")) {
     // } chorus): what follows a block that closes here, in a group or as a mistake
     out.push(part("tk-punct", "}"), ...names(body.slice(1), { depth, took: depth === 0 }))
@@ -449,7 +462,7 @@ function line(code, depth = 0, inside = false) {
     const [, gap, name, before, , afterEq, value] = typed
     // taken, or not a name: Bridge, a single letter, a numeral
     const taken =
-      SETTINGS.includes(name) || PARTS.includes(name) || KEYWORDS.includes(name) || !OWN_NAME.test(name) || /^(i|ii|iii|iv|v|vi|vii)$/.test(name)
+      among(SETTINGS, name) || PARTS.includes(name) || KEYWORDS.includes(name) || !OWN_NAME.test(name) || /^(i|ii|iii|iv|v|vi|vii)$/.test(name)
     out.push(part("tk-directive-key", word), part(null, gap))
     out.push(part(taken ? "tk-error" : "tk-word", name), part(null, before))
     out.push(part("tk-punct", "="), part(null, afterEq))
@@ -457,7 +470,8 @@ function line(code, depth = 0, inside = false) {
       const len = length(value)
       out.push(...len.parts, ...playable(len.rest, st))
     } else {
-      out.push(...values(value, { chords: "chord", notes: "notes", sticking: "sticking" }[word] || "drum"))
+      const holds: Record<string, Kind> = { chords: "chord", notes: "notes", sticking: "sticking" }
+      out.push(...values(value, holds[word] || "drum"))
     }
   } else if (["pattern", "steps", "sticking", "notes"].includes(word) && /^(\s|$)/.test(after)) {
     // pattern groove {: a type without its name and =
@@ -469,7 +483,7 @@ function line(code, depth = 0, inside = false) {
     if (!m) {
       // bar { ... }: the number is missing, as it is while it's being typed. The parser says
       // so, and what follows is read as it would be after a bar.
-      const space = /^\s*/.exec(after)[0]
+      const space = /^\s*/.exec(after)![0]
       out.push(part("tk-error", word), part(null, space), ...braces(after.slice(space.length)))
     } else {
       out.push(part(word === "bar" ? "tk-directive-key" : "tk-error", word), part(null, m[1]))
@@ -484,7 +498,7 @@ function line(code, depth = 0, inside = false) {
     }
   } else if (word === "play" && /^(\s|$)/.test(after)) {
     // play groove, play 3 bars { ... }, play kick: x--x
-    const space = /^\s*/.exec(after)[0]
+    const space = /^\s*/.exec(after)![0]
     out.push(part("tk-directive-key", word), part(null, space))
     const len = length(after.slice(space.length))
     out.push(...len.parts)
@@ -492,17 +506,17 @@ function line(code, depth = 0, inside = false) {
     else if (len.rest) out.push(...playable(len.rest, st))
   } else if (word === "set" && /^(\s|$)/.test(after)) {
     // set tempo 90, set key E, set guitar.electric muted: set, then a setting. Only at the top
-    const space = /^\s*/.exec(after)[0]
+    const space = /^\s*/.exec(after)![0]
     out.push(part(inside ? "tk-error" : "tk-directive-key", word), part(null, space), ...setting(after.slice(space.length)))
   } else if (word === "with" && /^(\s|\{|$)/.test(after)) {
     // with key E, mode minor { ... }: settings for its block only
     out.push(part("tk-directive-key", word), ...withHead(after, st))
-  } else if (soundSetting || (SETTINGS.includes(word) && /^\s/.test(after))) {
+  } else if (soundSetting || (among(SETTINGS, word) && /^\s/.test(after))) {
     // tempo 90 with no set in front: a mistake, which the parser explains
     out.push(...setting(body, true))
   } else if (word && /^\s*=/.test(after)) {
     // verse = Am E7|G D: a name without its type in front
-    const m = /^(\s*)(=)(\s*)([\s\S]*)$/.exec(after)
+    const m = /^(\s*)(=)(\s*)([\s\S]*)$/.exec(after)!
     out.push(part("tk-error", word), part(null, m[1]), part("tk-punct", "="))
     out.push(part(null, m[3]))
     const len = length(m[4])
@@ -514,36 +528,36 @@ function line(code, depth = 0, inside = false) {
 
 // A line in an instrument's block: one layer, of a drum's steps or of what a pitched
 // instrument plays.
-function layerLine(code, holds) {
-  const lead = /^\s*/.exec(code)[0]
+function layerLine(code: string, holds: "steps" | "pitched"): Part[] {
+  const lead = /^\s*/.exec(code)![0]
   return [part(null, lead), ...values(code.slice(lead.length), holds === "steps" ? "drum" : holds)]
 }
 
 // What a { holds, from the text in front of it on its line: a drum's steps after kick: or
 // steps name =, a pitched instrument's layers after piano:, and the same inside another
 // block of them; otherwise lines.
-function opens(before, outer) {
+function opens(before: string, outer: Holds | undefined): Holds {
   if (outer === "steps" || outer === "pitched") return outer
   const track = /([A-Za-z][A-Za-z0-9]*(?:\.[A-Za-z0-9]+)?)\s*:[^:{}]*$/.exec(before)
   if (track) {
     const name = track[1].toLowerCase()
-    return LANES.includes(name) ? "steps" : PITCHED.includes(name) ? "pitched" : "lines"
+    return LANES.includes(name) ? "steps" : among(PITCHED, name) ? "pitched" : "lines"
   }
   return /^\s*steps\s+[A-Za-z][A-Za-z0-9]*\s*=[^{}]*$/.test(before) ? "steps" : "lines"
 }
 
-export function highlightMusic(src) {
-  const open = [] // what each block still open holds
+export function highlightMusic(src: string): Part[][] {
+  const open: Holds[] = [] // what each block still open holds
   let groups = 0 // how many groups ( ) are open, from the lines above
-  let continues = null // what a line that starts with | goes on with
+  let continues: Kind | null = null // what a line that starts with | goes on with
   return src.split("\n").map((raw) => {
     // A line break may be \r\n. The parser trims it, so it's set aside here, and kept.
     const text = raw.endsWith("\r") ? raw.slice(0, -1) : raw
     const cut = text.indexOf("//")
     const code = cut < 0 ? text : text.slice(0, cut)
     const holds = open[open.length - 1]
-    const lead = /^\s*/.exec(code)[0]
-    let parts
+    const lead = /^\s*/.exec(code)![0]
+    let parts: Part[]
     lastKind = null
     if (code.slice(lead.length).startsWith("|") && continues) {
       // |C G: the line above goes on, so it's coloured as that line's value

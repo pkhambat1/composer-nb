@@ -7,7 +7,7 @@ import { describe, it, expect } from "vitest"
 import { existsSync, readFileSync } from "node:fs"
 import { join } from "node:path"
 import { initialState, LANES, parseCell, PITCHED } from "../../js/language.ts"
-import { highlightMusic } from "../../js/highlight.js"
+import { highlightMusic } from "../../js/highlight.ts"
 import { DOCS, examples, pages, read, readMagic } from "./docs-examples.js"
 
 describe("docs examples", () => {

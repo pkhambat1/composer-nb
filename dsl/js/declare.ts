@@ -45,11 +45,10 @@ import {
   tokenize,
   withoutOf,
 } from "./values/steps.ts"
-import { SETTINGS, TYPES, type Type } from "./vocab.ts"
+import { among, SETTINGS, TYPES, type Type } from "./vocab.ts"
 
 // What a value reads as, from how it's written
 type Shape = "steps" | "sticking" | "notes" | "chords" | "pattern"
-const among = (list: readonly string[], word: string) => list.includes(word)
 
 export const CHORDS_BLOCK =
   "Chords play one at a time, so they can't be layered in a block. Put them on one line: piano: chords Am F|C G"

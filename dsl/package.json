@@ -21,11 +21,15 @@
   "license": "MIT",
   "type": "module",
   "main": "./dist/composer-nb.js",
+  "types": "./lib/music.d.ts",
   "exports": {
-    ".": "./dist/composer-nb.js",
+    ".": {
+      "types": "./lib/music.d.ts",
+      "default": "./dist/composer-nb.js"
+    },
     "./engine": {
       "types": "./lib/music-engine.d.ts",
-      "composer-nb-source": "./js/music-engine.js",
+      "composer-nb-source": "./js/music-engine.ts",
       "default": "./lib/music-engine.js"
     },
     "./language": {
@@ -50,7 +54,7 @@
     },
     "./sheet": {
       "types": "./lib/sheet.d.ts",
-      "composer-nb-source": "./js/sheet.js",
+      "composer-nb-source": "./js/sheet.ts",
       "default": "./lib/sheet.js"
     },
     "./midi": {
@@ -60,7 +64,7 @@
     },
     "./highlight": {
       "types": "./lib/highlight.d.ts",
-      "composer-nb-source": "./js/highlight.js",
+      "composer-nb-source": "./js/highlight.ts",
       "default": "./lib/highlight.js"
     },
     "./chords": {
