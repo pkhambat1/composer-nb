@@ -21,7 +21,8 @@ const grooves = GROOVES.map((g) => ({
 }))
 const sections = SECTIONS.map((s) => [s])
 
-const escape = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;")
+const escape = (s: string) =>
+  s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;")
 
 const style = `
   :root { color-scheme: light; }
@@ -65,7 +66,9 @@ const foot = `<footer>composer-nb: a music notebook, in place of paper. Write wh
 `
 
 // The embedded playground sizes itself: it says how tall it is
-const embed = (source: string) => `<iframe src="/?embed#src=${encodeURIComponent(source)}" title="Play it" loading="lazy"></iframe>
+const embed = (
+  source: string,
+) => `<iframe src="/?embed#src=${encodeURIComponent(source)}" title="Play it" loading="lazy"></iframe>
 <script>
 addEventListener("message", (e) => {
   if (e.data && e.data.type === "composer-nb:height") document.querySelector("iframe").style.height = e.data.height + 16 + "px"
@@ -97,7 +100,8 @@ ${sections
       grooves
         .filter((g) => g.section === section)
         .map(
-          (g) => `<div class="card"><h3><a href="/grooves/${g.slug}/">${escape(g.title)}</a></h3><p>${escape(g.description)}</p></div>`,
+          (g) =>
+            `<div class="card"><h3><a href="/grooves/${g.slug}/">${escape(g.title)}</a></h3><p>${escape(g.description)}</p></div>`,
         )
         .join("\n"),
   )

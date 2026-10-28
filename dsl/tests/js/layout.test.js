@@ -11,7 +11,8 @@ function problems(source) {
     const at = `line ${i + 1}`
     const opens = (code.match(/\(/g) || []).length - (code.match(/\)/g) || []).length
     if (opens > 0 && !/\(\s*$/.test(code)) out.push(`${at}: a ( that runs over lines ends its line`)
-    if (/\}\s*\{\s*$/.test(code)) out.push(`${at}: one block a line in a group that runs over lines`)
+    if (/\}\s*\{\s*$/.test(code))
+      out.push(`${at}: one block a line in a group that runs over lines`)
     if (/\s$/.test(line)) out.push(`${at}: a trailing space`)
     if (/^\s*[a-z][\w.]*:\S/.test(code)) out.push(`${at}: one space after the colon`)
     if (/\S {2,}\S/.test(code)) out.push(`${at}: one space between words, no columns`)

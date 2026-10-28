@@ -29,7 +29,11 @@ describe("transpose", () => {
       ["piano", 2, [2, 6, 9]],
     ])
     expect(p.notes.map((e) => e.note.name)).toEqual(["F#3", "F#3", "F#3", "F#3"])
-    expect(parseSource("set key C\nset octave 4\nset transpose -3\nplay piano: notes 1---3---").notes.map((e) => e.note.name)).toEqual(["A3", "C#4"])
+    expect(
+      parseSource(
+        "set key C\nset octave 4\nset transpose -3\nplay piano: notes 1---3---",
+      ).notes.map((e) => e.note.name),
+    ).toEqual(["A3", "C#4"])
     // what's written stays: the grid shows the note as written
     expect(parseSource("set transpose 2\nplay piano: notes C4---").notes[0].label).toBe("C4")
   })
@@ -47,7 +51,9 @@ describe("transpose", () => {
   })
 
   it("is a whole number of semitones from -12 to 12", () => {
-    expect(firstError("set transpose 13")).toMatch(/transpose is a number of semitones from -12 to 12/)
+    expect(firstError("set transpose 13")).toMatch(
+      /transpose is a number of semitones from -12 to 12/,
+    )
     expect(firstError("set transpose 2.5")).toMatch(/transpose is a number of semitones/)
     expect(parseSource("set transpose -12\nplay piano: notes C4---").notes[0].note.name).toBe("C3")
     expect(parseSource("set transpose 1+1\nplay guitar: chords C").chords[0].transpose).toBe(2)
@@ -64,7 +70,9 @@ describe("transpose needs something with pitch", () => {
     expect(firstError("set transpose 2\nplay kick: x---")).toBe(
       "transpose moves notes and chords, and only drums play here. Give an instrument some: piano: chords C G",
     )
-    expect(firstError("pattern vv = {\n  with transpose 2 { kick: x--- }\n}\nplay vv")).toMatch(/only drums play here/)
+    expect(firstError("pattern vv = {\n  with transpose 2 { kick: x--- }\n}\nplay vv")).toMatch(
+      /only drums play here/,
+    )
     expect(firstError("with transpose 2 {\n  play kick: x---\n}")).toMatch(/only drums play here/)
   })
 

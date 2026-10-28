@@ -38,5 +38,4 @@ What you write is kept on this device as you go: your notebooks are listed on th
     ...grooveCells("Transcriptions"),
     ...grooveCells("Harmony"),
   ],
-
 }

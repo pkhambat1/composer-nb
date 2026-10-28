@@ -94,7 +94,11 @@ function renderDrumGrid(blocks: GridBlock[]): { grid: HTMLElement; setTime: Foll
       }
       row.append(h("div", "cnb-lane cnb-bar-num", block.bars > 1 ? `bar ${bar + 1}` : ""))
       counts.forEach((c, col) => {
-        const count = h("div", "cnb-count" + (c.beat ? " cnb-count-beat" : ""), c.label === "." ? "·" : c.label)
+        const count = h(
+          "div",
+          "cnb-count" + (c.beat ? " cnb-count-beat" : ""),
+          c.label === "." ? "·" : c.label,
+        )
         count.dataset.k = `${bi}-${bar}-${col}`
         row.append(count)
       })

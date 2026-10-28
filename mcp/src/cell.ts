@@ -77,7 +77,10 @@ export function gridText(block: GridBlock, maxBars = MAX_BARS_SHOWN): string[] {
   }
   const texts = rows.map((r) => {
     const pitched = r.key.includes(" ")
-    return { label: r.label, cells: Array.from({ length: per * block.bars }, (_, i) => cellText(r.cells.get(i), pitched)) }
+    return {
+      label: r.label,
+      cells: Array.from({ length: per * block.bars }, (_, i) => cellText(r.cells.get(i), pitched)),
+    }
   })
   const width = Math.max(1, ...texts.flatMap((r) => r.cells.map((c) => c.length)))
   const labels = Math.max(5, ...rows.map((r) => r.label.length))
@@ -136,7 +139,9 @@ export function describe(parsed: Parsed, earlier: Parsed | null, source = ""): s
     out.push("")
   }
   if (parsed.errors.length) {
-    out.push(`${plural(parsed.errors.length, "error")}. A cell with errors plays nothing; fix them and parse again:`)
+    out.push(
+      `${plural(parsed.errors.length, "error")}. A cell with errors plays nothing; fix them and parse again:`,
+    )
     say(parsed.errors, "")
   } else out.push("No errors.")
   const settings = settingsOf(parsed.state)
