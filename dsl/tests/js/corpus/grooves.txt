@@ -132,8 +132,8 @@ from above: none
 length: 5.7273 s
 block startSec=0 durSec=5.7273 bars=3 time=7 over 8 tempo=110 key=C unit=8 barTicks=336 res=4
 drums:
-  0 inst=snare art=rim lane=snare.rim kit=rock tick=0 vel=1 accent=true line=13
-  0.2727 inst=crash art=hit lane=crash kit=rock tick=48 vel=0.7 line=14
+  0 inst=snare art=rim lane=snare.rim kit=rock tick=0 vel=1 accent=true line=14
+  0.2727 inst=crash art=hit lane=crash kit=rock tick=48 vel=0.7 line=16
   0.2727 inst=kick art=hit lane=kick kit=rock tick=48 vel=0.7 line=7
   0.2727 inst=ride art=bell lane=ride.bell kit=rock tick=48 vel=0.7 line=9
   0.6818 inst=kick art=hit lane=kick kit=rock tick=120 vel=0.7 line=7
