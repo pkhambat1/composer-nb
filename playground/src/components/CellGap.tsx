@@ -1,9 +1,16 @@
 // components/CellGap.tsx — The space between two cells, where a + shows on hover. It adds a
-// music or a text cell right there, as the toolbar's + adds one at the end.
+// music or a text cell right there, as the toolbar's + adds one at the end. While a cell is
+// dragged, a line in it shows where the cell will land (`dropHere`).
 import React from "react"
 import type { CellType } from "../shared/types.ts"
 
-export default function CellGap({ onAdd }: { onAdd: (type: CellType) => void }) {
+export default function CellGap({
+  onAdd,
+  dropHere = false,
+}: {
+  onAdd: (type: CellType) => void
+  dropHere?: boolean
+}) {
   const [open, setOpen] = React.useState(false)
   const ref = React.useRef<HTMLDivElement>(null)
 
@@ -27,7 +34,10 @@ export default function CellGap({ onAdd }: { onAdd: (type: CellType) => void }) 
   }
 
   return (
-    <div className={"cell-gap" + (open ? " cell-gap-open" : "")} ref={ref}>
+    <div
+      className={"cell-gap" + (open ? " cell-gap-open" : "") + (dropHere ? " cell-gap-drop" : "")}
+      ref={ref}
+    >
       <button
         type="button"
         className="cell-gap-btn"
