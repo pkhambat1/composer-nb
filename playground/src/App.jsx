@@ -6,20 +6,10 @@ import React from "react"
 import * as Tone from "tone"
 import * as MusicEngine from "composer-nb/engine"
 import { APP_CONSTANTS } from "./shared/constants.js"
-import {
-  EMBED,
-  OPEN,
-  embedCell,
-  embedTheme,
-  listenForTheme,
-  openedCells,
-  reportHeight,
-  shareNotebookUrl,
-} from "./shared/embed.js"
+import { EMBED, embedCell, embedTheme, listenForTheme, reportHeight } from "./shared/embed.js"
 import { useCellManager } from "./hooks/useCellManager.js"
 import { openingNotebook, useNotebooks } from "./hooks/useNotebooks.js"
 import NotebookTitle from "./components/NotebookTitle.jsx"
-import SharedBanner from "./components/SharedBanner.jsx"
 import { usePlayback } from "./hooks/usePlayback.js"
 import { useKeyboard } from "./hooks/useKeyboard.js"
 import { useTheme } from "./components/theme-panel.jsx"
@@ -53,11 +43,10 @@ export default function App({ host = null } = {}) {
   const [activeCellId, setActiveCellId] = React.useState(null)
   const [runCounter, setRunCounter] = React.useState(0)
   const abortRef = React.useRef(null)
-  // The notebook the page opens with: a shared link's cells, the one that was open, or the
-  // starters as the first one. In a frame there's just the one cell, and in a host page its
-  // cells, kept nowhere.
+  // The notebook the page opens with: the one that was open, or the starters as the first
+  // one. In a frame there's just the one cell, and in a host page its cells, kept nowhere.
   const [opening] = React.useState(() =>
-    single ? null : openingNotebook(APP_CONSTANTS.STARTER_CELLS, openedCells()),
+    single ? null : openingNotebook(APP_CONSTANTS.STARTER_CELLS),
   )
   const cm = useCellManager(host ? host.cells : EMBED ? [embedCell()] : opening.cells)
   const {
@@ -75,21 +64,11 @@ export default function App({ host = null } = {}) {
     duplicateCell,
   } = cm
 
-  // The name a shared notebook was saved under, shown for a moment where its banner was
-  const [savedAs, setSavedAs] = React.useState(null)
-  React.useEffect(() => {
-    if (!savedAs) return
-    const t = setTimeout(() => setSavedAs(null), 6000)
-    return () => clearTimeout(t)
-  }, [savedAs])
-
   const notebooks = useNotebooks({
     store: opening?.store || { current: null, list: [] },
-    draft: opening?.draft || null,
     cells,
     setCells: cm.setCells,
     setSelectedId,
-    onKept: (nb) => setSavedAs(nb.title),
   })
 
   // In a frame or a host page the page's theme rules; otherwise the choices are kept on this
@@ -329,12 +308,7 @@ export default function App({ host = null } = {}) {
     [playback],
   )
 
-  // A shared link renders its cells as soon as it opens, and plays them; a host page's
-  // cells render as they open, and wait for Play.
-  const runAllRef = React.useRef(queuedRunAll)
-  React.useEffect(() => {
-    runAllRef.current = queuedRunAll
-  }, [queuedRunAll])
+  // A host page's cells render as they open, and wait for Play.
   const renderAll = React.useCallback(() => {
     for (const c of cells) if (c.type === "music") queuedRunCell(c.id)
   }, [cells, queuedRunCell])
@@ -343,8 +317,7 @@ export default function App({ host = null } = {}) {
     renderAllRef.current = renderAll
   }, [renderAll])
   React.useEffect(() => {
-    if (OPEN) runAllRef.current()
-    else if (hostRef.current) renderAllRef.current()
+    if (hostRef.current) renderAllRef.current()
   }, [])
 
   // Another notebook: whatever plays stops, and the page shows the one asked for
@@ -354,7 +327,7 @@ export default function App({ host = null } = {}) {
   }, [playback, stopAll])
   const openNotebook = React.useCallback(
     (id) => {
-      if (!notebooks.draft && notebooks.current?.id === id) return openTab("notebook")
+      if (notebooks.current?.id === id) return openTab("notebook")
       quiet()
       notebooks.open(id)
       openTab("notebook")
@@ -366,11 +339,11 @@ export default function App({ host = null } = {}) {
     notebooks.create()
     openTab("notebook")
   }, [notebooks, quiet, openTab])
-  // The title's menu, for the open notebook (a draft has none yet: it has Keep)
+  // The title's menu, for the open notebook
   const current = notebooks.current
   const notebookMenu = React.useMemo(
     () =>
-      current && !notebooks.draft
+      current
         ? {
             rename: (title) => notebooks.rename(current.id, title),
             duplicate: () => {
@@ -392,13 +365,6 @@ export default function App({ host = null } = {}) {
         : null,
     [current, notebooks, quiet, openTab],
   )
-
-  const [shared, setShared] = React.useState(false)
-  const shareNotebook = React.useCallback(async () => {
-    await navigator.clipboard.writeText(shareNotebookUrl(cells))
-    setShared(true)
-    setTimeout(() => setShared(false), 1500)
-  }, [cells])
 
   // Keyboard shortcuts hook
   useKeyboard({
@@ -451,7 +417,6 @@ export default function App({ host = null } = {}) {
           registerPlayer={playback.registerPlayer}
           unregisterPlayer={playback.unregisterPlayer}
           armAudio={armAudio}
-          share={!host}
         />
       ))}
     </div>
@@ -482,8 +447,8 @@ export default function App({ host = null } = {}) {
         <div className="notebook-root" style={{ display: sideTab === "notebook" ? undefined : "none" }}>
           <div className="nb-sticky-header">
           <NotebookTitle
-            title={notebooks.draft?.title || notebooks.current?.title || "Notebook"}
-            subtitle={notebooks.draft ? "Opened from a link" : "Kept on this device as you write"}
+            title={notebooks.current?.title || "Notebook"}
+            subtitle="Kept on this device as you write"
             menu={notebookMenu}
           />
           <Toolbar
@@ -503,21 +468,8 @@ export default function App({ host = null } = {}) {
             }
             onRunAll={queuedRunAll}
             onStop={quiet}
-            onShare={shareNotebook}
-            shared={shared}
             kernelStatus={kernelStatus}
           />
-          {notebooks.draft ? (
-            <SharedBanner
-              onSave={() => notebooks.keep(cells)}
-              onClose={() => {
-                quiet()
-                notebooks.discard(APP_CONSTANTS.STARTER_CELLS)
-              }}
-            />
-          ) : savedAs ? (
-            <SharedBanner saved={savedAs} onDismiss={() => setSavedAs(null)} />
-          ) : null}
           </div>
 
           <main

@@ -29,7 +29,7 @@
     },
     "instrument": {
       "name": "entity.name.function.composer-nb",
-      "match": "\\b(guitar(\\.electric)?|piano(\\.electric)?|organ|pad|bass|kick|snare(\\.(ghost|rim|cross))?|hat(\\.(open|pedal))?|ride(\\.bell)?|crash|tom\\.(high|low|floor))(?=\\s*:)"
+      "match": "\\b(guitar(\\.electric)?|piano(\\.electric)?|organ|bass|kick|snare(\\.(ghost|rim|cross))?|hat(\\.(open|pedal))?|ride(\\.bell)?|crash|tom\\.(high|low|floor))(?=\\s*:)"
     },
     "declaration": {
       "match": "\\b(steps|sticking|notes|chords|pattern)\\s+([A-Za-z][A-Za-z0-9]*)(?=\\s*=)",
@@ -51,7 +51,7 @@
     },
     "value": {
       "name": "constant.language.composer-nb",
-      "match": "\\b(rock|synth)\\b"
+      "match": "\\b(rock|synth|on|off)\\b"
     },
     "notes": {
       "name": "constant.character.step.composer-nb",

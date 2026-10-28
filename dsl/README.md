@@ -149,6 +149,7 @@ A setting is `set`, then the setting and its value: `set key A`. It applies from
 | -------- | ---------- | ---------------------------------------------------------------------------- |
 | `time`   | `4 over 4` | Notes in a bar, over which note: `7 over 8`, or felt in groups: `3+4 over 4` |
 | `tempo`  | `120`      | Quarter notes per minute                                                     |
+| `swing`  | `off`      | Swung eighths, a triplet feel: `on` or `off`                                 |
 | `key`    | `C`        | The root degrees and Roman numerals count from: a note, `E`, `F#`, `Bb`       |
 | `mode`   | `major`    | How the key is written on the sheet: `major`, `minor`, `dorian`, `phrygian`, `lydian`, `mixolydian`, `locrian` |
 | `transpose` | `0`     | Semitones every pitched instrument sounds from what's written, -12 to 12     |
@@ -160,12 +161,12 @@ Every number is arithmetic (`set tempo 60*2`, `(1+2) bars groove`), so `*` and `
 `with` gives settings to a block only, with commas between them, and puts back what was set at its `}`: `with key E, mode minor { ... }`. At the top of a cell its block holds statements, such as `play`. In a play or a pattern its block plays together with the other lines, and in brackets it's one part in order, so the bass can sit an octave below the chart, or one chart can play in two keys:
 
 ```
-chords verse = i bIII|bVII iv
+chords walk = i iidim|bIII iv|v bVI|bVII i
 chords prog = I vi|IV V
 
 with key E, mode minor {
   play {
-    piano: chords verse
+    piano: chords walk
     with octave 2 { bass: 1---5--- }
   }
 }
@@ -180,7 +181,7 @@ Names declared in a `with` stay in it, and nothing in it carries into later cell
 
 ### Notes and chords
 
-`piano`, `piano.electric`, `organ`, `pad`, `bass`, `guitar` and `guitar.electric` play notes and chords, each on a line of its own like a drum. The instrument is the line's name, so there is no setting for it.
+`piano`, `piano.electric`, `organ`, `bass`, `guitar` and `guitar.electric` play notes and chords, each on a line of its own like a drum. The instrument is the line's name, so there is no setting for it.
 
 Notes are drawn on the steps, a note where a drum has its `x`:
 

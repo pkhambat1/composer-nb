@@ -53,8 +53,6 @@ export default function Toolbar({
   onAddText,
   onRunAll,
   onStop,
-  onShare,
-  shared,
   kernelStatus,
 }) {
   const Icon = (children, viewBox = "0 0 16 16") => (
@@ -124,24 +122,6 @@ export default function Toolbar({
                 </span>,
                 { primary: true },
               )}
-        </div>
-        <div className="tb-group">
-          {btn(
-            "Copy a link that opens this notebook",
-            onShare,
-            <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
-              {Icon(
-                <path
-                  d="M6.5 9.5l3-3M7 11l-1.5 1.5a2.1 2.1 0 0 1-3-3L4 8M9 5l1.5-1.5a2.1 2.1 0 0 1 3 3L12 8"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.5"
-                  strokeLinecap="round"
-                />,
-              )}
-              <span style={{ fontSize: 12, fontWeight: 600 }}>{shared ? "Link copied" : "Share"}</span>
-            </span>,
-          )}
         </div>
       </div>
     </div>

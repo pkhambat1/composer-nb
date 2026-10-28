@@ -1,9 +1,8 @@
 /* The MCP App: the cells, drawn inside a conversation by a host that renders MCP Apps
    (claude.ai, Claude Desktop). The host hands over the tool's input, the cell's source and
-   what it continues from, or a notebook's cells, and they show as the playground's own:
-   its App, bundled into this page, holding just the cells (playground/src/App.jsx, the
-   `host` prop). So the editor, the player, the practice controls, the grid, the sheet and
-   the chord diagrams are the website's. The cells are parsed and rendered in this page,
+   what it continues from, and it shows as the playground's own: its App, bundled into this
+   page, holding just the cell (playground/src/App.jsx, the `host` prop). So the editor, the
+   player, the grid, the sheet and the chord diagrams are the website's. The cells are parsed and rendered in this page,
    with nothing asked of the server, and what the user plays is passed back as context for
    Claude's next turn.
 
@@ -65,18 +64,9 @@ function draw(cells, after = "") {
   render()
 }
 
-// The tool's arguments: parse and link take a cell (and what it continues from), link
-// takes a notebook of text and music cells instead.
+// The tool's arguments: parse takes a cell, and what it continues from.
 function show(args) {
-  if (!args) return
-  if (Array.isArray(args.cells) && args.cells.length) {
-    const cells = args.cells
-      .filter((c) => c && typeof c.source === "string")
-      .map((c) => ({ type: c.type === "text" ? "text" : "music", source: c.source }))
-    if (cells.length) draw(cells)
-    return
-  }
-  if (typeof args.source !== "string") return
+  if (typeof args?.source !== "string") return
   draw([{ type: "music", source: args.source }], typeof args.after === "string" ? args.after : "")
 }
 

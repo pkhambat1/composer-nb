@@ -21,7 +21,7 @@ export function settingsOf(state) {
   const out = {
     time: timeLabel(state),
     tempo: state.tempo,
-    swing: state.swing,
+    swing: state.swing ? "on" : "off",
     key: state.key,
     mode: state.mode,
     transpose: state.transpose,

@@ -76,6 +76,7 @@ export {
   SETTINGS,
   SOUNDS,
   SPLIT,
+  SWING,
   TYPES,
   UNITS,
   VARIATIONS,

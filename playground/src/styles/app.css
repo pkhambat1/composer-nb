@@ -314,14 +314,6 @@ body {
 .lhs-tab-active .lhs-tab-label {
   font-weight: 600;
 }
-/* A notebook opened from a link, not saved yet: marked with the link */
-.lhs-tab-shared {
-  align-items: center;
-}
-.lhs-tab-icon {
-  flex-shrink: 0;
-  color: var(--accent);
-}
 .app-main {
   flex: 1;
   min-width: 0;
@@ -722,66 +714,6 @@ body {
 }
 .panel-subtitle-problem {
   color: var(--traceback);
-}
-/* Across a notebook opened from a link: whose it is, and what to do with it */
-.shared-banner {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 8px 10px;
-  padding: 9px 20px;
-  background: var(--accent-soft);
-  border-bottom: 1px solid var(--border);
-  font-size: 13px;
-  color: var(--text);
-}
-.shared-banner-icon {
-  display: flex;
-  color: var(--accent);
-}
-.shared-banner-text {
-  flex: 1 1 260px;
-  min-width: 0;
-}
-.shared-banner-text strong {
-  font-weight: 600;
-}
-.shared-banner-actions {
-  display: flex;
-  gap: 6px;
-  flex-shrink: 0;
-}
-.shared-btn {
-  appearance: none;
-  font: inherit;
-  font-size: 12px;
-  font-weight: 600;
-  height: 28px;
-  padding: 0 12px;
-  border-radius: 4px;
-  border: 1px solid var(--border);
-  background: var(--paper);
-  color: var(--text);
-  cursor: pointer;
-  white-space: nowrap;
-}
-.shared-btn:hover {
-  background: var(--tb-btn-hover);
-}
-.shared-btn-primary {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: #fff;
-}
-.shared-btn-primary:hover {
-  background: var(--accent);
-  filter: brightness(1.08);
-}
-[data-theme="dark"] .shared-btn-primary {
-  color: #10223d;
-}
-.shared-banner-saved .shared-banner-icon {
-  color: var(--kernel-idle);
 }
 .kernel-status-label {
   color: var(--text-dim);
@@ -1300,30 +1232,6 @@ body {
   text-align: center;
 }
 
-.out-controls-right {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-.icon-btn {
-  appearance: none;
-  background: var(--paper);
-  border: 1px solid var(--border);
-  color: var(--text-dim);
-  font: inherit;
-  font-size: 11px;
-  padding: 4px 8px;
-  border-radius: 3px;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  font-family: var(--font-mono);
-}
-.icon-btn:hover {
-  background: var(--tb-btn-hover);
-  color: var(--text);
-}
 
 .music-meta {
   display: flex;
@@ -1368,114 +1276,6 @@ body {
   align-items: center;
   gap: 10px;
   flex-wrap: wrap;
-}
-/* Practice controls and sharing, on the right of the player */
-.icon-btn-on {
-  color: var(--accent);
-  border-color: var(--accent);
-  background: var(--accent-soft);
-}
-.tempo-ctl {
-  display: inline-flex;
-  align-items: center;
-  border: 1px solid var(--border);
-  border-radius: 3px;
-  overflow: hidden;
-  font-family: var(--font-mono);
-  font-size: 11px;
-  color: var(--text-dim);
-}
-.tempo-btn {
-  appearance: none;
-  border: 0;
-  background: var(--paper);
-  color: var(--text-dim);
-  font: inherit;
-  font-size: 13px;
-  line-height: 1;
-  width: 22px;
-  height: 22px;
-  cursor: pointer;
-}
-.tempo-btn:hover:not(:disabled) {
-  color: var(--accent);
-  background: var(--accent-soft);
-}
-.tempo-btn:disabled {
-  opacity: 0.35;
-  cursor: default;
-}
-.tempo-val {
-  padding: 0 6px;
-  min-width: 52px;
-  text-align: center;
-  border-left: 1px solid var(--border);
-  border-right: 1px solid var(--border);
-  line-height: 22px;
-  white-space: nowrap;
-}
-.tempo-val-changed {
-  color: var(--accent);
-  font-weight: 600;
-}
-.share-wrap {
-  position: relative;
-}
-.share-menu {
-  position: absolute;
-  right: 0;
-  top: calc(100% + 4px);
-  z-index: 30;
-  min-width: 240px;
-  background: var(--paper);
-  border: 1px solid var(--border);
-  border-radius: 4px;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
-  padding: 4px;
-  display: flex;
-  flex-direction: column;
-}
-.share-item {
-  appearance: none;
-  border: 0;
-  background: transparent;
-  color: var(--text);
-  font: inherit;
-  font-size: 12px;
-  font-weight: 600;
-  text-align: left;
-  padding: 7px 9px;
-  border-radius: 3px;
-  cursor: pointer;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-.share-item:hover {
-  background: var(--accent-soft);
-  color: var(--accent);
-}
-.share-hint {
-  font-weight: 400;
-  font-size: 11px;
-  color: var(--text-mute);
-}
-.mute-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 9px;
-  font-size: 12px;
-  color: var(--text);
-  cursor: pointer;
-  border-radius: 3px;
-}
-.mute-item:hover {
-  background: var(--accent-soft);
-}
-/* A muted row of the grid */
-.dg-muted {
-  opacity: 0.3;
 }
 /* bricks | sheet: how the drums are drawn */
 .view-toggle {
@@ -1778,7 +1578,7 @@ body {
     overflow-x: auto;
     min-width: 0;
   }
-  /* In a line: a shared notebook, the notebooks, + for a new one, then the reference */
+  /* In a line: the notebooks, + for a new one, then the reference */
   .lhs-section {
     display: contents;
   }
@@ -1802,9 +1602,6 @@ body {
   }
   .lhs-tab-label {
     max-width: 160px;
-  }
-  .shared-banner {
-    padding: 8px 12px;
   }
   .nb-title-menu {
     left: 0;
@@ -1850,11 +1647,6 @@ body {
   .music-row {
     flex-wrap: wrap;
     padding: 8px;
-  }
-  .out-controls-right {
-    width: 100%;
-    justify-content: flex-end;
-    flex-wrap: wrap;
   }
   .dg-cell {
     height: 12px;

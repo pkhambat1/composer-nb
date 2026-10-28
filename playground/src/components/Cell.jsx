@@ -133,7 +133,6 @@ function Cell({
   registerPlayer,
   unregisterPlayer,
   armAudio,
-  share = true,
 }) {
   const taRef = React.useRef(null)
 
@@ -225,14 +224,12 @@ function Cell({
               registerPlayer={registerPlayer}
               unregisterPlayer={unregisterPlayer}
               armAudio={armAudio}
-              share={share}
               theme={theme}
               accent={accent}
               drumView={drumView}
               onSetDrumView={onSetDrumView}
               sheetCounts={sheetCounts}
               onSetSheetCounts={onSetSheetCounts}
-              runCount={cell.runCount}
             />
           </>
         ) : editing ? (

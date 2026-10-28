@@ -2,7 +2,7 @@
    the language reference boiled down, so a model writes a cell that parses the first time,
    and knows to check it with `parse` before handing it over. */
 
-export const INSTRUCTIONS = `composer-nb is a small, typed language for music: drums, notes and chords, written as text cells. Call parse on every cell before you show it to anyone: it returns the errors with line numbers (a cell with errors plays nothing), what is set and named, and a grid of every hit. Fix the errors and parse again. When the user wants to write a cell themselves, call parse with an empty source: it gives an empty cell to play. Then link gives a link that opens the playground on the cell, ready to play, with practice controls; render draws the sheet music or writes a MIDI file; library finds a groove to start from; reference has the full rules.
+export const INSTRUCTIONS = `composer-nb is a small, typed language for music: drums, notes and chords, written as text cells. Call parse on every cell before you show it to anyone: it returns the errors with line numbers (a cell with errors plays nothing), what is set and named, and a grid of every hit. Fix the errors and parse again. When the user wants to write a cell themselves, call parse with an empty source: it gives an empty cell to play. Then render draws the sheet music or writes a MIDI file; library finds a groove to start from; reference has the full rules.
 
 HOW A CELL READS. Every line says what it is:
   set tempo 90              a setting, at the top only: set, then the setting and its value
@@ -14,11 +14,11 @@ Names, of every type, start with a lowercase letter, then letters and digits in 
   // a comment
 Blank lines and indentation mean nothing. A line that starts with | continues the line above, at a bar line. What is set and named at the top carries on into later cells (pass earlier cells as after).
 
-SETTINGS: set time 7 over 8 (never 7/8: / divides) · set tempo 20 to 400 · set swing 50 (straight) to 75, 67 is a triplet feel · set key E (a note) · set mode minor: major (default), minor, dorian, phrygian, lydian, mixolydian, locrian; it sets only the signature and spelling · set transpose -12 to 12 (semitones every pitched instrument sounds; chord names and guitar shapes stay, so set transpose 4 is a capo at the 4th fret) · set octave 1 to 6, default 3 · set kit rock or synth · set guitar.electric muted.
+SETTINGS: set time 7 over 8 (never 7/8: / divides) · set tempo 20 to 400 · set swing on (swung eighths, a triplet feel; off by default) · set key E (a note) · set mode minor: major (default), minor, dorian, phrygian, lydian, mixolydian, locrian; it sets only the signature and spelling · set transpose -12 to 12 (semitones every pitched instrument sounds; chord names and guitar shapes stay, so set transpose 4 is a capo at the 4th fret) · set octave 1 to 6, default 3 · set kit rock or synth · set guitar.electric muted.
 WITH, then settings with commas, gives them to its block only: with key E, mode minor { ... }. At the top its block holds statements (play ...). In a play or pattern it is a block sounding with the other lines, so an instrument gets its own octave: with octave 2 { bass: 1---5--- }; in ( ) it is a part in order: play (with key E { song } with key G { song }). Names in it stay in it. Put time, tempo and swing on a with around a play or on a part in order, never one sounding with other lines.
 
 KIT PIECES, one line each: kick, snare, snare.ghost (the snare's ghost notes), snare.rim (rimshot), snare.cross (cross-stick), hat (closed hi-hat), hat.open, hat.pedal (the foot), ride, ride.bell, crash, tom.high, tom.low, tom.floor.
-INSTRUMENTS: piano, piano.electric, organ, pad, bass, guitar, guitar.electric.
+INSTRUMENTS: piano, piano.electric, organ, bass, guitar, guitar.electric.
 
 STEPS, what a kit piece plays: one character per step, a step is a 16th note. x hit, ^ accent, ~ ghost (on the snare, write it as x on snare.ghost), d double stroke, - nothing. Spaces are ignored, so group by beat: kick: x--- --x- x--- ----. A 4 over 4 bar is 16 steps, 7 over 8 is 14, 3 over 4 is 12. | may mark where a bar ends.
   A figure written twice is an error, because a pattern repeats its lines: hat: x-x- x-x- is hat: x-. To play a figure once for a length, put the length in front: hat: 1 bars x-.

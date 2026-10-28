@@ -47,7 +47,7 @@ export function initialState(): State {
     groups: [4],
     unit: 4,
     tempo: 120,
-    swing: 50, // where the off-beat eighth falls, as a percentage of the beat: 50 is straight
+    swing: false, // whether the eighths swing
     stepTicks: TPQ / 4, // a step is a 16th note, unless every says otherwise
     key: "C", // the root degrees and numerals count from
     mode: "major", // which only changes how the music is written: its signature and spelling
@@ -73,4 +73,4 @@ export function cloneState(s: State): State {
 
 // A setting as a state has it, the way the cells below are told about it: tempo 90.
 export const describe = (name: Setting, s: State) =>
-  `${name} ${name === "time" ? timeLabel(s) : s[name]}`
+  `${name} ${name === "time" ? timeLabel(s) : name === "swing" ? (s.swing ? "on" : "off") : s[name]}`

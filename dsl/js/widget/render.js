@@ -40,7 +40,7 @@ function formatTime(sec) {
 
 function describeBlock(b) {
   const bars = `${b.bars} bar${b.bars === 1 ? "" : "s"}${b.times > 1 ? ` × ${b.times}` : ""}`
-  return `time ${b.time} · tempo ${b.tempo} · key ${b.key} ${b.mode} · ${bars}`
+  return `time ${b.time} · tempo ${b.tempo}${b.swing ? " · swing" : ""} · key ${b.key} ${b.mode} · ${bars}`
 }
 
 // The pitched instruments that play, e.g. "guitar, transpose 2 · bass".
@@ -178,7 +178,7 @@ const views = new Set() // each output's switch, so they change together
 // --- Player --------------------------------------------------------------------
 
 // With `autoplay`, it starts playing as soon as it's drawn, as after a cell's Play button.
-function renderPlayer(slot, buffer, filename, onTime, autoplay) {
+function renderPlayer(slot, buffer, onTime, autoplay) {
   const audioUrl = URL.createObjectURL(bufferToWav(buffer))
   const audio = new Audio(audioUrl)
   const duration = bufferDuration(buffer)
@@ -196,11 +196,7 @@ function renderPlayer(slot, buffer, filename, onTime, autoplay) {
   progress.append(fill)
   wave.append(base, progress)
   const time = h("span", "cnb-time", `0:00 / ${formatTime(duration)}`)
-  const download = h("a", "cnb-download", "WAV")
-  download.href = audioUrl
-  download.download = filename
-  download.title = "Download as WAV"
-  row.append(play, wave, time, download)
+  row.append(play, wave, time)
   slot.replaceChildren(row)
 
   const draw = () => {
@@ -272,7 +268,7 @@ function renderPlayer(slot, buffer, filename, onTime, autoplay) {
 // --- Cell ----------------------------------------------------------------------
 
 // One play line's output: what it is, its player, drum grid and chords.
-function renderOutput(output, filename, messages, autoplay) {
+function renderOutput(output, messages, autoplay) {
   const box = h("div", "cnb-output")
   const head = h("div", "cnb-output-head")
   head.append(h("span", "cnb-play-line", output.label))
@@ -341,7 +337,7 @@ function renderOutput(output, filename, messages, autoplay) {
   queueRender(output, () => disposed)
     .then((buffer) => {
       if (disposed) return
-      disposePlayer = renderPlayer(slot, buffer, filename, setTime, autoplay)
+      disposePlayer = renderPlayer(slot, buffer, setTime, autoplay)
       for (const msg of output.warnings || []) messages.add(msg)
     })
     .catch((err) => {
@@ -404,14 +400,7 @@ export function renderCell(el, { sources, name, after, play = false }) {
     if (shown.length && !errors.isConnected) root.append(errors)
   }
 
-  const outputs = parsed.outputs.map((o, i) =>
-    renderOutput(
-      o,
-      `${name || "composer-nb"}${parsed.outputs.length > 1 ? "-" + (i + 1) : ""}.wav`,
-      messages,
-      play && i === 0,
-    ),
-  )
+  const outputs = parsed.outputs.map((o, i) => renderOutput(o, messages, play && i === 0))
   for (const o of outputs) root.append(o.box)
   if (!outputs.length && !parsed.errors.length) {
     const defined = Object.keys(parsed.state.sections)

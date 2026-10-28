@@ -415,7 +415,7 @@ export function sheetAbc(block, { counts = false, barsPerLine = 4 } = {}) {
     "X:1",
     "L:1/16",
     `M:${count}/${block.unit}`,
-    `Q:1/4=${block.tempo}`,
+    `Q:${block.swing ? '"Swing" ' : ""}1/4=${block.tempo}`,
     `K:${abcKey(key)}`,
     `%%score ${score.join(" ")}`,
     ...voices.map(

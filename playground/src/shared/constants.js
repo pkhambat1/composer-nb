@@ -25,9 +25,9 @@ export const APP_CONSTANTS = {
       type: "text",
       source: `# A music notebook, in place of paper
 
-Write what plays, hear it, and see it as bricks or as sheet music. A notebook is cells, like a page: text cells like this one, and music cells with a groove, a riff or a chord chart. Press **Play** on a cell (or Shift+Enter) to hear it, and **Share** to copy a link that opens on it, ready to play. The language is small and the whole of it is under **Docs**.
+Write what plays, hear it, and see it as bricks or as sheet music. A notebook is cells, like a page: text cells like this one, and music cells with a groove, a riff or a chord chart. Press **Play** on a cell (or Shift+Enter) to hear it. The language is small and the whole of it is under **Docs**.
 
-What you write is kept on this device as you go: your notebooks are listed on the left, and a notebook's name opens its menu. Below are transcriptions, then harmony cells: a ii–V–I, modal vamps and riffs, a blues and a cadence. Then the rudiments, with their stickings. Change anything and play it again.`,
+What you write is kept on this device as you go: your notebooks are listed on the left, and a notebook's name opens its menu. Below are transcriptions, then harmony cells: a ii–V–I, a blues, and a walk through each mode, from lydian to locrian. Then the rudiments, with their stickings. Change anything and play it again.`,
     },
     ...grooveCells("Transcriptions"),
     ...grooveCells("Harmony"),

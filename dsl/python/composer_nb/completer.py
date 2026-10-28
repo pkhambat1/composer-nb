@@ -19,10 +19,11 @@ VARIATIONS = {
 }
 SPLIT = ["tom"]  # drums that are only their variations: tom is three drums
 # Instruments that play notes and chords, each on a line of its own like a drum
-PITCHED = ["guitar", "guitar.electric", "piano", "piano.electric", "organ", "pad", "bass"]
+PITCHED = ["guitar", "guitar.electric", "piano", "piano.electric", "organ", "bass"]
 SETTINGS = ["time", "tempo", "swing", "key", "mode", "transpose", "octave", "kit"]
 TYPES = ["steps", "sticking", "notes", "chords", "pattern"]
 KITS = ["rock", "synth"]
+SWING = ["on", "off"]
 MODES = ["major", "minor", "dorian", "phrygian", "lydian", "mixolydian", "locrian"]
 UNITS = ["steps", "beats", "bars"]  # what a length on a line is measured in
 
@@ -37,7 +38,7 @@ SOUNDS = dict(VARIATIONS)
 for _name in PITCHED:
     if "." in _name:
         SOUNDS.setdefault(_name.split(".")[0], []).append(_name.split(".")[1])
-SETTING_VALUES = {"kit": KITS, "mode": MODES}
+SETTING_VALUES = {"kit": KITS, "mode": MODES, "swing": SWING}
 # Instruments with more than one sound, set like a setting: set guitar.electric muted
 INSTRUMENT_SOUNDS = {"guitar.electric": ["clean", "muted"]}
 

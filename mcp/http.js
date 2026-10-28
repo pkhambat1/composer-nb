@@ -20,7 +20,7 @@ export async function handleMcp(req, res, options = {}) {
   await transport.handleRequest(req, res, req.body)
 }
 
-// The playground's address for links, from the request when it was made to a deployment.
+// The site's address for links, from the request when it was made to a deployment.
 export function siteOf(req, fallback) {
   const host = req.headers["x-forwarded-host"] || req.headers.host
   if (!host) return fallback

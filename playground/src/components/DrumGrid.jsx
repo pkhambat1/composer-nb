@@ -2,13 +2,8 @@
 import React from "react"
 import { TPQ } from "composer-nb/language"
 import { countingOf, gridCounts, gridRows } from "composer-nb/grid"
-import { quietens } from "../shared/mute.js"
 
-// Whether a row of the grid is muted: a drum's by its lane, an instrument's by its name
-const quietRow = (muted, row) =>
-  row.key.includes(" ") ? quietens(muted, null, row.key.split(" ")[0]) : quietens(muted, row.key)
-
-function DrumBlock({ block, index, muted }) {
+function DrumBlock({ block, index }) {
   const { per, rows } = gridRows(block)
   // Wide enough for the longest line name, e.g. guitar.electric
   const labels = Math.max(...rows.map((r) => r.label.length), 5) + 1
@@ -19,7 +14,7 @@ function DrumBlock({ block, index, muted }) {
   return (
     <div className="dg-block">
       <div className="dg-head">
-        time {block.time} · tempo {block.tempo} · key {block.key} {block.mode} · {block.bars} bar{block.bars === 1 ? "" : "s"} · counting{" "}
+        time {block.time} · tempo {block.tempo}{block.swing ? " · swing" : ""} · key {block.key} {block.mode} · {block.bars} bar{block.bars === 1 ? "" : "s"} · counting{" "}
         {countingOf(block)}
       </div>
       {Array.from({ length: block.bars }, (_, bar) => (
@@ -30,11 +25,10 @@ function DrumBlock({ block, index, muted }) {
         >
           {rows.map((row) => (
             <React.Fragment key={row.key}>
-              <div className={"dg-lane" + (quietRow(muted, row) ? " dg-muted" : "")}>{row.label}</div>
+              <div className="dg-lane">{row.label}</div>
               {Array.from({ length: per }, (_, col) => {
                 const e = row.cells.get(bar * per + col)
                 let cls = "dg-cell" + (shaded(col) ? " dg-alt" : "") + (e?.note ? " dg-note" : "")
-                if (quietRow(muted, row)) cls += " dg-muted"
                 if (e?.sticking) cls += " dg-stk"
                 else if (e?.hit) {
                   cls += " dg-hit"
@@ -66,7 +60,7 @@ function DrumBlock({ block, index, muted }) {
   )
 }
 
-function DrumGrid({ blocks, muted = new Set(), getTime, playing }) {
+function DrumGrid({ blocks, getTime, playing }) {
   const rootRef = React.useRef(null)
 
   // Move the playhead with direct DOM updates so playback doesn't re-render the grid.
@@ -102,7 +96,7 @@ function DrumGrid({ blocks, muted = new Set(), getTime, playing }) {
   return (
     <div className="drum-grid" ref={rootRef}>
       {blocks.map((b, i) =>
-        b.drumEvents.length || b.noteEvents.length ? <DrumBlock key={i} block={b} index={i} muted={muted} /> : null,
+        b.drumEvents.length || b.noteEvents.length ? <DrumBlock key={i} block={b} index={i} /> : null,
       )}
     </div>
   )

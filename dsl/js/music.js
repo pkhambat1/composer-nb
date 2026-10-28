@@ -40,7 +40,7 @@ function defineElement() {
 
 // The player for one cell's worth of source. Pass `after` (what an earlier music() call
 // returned) to start from the settings and names that song ended with, and `name` to
-// label it and name its WAV file.
+// label it.
 export function music(source, { after, name } = {}) {
   if (typeof source !== "string")
     throw new TypeError(`source must be a string, not ${source === null ? "null" : typeof source}`)

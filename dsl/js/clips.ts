@@ -179,7 +179,7 @@ export function layer(
       err(
         r.ln,
         `${r.what} changes the ${which}, so it can't sound together with other lines. ` +
-          `Play it on its own, or put the with around the whole play: with ${which} ${which === "time" ? own.time : own[which as "tempo" | "swing"]} { play ... }`,
+          `Play it on its own, or put the with around the whole play: with ${which} ${which === "time" ? own.time : which === "tempo" ? own.tempo : own.swing ? "on" : "off"} { play ... }`,
       )
       return null
     }

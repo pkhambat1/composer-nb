@@ -5,7 +5,7 @@ import React from "react"
 export default function NotebookTitle({
   title,
   subtitle,
-  menu, // null for a draft, which has no notebook to manage yet
+  menu, // null when no notebook is open
 }) {
   const [open, setOpen] = React.useState(false)
   const [renaming, setRenaming] = React.useState(null) // the name as it's typed

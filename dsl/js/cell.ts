@@ -74,6 +74,7 @@ function gridBlocks(
       last &&
       last.time === s.time &&
       last.tempo === s.tempo &&
+      last.swing === s.swing &&
       last.key === s.key &&
       last.mode === s.mode &&
       Math.abs(last.startSec + last.durSec - s.startSec) < 1e-6

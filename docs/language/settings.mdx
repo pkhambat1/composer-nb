@@ -11,7 +11,7 @@ A setting is `set`, then the setting and its value: `set tempo 90`. It applies f
 | --- | --- | --- | --- |
 | `time` | `<count> over <unit>` | `4 over 4` | The time signature. |
 | `tempo` | 20 to 400 | `120` | Quarter notes per minute. |
-| `swing` | 50 to 75 | `50` | Where the off-beat eighth falls, as a percentage of the beat. |
+| `swing` | `on` or `off` | `off` | Whether the eighths swing. |
 
 These three apply to every line. The drums and the pitched instruments each have settings of their own, set the same way: [`kit`](/drums/kit#kit) for the drums, and [`key` and `mode`](/pitched/key), [`octave`](/pitched/instruments#octave), [`transpose`](/pitched/instruments#transpose) and [an instrument's sound](/pitched/instruments#sound) for the pitched instruments.
 
@@ -21,12 +21,12 @@ The unit is the note value counted: 1, 2, 4, 8 or 16. The count can be a sum, as
 
 ## swing
 
-`set swing 67` plays the off-beat eighths at two thirds of the beat, a triplet feel; `50` is straight and `75` dotted. Sixteenths move with the eighth they belong to. Only the sound moves: the grid and the sheet stay as written.
+`set swing on` swings the eighths, as a part marked *Swing* is played: the off-beat eighth falls two thirds of the way through the beat, where a triplet's third note would, and sixteenths move with the eighth they belong to. It is off unless it's set, and `set swing off` turns it off again. Only the sound moves: the grid stays as written, and the sheet says *Swing* above the first staff.
 
 <Cell>
 
 ```composer-nb
-set swing 67
+set swing on
 set tempo 100
 
 play {
@@ -56,11 +56,11 @@ An instrument's block of layers and a named value hold values, not lines, so a `
 
 ```composer-nb
 set tempo 96
-chords verse = i bIII|bVII iv
+chords walk = i iidim|bIII iv|v bVI|bVII i
 
 with key E, mode minor {
   play {
-    piano: chords verse
+    piano: chords walk
     with octave 2 { bass: 1---5--- }
   }
 }
@@ -74,7 +74,7 @@ play (
 
 </Cell>
 
-The bass plays an octave below the chart, and its figure repeats under it. A pattern is evaluated where it is played, so `prog` plays in E and then in G.
+The chart walks through every chord of E minor, and the bass plays an octave below it, its figure repeating under each chord. A pattern is evaluated where it is played, so `prog` plays in E and then in G.
 
 `time`, `tempo` and `swing` go on a `with` around a whole play, or on a part that plays in order. Lines that sound together share one moment, and so one tempo: a `with tempo` beside other lines in a play or a pattern is an error, and so is a pattern that changes the tempo played with other lines. A `with` that holds everything a pattern plays can set its tempo, and the pattern then plays at it wherever it plays in order: `pattern tag = with time 6 over 4 { ... }`.
 

@@ -8,7 +8,7 @@
      .tk-note (a note on a pitched line),
      .tk-error
    Whitespace is kept exactly, so the layer lines up with the textarea under it. */
-import { KEYWORDS, LANES, MODES, PARTS, PITCHED, SETTINGS, SOUNDS, TYPES, UNITS } from "./language.ts"
+import { KEYWORDS, LANES, MODES, PARTS, PITCHED, SETTINGS, SOUNDS, SWING, TYPES, UNITS } from "./language.ts"
 import { chordParts, isRoman, parseKey } from "./chords.ts"
 
 const ROMAN_RE = /^([#b])?(VII|VI|IV|V|III|II|I|vii|vi|iv|v|iii|ii|i)(.*)$/
@@ -378,7 +378,7 @@ function braces(text, st = { depth: 0, took: false }) {
   return out
 }
 
-// A setting after set or with: tempo 90, time 7 over 8, key E, mode minor, or
+// A setting after set or with: tempo 90, time 7 over 8, key E, mode minor, swing on, or
 // guitar.electric muted (an instrument and its sound). `bare` marks one written without set.
 function setting(text, bare = false) {
   const word = /^[A-Za-z][A-Za-z0-9.]*/.exec(text)?.[0] || ""
@@ -389,10 +389,10 @@ function setting(text, bare = false) {
     const ok = SOUNDS[word].includes(sound[2])
     return [name, part(null, sound[1]), part(ok ? "tk-directive-val" : "tk-error", sound[2]), part(null, sound[3])]
   }
-  if ((word === "key" || word === "mode") && /^\s/.test(after)) {
-    // a key is a note, and a mode one of the modes
+  if ((word === "key" || word === "mode" || word === "swing") && /^\s/.test(after)) {
+    // a key is a note, a mode one of the modes, and swing on or off
     const m = /^(\s+)([\s\S]*?)(\s*)$/.exec(after)
-    const ok = word === "key" ? parseKey(m[2]) : MODES.includes(m[2])
+    const ok = word === "key" ? parseKey(m[2]) : (word === "mode" ? MODES : SWING).includes(m[2])
     return [name, part(null, m[1]), part(ok ? "tk-directive-val" : "tk-error", m[2]), part(null, m[3])]
   }
   if (SETTINGS.includes(word)) {

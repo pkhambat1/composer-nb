@@ -49,8 +49,8 @@ export const MESSAGES = {
   "time.unit": () => "The second number of time is the note being counted: 1, 2, 4, 8 or 16",
   "time.tooLong": () => "A bar can be up to 8 whole notes long",
   "tempo.range": () => "tempo is quarter notes per minute, between 20 and 400",
-  "swing.range": ({ verb }: { verb: Verb }) =>
-    `swing is where the off-beat eighth falls, from 50 (straight) to 75 (dotted): ${verb} swing 67 is a triplet feel`,
+  "swing.onOff": ({ verb }: { verb: Verb }) =>
+    `swing is on or off: ${verb} swing on plays the off-beat eighths late, as a triplet feel`,
   "key.withMode": ({ verb, root, mode }: { verb: Verb; root: string; mode: string }) =>
     verb === "with"
       ? `A key is a note: with key ${root}, mode ${mode} { ... }`

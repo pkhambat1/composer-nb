@@ -22,7 +22,7 @@ export const GROOVES: Groove[] = [
     link: "https://www.youtube.com/watch?v=4ulgVOBpNWA",
     source: `set time 7 over 8
 set tempo 90
-set swing 50
+set swing off
 
 pattern groove = {
   kick: x--x---
@@ -49,7 +49,7 @@ play {
     link: "https://www.youtube.com/results?search_query=Porcupine+Tree+Circle+of+Manias",
     source: `set time 9 over 8
 set tempo 100
-set swing 50
+set swing off
 
 pattern manias = {
   hat.open: x---
@@ -69,7 +69,7 @@ play 4 bars manias`,
     link: "https://www.youtube.com/watch?v=v0Iv4SYJW-k",
     source: `set time 7 over 8
 set tempo 110
-set swing 50
+set swing off
 set octave 2
 set guitar.electric muted
 
@@ -93,7 +93,7 @@ play 3 bars ({ snare.rim: ^- } {
     link: "https://www.youtube.com/watch?v=XEWmzQ_fJmw",
     source: `set time 3 over 4
 set tempo 100
-set swing 50
+set swing off
 
 steps pa = ^---
 steps radiddle = -xxx
@@ -121,7 +121,7 @@ play {
     link: "https://www.youtube.com/watch?v=YZPtPMCDEs4",
     source: `set time 3 over 4
 set tempo 82.5
-set swing 50
+set swing off
 
 pattern groove = {
   ride.bell: x-x-x-xx-x-x
@@ -140,7 +140,7 @@ play 2 bars groove`,
     link: null,
     source: `set time 5 over 4
 set tempo 120
-set swing 50
+set swing off
 
 pattern groove = {
   kick: x---
@@ -154,11 +154,11 @@ play groove`,
     section: "Harmony",
     title: "ii–V–I",
     byline: "The cadence jazz is built on",
-    body: "Dm7 to G7 to Cmaj7: the ii sets up the V, and the V resolves home. Written as numerals, so `key` moves it: change `set key C` to `set key F` and the whole thing follows. The bass walks a quarter note a step, `set swing 67` puts the ride's off-beats late, and `set octave 4` keeps the piano's voicings around middle C.",
+    body: "Dm7 to G7 to Cmaj7: the ii sets up the V, and the V resolves home. Written as numerals, so `key` moves it: change `set key C` to `set key F` and the whole thing follows. The bass walks a quarter note a step, `set swing on` puts the ride's off-beats late, and `set octave 4` keeps the piano's voicings around middle C.",
     link: null,
     source: `set time 4 over 4
 set tempo 132
-set swing 67
+set swing on
 set key C
 set octave 4
 
@@ -175,85 +175,13 @@ play turnaround`,
   },
   {
     section: "Harmony",
-    title: "Dorian vamp",
-    byline: "D dorian: minor with a major sixth",
-    body: "D to D on the white keys, so the B is natural. Against D major that is a flat third and a flat seventh with the sixth left natural, and numerals and degrees count from D major: `i7 IV` is Dm7 G, `bVII` is C, and the melody's `6` is the B that makes dorian. `set mode dorian` gives the sheet its signature, which has no sharps.",
-    link: null,
-    source: `set time 4 over 4
-set tempo 100
-set swing 50
-set key D
-set mode dorian
-set octave 4
-
-pattern vamp = {
-  piano: {
-    chords i7 - IV -|i7 - bVII -
-    5---6---b7---1'---|2'-------b7---5---
-  }
-  bass: D2-------A2---B2---|D2-------C2---A2---
-  hat: x-
-  snare.cross: 2 4
-  kick: 1 3
-}
-
-play vamp`,
-  },
-  {
-    section: "Harmony",
-    title: "Mixolydian vamp",
-    byline: "A mixolydian: major with a flat seventh",
-    body: "The G is natural in A, so the seventh degree is a G chord, not G#. I to bVII to IV and back (A, G, D, A) is the rock vamp, and the melody lands on that G, its `b7`. Numerals and degrees count from A major, so the flat is written, as it is said.",
-    link: null,
-    source: `set time 4 over 4
-set tempo 112
-set swing 50
-set key A
-set mode mixolydian
-set octave 4
-set guitar.electric clean
-
-pattern vamp = {
-  guitar.electric: chords I - bVII -|IV - I -
-  piano: 1-2-3---5-------|4-------3---'b7---
-  bass: A2-------G2-------|D2-------A2-------
-  hat: x-
-  snare: 2 4
-  kick: 1 2& 3
-}
-
-play vamp`,
-  },
-  {
-    section: "Harmony",
-    title: "Lydian float",
-    byline: "F lydian: major with a raised fourth",
-    body: "F to F on the white keys puts a B natural where F major has a Bb. Two chords a whole step apart, F and G, and a melody that lands on the B, the `#4`: the floating, film-score sound. The `pad` holds each chord for a bar, written `I|II`, and the bass holds each root for a bar.",
-    link: null,
-    source: `set time 4 over 4
-set tempo 72
-set swing 50
-set key F
-set mode lydian
-set octave 4
-
-pattern float = {
-  pad: chords I|II
-  piano: 1---3---#4---5---|6-------#4---2---
-  bass: 1 bars F2 | 1 bars G2
-}
-
-play float`,
-  },
-  {
-    section: "Harmony",
     title: "12-bar blues",
     byline: "Twelve bars, three chords, all dominant sevenths",
-    body: "I7 for four bars, IV7 for two, back to I7 for two, then V7 IV7 I7 V7 to turn around. `%` repeats the bar before, and `set swing 67` makes the ride shuffle. Change `set key A` to `set key E` and the chart moves.",
+    body: "I7 for four bars, IV7 for two, back to I7 for two, then V7 IV7 I7 V7 to turn around. `%` repeats the bar before, and `set swing on` makes the ride shuffle. Change `set key A` to `set key E` and the chart moves.",
     link: null,
     source: `set time 4 over 4
 set tempo 120
-set swing 67
+set swing on
 set key A
 set octave 3
 set guitar.electric clean
@@ -269,100 +197,193 @@ play blues`,
   },
   {
     section: "Harmony",
-    title: "Harmonic minor cadence",
-    byline: "A minor, with the leading tone raised",
-    body: "A minor's own V chord is Em, and it pulls nowhere. Raise its third to G# and E7 leans into Am: the harmonic-minor cadence. `V7` in `set key A` spells it for you, and the melody's `7`, the raised seventh, is the G# that `set mode minor` marks with a sharp on the sheet.",
+    title: "Lydian walk",
+    byline: "D lydian: major with a raised fourth",
+    body: "The scale goes up and back down, and on every second beat the chord underneath has that note as its root, so you hear all seven notes and all seven chords: D F#m A C#m, then D Bm G#dim E, and back to D. The G#, the raised fourth, is lydian's colour. It makes the II chord, E, major, and E falling to D at the end is the floating sound lydian is known for. Degrees and numerals count on D major, so the raised fourth is written `#4`.",
     link: null,
     source: `set time 4 over 4
-set tempo 90
-set swing 50
-set key A
-set mode minor
-set octave 4
-
-pattern cadence = {
-  piano: {
-    chords i iv|V7 i
-    5-------b6-------|7---2---b3-------
-  }
-  bass: A2-------D2-------|E2-------A2-------
-  hat: x---
-  snare.cross: 3
-  kick: 1
-}
-
-play cadence`,
-  },
-  {
-    section: "Harmony",
-    title: "Phrygian riff",
-    byline: "E phrygian, palm muted",
-    body: "Phrygian is minor with a flat second: the F a half step above the E, the riff's `b2`. The riff stays on the low string and the kick doubles every eighth.",
-    link: null,
-    source: `set time 4 over 4
-set tempo 140
-set swing 50
-set key E
-set mode phrygian
-set octave 2
-set guitar.electric muted
-
-pattern riff = {
-  guitar.electric: 1-1-b2-1- 1-1-b3-b2-|1-1-b2-1- 5-4-b3-b2-
-  kick: x-
-  snare: ---- x---
-  hat: x-
-}
-
-play 2 bars riff`,
-  },
-  {
-    section: "Harmony",
-    title: "Lydian groove in fifteen",
-    byline: "G lydian, in Gavin Harrison's territory",
-    body: "A bar of 4+4+4+3 sixteenths. The ride bell plays every three against the groups, the backbeat sits on 2 and 4 with ghost notes between, the feet mark the quarters, and `bar 2` opens the hi-hat. The riff is G lydian: the C#, its `#4`, on the and of 1, and the pad's I to II, a pair of major chords only lydian has.",
-    link: null,
-    source: `set time 4+4+4+3 over 16
-set tempo 112
-set swing 50
-set key G
+set tempo 84
+set swing off
+set key D
 set mode lydian
-set octave 2
-set guitar.electric muted
+set octave 3
 
-pattern groove = {
-  ride.bell: x--
-  snare: ---- x--- ---- x--
-  snare.ghost: -x-- --x- -x-- ---
-  kick: x--- --x- x--- -x-
-  hat.pedal: 1 2 3 4
-  bar 2 {
-    hat.open: ^3&
-    snare.ghost: d4
+pattern walk = {
+  with octave 4 {
+    piano: 1---2---3---#4---|5---6---7---1'---
+      |1'---7---6---5---|#4---3---2-------|1 bars 1
   }
+  guitar: chords I iii|V vii|I vi|#ivdim II|I
+  with octave 2 {
+    bass: 1-------3-------|5-------7-------
+      |1'-------6-------|#4-------2-------|1 bars 1
+  }
+  hat: x-
+  snare.cross: 2 4
+  kick: 1 3
 }
 
-pattern riff = {
-  guitar.electric: 1-1- #4-1- 5--- 3-2|1-1- #4-1- 5-3- 2--
-  bass: 1 bars G2 | 1 bars A2
-  pad: chords I|II
+play walk`,
+  },
+  {
+    section: "Harmony",
+    title: "Mixolydian walk",
+    byline: "D mixolydian: major with a flat seventh",
+    body: "The scale goes up and back down, and on every second beat the chord underneath has that note as its root, so you hear all seven notes and all seven chords: D F#dim Am C, then D Bm G Em, and back to D. The C natural, the flat seventh, is mixolydian's sound. It makes the v chord minor (Am) and puts a major chord, C, a whole step under the root. On the way down, the tune's C over the D chord is a dominant seventh that never resolves. Degrees and numerals count on D major, so the flat seventh is written `b7`.",
+    link: null,
+    source: `set time 4 over 4
+set tempo 104
+set swing off
+set key D
+set mode mixolydian
+set octave 3
+
+pattern walk = {
+  with octave 4 {
+    piano: 1---2---3---4---|5---6---b7---1'---
+      |1'---b7---6---5---|4---3---2-------|1 bars 1
+  }
+  guitar: chords I iiidim|v bVII|I vi|IV ii|I
+  with octave 2 {
+    bass: 1-------3-------|5-------b7-------
+      |1'-------6-------|4-------2-------|1 bars 1
+  }
+  hat: x-
+  snare.cross: 2 4
+  kick: 1 3
 }
 
-play 4 bars {
-  crash: 1
-  groove
-  riff
-}`,
+play walk`,
+  },
+  {
+    section: "Harmony",
+    title: "Dorian walk",
+    byline: "D dorian: minor with a major sixth",
+    body: "The scale goes up and back down, and on every second beat the chord underneath has that note as its root, so you hear all seven notes and all seven chords: Dm F Am C, then Dm Bdim G Em, and back to Dm. The B natural, a major sixth in a minor key, is dorian's colour. It makes the IV chord, G, major where natural minor has Gm. Degrees and numerals count on D major, so the minor third and seventh are written `b3` and `b7`, and the sixth needs no mark.",
+    link: null,
+    source: `set time 4 over 4
+set tempo 96
+set swing off
+set key D
+set mode dorian
+set octave 3
+
+pattern walk = {
+  with octave 4 {
+    piano: 1---2---b3---4---|5---6---b7---1'---
+      |1'---b7---6---5---|4---b3---2-------|1 bars 1
+  }
+  guitar: chords i bIII|v bVII|i vidim|IV ii|i
+  with octave 2 {
+    bass: 1-------b3-------|5-------b7-------
+      |1'-------6-------|4-------2-------|1 bars 1
+  }
+  hat: x-
+  snare.cross: 2 4
+  kick: 1 3
+}
+
+play walk`,
+  },
+  {
+    section: "Harmony",
+    title: "Minor walk",
+    byline: "D minor: the natural minor scale",
+    body: "The scale goes up and back down, and on every second beat the chord underneath has that note as its root, so you hear all seven notes and all seven chords: Dm F Am C, then Dm Bb Gm Edim, and back to Dm. The Bb, the flat sixth, is what makes it minor rather than dorian: hear it over the Bb chord on the way down, and the diminished ii, Edim, just before the end. Degrees and numerals count on D major, so the flats are written out: `b3`, `b6`, `b7`.",
+    link: null,
+    source: `set time 4 over 4
+set tempo 92
+set swing off
+set key D
+set mode minor
+set octave 3
+
+pattern walk = {
+  with octave 4 {
+    piano: 1---2---b3---4---|5---b6---b7---1'---
+      |1'---b7---b6---5---|4---b3---2-------|1 bars 1
+  }
+  guitar: chords i bIII|v bVII|i bVI|iv iidim|i
+  with octave 2 {
+    bass: 1-------b3-------|5-------b7-------
+      |1'-------b6-------|4-------2-------|1 bars 1
+  }
+  hat: x-
+  snare.cross: 2 4
+  kick: 1 3
+}
+
+play walk`,
+  },
+  {
+    section: "Harmony",
+    title: "Phrygian walk",
+    byline: "D phrygian: minor with a flat second",
+    body: "The scale goes up and back down, and on every second beat the chord underneath has that note as its root, so you hear all seven notes and all seven chords: Dm F Adim Cm, then Dm Bb Gm Eb, and back to Dm. The Eb, a half step above the root, is phrygian's dark, Spanish sound, and the Eb chord falling to Dm at the end is the phrygian cadence. Degrees and numerals count on D major, so the flat second is written `b2`.",
+    link: null,
+    source: `set time 4 over 4
+set tempo 88
+set swing off
+set key D
+set mode phrygian
+set octave 3
+
+pattern walk = {
+  with octave 4 {
+    piano: 1---b2---b3---4---|5---b6---b7---1'---
+      |1'---b7---b6---5---|4---b3---b2-------|1 bars 1
+  }
+  guitar: chords i bIII|vdim bvii|i bVI|iv bII|i
+  with octave 2 {
+    bass: 1-------b3-------|5-------b7-------
+      |1'-------b6-------|4-------b2-------|1 bars 1
+  }
+  hat: x-
+  snare.cross: 2 4
+  kick: 1 3
+}
+
+play walk`,
+  },
+  {
+    section: "Harmony",
+    title: "Locrian walk",
+    byline: "D locrian: a diminished root",
+    body: "The scale goes up and back down, and on every second beat the chord underneath has that note as its root, so you hear all seven notes and all seven chords: Ddim Fm Ab Cm, then Ddim Bb Gm Eb, and back to Ddim. The fifth is flat (Ab), so the root's own chord is diminished and never sounds at rest: locrian is the mode that won't settle. Degrees and numerals count on D major, so every flat is written: `b2`, `b3`, `b5`, `b6`, `b7`.",
+    link: null,
+    source: `set time 4 over 4
+set tempo 80
+set swing off
+set key D
+set mode locrian
+set octave 3
+
+pattern walk = {
+  with octave 4 {
+    piano: 1---b2---b3---4---|b5---b6---b7---1'---
+      |1'---b7---b6---b5---|4---b3---b2-------|1 bars 1
+  }
+  guitar: chords idim biii|bV bvii|idim bVI|iv bII|idim
+  with octave 2 {
+    bass: 1-------b3-------|b5-------b7-------
+      |1'-------b6-------|4-------b2-------|1 bars 1
+  }
+  hat: x-
+  snare.cross: 2 4
+  kick: 1 3
+}
+
+play walk`,
   },
   {
     section: "Rudiments",
     title: "Single stroke roll",
     byline: "RLRL",
-    body: "Alternate hands, every stroke the same. Slow it down with the tempo stepper, loop it, and let Ramp bring it back up a step at a time.",
+    body: "Alternate hands, every stroke the same. Start slow: lower `set tempo` until every stroke is even, then bring it back up ten at a time.",
     link: null,
     source: `set time 4 over 4
 set tempo 100
-set swing 50
+set swing off
 
 pattern roll = {
   snare: x
@@ -379,7 +400,7 @@ play 2 bars roll`,
     link: null,
     source: `set time 4 over 4
 set tempo 90
-set swing 50
+set swing off
 
 pattern roll = {
   snare: x
@@ -396,7 +417,7 @@ play 2 bars roll`,
     link: null,
     source: `set time 4 over 4
 set tempo 100
-set swing 50
+set swing off
 
 pattern paradiddle = {
   snare: ^xxx
@@ -413,7 +434,7 @@ play 2 bars paradiddle`,
     link: null,
     source: `set time 3 over 4
 set tempo 100
-set swing 50
+set swing off
 
 pattern paradiddle = {
   snare: ^xxxxx
@@ -430,7 +451,7 @@ play 2 bars paradiddle`,
     link: null,
     source: `set time 3 over 4
 set tempo 100
-set swing 50
+set swing off
 
 pattern pdd = {
   snare: ^xxxxx
@@ -447,7 +468,7 @@ play 2 bars pdd`,
     link: null,
     source: `set time 4 over 4
 set tempo 80
-set swing 50
+set swing off
 
 pattern five = {
   snare: dd^-
