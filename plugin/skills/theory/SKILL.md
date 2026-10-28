@@ -13,28 +13,17 @@ description: Explain a music theory idea with small composer-nb cells the user c
 
 ## Example
 
-"What makes dorian different from natural minor?" The two scales differ at the 6:
+"What makes dorian different from natural minor?" The chords differ at the 4 and the 6. A digit in a chart is the chord the scale has on that degree, so one chart plays each mode's own chords:
 
 ```composer-nb
-set key D
-set octave 4
+chords chart = 1 2|3 4|5 6|7 1
 
-notes scale = 1---2---3---4---|5---6---7---1'---
-
-with mode minor { play piano: notes scale }
-with mode dorian { play piano: notes scale }
+with key D, mode minor { play piano: chords chart }
+with key D, mode dorian { play piano: chords chart }
 ```
 
-The raised 6 makes the IV major: G in D dorian, where natural minor has Gm. Every chord of D dorian, in turn:
+The raised 6 makes the 4 major: G in D dorian, where natural minor has Gm. The same chart in another key, parsed with the first cell as `after`:
 
 ```composer-nb
-set mode dorian
-play piano: chords i ii|III IV|v vi|VII i
-```
-
-The same name in another key, parsed with the first cell as `after`:
-
-```composer-nb
-set key A
-play piano: notes scale
+with key A, mode dorian { play piano: chords chart }
 ```

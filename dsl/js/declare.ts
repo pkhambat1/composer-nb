@@ -172,7 +172,9 @@ export function defineWord(
     else if (state.sections[t]) {
       return err(ln, `${t} is a pattern, so it can't go in ${type}`)
     } else if (
-      type === "steps" ? isStepRun(t) || t === "|" : CHORD_MARKS.includes(t) || buildChord(t, key)
+      type === "steps"
+        ? isStepRun(t) || t === "|"
+        : CHORD_MARKS.includes(t) || buildChord(t, key, 3, true)
     ) {
       tokens.push(t)
     } else if (NAME_LIKE.test(t) && !isRoman(t) && !/^[-xd]+$/.test(t)) {

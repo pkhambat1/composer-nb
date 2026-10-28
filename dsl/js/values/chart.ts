@@ -130,7 +130,7 @@ function chordSlot(tok: string, part: Part, st: State, key: Key, err: Report): S
     )
     return null
   }
-  const chord = buildChord(tok, key, st.octave)
+  const chord = buildChord(tok, key, st.octave, true)
   if (!chord) {
     err(
       part.ln,

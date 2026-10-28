@@ -205,7 +205,6 @@ A degree goes where a note goes: a digit from `1` to `7`, counted on the scale o
 ```
 set key A
 set mode minor
-set octave 3
 
 notes scale = 1---2---3---4---|5---6---7---1'---
 

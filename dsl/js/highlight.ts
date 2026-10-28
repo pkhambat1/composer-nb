@@ -63,7 +63,9 @@ function chordToken(token: string): Part[] {
   }
   let rest = ""
   const rm = ROMAN_RE.exec(core)
-  if (rm) {
+  if (/^[1-7]$/.test(core)) {
+    parts.push(part("tk-root tk-root-maj", core))
+  } else if (rm) {
     const lower = rm[2] === rm[2].toLowerCase()
     parts.push(part("tk-root " + (lower ? "tk-root-min" : "tk-root-maj"), (rm[1] || "") + rm[2]))
     rest = rm[3] || ""
