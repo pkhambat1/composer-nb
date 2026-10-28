@@ -15,14 +15,8 @@ import { classify, EVERY_RE, PLACE_RE, TYPED_RE } from "./lines.ts"
 import { Scope } from "./resolve.ts"
 import { applySetting, readWithHeader, setInBlock, WITH_HELP, withState } from "./settings.ts"
 import { Parser } from "./parser.ts"
-import {
-  cloneState,
-  describe,
-  initialState,
-  type Line,
-  type LineBlock,
-  type State,
-} from "./state.ts"
+import { cloneState, describe, initialState, type Line, type Piece, type State } from "./state.ts"
+import { bracesIn, isBraces, plain } from "./parts.ts"
 import type { Block, Statement, Text } from "./syntax.ts"
 import { fmt, lengthPrefix, MAX_SECONDS, singularLength, TPQ } from "./time.ts"
 import { SETTINGS } from "./vocab.ts"
@@ -138,13 +132,13 @@ export function parseCell(src: unknown, inherited: State = initialState()) {
   // A line as written, without its comment: what messages quote
   const lineAt = (ln: number) => raws[ln - 1].replace(/\/\/.*$/, "").trim()
 
-  let anonCount = 0
   // A with that transposes, in a block or around one: the line it's on, for the check that
   // something pitched plays
   const noteTranspose = (body: Line[]) => {
     for (const l of body) {
-      if (/\bwith\b[^{]*\btranspose\s+-?\(?[1-9]/.test(l.text)) transposeLine ??= l.ln
-      for (const b of Object.values(l.blocks || {})) noteTranspose(b.lines)
+      const text = l.parts.filter((p) => !isBraces(p)).join(" ")
+      if (/\bwith\b[^{]*\btranspose\s+-?\(?[1-9]/.test(text)) transposeLine ??= l.ln
+      for (const b of bracesIn(l.parts)) noteTranspose(b.lines)
     }
   }
 
@@ -163,21 +157,27 @@ export function parseCell(src: unknown, inherited: State = initialState()) {
     return out.join("\n").trim()
   }
 
-  // Parts of a statement read as one line: its text, with each block in it written {#1} and
-  // kept in `blocks`. `what` names the statement when one of these braces isn't closed.
-  // Whether a line in its blocks was left out as a mistake comes back as `dropped`.
+  // Parts of a statement read as one line: its text and the blocks in it, each block's
+  // statements read as its lines. `what` names the statement when one of these braces isn't
+  // closed. Whether a line in its blocks was left out as a mistake comes back as `dropped`.
   const lineOf = (
     parts: (Text | Block)[],
     ln: number,
     what: string,
   ): { line: Line; dropped: boolean } => {
-    let text = ""
-    let blocks: Record<string, LineBlock> | null = null
+    let out: Piece[] = []
     let dropped = false
     let last = 0 // the line the part before ended on
     // A part goes on a line of its own when it starts on a later line than the one before
-    const add = (more: string, from: { line: number; endLine: number }) => {
-      text = !text ? more : `${text}${from.line > last ? "\n" : " "}${more}`
+    const add = (more: Piece, from: { line: number; endLine: number }) => {
+      const gap = out.length && from.line > last ? "\n" : out.length ? " " : ""
+      const before = out[out.length - 1]
+      if (typeof more === "string" && typeof before === "string") out[out.length - 1] += gap + more
+      else if (typeof more === "string") out.push(gap + more)
+      else {
+        if (gap === "\n") out.push("\n")
+        out.push(more)
+      }
       last = from.endLine
     }
     for (const p of parts) {
@@ -191,15 +191,17 @@ export function parseCell(src: unknown, inherited: State = initialState()) {
       if (!inner.body.length) {
         // Unless what was in them was a mistake, already said
         if (!inner.dropped) err(ln, "These braces have nothing in them")
-        text = ""
+        out = []
         continue
       }
-      const key = `{#${++anonCount}}`
-      blocks = { ...(blocks ?? {}), [key]: { key, anon: true, ln, lines: inner.body, bars: 0 } }
-      add(key, p.span)
+      add({ kind: "braces", ln, lines: inner.body }, p.span)
     }
-    const line: Line = { ln, text, blocks }
-    return { line, dropped }
+    // A line has no space at its ends. Line breaks inside it stay: in a group in brackets, a
+    // line of its own ends at one.
+    if (typeof out[0] === "string") out[0] = out[0].trimStart()
+    const end = out[out.length - 1]
+    if (typeof end === "string") out[out.length - 1] = end.trimEnd()
+    return { line: { ln, parts: out.filter((p) => isBraces(p) || p) }, dropped }
   }
 
   // A block's statements as its lines. play goes at the top, and a pattern takes =, so
@@ -224,7 +226,7 @@ export function parseCell(src: unknown, inherited: State = initialState()) {
       }
       const read = lineOf(s.parts, ln, "This {")
       dropped ||= read.dropped
-      if (read.line.text.trim()) body.push(read.line)
+      if (read.line.parts.length) body.push(read.line)
     }
     return { body, dropped }
   }
@@ -345,15 +347,13 @@ export function parseCell(src: unknown, inherited: State = initialState()) {
           const read = lineOf(parts, ln, "This {")
           if (s.span.endLine > ln) {
             const size = bars ? `${fmt(bars)} bars ` : ""
-            label = `play ${size}${read.line.text
-              .replace(/\{#\d+\}/g, "{ … }")
-              .replace(/\s+/g, " ")
-              .trim()}`
+            const shown = read.line.parts.map((p) => (isBraces(p) ? "{ … }" : p)).join(" ")
+            label = `play ${size}${shown.replace(/\s+/g, " ").trim()}`
           }
-          arg = read.line.text.trim() ? [read.line] : []
+          arg = read.line.parts.length ? [read.line] : []
           if (!arg.length) ok = false
         } else {
-          arg = [{ ln, text: lineOf(parts, ln, "This {").line.text }]
+          arg = [lineOf(parts, ln, "This {").line]
         }
         noteTranspose(arg)
         const out = ok ? blockClip(arg, state, err, outputCtx(ln), [], bars) : null
@@ -398,9 +398,12 @@ export function parseCell(src: unknown, inherited: State = initialState()) {
       }
       if (decl) {
         const read = lineOf(decl.parts, ln, decl.name)
-        if (!read.line.text.trim()) continue // its braces were a mistake, already said
+        const value = read.line.parts
+        if (!value.length) continue // its braces were a mistake, already said
         noteTranspose([read.line])
-        const after = /^\{#\d+\}\s+(\S+)\s+bars$/.exec(read.line.text)
+        // pattern groove = { ... } 4 bars: the length after the braces
+        const tail = isBraces(value[0]) && value.length === 2 ? value[1] : null
+        const after = typeof tail === "string" ? /^(\S+)\s+bars$/.exec(tail.trim()) : null
         if (after) {
           err(
             ln,
@@ -408,15 +411,9 @@ export function parseCell(src: unknown, inherited: State = initialState()) {
           )
           continue
         }
-        const value = read.line.text
-        const l = classifyDecl(
-          { type: decl.type, name: decl.name, value },
-          { ln, blocks: read.line.blocks },
-          err,
-          state,
-        )
+        const l = classifyDecl({ type: decl.type, name: decl.name, value }, ln, err, state)
         if (!l) continue
-        if (l.kind === "word") defineWord(l.type, l.name, l.value, ln, state, err, l.blocks)
+        if (l.kind === "word") defineWord(l.type, l.name, l.value, ln, state, err)
         else {
           const sec = defineBlock(l, state, err)
           if (sec) checkSection(sec, state, err)
@@ -454,8 +451,8 @@ export function parseCell(src: unknown, inherited: State = initialState()) {
         continue
       }
 
-      const line = braces.length ? text : lineOf(s.parts, ln, "This {").line.text
-      const l = classify({ ln, text: line }, err, state)
+      const line = braces.length ? plain(ln, text) : lineOf(s.parts, ln, "This {").line
+      const l = classify(line, err, state)
       if (!l) continue
       if (l.kind === "setting" && inWith) err(ln, setInBlock(l))
       else if (l.kind === "setting") {

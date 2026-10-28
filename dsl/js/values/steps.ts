@@ -5,11 +5,11 @@
 import { buildChord } from "../chords.js"
 import { misplaced } from "../check.ts"
 import { blockBeside } from "../eval.ts"
-import { BLOCK_KEY } from "../declare.ts"
 import { TRACK_RE } from "../lines.ts"
 import { keyOf, withInLayers } from "../settings.ts"
 import { NAME_LIKE } from "../resolve.ts"
-import type { Line, LineBlock, State } from "../state.ts"
+import { bracesIn, headOf, isBraces, onlyBraces, pieces, textOf } from "../parts.ts"
+import type { Braces, Line, Piece, State } from "../state.ts"
 import {
   barQuarters,
   count,
@@ -32,18 +32,16 @@ const UNITS_ANY: readonly string[] = UNITS
 
 // How a drum is hit
 export type Mods = { accent?: boolean; ghost?: boolean; double?: boolean }
-// A drum's line: its name (snare.ghost), the drum and how it's hit (snare, ghost), what it
-// holds and the blocks written in it
+// A drum's line: its name (snare.ghost), the drum and how it's hit (snare, ghost), and what
+// it holds
 export type DrumPart = {
   name: string
   ln: number
   drum?: string
   art?: string
-  value?: string
-  blocks?: Blocks
+  value?: Piece[]
   layer?: boolean
 }
-export type Blocks = Record<string, LineBlock> | null | undefined
 // One hit, as it sounds: the sound (inst and art), the line it came from (lane)
 export type DrumHit = {
   inst: string
@@ -221,7 +219,7 @@ function readBeats(
   }
   // Steps, bar lines or a block beside beats: a line is one or the other.
   const notBeat = (t: string) =>
-    t === "|" || t === "%" || isStepRun(t) || st.words[t]?.type === "steps" || !!part.blocks?.[t]
+    t === "|" || t === "%" || isStepRun(t) || st.words[t]?.type === "steps"
   if (tokens.some(notBeat)) {
     const drum = part.drum ? part.name : "snare"
     fail(
@@ -362,7 +360,12 @@ export const STICKING_HELP = "A sticking is a hand for each step, R, L or -: sti
 export function stickingPattern(part: DrumPart, st: State, err: Report): DrumClip | null {
   const hands: (string | null)[] = []
   let ok = true
-  for (const tok of tokenize(part.value ?? "")) {
+  for (const tok of pieces(part.value ?? [])) {
+    if (isBraces(tok)) {
+      err(part.ln, `"{ ... }" isn't a sticking. ${STICKING_HELP}`)
+      ok = false
+      continue
+    }
     const w = st.words[tok]
     const runs =
       tok === "|" ? ["|"] : STICKING_RE.test(tok) ? [tok] : w?.type === "sticking" ? w.tokens : null
@@ -429,23 +432,12 @@ export function partsOf(value: string): string[] {
 }
 
 // What a length measures, when it isn't rest: steps, written out as one run of letters.
-export function figureRun(
-  text: string,
-  blocks: Blocks,
-  st: State,
-  err: Report,
-  ln: number,
-  part: DrumPart | null,
-): string | null {
+export function figureRun(text: string, st: State, err: Report, ln: number): string | null {
   let run = ""
   for (const tok of tokenize(text)) {
     const w = st.words[tok]
     if (tok === "|") continue
-    if (blocks?.[tok]) {
-      const inner = stepBlock(blocks[tok], st, err, part)
-      if (inner == null) return null
-      run += inner
-    } else if (w?.type === "steps") run += w.tokens.filter((t) => t !== "|").join("")
+    if (w?.type === "steps") run += w.tokens.filter((t) => t !== "|").join("")
     else if (isStepRun(tok)) run += tok
     else {
       err(
@@ -465,9 +457,9 @@ export function figureRun(
 // The length ... is what's left of the block the line is in, so a last part ...rest is
 // silence to the end (`toEnd`), and ...x- is x- repeated to the end (`toEnd`, with the
 // steps as `fill`). Returns { tokens, toEnd, fill }, or null after saying what's wrong.
+// A block on the line is the whole of it, and is read by stepBlock, so this is text.
 export function stepParts(
   value: string,
-  blocks: Blocks,
   st: State,
   err: Report,
   ln: number,
@@ -536,7 +528,7 @@ export function stepParts(
         toEnd = true
         continue
       }
-      const fig = figureRun(thing, blocks, st, err, ln, part)
+      const fig = figureRun(thing, st, err, ln)
       if (fig == null) return null
       if (!fig || /^-+$/.test(fig)) return fail("Silence to the end of the block is ...rest")
       toEnd = true
@@ -614,7 +606,7 @@ export function stepParts(
         `A comma ends a length, so put one here: ${len.shown} ${things.slice(0, cut).join(" ")}, ${things.slice(cut).join(" ")}`,
       )
     }
-    const fig = figureRun(len.thing, blocks, st, err, ln, part)
+    const fig = figureRun(len.thing, st, err, ln)
     if (fig == null) return null
     if (!fig || /^-+$/.test(fig)) return fail(`Silence for a length is rest: ${len.shown} rest`)
     if (n % fig.length) {
@@ -717,13 +709,6 @@ export function stepPattern(
       barLine()
       continue
     }
-    const block = part.blocks?.[tok]
-    if (block) {
-      const run = stepBlock(block, st, err, part)
-      if (run == null) ok = false
-      else addRun(run)
-      continue
-    }
     const w = st.words[tok]
     if (!w) {
       addRun(tok)
@@ -773,7 +758,7 @@ export function stepPattern(
 // saying what's wrong. With `part`, each layer is checked as that drum's steps, on its own
 // line.
 export function stepBlock(
-  block: LineBlock,
+  block: Braces,
   st: State,
   err: Report,
   part: DrumPart | null = null,
@@ -836,24 +821,29 @@ function stepLayerRun(
     err(line.ln, msg)
     return null
   }
-  if (TRACK_RE.test(line.text)) {
+  const text = textOf(line.parts)
+  if (TRACK_RE.test(headOf(line.parts))) {
     return fail(
-      `A block of steps holds steps, one layer a line, like --x-. ${line.text} is an instrument's line, which goes in a pattern`,
+      `A block of steps holds steps, one layer a line, like --x-. ${text} is an instrument's line, which goes in a pattern`,
     )
   }
-  if (/^with(\s|\{|$)/.test(line.text)) {
+  if (/^with(\s|\{|$)/.test(text)) {
     return fail(
       part
         ? withInLayers(part.name)
         : "A with holds lines that play, so it goes around a drum's line, not among its steps",
     )
   }
-  if (singularLength(line.text, line.ln, err)) return null
-  if (line.blocks && !BLOCK_KEY.test(line.text.trim())) {
-    return fail(blockBeside("in its layer", (fig: string) => `x--- ${fig}`))
+  if (singularLength(text, line.ln, err)) return null
+  if (bracesIn(line.parts).length) {
+    // A layer that's a block is that block's steps
+    const only = onlyBraces(line.parts)
+    if (!only) return fail(blockBeside("in its layer", (fig: string) => `x--- ${fig}`))
+    const run = stepBlock(only, st, err, part)
+    return run == null ? null : { run, toEnd: false, fill: null }
   }
   const here = part ? { ...part, ln: line.ln } : null
-  const parts = stepParts(line.text, line.blocks, st, err, line.ln, here)
+  const parts = stepParts(text, st, err, line.ln, here)
   if (!parts) return null
   const { tokens, toEnd, fill } = parts
   // Each step of this layer has to be one this drum can play
@@ -870,7 +860,6 @@ function stepLayerRun(
       art: "hit",
       ...part,
       ln: line.ln,
-      blocks: line.blocks,
       layer: true,
     }
     const run = beatsAsSteps(where, tokens, st, err)
@@ -882,10 +871,6 @@ function stepLayerRun(
     if (tok === "|") {
       const problem = barLineProblem(run.length, st)
       if (problem) return fail(problem)
-    } else if (line.blocks?.[tok]) {
-      const inner = stepBlock(line.blocks[tok], st, err, part)
-      if (inner == null) return null
-      run += inner
     } else if (w?.type === "steps") {
       const named = w.tokens.filter((t) => t !== "|").join("")
       if (!check(named, ` (in ${tok})`)) return null

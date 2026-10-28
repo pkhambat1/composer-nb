@@ -3,12 +3,13 @@
    (bar 2 { ... }) or at its own pace (every 3 steps { ... }), or patterns to play (intro
    verse). An instrument's line is then read as what it plays. */
 import { buildChord, parseKey } from "./chords.js"
-import { BLOCK_KEY, classifyDecl, patternHint, readDecl } from "./declare.ts"
+import { classifyDecl, patternHint, readDecl } from "./declare.ts"
 import { blockBeside } from "./eval.ts"
 import { readSequence, type Item } from "./sequence.ts"
 import { closest, unknownInstrument } from "./resolve.ts"
 import { keyOf, readSetting } from "./settings.ts"
-import type { Line, State } from "./state.ts"
+import { bracesIn, headOf, onlyBraces, textOf, withHead } from "./parts.ts"
+import type { Line, Piece, State } from "./state.ts"
 import {
   evalNumber,
   lengthAt,
@@ -27,10 +28,10 @@ import {
   beatPattern,
   listsBeats,
   stepParts,
+  stepBlock,
   stepPattern,
   stickingPattern,
   tokenize,
-  type Blocks,
   type DrumClip,
 } from "./values/steps.ts"
 import {
@@ -47,15 +48,14 @@ import {
 // What a line is, read
 export type SettingLine = { kind: "setting"; ln: number; name: string; value: string }
 export type DeclLine =
-  | { kind: "word"; ln: number; type: Type; name: string; value: string; blocks?: Blocks }
-  | { kind: "blockdef"; ln: number; name: string; value: string; blocks?: Blocks }
+  | { kind: "word"; ln: number; type: Type; name: string; value: Piece[] }
+  | { kind: "blockdef"; ln: number; name: string; value: Piece[] }
 export type PartLine = {
   kind: "part"
   ln: number
   st?: State // the state where it plays
   name: string
-  value: string
-  blocks?: Blocks
+  value: Piece[]
   pitched?: boolean
   sticking?: boolean
   drum?: string
@@ -105,11 +105,8 @@ export const LINE_SHAPES =
 // bar 2 { ... }, bar 2 hat.pedal: 4, bar 3 to 4 fill: what plays in those bars of the
 // block it's in, and nowhere else. Returns { kind: "placed", from, to, lines }, where
 // `lines` is what plays there, or null after saying what's wrong.
-export function readPlace(
-  text: string,
-  { ln, blocks }: { ln: number; blocks?: Blocks },
-  err: Report,
-): Placed | null {
+export function readPlace(parts: Piece[], ln: number, err: Report): Placed | null {
+  const text = headOf(parts)
   const nums = numbers(text)
   const first = nums.sumAt(3)
   const to = first && /^\s+to(?![A-Za-z0-9])\s*/.exec(text.slice(first.end))
@@ -130,33 +127,30 @@ export function readPlace(
     err(ln, `bar ${from} to ${until} runs backwards. The first bar comes first`)
     return null
   }
-  const rest = text.slice(last.end).trim()
+  const rest = withHead(parts, text.slice(last.end))
   const shown = text.slice(0, last.end).trim()
-  if (!rest) {
+  if (!rest.length) {
     err(ln, `${shown} needs what plays there: ${shown} { ... }`)
     return null
   }
   // bar 2 { ... }: the braces are the bar's own lines, so they fill the bar directly
-  const braces = BLOCK_KEY.test(rest) && blocks?.[rest]
-  const lines: Line[] = braces ? braces.lines : [{ ln, text: rest, blocks }]
+  const braces = onlyBraces(rest)
+  const lines: Line[] = braces ? braces.lines : [{ ln, parts: rest }]
   return { kind: "placed", ln, from, to: until, lines }
 }
 
 // every 3 steps { ... }, every 1/3 beats hats: what plays at that pace, where one step
 // lasts that long. Returns { kind: "paced", n, unit, shown, line }, where `line` is what
 // plays, or null after saying what's wrong.
-export function readPace(
-  text: string,
-  { ln, blocks }: { ln: number; blocks?: Blocks },
-  err: Report,
-): Paced | null {
-  const len = lengthAt(text.slice(5).trim())
+export function readPace(parts: Piece[], ln: number, err: Report): Paced | null {
+  const len = lengthAt(headOf(parts).slice(5).trim())
   if (!len) {
     err(ln, "every takes a length, then what plays at that pace: every 3 steps { ... }")
     return null
   }
   const shown = `every ${len.shown}`
-  if (!len.thing) {
+  const thing = withHead(parts, len.thing)
+  if (!thing.length) {
     err(ln, `${shown} needs what plays at that pace: ${shown} { ... }`)
     return null
   }
@@ -166,7 +160,7 @@ export function readPace(
     n: len.n,
     unit: len.unit,
     shown,
-    line: { ln, text: len.thing, blocks },
+    line: { ln, parts: thing },
   }
 }
 
@@ -186,13 +180,14 @@ export function paceTicks(l: Paced, st: State, err: Report): number | null {
 // Sorts one line (not play) into a setting, a word, a named pattern ("blockdef"), an
 // instrument line ("part"), patterns to play ("sequence"), something in a bar ("placed")
 // or something at its own pace ("paced"). Returns null when the line
-// is a mistake, after reporting it. A line's patterns without a name are in `blocks`.
-// `st` is the state so far, for the names it has.
-export function classify({ ln, text, blocks }: Line, err: Report, st: State): ReadLine | null {
+// is a mistake, after reporting it. `st` is the state so far, for the names it has.
+export function classify({ ln, parts }: Line, err: Report, st: State): ReadLine | null {
   const sections = st.sections
+  // The line as text, its blocks shown as { ... }, for how it starts and for messages
+  const text = textOf(parts)
   if (singularLength(text, ln, err)) return null
-  if (PLACE_RE.test(text)) return readPlace(text, { ln, blocks }, err)
-  if (EVERY_RE.test(text)) return readPace(text, { ln, blocks }, err)
+  if (PLACE_RE.test(text)) return readPlace(parts, ln, err)
+  if (EVERY_RE.test(text)) return readPace(parts, ln, err)
   if (/^bars(\s|$)/.test(text)) {
     err(
       ln,
@@ -201,13 +196,13 @@ export function classify({ ln, text, blocks }: Line, err: Report, st: State): Re
     return null
   }
 
-  const decl = readDecl(text)
-  if (decl) return classifyDecl(decl, { ln, blocks }, err, st)
+  const decl = readDecl(parts)
+  if (decl) return classifyDecl(decl, ln, err, st)
 
-  const m = TRACK_RE.exec(text)
+  const m = TRACK_RE.exec(headOf(parts))
   // ( ... ) or 4 bars ( ... ): what plays in order, whatever lines are in it
   if (!m && lengthPrefix(text).rest.startsWith("(")) {
-    const items = readSequence(text, ln, err, blocks, st)
+    const items = readSequence(parts, ln, err, st)
     return items && { kind: "sequence", ln, items }
   }
   if (!m) {
@@ -218,7 +213,7 @@ export function classify({ ln, text, blocks }: Line, err: Report, st: State): Re
     if (first === "set") return readSetting(text, tokens, ln, err)
     if (/^with(\s|\{|$)/.test(text)) {
       // with octave 2 { ... }: a block, played with those settings
-      const items = readSequence(text, ln, err, blocks, st)
+      const items = readSequence(parts, ln, err, st)
       return items && { kind: "sequence", ln, items }
     }
     if (text.startsWith("|")) {
@@ -265,13 +260,13 @@ export function classify({ ln, text, blocks }: Line, err: Report, st: State): Re
       err(ln, `Notes go on an instrument's line, e.g. guitar: ${spaceNotes(text)}`)
     } else if (/^[A-Za-z(*\d{]/.test(first)) {
       // intro verse verse: patterns to play, one after another
-      const items = readSequence(text, ln, err, blocks, st)
+      const items = readSequence(parts, ln, err, st)
       return items && { kind: "sequence", ln, items }
     } else err(ln, LINE_SHAPES)
     return null
   }
   const name = m[1].toLowerCase()
-  const value = m[2].trim()
+  const value = withHead(parts, m[2])
   if (name === "bars" || name === "bar") {
     err(
       ln,
@@ -280,19 +275,22 @@ export function classify({ ln, text, blocks }: Line, err: Report, st: State): Re
     return null
   }
   if (among(SETTINGS, name)) {
-    err(ln, `${name} is a setting, not an instrument, so it takes no colon: set ${name} ${value}`)
+    err(
+      ln,
+      `${name} is a setting, not an instrument, so it takes no colon: set ${name} ${textOf(value)}`,
+    )
     return null
   }
   if (among(PARTS, name) || name === "sticking") {
-    if (!value) {
+    if (!value.length) {
       err(ln, `${name}: needs something after the colon`)
       return null
     }
-    if (among(PITCHED, name)) return { kind: "part", ln, name, value, pitched: true, blocks }
+    if (among(PITCHED, name)) return { kind: "part", ln, name, value, pitched: true }
     // sticking: RLRR LRLL: which hand plays each step, shown on the hands' hits
-    if (name === "sticking") return { kind: "part", ln, name, value, sticking: true, blocks }
+    if (name === "sticking") return { kind: "part", ln, name, value, sticking: true }
     const [drum, art = "hit"] = name.split(".")
-    return { kind: "part", ln, name, value, drum, art, blocks }
+    return { kind: "part", ln, name, value, drum, art }
   }
   err(ln, unknownInstrument(name))
   return null
@@ -314,15 +312,21 @@ export function readPart(part: PartLine, st: State, barTicks: number, err: Repor
     return pattern && { ...pattern, part }
   }
   // A drum's line: its parts, with any lengths written out as the steps they stand for.
-  // A block on it is the whole line.
-  if (part.blocks && !BLOCK_KEY.test(part.value.trim())) {
-    err(
-      part.ln,
-      blockBeside(`${part.name} plays`, (fig: string) => `${part.name}: x--- ${fig}`),
-    )
-    return null
+  // A block on it is the whole line: its layers' steps.
+  if (bracesIn(part.value).length) {
+    const only = onlyBraces(part.value)
+    if (!only) {
+      err(
+        part.ln,
+        blockBeside(`${part.name} plays`, (fig: string) => `${part.name}: x--- ${fig}`),
+      )
+      return null
+    }
+    const run = stepBlock(only, st, err, part)
+    const pattern = run == null ? null : stepPattern(part, [run], st, err)
+    return pattern && { ...pattern, part }
   }
-  const parts = stepParts(part.value, part.blocks, st, err, part.ln, part)
+  const parts = stepParts(textOf(part.value), st, err, part.ln, part)
   if (!parts) return null
   const pattern = listsBeats(parts.tokens)
     ? beatPattern(part, parts.tokens, st, barTicks, err)
