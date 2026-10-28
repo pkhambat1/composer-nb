@@ -323,6 +323,47 @@ play walk`,
   },
   {
     section: "Harmony",
+    title: "Fifth of a fifth",
+    byline: "of counts a note from another note: 5 of 1, 5 of (5 of 1)",
+    body: "`5 of 1` is the 5th of the key's root, and `5 of (5 of 1)` the 5th of that: one `of` a fifth up, and brackets chain them. This goes up the circle of fifths from the key's root, C G D A, and it follows the key: change `set key C` to `set key F` and every note moves with it. Without the brackets, `5 of 5 of 1` is an error.",
+    link: null,
+    source: `set time 4 over 4
+set tempo 76
+set key C
+set mode major
+set octave 3
+
+pattern fifths = {
+  piano: notes 1--- 5 of 1--- 5 of (5 of 1)--- 5 of (5 of (5 of 1))---
+  hat: x-
+  kick: 1 3
+}
+
+play 2 bars fifths`,
+  },
+  {
+    section: "Harmony",
+    title: "Dominants of dominants",
+    byline: "of counts a chord from another chord: V7 of V",
+    body: "`V7 of V` is the dominant seventh built on the key's V: in C, D7, the chord that pulls to G. Chain them in brackets and each pulls to the next: `V7 of (V of V)` is A7, then D7, G7, and home to C. This is the same trick as the circle of fifths, on chords, and it follows `set key` too.",
+    link: null,
+    source: `set time 4 over 4
+set tempo 84
+set key C
+set mode major
+set octave 3
+
+pattern pulls = {
+  piano: chords V7 of (V of V)|V7 of V|V7|I
+  hat: x-
+  snare: 2 4
+  kick: 1 3
+}
+
+play 4 bars pulls`,
+  },
+  {
+    section: "Harmony",
     title: "ii–V–I",
     byline: "The cadence jazz is built on",
     body: "Dm7 to G7 to Cmaj7: the ii sets up the V, and the V resolves home. Written as numerals, so `key` moves it: change `set key C` to `set key F` and the whole thing follows. The bass walks a quarter note a step, written as degrees so it follows the key too, `set swing on` puts the ride's off-beats late, and `set octave 4` keeps the piano's voicings around middle C.",

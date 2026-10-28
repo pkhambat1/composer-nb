@@ -953,6 +953,104 @@ chords:
   10.5 tick=1344 ticks=192 chord={"input":"II","label":"Eb","rootPc":3,"bassMidi":39,"notesMidi":[51,55,58],"noteNames":["Eb3","G3","Bb3"],"bassName":"Eb2"} label=Eb instrument=guitar transpose=0 line=12 secDur=1.5
   12 tick=1536 ticks=384 chord={"input":"idim","label":"Ddim","rootPc":2,"bassMidi":38,"notesMidi":[50,53,56],"noteNames":["D3","F3","Ab3"],"bassName":"D2"} label=Ddim instrument=guitar transpose=0 line=12 secDur=3
 
+## Fifth of a fifth
+errors: none
+names: fifths pattern line 7
+from above: none
+length: 6.3158 s
+block startSec=0 durSec=6.3158 bars=2 time=4 over 4 tempo=76 key=C unit=4 barTicks=384 res=2
+drums:
+  0 inst=hat art=hit lane=hat kit=rock tick=0 vel=0.7 line=9
+  0 inst=kick art=hit lane=kick kit=rock tick=0 vel=0.7 line=10
+  0.3947 inst=hat art=hit lane=hat kit=rock tick=48 vel=0.7 line=9
+  0.7895 inst=hat art=hit lane=hat kit=rock tick=96 vel=0.7 line=9
+  1.1842 inst=hat art=hit lane=hat kit=rock tick=144 vel=0.7 line=9
+  1.5789 inst=hat art=hit lane=hat kit=rock tick=192 vel=0.7 line=9
+  1.5789 inst=kick art=hit lane=kick kit=rock tick=192 vel=0.7 line=10
+  1.9737 inst=hat art=hit lane=hat kit=rock tick=240 vel=0.7 line=9
+  2.3684 inst=hat art=hit lane=hat kit=rock tick=288 vel=0.7 line=9
+  2.7632 inst=hat art=hit lane=hat kit=rock tick=336 vel=0.7 line=9
+  3.1579 inst=hat art=hit lane=hat kit=rock tick=384 vel=0.7 line=9
+  3.1579 inst=kick art=hit lane=kick kit=rock tick=384 vel=0.7 line=10
+  3.5526 inst=hat art=hit lane=hat kit=rock tick=432 vel=0.7 line=9
+  3.9474 inst=hat art=hit lane=hat kit=rock tick=480 vel=0.7 line=9
+  4.3421 inst=hat art=hit lane=hat kit=rock tick=528 vel=0.7 line=9
+  4.7368 inst=hat art=hit lane=hat kit=rock tick=576 vel=0.7 line=9
+  4.7368 inst=kick art=hit lane=kick kit=rock tick=576 vel=0.7 line=10
+  5.1316 inst=hat art=hit lane=hat kit=rock tick=624 vel=0.7 line=9
+  5.5263 inst=hat art=hit lane=hat kit=rock tick=672 vel=0.7 line=9
+  5.9211 inst=hat art=hit lane=hat kit=rock tick=720 vel=0.7 line=9
+notes:
+  0 tick=0 ticks=96 note={"midi":48,"name":"C3","spell":{"letter":"C","alter":0}} label=1 instrument=piano voice=0 vel=0.7 line=8 secDur=0.7895
+  0.7895 tick=96 ticks=96 note={"midi":55,"name":"G3","spell":{"letter":"G","alter":0}} label=G3 instrument=piano voice=0 vel=0.7 line=8 secDur=0.7895
+  1.5789 tick=192 ticks=96 note={"midi":62,"name":"D4","spell":{"letter":"D","alter":0}} label=D4 instrument=piano voice=0 vel=0.7 line=8 secDur=0.7895
+  2.3684 tick=288 ticks=96 note={"midi":69,"name":"A4","spell":{"letter":"A","alter":0}} label=A4 instrument=piano voice=0 vel=0.7 line=8 secDur=0.7895
+  3.1579 tick=384 ticks=96 note={"midi":48,"name":"C3","spell":{"letter":"C","alter":0}} label=1 instrument=piano voice=0 vel=0.7 repeat=true line=8 secDur=0.7895
+  3.9474 tick=480 ticks=96 note={"midi":55,"name":"G3","spell":{"letter":"G","alter":0}} label=G3 instrument=piano voice=0 vel=0.7 repeat=true line=8 secDur=0.7895
+  4.7368 tick=576 ticks=96 note={"midi":62,"name":"D4","spell":{"letter":"D","alter":0}} label=D4 instrument=piano voice=0 vel=0.7 repeat=true line=8 secDur=0.7895
+  5.5263 tick=672 ticks=96 note={"midi":69,"name":"A4","spell":{"letter":"A","alter":0}} label=A4 instrument=piano voice=0 vel=0.7 repeat=true line=8 secDur=0.7895
+
+## Dominants of dominants
+errors: none
+names: pulls pattern line 7
+from above: none
+length: 11.4286 s
+block startSec=0 durSec=11.4286 bars=4 time=4 over 4 tempo=84 key=C unit=4 barTicks=384 res=2
+drums:
+  0 inst=hat art=hit lane=hat kit=rock tick=0 vel=0.7 line=9
+  0 inst=kick art=hit lane=kick kit=rock tick=0 vel=0.7 line=11
+  0.3571 inst=hat art=hit lane=hat kit=rock tick=48 vel=0.7 line=9
+  0.7143 inst=hat art=hit lane=hat kit=rock tick=96 vel=0.7 line=9
+  0.7143 inst=snare art=hit lane=snare kit=rock tick=96 vel=0.7 line=10
+  1.0714 inst=hat art=hit lane=hat kit=rock tick=144 vel=0.7 line=9
+  1.4286 inst=hat art=hit lane=hat kit=rock tick=192 vel=0.7 line=9
+  1.4286 inst=kick art=hit lane=kick kit=rock tick=192 vel=0.7 line=11
+  1.7857 inst=hat art=hit lane=hat kit=rock tick=240 vel=0.7 line=9
+  2.1429 inst=hat art=hit lane=hat kit=rock tick=288 vel=0.7 line=9
+  2.1429 inst=snare art=hit lane=snare kit=rock tick=288 vel=0.7 line=10
+  2.5 inst=hat art=hit lane=hat kit=rock tick=336 vel=0.7 line=9
+  2.8571 inst=hat art=hit lane=hat kit=rock tick=384 vel=0.7 line=9
+  2.8571 inst=kick art=hit lane=kick kit=rock tick=384 vel=0.7 line=11
+  3.2143 inst=hat art=hit lane=hat kit=rock tick=432 vel=0.7 line=9
+  3.5714 inst=hat art=hit lane=hat kit=rock tick=480 vel=0.7 line=9
+  3.5714 inst=snare art=hit lane=snare kit=rock tick=480 vel=0.7 line=10
+  3.9286 inst=hat art=hit lane=hat kit=rock tick=528 vel=0.7 line=9
+  4.2857 inst=hat art=hit lane=hat kit=rock tick=576 vel=0.7 line=9
+  4.2857 inst=kick art=hit lane=kick kit=rock tick=576 vel=0.7 line=11
+  4.6429 inst=hat art=hit lane=hat kit=rock tick=624 vel=0.7 line=9
+  5 inst=hat art=hit lane=hat kit=rock tick=672 vel=0.7 line=9
+  5 inst=snare art=hit lane=snare kit=rock tick=672 vel=0.7 line=10
+  5.3571 inst=hat art=hit lane=hat kit=rock tick=720 vel=0.7 line=9
+  5.7143 inst=hat art=hit lane=hat kit=rock tick=768 vel=0.7 line=9
+  5.7143 inst=kick art=hit lane=kick kit=rock tick=768 vel=0.7 line=11
+  6.0714 inst=hat art=hit lane=hat kit=rock tick=816 vel=0.7 line=9
+  6.4286 inst=hat art=hit lane=hat kit=rock tick=864 vel=0.7 line=9
+  6.4286 inst=snare art=hit lane=snare kit=rock tick=864 vel=0.7 line=10
+  6.7857 inst=hat art=hit lane=hat kit=rock tick=912 vel=0.7 line=9
+  7.1429 inst=hat art=hit lane=hat kit=rock tick=960 vel=0.7 line=9
+  7.1429 inst=kick art=hit lane=kick kit=rock tick=960 vel=0.7 line=11
+  7.5 inst=hat art=hit lane=hat kit=rock tick=1008 vel=0.7 line=9
+  7.8571 inst=hat art=hit lane=hat kit=rock tick=1056 vel=0.7 line=9
+  7.8571 inst=snare art=hit lane=snare kit=rock tick=1056 vel=0.7 line=10
+  8.2143 inst=hat art=hit lane=hat kit=rock tick=1104 vel=0.7 line=9
+  8.5714 inst=hat art=hit lane=hat kit=rock tick=1152 vel=0.7 line=9
+  8.5714 inst=kick art=hit lane=kick kit=rock tick=1152 vel=0.7 line=11
+  8.9286 inst=hat art=hit lane=hat kit=rock tick=1200 vel=0.7 line=9
+  9.2857 inst=hat art=hit lane=hat kit=rock tick=1248 vel=0.7 line=9
+  9.2857 inst=snare art=hit lane=snare kit=rock tick=1248 vel=0.7 line=10
+  9.6429 inst=hat art=hit lane=hat kit=rock tick=1296 vel=0.7 line=9
+  10 inst=hat art=hit lane=hat kit=rock tick=1344 vel=0.7 line=9
+  10 inst=kick art=hit lane=kick kit=rock tick=1344 vel=0.7 line=11
+  10.3571 inst=hat art=hit lane=hat kit=rock tick=1392 vel=0.7 line=9
+  10.7143 inst=hat art=hit lane=hat kit=rock tick=1440 vel=0.7 line=9
+  10.7143 inst=snare art=hit lane=snare kit=rock tick=1440 vel=0.7 line=10
+  11.0714 inst=hat art=hit lane=hat kit=rock tick=1488 vel=0.7 line=9
+chords:
+  0 tick=0 ticks=384 chord={"input":"V7","label":"A7","rootPc":9,"bassMidi":57,"notesMidi":[69,73,76,79],"noteNames":["A4","C#5","E5","G5"],"bassName":"A3"} label=A7 instrument=piano transpose=0 line=8 secDur=2.8571
+  2.8571 tick=384 ticks=384 chord={"input":"V7","label":"D7","rootPc":2,"bassMidi":50,"notesMidi":[62,66,69,72],"noteNames":["D4","F#4","A4","C5"],"bassName":"D3"} label=D7 instrument=piano transpose=0 line=8 secDur=2.8571
+  5.7143 tick=768 ticks=384 chord={"input":"V7","label":"G7","rootPc":7,"bassMidi":43,"notesMidi":[55,59,62,65],"noteNames":["G3","B3","D4","F4"],"bassName":"G2"} label=G7 instrument=piano transpose=0 line=8 secDur=2.8571
+  8.5714 tick=1152 ticks=384 chord={"input":"I","label":"C","rootPc":0,"bassMidi":36,"notesMidi":[48,52,55],"noteNames":["C3","E3","G3"],"bassName":"C2"} label=C instrument=piano transpose=0 line=8 secDur=2.8571
+
 ## ii–V–I
 errors: none
 names: turnaround pattern line 8
