@@ -144,6 +144,9 @@ function Cell({
   registerPlayer,
   unregisterPlayer,
   armAudio,
+  onDragStart,
+  onDragEnd,
+  dragging = false,
 }: PlayerProps &
   MenuProps & {
     cell: NotebookCell
@@ -158,6 +161,10 @@ function Cell({
     onRun: () => void
     onInterrupt: () => void
     onSetPreview: (preview: boolean) => void
+    // Dragging the cell by its grip, in a notebook; and whether it's the one being dragged
+    onDragStart?: (e: React.DragEvent<HTMLElement>) => void
+    onDragEnd?: () => void
+    dragging?: boolean
   }) {
   const taRef = React.useRef<HTMLTextAreaElement>(null)
 
@@ -201,12 +208,31 @@ function Cell({
         cell.type +
         (selected ? " cell-selected" : "") +
         (editing ? " cell-editing" : "") +
-        (isActive ? " cell-running" : "")
+        (isActive ? " cell-running" : "") +
+        (dragging ? " cell-dragging" : "")
       }
       onClick={onSelect}
       data-screen-label={`Cell ${index + 1} (${cell.type})`}
       data-cell-id={cell.id}
     >
+      {onDragStart && (
+        <span
+          className="cell-drag"
+          draggable
+          onDragStart={onDragStart}
+          onDragEnd={onDragEnd}
+          title="Drag to move the cell"
+        >
+          <svg width="10" height="14" viewBox="0 0 10 14" fill="currentColor">
+            {[2, 7, 12].map((y) => (
+              <React.Fragment key={y}>
+                <circle cx="3" cy={y} r="1.2" />
+                <circle cx="7" cy={y} r="1.2" />
+              </React.Fragment>
+            ))}
+          </svg>
+        </span>
+      )}
       <div className="cell-prompt">
         {cell.type === "music" && runState !== "idle" ? (
           <span
@@ -351,6 +377,7 @@ export default React.memo(Cell, (prev, next) =>
   prev.selected === next.selected &&
   prev.editing === next.editing &&
   prev.isActive === next.isActive &&
+  prev.dragging === next.dragging &&
   prev.theme === next.theme &&
   prev.accent === next.accent &&
   prev.drumView === next.drumView &&

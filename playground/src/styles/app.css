@@ -807,6 +807,51 @@ body {
   color: var(--accent);
   border-color: var(--accent);
 }
+/* While a cell is dragged: no +, and a line where the cell will land */
+.cells-dragging .cell-gap-btn {
+  display: none;
+}
+.cell-gap-drop::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 3px;
+  margin-top: -1.5px;
+  border-radius: 2px;
+  background: var(--accent);
+}
+.cell-dragging {
+  opacity: 0.4;
+}
+/* The grip a cell is dragged by, at the top of its margin, shown as the menu's ⋮ is */
+.cell-drag {
+  position: absolute;
+  top: 9px;
+  left: 10px;
+  z-index: 5;
+  width: 18px;
+  height: 22px;
+  display: grid;
+  place-items: center;
+  border-radius: 4px;
+  color: var(--text-mute);
+  cursor: grab;
+  opacity: 0;
+  transition: opacity 120ms ease;
+}
+.cell:hover .cell-drag,
+.cell-selected .cell-drag {
+  opacity: 1;
+}
+.cell-drag:hover {
+  color: var(--text);
+  background: var(--tb-btn-hover);
+}
+.cell-drag:active {
+  cursor: grabbing;
+}
 .cell-gap-menu {
   top: calc(50% + 14px);
   left: 50%;

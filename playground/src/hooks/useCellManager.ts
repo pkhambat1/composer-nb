@@ -108,6 +108,18 @@ export function useCellManager(starterCells: SavedCell[]) {
     })
   }, [])
 
+  // Move a cell to just before the cell at `to` (the cells' length: the end), as a drop does
+  const moveCellTo = useCallback((id: string, to: number) => {
+    setCells((cs) => {
+      const from = cs.findIndex((c) => c.id === id)
+      if (from < 0 || to === from || to === from + 1) return cs
+      const next = [...cs]
+      const [cell] = next.splice(from, 1)
+      next.splice(to > from ? to - 1 : to, 0, cell)
+      return next
+    })
+  }, [])
+
   // A copy of a cell, right under it, with the same source and no output yet
   const duplicateCell = useCallback((id: string) => {
     setCells((cs) => {
@@ -142,6 +154,7 @@ export function useCellManager(starterCells: SavedCell[]) {
     deleteCell,
     undoDelete,
     moveCell,
+    moveCellTo,
     duplicateCell,
     convertCell,
   }
