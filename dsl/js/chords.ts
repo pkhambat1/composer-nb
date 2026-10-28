@@ -184,16 +184,22 @@ export function degreeName(key: Key, degree: number, acc = ""): string {
   return letter + (alter > 0 ? "#".repeat(alter) : "b".repeat(-alter))
 }
 
-// Case sets the third: V is major and v minor. What follows is the quality, written as it
-// is after a chord's root: V7, ii7, IVmaj7, viidim, viidim7, viim7b5. The degree is counted
-// on the key's own scale, so in A minor VII is G and III is C.
+// Case sets the third: V is major and v minor. A plain lowercase numeral takes the scale's own
+// fifth too, so vii is diminished in major and iv in lydian, without saying so. What follows
+// is the quality, written as it is after a chord's root: V7, ii7, IVmaj7, viidim, viim7b5.
+// The degree is counted on the key's own scale, so in A minor VII is G and III is C.
 function romanToSymbol(main: string, key: Key): string | null {
   const m = ROMAN_RE.exec(main)
   if (!m) return null
   const [, acc, numeral, rest] = m
   const root = degreeName(key, DEGREE[numeral.toLowerCase()] + 1, acc)
   let quality: string
-  if (/^(dim|m7b5)/.test(rest)) quality = rest
+  const degree = DEGREE[numeral.toLowerCase()]
+  // The fifth the scale has above this degree: a flat one makes a plain lowercase numeral dim
+  const flatFifth =
+    !acc && key.scale[(degree + 4) % 7] + (degree + 4 >= 7 ? 12 : 0) - key.scale[degree] === 6
+  if (!rest && numeral === numeral.toLowerCase() && flatFifth) quality = "dim"
+  else if (/^(dim|m7b5)/.test(rest)) quality = rest
   else if (numeral === numeral.toUpperCase() || rest.startsWith("sus")) quality = rest
   else quality = rest.startsWith("maj") ? "mMaj" + rest.slice(3) : "m" + rest
   return root + quality
