@@ -112,8 +112,8 @@ export function applySetting(
     return true
   }
   if (name === "mode") {
-    // How the key is written: its signature, and how accidentals are spelt. It changes no
-    // pitch, since degrees and numerals count on the major scale of the root.
+    // The key's scale: degrees and numerals count on it, so in D minor 3 is F and III is F
+    // major. It also gives the sheet its signature and how accidentals are spelt.
     if (!among(MODES, value)) {
       err(
         ln,

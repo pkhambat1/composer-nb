@@ -26,7 +26,7 @@ When the user wants to write the cell themselves ("give me a cell", "I'll write 
 
 - Every cell makes musical sense on its own: one idea, with names that say what each part is.
 - No figure written twice. A pattern repeats its lines, so `hat: x-`, not `hat: x-x- x-x-`. The parser rejects the repeat.
-- Scales, lines and chord formulas by degree (`1 2 b3 4 5 b6 b7`) and charts by numeral, so they play in any key. Letters only where the note names are the point.
+- Scales, lines and chord formulas by degree (`1 2 3 4 5 6 7`) and charts by numeral, so they play in any key. In a mode, write the plain degrees and numerals and let `set mode` make them minor, dorian and so on: no `b` or `#` for what the mode already does. Letters only where the note names are the point.
 - A note held over two beats gets a stated length, `3 beats C2` or `1 bars rest`, not a long run of dashes.
 - Brackets for order: `play (intro 4 bars verse)`.
 - `set` in front of every setting.
@@ -45,9 +45,9 @@ set tempo 96
 set key D
 set mode dorian
 
-notes scale = 1---2---b3---4---|5---6---b7---1'---
-  |1'---b7---6---5---|4---b3---2-------|1 bars 1
-notes roots = 1-------b3-------|5-------b7-------
+notes scale = 1---2---3---4---|5---6---7---1'---
+  |1'---7---6---5---|4---3---2-------|1 bars 1
+notes roots = 1-------3-------|5-------7-------
   |1'-------6-------|4-------2-------|1 bars 1
 
 pattern groove = {
@@ -60,7 +60,7 @@ pattern walk = {
   groove
   with octave 4 { piano: scale }
   with octave 2 { bass: roots }
-  guitar: chords i bIII|v bVII|i vidim|IV ii|i
+  guitar: chords i III|v VII|i vidim|IV ii|i
 }
 
 play (2 bars groove walk)

@@ -42,7 +42,7 @@ A 6/9 chord is written as on a lead sheet, `C6/9` or `Cm6/9`. Its `/` is part of
 
 ## Roman numerals
 
-Uppercase is a major chord and lowercase a minor one, on that degree of the current [`key`](/pitched/key). Degrees count on the major scale of the key's root, whatever the key's mode, as [degrees in notes](/pitched/notes#degrees) do. A `b` or `#` in front moves the root a semitone, so `bVII` is a whole step below the root in every key: in A minor the natural minor's chords are `i bIII iv v bVI bVII`, and `II` in E phrygian is `bII`. The case gives the third, and a quality follows the numeral as it follows a chord's root: `V7`, `ii7`, `IVmaj7`, `viidim`, `viidim7`, `viim7b5`.
+Uppercase is a major chord and lowercase a minor one, on that degree of the current [`key`](/pitched/key). Degrees count on the key's own scale, its mode's, as [degrees in notes](/pitched/notes#degrees) do: in A minor `III` is C and `VII` is G, and in A major they're C# and G#. A `b` or `#` in front moves the root a semitone off the scale: `bVII` in C major is Bb. The case gives the third, and a quality follows the numeral as it follows a chord's root: `V7`, `ii7`, `IVmaj7`, `viidim`, `viidim7`, `viim7b5`.
 
 <Cell>
 
@@ -60,7 +60,7 @@ In C, this plays `C Am`, `F G7`, `Bb F`, `Dm7 Bdim`.
 ```composer-nb
 set key A
 set mode minor
-play piano: chords i iidim|bIII iv|v bVI|bVII i
+play piano: chords i iidim|III iv|v VI|VII i
 ```
 
 </Cell>
