@@ -21,8 +21,8 @@ set octave 4
 
 notes scale = 1---2---3---4---|5---6---7---1'---
 
-with mode minor { play piano: scale }
-with mode dorian { play piano: scale }
+with mode minor { play piano: notes scale }
+with mode dorian { play piano: notes scale }
 ```
 
 The raised 6 makes the IV major: G in D dorian, where natural minor has Gm. Every chord of D dorian, in turn:
@@ -36,5 +36,5 @@ The same name in another key, parsed with the first cell as `after`:
 
 ```composer-nb
 set key A
-play piano: scale
+play piano: notes scale
 ```

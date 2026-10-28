@@ -3,7 +3,7 @@ title: "Instruments"
 description: "The pitched instruments, a line each, and their settings: key, mode, octave, transpose and an instrument's sound."
 ---
 
-Each pitched instrument has a line of its own. It holds [`notes`](/pitched/notes), or a [`chords`](/pitched/chords) chart after the word `chords`.
+Each pitched instrument has a line of its own. It says what it holds: [`notes`](/pitched/notes) in front of notes, or `chords` in front of a [`chords`](/pitched/chords) chart.
 
 | Name | Instrument |
 | --- | --- |
@@ -28,7 +28,7 @@ These are set with `set` at the top of a cell, or on a [`with`](/language/settin
 
 ## octave
 
-`octave` counts from C: `C4` is middle C, and the note below it is `B3`. Degree 1 and a numeral's root are the key's root in that octave, and the other degrees and numerals count up from there, so under `set key A`, `1` is A3 and `5` is E4. On a `with`, it gives one instrument its own octave: `with octave 2 { bass: 1---5--- }`.
+`octave` counts from C: `C4` is middle C, and the note below it is `B3`. Degree 1 and a numeral's root are the key's root in that octave, and the other degrees and numerals count up from there, so under `set key A`, `1` is A3 and `5` is E4. On a `with`, it gives one instrument its own octave: `with octave 2 { bass: notes 1---5--- }`.
 
 ## transpose
 

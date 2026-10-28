@@ -35,7 +35,7 @@ describe("lines that have no mistake", () => {
     "play {\n  bar 2 (a b)\n}",
     "play {\n  every 2 steps (a b)\n}",
     // a group over several lines, with blocks and lines of their own in it
-    "play (\n  { piano: C4--- }\n  piano: D4---\n  verse\n)",
+    "play (\n  { piano: notes C4--- }\n  piano: notes D4---\n  verse\n)",
     "play (chorus with key A, mode minor {\n  bridge\n} chorus)",
     // then is a name like any other
     "pattern then = { kick: x- }",
@@ -92,17 +92,17 @@ describe("a line that starts with |", () => {
 describe("a notes line", () => {
   it("paints degrees as notes, with their marks", () => {
     for (const d of ["1", "b3", "#4", "1'", "'5", "''b7", "^5", "~b6"]) {
-      expect(marked(`play piano: ${d}---`)).toEqual([])
-      expect(painted(`play piano: ${d}---`, d)[0]).toMatch(/tk-note/)
+      expect(marked(`play piano: notes ${d}---`)).toEqual([])
+      expect(painted(`play piano: notes ${d}---`, d)[0]).toMatch(/tk-note/)
     }
   })
 
   it("paints two degrees that touch as a mistake", () => {
-    expect(marked("play piano: 13--")).toEqual(["3"])
+    expect(marked("play piano: notes 13--")).toEqual(["3"])
   })
 
   it("paints lengths, rest and ... as a kit piece's line has them", () => {
-    const src = "play bass: 3 beats C2, 2 beats rest, b3---, ...G1"
+    const src = "play bass: notes 3 beats C2, 2 beats rest, b3---, ...G1"
     expect(marked(src)).toEqual([])
     expect(painted(src, "3")).toEqual(["tk-directive-val"])
     expect(painted(src, "beats")).toEqual(["tk-directive-key", "tk-directive-key"])
@@ -142,7 +142,7 @@ describe("whitespace", () => {
       "play  (intro   verse\t{ snare: xxxx }  outro)  ",
       "play (intro 4 bars (verse chorus) intro)",
       "{ kick: x--- } { snare: x--- }",
-      "play (\n  { piano: C4--- }\n\tpiano: D4---\n)",
+      "play (\n  { piano: notes C4--- }\n\tpiano: D4---\n)",
       "notes flats = A3-Ab3-\n  |Db3-C3-",
       "play {\n  hat: x--- { x- }\n}",
       "play ((1 + 2)*2 bars b)",
@@ -170,10 +170,10 @@ describe("settings, and with", () => {
       ["{", "tk-punct"],
     ])
     const clean = [
-      "with key E, mode minor {\n  play {\n    piano: chords verse\n    with octave 2 { bass: 1---5--- }\n  }\n}",
+      "with key E, mode minor {\n  play {\n    piano: chords verse\n    with octave 2 { bass: notes 1---5--- }\n  }\n}",
       "play (\n  with key E { piano: chords prog }\n  with key G { piano: chords prog }\n)",
       "play (with key E { piano: chords prog } with key G { piano: chords prog })",
-      "play {\n  bar 2 with octave 5 { piano: 1--- }\n}",
+      "play {\n  bar 2 with octave 5 { piano: notes 1--- }\n}",
       "with tempo 60*2, time 7 over 8, guitar.electric muted {\n  play kick: x\n}",
     ]
     for (const src of clean) expect(marked(src), src).toEqual([])
@@ -189,7 +189,7 @@ describe("settings, and with", () => {
 
   it("paints set inside braces, where settings go on a with", () => {
     expect(painted("set octave 2", "set")).toEqual(["tk-directive-key"])
-    expect(painted("play {\n  set octave 2\n  bass: 1---\n}", "set")).toEqual(["tk-error"])
+    expect(painted("play {\n  set octave 2\n  bass: notes 1---\n}", "set")).toEqual(["tk-error"])
     expect(painted("with key E {\n  set mode minor\n}", "set")).toEqual(["tk-error"])
     expect(painted("play { set octave 2 }", "set")).toEqual(["tk-error"])
   })

@@ -80,10 +80,10 @@ describe("lines", () => {
     expect(firstError("play Am F|C G")).toMatch(
       /Chords go on an instrument's line, e\.g\. piano: chords Am F\|C G/,
     )
-    expect(firstError("play guitar: Am F")).toMatch(
+    expect(firstError("play guitar: notes Am F")).toMatch(
       /"Am" is a chord, and these are notes. For chords, write guitar: chords Am F/,
     )
-    expect(firstError("play guitar: C G|F G")).toMatch(
+    expect(firstError("play guitar: notes C G|F G")).toMatch(
       /For chords, put chords in front: guitar: chords C G\|F G/,
     )
   })
@@ -105,7 +105,7 @@ describe("lines", () => {
     expect(firstError(play("kick: x", "kick: x-"))).toMatch(
       /kick already has a line in this play. To layer it, put its lines in a block: kick: \{ \.\.\. \}/,
     )
-    expect(firstError(play("piano: chords Am", "piano: F---"))).toMatch(
+    expect(firstError(play("piano: chords Am", "piano: notes F---"))).toMatch(
       /piano already has a line in this play. To layer it, put its lines in a block: piano: \{ \.\.\. \}/,
     )
   })
@@ -152,7 +152,7 @@ describe("what each symbol is for", () => {
       /guitar is an instrument, so it takes a colon: guitar: chords Am F/,
     )
     expect(firstError("guitar = F---G---")).toMatch(
-      /guitar is an instrument, so it takes a colon: guitar: F---G---/,
+      /guitar is an instrument, so it takes a colon: guitar: notes F---G---/,
     )
     expect(firstError("play: groove")).toMatch(
       /play is a keyword, not an instrument, so it takes no colon/,
@@ -197,7 +197,7 @@ describe("what each symbol is for", () => {
 describe("types", () => {
   it("go in front of a name: steps, notes, chords or pattern", () => {
     const p = parseSource(
-      "steps pair = ^-x-\nnotes riff = F---G---\nchords verse = Am F|C G\npattern beat = {\n  piano: chords verse\n  guitar: riff\n  hat: pair\n}\nplay beat",
+      "steps pair = ^-x-\nnotes riff = F---G---\nchords verse = Am F|C G\npattern beat = {\n  piano: chords verse\n  guitar: notes riff\n  hat: pair\n}\nplay beat",
     )
     expect(p.errors).toEqual([])
     expect(p.chords.map((e) => e.label)).toEqual(["Am", "F", "C", "G"])
@@ -246,7 +246,7 @@ describe("types", () => {
       /Am F is chords, not a pattern. Write chords verse = Am F, or give them an instrument: pattern verse = piano: chords Am F/,
     )
     expect(firstError("pattern riff = F---G---")).toMatch(
-      /F---G--- is notes, not a pattern. Write notes riff = F---G---, or give them an instrument: pattern riff = guitar: F---G---/,
+      /F---G--- is notes, not a pattern. Write notes riff = F---G---, or give them an instrument: pattern riff = guitar: notes F---G---/,
     )
     expect(firstError("notes riff = Am F")).toMatch(
       /"Am" is a chord, and these are notes. For chords, write chords riff = Am F/,
@@ -275,7 +275,7 @@ describe("types", () => {
       /verse is chords, so it goes on an instrument's line: piano: chords verse/,
     )
     expect(firstError("notes riff = F---\nplay riff")).toMatch(
-      /riff is notes, so it goes on an instrument's line: piano: riff/,
+      /riff is notes, so it goes on an instrument's line: piano: notes riff/,
     )
     expect(firstError("steps pair = ^-x-\nplay pair")).toMatch(
       /pair is steps, so it goes on a drum's line: hat: pair/,
@@ -283,7 +283,7 @@ describe("types", () => {
     expect(firstError("pattern fill = { snare: x-xx }\nplay piano: chords fill")).toMatch(
       /fill is a pattern, so it goes on a line of its own/,
     )
-    expect(firstError("pattern fill = { snare: x-xx }\nplay piano: fill")).toMatch(
+    expect(firstError("pattern fill = { snare: x-xx }\nplay piano: notes fill")).toMatch(
       /fill is a pattern, so it goes on a line of its own/,
     )
     expect(firstError("pattern fill = { snare: x-xx }\nplay hat: fill")).toMatch(
@@ -293,22 +293,22 @@ describe("types", () => {
       /verse is chords, so it goes on a line like piano: chords verse, not on a drum's/,
     )
     expect(firstError("notes riff = F---\nplay hat: riff")).toMatch(
-      /riff is notes, so it goes on a line like piano: riff, not on a drum's/,
+      /riff is notes, so it goes on a line like piano: notes riff, not on a drum's/,
     )
     expect(firstError("steps pair = ^-x-\nplay piano: chords pair")).toMatch(
       /pair is steps, so it goes on a drum's line, not among chords/,
     )
-    expect(firstError("steps pair = ^-x-\nplay piano: pair")).toMatch(
+    expect(firstError("steps pair = ^-x-\nplay piano: notes pair")).toMatch(
       /pair is steps, so it goes on a drum's line, not on piano's/,
     )
     // chords in front is what makes a line a chart, whatever the chart holds
-    expect(firstError("chords verse = Am F\nplay piano: verse")).toMatch(
+    expect(firstError("chords verse = Am F\nplay piano: notes verse")).toMatch(
       /verse is chords, so chords goes in front of it: piano: chords verse/,
     )
     expect(firstError("notes riff = F---\nplay piano: chords riff")).toMatch(
       /riff is notes, and the rest of this line is chords. A line plays one or the other/,
     )
-    expect(firstError("chords verse = Am F\nplay piano: F--- verse")).toMatch(
+    expect(firstError("chords verse = Am F\nplay piano: notes F--- verse")).toMatch(
       /verse is chords, and the rest of this line is notes. A line plays one or the other/,
     )
     expect(firstError("chords verse = Am F\nplay kick: 1 verse")).toMatch(
@@ -325,7 +325,7 @@ describe("types", () => {
     ])
     const o = parseSource("steps pair = ^-x-\nsteps four = pair ^---\nplay hat: four").outputs[0]
     expect(hits(o, "hat").map((e) => e.vel)).toEqual([1, 0.7, 1])
-    expect(notes("notes up = C-E-\nnotes line = up G-E-\nplay piano: line")).toEqual([
+    expect(notes("notes up = C-E-\nnotes line = up G-E-\nplay piano: notes line")).toEqual([
       "C3",
       "E3",
       "G3",
@@ -369,7 +369,7 @@ describe("types", () => {
       /Chords go on an instrument's line: piano: chords Am F/,
     )
     expect(firstError("play notes F---G---")).toMatch(
-      /Notes go on an instrument's line: guitar: F---G---/,
+      /Notes go on an instrument's line: guitar: notes F---G---/,
     )
   })
 
@@ -703,7 +703,7 @@ describe("names", () => {
     ).toEqual(["C", "G", "C"])
     const src =
       "steps countIn = x---\nsticking handsA = R---\nnotes riffB = C4---\nchords verseA = Am F\n" +
-      "pattern at100 = {\n  hat: countIn\n  sticking: handsA\n  piano: riffB\n  guitar: chords verseA\n}\nplay at100"
+      "pattern at100 = {\n  hat: countIn\n  sticking: handsA\n  piano: notes riffB\n  guitar: chords verseA\n}\nplay at100"
     expect(parseSource(src).errors).toEqual([])
   })
 
@@ -741,7 +741,7 @@ describe("names", () => {
         .flat()
         .filter((p) => p.s === word)
         .map((p) => p.c)
-    expect(named("notes riffB = C4---\nplay piano: riffB", "riffB")).toEqual(["tk-word", "tk-word"])
+    expect(named("notes riffB = C4---\nplay piano: notes riffB", "riffB")).toEqual(["tk-word", "tk-word"])
     expect(named("pattern Bridge = { kick: x }", "Bridge")).toEqual(["tk-error"])
     expect(named("pattern vi = { kick: x }", "vi")).toEqual(["tk-error"])
   })
@@ -882,7 +882,7 @@ describe("what repeats has to fit", () => {
     expect(
       firstError("pattern cc = 6 bars {\n  kick: 1\n  piano: chords C|G|F|C|G\n}\nplay cc"),
     ).toMatch(/The piano line is 5 bars long, which doesn't fit 6 bars a whole number of times/)
-    expect(firstError("pattern cc = 2 bars { guitar: F-- }\nplay cc")).toMatch(
+    expect(firstError("pattern cc = 2 bars { guitar: notes F-- }\nplay cc")).toMatch(
       /The guitar line is 3 steps long, which doesn't fit 2 bars a whole number of times/,
     )
     // A pattern at its own tempo is measured against the tempo of what it's in.
@@ -906,7 +906,7 @@ describe("what repeats has to fit", () => {
     ).toBeLessThan(o.durSec)
     expect(hits(o, "kick")).toHaveLength(16)
     // A note still sounding at the end stops there
-    const riff = parseSource(`pattern rr = { guitar: C${"-".repeat(31)} }\nplay 1 bars rr`).outputs[0]
+    const riff = parseSource(`pattern rr = { guitar: notes C${"-".repeat(31)} }\nplay 1 bars rr`).outputs[0]
     expect(riff.notes.map((e) => e.secDur)).toEqual([2])
     // Bars it names still have to be there
     expect(firstError("play 2 bars {\n  bar 3 crash: 1\n}")).toMatch(
@@ -1087,7 +1087,7 @@ describe("a name of one type where another goes", () => {
   it("is sent to the line its type goes on, from the one table that says which", () => {
     const sticking = "sticking para = RLRR\n"
     const goes = "para is a sticking, so it goes on the sticking line: sticking: para"
-    expect(firstError(sticking + play("piano: para"))).toBe(goes)
+    expect(firstError(sticking + play("piano: notes para"))).toBe(goes)
     expect(firstError(sticking + play("piano: chords para"))).toBe(goes)
     expect(firstError(sticking + play("kick: para"))).toBe(goes)
     expect(firstError(sticking + "play para")).toBe(goes)
@@ -1135,21 +1135,21 @@ describe("settings", () => {
   it("go on a with inside a block, so a block's lines can each have their own", () => {
     const by = (src) =>
       Object.fromEntries(parseSource(src).notes.map((e) => [e.instrument, e.note.name]))
-    expect(by("play {\n  with octave 4 { piano: 1--- }\n  with octave 2 { bass: 1--- }\n}")).toEqual({
+    expect(by("play {\n  with octave 4 { piano: notes 1--- }\n  with octave 2 { bass: notes 1--- }\n}")).toEqual({
       piano: "C4",
       bass: "C2",
     })
-    expect(by("pattern aa = {\n  piano: 1---\n  with key E { bass: 1--- }\n}\nplay aa")).toEqual({
+    expect(by("pattern aa = {\n  piano: notes 1---\n  with key E { bass: notes 1--- }\n}\nplay aa")).toEqual({
       piano: "C3",
       bass: "E3",
     })
     // a pattern plays with the settings where it's played
-    expect(by("pattern up = { piano: 1--- }\nplay {\n  up\n  with key E { bass: 1--- }\n}")).toEqual({
+    expect(by("pattern up = { piano: notes 1--- }\nplay {\n  up\n  with key E { bass: notes 1--- }\n}")).toEqual({
       piano: "C3",
       bass: "E3",
     })
     // the header shows the key the block starts in
-    const b = parseSource("play {\n  with key G { piano: 1--- }\n  with key E { bass: 1--- }\n}").outputs[0].blocks[0]
+    const b = parseSource("play {\n  with key G { piano: notes 1--- }\n  with key E { bass: notes 1--- }\n}").outputs[0].blocks[0]
     expect(b.key).toBe("G")
   })
 
@@ -1157,10 +1157,10 @@ describe("settings", () => {
     expect(firstError("play {\n  kick: x---\n  set tempo 60\n}")).toBe(
       "Inside a block, settings go on a with: with tempo 60 { ... }",
     )
-    expect(firstError("pattern pp = {\n  set octave 2\n  bass: 1---\n}\nplay pp")).toBe(
+    expect(firstError("pattern pp = {\n  set octave 2\n  bass: notes 1---\n}\nplay pp")).toBe(
       "Inside a block, settings go on a with: with octave 2 { ... }",
     )
-    expect(firstError("with key E {\n  set mode minor\n  play piano: 1---\n}")).toBe(
+    expect(firstError("with key E {\n  set mode minor\n  play piano: notes 1---\n}")).toBe(
       "Inside a block, settings go on a with: with mode minor { ... }",
     )
     expect(durations("set tempo 60\nplay kick: 1")).toEqual([4])
@@ -1918,17 +1918,17 @@ describe("notes", () => {
   }
 
   it("are drawn on the steps, a note where a drum has its x", () => {
-    expect(heard("play guitar: F---G F-F--")).toEqual([
+    expect(heard("play guitar: notes F---G F-F--")).toEqual([
       ["F3", 0, 4],
       ["G3", 4, 1],
       ["F3", 5, 2],
       ["F3", 7, 3],
     ])
-    expect(durations("play guitar: F---G F-F--")).toEqual([1.25])
+    expect(durations("play guitar: notes F---G F-F--")).toEqual([1.25])
   })
 
   it("take one step each, however many characters a note is", () => {
-    expect(heard("play bass: E1-F#1 Bb1-")).toEqual([
+    expect(heard("play bass: notes E1-F#1 Bb1-")).toEqual([
       ["E1", 0, 2],
       ["F#1", 2, 1],
       ["A#1", 3, 2],
@@ -1936,37 +1936,37 @@ describe("notes", () => {
   })
 
   it("use the octave setting when a note has no number", () => {
-    expect(notes("play piano: C E4 G")).toEqual(["C3", "E4", "G3"])
-    expect(notes("set octave 2\nplay bass: E-G-")).toEqual(["E2", "G2"])
+    expect(notes("play piano: notes C E4 G")).toEqual(["C3", "E4", "G3"])
+    expect(notes("set octave 2\nplay bass: notes E-G-")).toEqual(["E2", "G2"])
   })
 
   it("ring until the next note, and _ stops one", () => {
-    expect(heard("play piano: C---__E-")).toEqual([
+    expect(heard("play piano: notes C---__E-")).toEqual([
       ["C3", 0, 4],
       ["E3", 6, 2],
     ])
     // Before the first note, - is silence: nothing is ringing yet.
-    expect(heard("play piano: --C-")).toEqual([["C3", 2, 2]])
+    expect(heard("play piano: notes --C-")).toEqual([["C3", 2, 2]])
   })
 
   it("don't touch: a space goes between two notes, and takes no step", () => {
-    expect(firstError("play guitar: E---F#E-E--")).toBe(
+    expect(firstError("play guitar: notes E---F#E-E--")).toBe(
       '"E---F#E-E--": notes don\'t touch, so put a space between them: E---F# E-E--',
     )
-    expect(firstError("play piano: CEG")).toMatch(/put a space between them: C E G$/)
-    expect(firstError("play piano: ^F^G")).toMatch(/put a space between them: \^F \^G$/)
+    expect(firstError("play piano: notes CEG")).toMatch(/put a space between them: C E G$/)
+    expect(firstError("play piano: notes ^F^G")).toMatch(/put a space between them: \^F \^G$/)
     expect(firstError("notes riff = E2G2")).toMatch(/put a space between them: E2 G2$/)
-    expect(sound("play guitar: E---F# E-E--")).toBe(sound("play guitar: E--- F# E- E--"))
+    expect(sound("play guitar: notes E---F# E-E--")).toBe(sound("play guitar: notes E--- F# E- E--"))
     // -, _ and a bar line keep notes apart already
-    expect(parseSource("play piano: C-E-G-_F#_E").errors).toEqual([])
-    expect(parseSource("play piano: C--------------- | E---------------").errors).toEqual([])
+    expect(parseSource("play piano: notes C-E-G-_F#_E").errors).toEqual([])
+    expect(parseSource("play piano: notes C--------------- | E---------------").errors).toEqual([])
     // Where a message shows notes as the line to write, they're spaced apart.
-    expect(firstError("play kick: F#E-")).toMatch(/guitar: F# E-$/)
+    expect(firstError("play kick: F#E-")).toMatch(/guitar: notes F# E-$/)
     expect(firstError("riff = F#E-")).toMatch(/Put its type in front: notes riff = F# E-$/)
   })
 
   it("take ^ and ~ in front, for an accent and a soft note", () => {
-    const o = parseSource("play piano: ^C-~E-G-").outputs[0]
+    const o = parseSource("play piano: notes ^C-~E-G-").outputs[0]
     expect(o.notes.map((e) => [e.label, e.vel, e.accent, e.ghost])).toEqual([
       ["C", 1, true, false],
       ["E", 0.3, false, true],
@@ -1976,7 +1976,7 @@ describe("notes", () => {
 
   it("repeat at their own length in a pattern, against the drums", () => {
     const groove =
-      "set time 7 over 8\npattern groove = {\n  kick: x--x---\n  guitar.electric: F---G F-F--\n}\n"
+      "set time 7 over 8\npattern groove = {\n  kick: x--x---\n  guitar.electric: notes F---G F-F--\n}\n"
     // Lines of 7 and 10 steps meet after 70: five bars of 14.
     const o = parseSource(groove + "play groove").outputs[0]
     expect(o.durSec).toBe(8.75)
@@ -1987,89 +1987,92 @@ describe("notes", () => {
   })
 
   it("play once on a play's own line, like a drum's", () => {
-    expect(heard("play 2 bars piano: C---")).toEqual([["C3", 0, 4]])
-    expect(heard("pattern pp = 1 bars { piano: C--- }\nplay pp")).toHaveLength(4)
+    expect(heard("play 2 bars piano: notes C---")).toEqual([["C3", 0, 4]])
+    expect(heard("pattern pp = 1 bars { piano: notes C--- }\nplay pp")).toHaveLength(4)
   })
 
   it("take | where a bar ends, and spaces, for the eye", () => {
-    expect(sound("play piano: C--- E--- G--- E--- | C---")).toBe(
-      sound("play piano: C---E---G---E---C---"),
+    expect(sound("play piano: notes C--- E--- G--- E--- | C---")).toBe(
+      sound("play piano: notes C---E---G---E---C---"),
     )
-    expect(firstError("play piano: C---E---|G---")).toMatch(
+    expect(firstError("play piano: notes C---E---|G---")).toMatch(
       /This \| isn't at the end of a bar: it's after 8 steps, and a 4 over 4 bar is 16 steps/,
     )
   })
 
   it("go by name, in a row with more notes", () => {
-    expect(sound("notes riff = F---G F-F--\nplay guitar: riff G---")).toBe(
-      sound("play guitar: F---G F-F-- G---"),
+    expect(sound("notes riff = F---G F-F--\nplay guitar: notes riff G---")).toBe(
+      sound("play guitar: notes F---G F-F-- G---"),
     )
-    expect(sound("notes riff = F---\nplay guitar: riff G---")).toBe(sound("play guitar: F---G---"))
+    expect(sound("notes riff = F---\nplay guitar: notes riff G---")).toBe(sound("play guitar: notes F---G---"))
   })
 
   it("play at the pace every sets", () => {
-    expect(heard("play every 2 steps piano: C-E-")).toEqual([
+    expect(heard("play every 2 steps piano: notes C-E-")).toEqual([
       ["C3", 0, 4],
       ["E3", 4, 4],
     ])
-    expect(durations("play every 1/3 beats piano: C E G")).toEqual([0.5])
+    expect(durations("play every 1/3 beats piano: notes C E G")).toEqual([0.5])
   })
 
   it("play together from a block of lines, each ringing on its own", () => {
     // G4 rings for all four steps while the line above it moves.
-    expect(heard("play piano: {\n  C4-E4-\n  G4---\n}")).toEqual([
+    expect(heard("play piano: {\n  notes C4-E4-\n  notes G4---\n}")).toEqual([
       ["C4", 0, 2],
       ["G4", 0, 4],
       ["E4", 2, 2],
     ])
     // A chart is a layer too: chords under a tune, on one instrument.
-    const o = parseSource("play piano: {\n  chords C|F\n  E4---G4---\n}").outputs[0]
+    const o = parseSource("play piano: {\n  chords C|F\n  notes E4---G4---\n}").outputs[0]
     expect(o.durSec).toBe(4)
     expect(o.chords.map((e) => e.label)).toEqual(["C", "F"])
     expect(o.notes.map((e) => e.label)).toEqual(["E4", "G4", "E4", "G4", "E4", "G4", "E4", "G4"])
   })
 
   it("lose to a lower line's note at the same moment, as a drum's hit does", () => {
-    const o = parseSource("pattern gg = {\n  piano: C---\n  bar 2 piano: E---\n}\nplay gg").outputs[0]
+    const o = parseSource("pattern gg = {\n  piano: notes C---\n  bar 2 piano: notes E---\n}\nplay gg").outputs[0]
     expect(o.notes.map((e) => e.label)).toEqual(["C", "C", "C", "C", "E", "E", "E", "E"])
   })
 
   it("explain what a line of notes can't hold", () => {
-    expect(firstError("play guitar: x---")).toMatch(
-      /"x---" is a drum's steps. On guitar a step is a note: guitar: F---G---/,
+    expect(firstError("play guitar: notes x---")).toMatch(
+      /"x---" is a drum's steps. On guitar a step is a note: guitar: notes F---G---/,
     )
-    expect(firstError("play guitar: f---")).toMatch(
-      /"f---": notes are capital letters, A to G: guitar: F---G---/,
+    expect(firstError("play guitar: notes f---")).toMatch(
+      /"f---": notes are capital letters, A to G: guitar: notes F---G---/,
     )
-    expect(firstError("play guitar: ^---")).toMatch(/\^ and ~ go in front of a note: \^F, ~G/)
-    expect(firstError("play guitar: C9--")).toMatch(/"C9--": octaves run from 0 to 8/)
-    expect(firstError("play guitar: H---")).toMatch(
+    expect(firstError("play guitar: notes ^---")).toMatch(/\^ and ~ go in front of a note: \^F, ~G/)
+    expect(firstError("play guitar: notes C9--")).toMatch(/"C9--": octaves run from 0 to 8/)
+    expect(firstError("play guitar: notes H---")).toMatch(
       /"H---" isn't a note. Notes are A to G, with # or b after them and an octave when it's needed \(F, F#, Bb, E2\), or degrees of the key, 1 to 7/,
     )
-    expect(firstError("play guitar: Am---")).toMatch(
+    expect(firstError("play guitar: notes Am---")).toMatch(
       /chord names don't go on the steps. Chords are written in a chart, where _ leaves a slot silent: guitar: chords _ Am _ Am/,
     )
-    expect(firstError("play guitar: 2 beats C2-E2-")).toMatch(
+    expect(firstError("play guitar: notes 2 beats C2-E2-")).toMatch(
       /2 beats holds one note. To draw a figure, leave the length off: C2-E2-/,
     )
-    expect(firstError("play guitar: 8---")).toMatch(/degrees run from 1 to 7/)
-    expect(firstError("play piano: notes F---")).toMatch(
-      /A line's notes need no word in front: piano: F---/,
+    expect(firstError("play guitar: notes 8---")).toMatch(/degrees run from 1 to 7/)
+    expect(firstError("play piano: F---")).toBe(
+      "piano takes notes or chords, and says which: piano: notes F---",
+    )
+    expect(firstError("play piano: Am F")).toBe(
+      "piano takes notes or chords, and says which: piano: chords Am F",
     )
     expect(firstError("play piano: chords")).toMatch(
       /chords needs the chords after it: piano: chords Am F\|C G/,
     )
     expect(firstError("play piano: chords F---G---")).toMatch(
-      /"F---G---" is notes, and this line says chords. A line of notes has no word in front: piano: F---G---/,
+      /"F---G---" is notes, and this line says chords. A line of notes says notes in front: piano: notes F---G---/,
     )
     expect(firstError("F---G---")).toMatch(
-      /Notes go on an instrument's line, e\.g\. guitar: F---G---/,
+      /Notes go on an instrument's line, e\.g\. guitar: notes F---G---/,
     )
   })
 
   it("stay off a drum's line, and so do chords", () => {
     expect(firstError("play kick: F---")).toMatch(
-      /"F---" is notes, and kick is a drum. Notes go on a pitched instrument's line: guitar: F---/,
+      /"F---" is notes, and kick is a drum. Notes go on a pitched instrument's line: guitar: notes F---/,
     )
     expect(firstError("play kick: Am")).toMatch(
       /"Am" is a chord, and kick is a drum. Chords go on a pitched instrument's line: piano: chords Am/,
@@ -2080,7 +2083,7 @@ describe("notes", () => {
     expect(firstError("play piano: {\n  kick: x---\n}")).toMatch(
       /A block after piano: holds what piano plays, one layer a line. kick: x--- is an instrument's line, which goes in a pattern/,
     )
-    expect(firstError("play piano: C--- {\n  E---\n}")).toMatch(
+    expect(firstError("play piano: notes C--- {\n  E---\n}")).toMatch(
       /A block is everything piano plays, so nothing goes beside it: piano: \{ \.\.\. \}/,
     )
     expect(firstError("notes riff = {\n  F---\n}")).toMatch(
@@ -2089,71 +2092,71 @@ describe("notes", () => {
   })
 
   it("take a length in front of one note, which holds it that long", () => {
-    expect(heard("play bass: 3 beats C2, 1 beats G1")).toEqual([
+    expect(heard("play bass: notes 3 beats C2, 1 beats G1")).toEqual([
       ["C2", 0, 12],
       ["G1", 12, 4],
     ])
-    expect(sound("play piano: 2 beats rest, E4---F4---")).toBe(sound("play piano: _-------E4---F4---"))
-    expect(sound("notes gap = 1 bars rest\nplay piano: gap C4---")).toBe(
-      sound("play piano: _--------------- C4---"),
+    expect(sound("play piano: notes 2 beats rest, E4---F4---")).toBe(sound("play piano: notes _-------E4---F4---"))
+    expect(sound("notes gap = 1 bars rest\nplay piano: notes gap C4---")).toBe(
+      sound("play piano: notes _--------------- C4---"),
     )
-    expect(sound("play piano: 3 beats ^E4, 1 beats ~D4")).toBe(sound("play piano: ^E4----------- ~D4---"))
+    expect(sound("play piano: notes 3 beats ^E4, 1 beats ~D4")).toBe(sound("play piano: notes ^E4----------- ~D4---"))
     // a bar line may end a length's part, and is checked there
-    expect(sound("play bass: 1 bars F2 | 1 bars G2")).toBe(sound("play bass: 1 bars F2, 1 bars G2"))
-    expect(firstError("play bass: 3 beats F2 | 1 bars G2")).toMatch(/This \| isn't at the end of a bar/)
+    expect(sound("play bass: notes 1 bars F2 | 1 bars G2")).toBe(sound("play bass: notes 1 bars F2, 1 bars G2"))
+    expect(firstError("play bass: notes 3 beats F2 | 1 bars G2")).toMatch(/This \| isn't at the end of a bar/)
     // ... holds a note, or silence, to the end of the block
-    expect(heard("play 2 bars bass: 3 beats C2, ...G1")).toEqual([
+    expect(heard("play 2 bars bass: notes 3 beats C2, ...G1")).toEqual([
       ["C2", 0, 12],
       ["G1", 12, 20],
     ])
-    expect(firstError("play piano: E4---, ...rest")).toMatch(/Every line in this play ends in \.\.\./)
+    expect(firstError("play piano: notes E4---, ...rest")).toMatch(/Every line in this play ends in \.\.\./)
     expect(firstError("notes tail = E4---, ...rest")).toMatch(/A name's notes have a length of their own/)
-    expect(firstError("play piano: 3 beats riff")).toMatch(/3 beats needs one note or rest after it/)
+    expect(firstError("play piano: notes 3 beats riff")).toMatch(/3 beats needs one note or rest after it/)
   })
 
   it("take degrees of the key, counted on its mode's scale", () => {
     const major = "notes major = 1---2---3---4---|5---6---7---1'---\n"
-    expect(notes("set key C\nset octave 4\n" + major + "play piano: major")).toEqual([
+    expect(notes("set key C\nset octave 4\n" + major + "play piano: notes major")).toEqual([
       "C4", "D4", "E4", "F4", "G4", "A4", "B4", "C5",
     ])
     // a name of degrees is read under the key that plays it
-    expect(notes("set key F#\nset octave 4\n" + major + "play piano: major")).toEqual([
+    expect(notes("set key F#\nset octave 4\n" + major + "play piano: notes major")).toEqual([
       "F#4", "G#4", "A#4", "B4", "C#5", "D#5", "F5", "F#5",
     ])
     // b and # move a degree a semitone off the key's scale
-    expect(notes("set key A\nset octave 4\nplay piano: 1-2-b3-4-5-b6-7-1'-")).toEqual([
+    expect(notes("set key A\nset octave 4\nplay piano: notes 1-2-b3-4-5-b6-7-1'-")).toEqual([
       "A4", "B4", "C5", "D5", "E5", "F5", "G#5", "A5",
     ])
     // the scale is the mode's: in A minor, 3 is C and #7 the raised seventh, G#
-    expect(notes("set key A\nset mode minor\nset octave 4\nplay piano: 1-2-3-4-5-6-7-#7-")).toEqual([
+    expect(notes("set key A\nset mode minor\nset octave 4\nplay piano: notes 1-2-3-4-5-6-7-#7-")).toEqual([
       "A4", "B4", "C5", "D5", "E5", "F5", "G5", "G#5",
     ])
-    expect(notes("set key D\nset mode dorian\nset octave 4\nplay piano: 3-6-")).toEqual(["F4", "B4"])
+    expect(notes("set key D\nset mode dorian\nset octave 4\nplay piano: notes 3-6-")).toEqual(["F4", "B4"])
     // ' after a degree is an octave up, before it an octave down
-    expect(notes("set key C\nset octave 3\nplay bass: 1-'5-''1-1''-")).toEqual(["C3", "G2", "C1", "C5"])
+    expect(notes("set key C\nset octave 3\nplay bass: notes 1-'5-''1-1''-")).toEqual(["C3", "G2", "C1", "C5"])
     // letters and degrees can share a line
-    expect(notes("set key D\nset octave 4\nplay piano: 1-F#4-5-")).toEqual(["D4", "F#4", "A4"])
+    expect(notes("set key D\nset octave 4\nplay piano: notes 1-F#4-5-")).toEqual(["D4", "F#4", "A4"])
     // Cb4 sits just below C4, so key Cb's root in octave 4 is the B below middle C
-    expect(midis("set key Cb\nset octave 4\nplay piano: 1-4-")).toEqual([59, 64])
-    expect(firstError("play piano: 13--")).toMatch(/notes don't touch, so put a space between them: 1 3--/)
+    expect(midis("set key Cb\nset octave 4\nplay piano: notes 1-4-")).toEqual([59, 64])
+    expect(firstError("play piano: notes 13--")).toMatch(/notes don't touch, so put a space between them: 1 3--/)
   })
 
   it("aren't written as the same figure twice, since a pattern repeats them", () => {
-    expect(firstError("play piano: C4-C4-")).toBe("piano: C4-C4- repeats C4-. Write piano: C4-: a pattern repeats it")
-    expect(firstError("notes riff = C4---D4---\nplay piano: riff riff")).toMatch(/repeats C4---D4---/)
-    expect(parseSource("play piano: C2-C2--").errors).toEqual([])
+    expect(firstError("play piano: notes C4-C4-")).toBe("piano: notes C4-C4- repeats C4-. Write piano: notes C4-: a pattern repeats it")
+    expect(firstError("notes riff = C4---D4---\nplay piano: notes riff riff")).toMatch(/repeats C4---D4---/)
+    expect(parseSource("play piano: notes C2-C2--").errors).toEqual([])
   })
 })
 
 describe("pitched instruments", () => {
   it("name a second sound after a dot, the way a drum does", () => {
-    expect(parseSource("play guitar.electric: E2---").notes[0].instrument).toBe("guitar.electric")
+    expect(parseSource("play guitar.electric: notes E2---").notes[0].instrument).toBe("guitar.electric")
     expect(parseSource("play piano.electric: chords C").chords[0].instrument).toBe("piano.electric")
     expect(firstError("play guitar.acoustic: C---")).toMatch(
       /"guitar.acoustic" isn't an instrument. guitar's other sound is guitar.electric/,
     )
     expect(firstError("play organ.loud: C---")).toMatch(
-      /"organ.loud" isn't an instrument. organ has one sound: organ: F---G---/,
+      /"organ.loud" isn't an instrument. organ has one sound: organ: notes F---G---/,
     )
     expect(firstError("play banjo: C---")).toMatch(/"banjo" isn't an instrument. Instruments: /)
   })
@@ -2163,9 +2166,10 @@ describe("pitched instruments", () => {
       highlightMusic(`play {\n  ${text}\n}`)[1]
         .filter((p) => p.s.trim())
         .map((p) => [p.c, p.s])
-    expect(line("guitar.electric: F#-^E2_")).toEqual([
+    expect(line("guitar.electric: notes F#-^E2_")).toEqual([
       ["tk-inst", "guitar.electric"],
       ["tk-punct", ":"],
+      ["tk-directive-key", "notes"],
       ["tk-note", "F#"],
       ["tk-rest", "-"],
       ["tk-note tk-step-acc", "^E2"],
@@ -2181,7 +2185,7 @@ describe("pitched instruments", () => {
       "tk-word",
     ])
     // A note straight after another is marked where the space goes.
-    expect(line("guitar: F#E-").slice(2)).toEqual([
+    expect(line("guitar: notes F#E-").slice(3)).toEqual([
       ["tk-note", "F#"],
       ["tk-error", "E"],
       ["tk-rest", "-"],
@@ -2192,7 +2196,7 @@ describe("pitched instruments", () => {
 
   it("keep every character of the source when colouring it", () => {
     const src =
-      "notes riff = F---G F-F--\nplay {\n  guitar.electric: riff | ^E2 ~Bb_\n  piano: {\n    chords Am F|C G\n    C4-E4-\n  }\n}"
+      "notes riff = F---G F-F--\nplay {\n  guitar.electric: notes riff | ^E2 ~Bb_\n  piano: {\n    chords Am F|C G\n    notes C4-E4-\n  }\n}"
     expect(
       highlightMusic(src)
         .map((parts) => parts.map((p) => p.s).join(""))
@@ -2210,7 +2214,7 @@ describe("the grid", () => {
   const cells = (row) => [...row.cells].sort((a, b) => a[0] - b[0])
 
   it("gives a pitched instrument a row above the drums, a note's name in its cell", () => {
-    const { per, rows } = grid(play("kick: x---", "guitar: F-_^G"))
+    const { per, rows } = grid(play("kick: x---", "guitar: notes F-_^G"))
     expect(per).toBe(16)
     expect(rows.map((r) => r.label)).toEqual(["guitar", "kick"])
     expect(cells(rows[0])).toEqual([
@@ -2222,7 +2226,7 @@ describe("the grid", () => {
   })
 
   it("gives each line of an instrument's block a row, named once", () => {
-    const { rows } = grid("play piano: {\n  C4 E4--\n  G4---\n}")
+    const { rows } = grid("play piano: {\n  notes C4 E4--\n  notes G4---\n}")
     expect(rows.map((r) => r.label)).toEqual(["piano", ""])
     expect(cells(rows[1]).map(([at, cell]) => [at, cell.text || "held"])).toEqual([
       [0, "G4"],
@@ -2234,8 +2238,8 @@ describe("the grid", () => {
 
   it("is as fine as it takes to show every note start and stop", () => {
     // Notes two steps apart fit a grid of 8th notes, until one is cut short on a 16th.
-    expect(grid("play piano: C-E-G-E-").per).toBe(8)
-    expect(grid("play piano: C_E-G-E-").per).toBe(16)
+    expect(grid("play piano: notes C-E-G-E-").per).toBe(8)
+    expect(grid("play piano: notes C_E-G-E-").per).toBe(16)
   })
 
   it("leaves chords to the chart above it", () => {
@@ -2293,7 +2297,7 @@ describe("key", () => {
     )
     expect(errs("set key H")).toEqual(["A key is a note, A to G with # or b after it: set key E, set key Bb"])
     expect(errs("set key e")).toEqual(["A key is a note, A to G with # or b after it: set key E, set key Bb"])
-    expect(errs("with key Em { play piano: 1--- }")).toEqual(["A key is a note: with key E, mode minor { ... }"])
+    expect(errs("with key Em { play piano: notes 1--- }")).toEqual(["A key is a note: with key E, mode minor { ... }"])
   })
   it("has a mode of major, minor or one of the five others, each with one name", () => {
     const errs = (src) => parseCell(src, initialState()).errors.map((e) => e.msg)

@@ -136,7 +136,7 @@ function chordSlot(tok: string, part: Part, st: State, key: Key, err: Report): S
       part.ln,
       dimMarkProblem(tok) ||
         (drawsNotes(tok)
-          ? `"${tok}" is notes, and this line says chords. A line of notes has no word in front: ${part.name}: ${spaceNotes(tok)}`
+          ? `"${tok}" is notes, and this line says chords. A line of notes says notes in front: ${part.name}: notes ${spaceNotes(tok)}`
           : `"${tok}" isn't a chord I know`),
     )
     return null

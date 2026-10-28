@@ -379,7 +379,10 @@ export function classifyDecl(
     type = shape
   } else if (type === "pattern" && shape !== "pattern") {
     const line = (
-      { steps: "kick: ", notes: "guitar: ", chords: "piano: chords " } as Record<string, string>
+      { steps: "kick: ", notes: "guitar: notes ", chords: "piano: chords " } as Record<
+        string,
+        string
+      >
     )[shape]
     err(
       ln,
