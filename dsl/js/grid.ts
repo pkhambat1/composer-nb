@@ -5,7 +5,7 @@ import type { GridBlock } from "./cell.ts"
 import { LANES, PITCHED, TPQ } from "./language.ts"
 
 // One cell of a row: a hit (and on a pitched row, its note as `text`), a note still
-// sounding, or a sticking's hand
+// sounding
 export type GridCell = {
   hit?: boolean
   held?: boolean
@@ -14,7 +14,6 @@ export type GridCell = {
   ghost?: boolean
   double?: boolean
   vel?: number
-  sticking?: boolean
   text?: string
 }
 export type GridRow = { key: string; label: string; cells: Map<number, GridCell> }
@@ -58,13 +57,6 @@ export function gridRows(block: GridBlock) {
     }
     if (cells.size) rows.push({ key: lane, label: lane, cells })
   }
-  // The sticking, under the drums: R or L in the cell of the hit it names
-  const hands = new Map<number, GridCell>()
-  for (const e of block.drumEvents) {
-    if (e.lane === "sticking")
-      hands.set(Math.round(e.tick / cellTicks), { hit: true, sticking: true, text: e.hand })
-  }
-  if (hands.size) rows.push({ key: "sticking", label: "sticking", cells: hands })
   return { per, cellTicks, rows }
 }
 

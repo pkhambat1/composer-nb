@@ -25,9 +25,9 @@ import { among, soundsOf } from "./vocab.ts"
 // A run of a line's text, and the class it's coloured with (null for none)
 export type Part = { c: string | null; s: string }
 // What a value holds: a drum's steps ("drum"), notes, a chart of chords ("chord"), what a
-// pitched instrument's line holds ("pitched": notes, or chords and then a chart), a
-// sticking, or anything a name could hold ("word")
-type Kind = "drum" | "notes" | "chord" | "pitched" | "sticking" | "word"
+// pitched instrument's line holds ("pitched": notes, or chords and then a chart), or
+// anything a name could hold ("word")
+type Kind = "drum" | "notes" | "chord" | "pitched" | "word"
 // What a block holds: a drum's layers of steps, a pitched instrument's layers, or lines
 type Holds = "steps" | "pitched" | "lines"
 // Where a line stands: how many groups ( ) are open, and whether a thing has been written
@@ -63,7 +63,9 @@ function chordToken(token: string): Part[] {
   }
   let rest = ""
   const rm = ROMAN_RE.exec(core)
-  if (rm) {
+  if (/^[1-7]$/.test(core)) {
+    parts.push(part("tk-root tk-root-maj", core))
+  } else if (rm) {
     const lower = rm[2] === rm[2].toLowerCase()
     parts.push(part("tk-root " + (lower ? "tk-root-min" : "tk-root-maj"), (rm[1] || "") + rm[2]))
     rest = rm[3] || ""
@@ -122,13 +124,6 @@ function valueToken(t: string, kind: Kind): Part[] {
   if (t === "{" || t === "}") return [part("tk-punct", t)] // an instrument's block of layers
   // loop is gone: whether something repeats depends on where it is
   if (t === "loop") return [part("tk-error", t)]
-  if (kind === "sticking") {
-    // RLRR LRLL: a hand for each step
-    if (/^[RL-]+$/.test(t)) {
-      return [...t].map((ch) => (ch === "-" ? part("tk-rest", ch) : part("tk-step", ch)))
-    }
-    return [part(OWN_NAME.test(t) ? "tk-word" : "tk-error", t)]
-  }
   if (kind === "notes") {
     if (NOTES_RE.test(t)) return noteRun(t)
     const name = OWN_NAME.test(t) && !isRoman(t) && !among(TYPES, t)
@@ -370,8 +365,8 @@ function playable(text: string, st?: Stand): Part[] {
   const track = /^([A-Za-z][A-Za-z0-9]*(?:\.[A-Za-z0-9]+)?)(\s*)(:)(.*)$/.exec(text)
   if (track) {
     const name = track[1].toLowerCase()
-    const known = PARTS.includes(name) || name === "sticking"
-    const kind: Kind = among(PITCHED, name) ? "pitched" : name === "sticking" ? "sticking" : "drum"
+    const known = PARTS.includes(name)
+    const kind: Kind = among(PITCHED, name) ? "pitched" : "drum"
     return [
       part(known ? "tk-inst" : "tk-error", track[1]),
       part(null, track[2]),
@@ -506,10 +501,10 @@ function line(code: string, depth = 0, inside = false): Part[] {
       const len = length(value)
       out.push(...len.parts, ...playable(len.rest, st))
     } else {
-      const holds: Record<string, Kind> = { chords: "chord", notes: "notes", sticking: "sticking" }
+      const holds: Record<string, Kind> = { chords: "chord", notes: "notes" }
       out.push(...values(value, holds[word] || "drum"))
     }
-  } else if (["pattern", "steps", "sticking", "notes"].includes(word) && /^(\s|$)/.test(after)) {
+  } else if (["pattern", "steps", "notes"].includes(word) && /^(\s|$)/.test(after)) {
     // pattern groove {: a type without its name and =
     out.push(part("tk-error", word), ...names(after, st))
   } else if ((word === "bar" || word === "bars") && /^\s+\S/.test(after)) {

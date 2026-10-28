@@ -113,16 +113,6 @@ describe("drum sheet music", () => {
     ])
   })
 
-  it("writes the sticking above the hands' notes", () => {
-    expect(voices("play {\n  snare: 4 steps x\n  sticking: RLRR\n}")).toEqual([
-      '[V:H] "^R"c"^L"c"^R"c"^R"c z4 z4 z4 |',
-    ])
-    expect(voices("play {\n  hat: 4 steps x-\n  kick: x---\n  sticking: R-L-\n}")).toEqual([
-      `[V:H] "^R"${X}2"^L"${X}2 z4 z4 z4 |`,
-      "[V:F] F4 z4 z4 z4 |",
-    ])
-  })
-
   it("takes the louder of two hits on one line of the staff", () => {
     expect(voices("play {\n  snare: x---\n  snare.ghost: x---\n}")).toEqual(["[V:H] c4 z4 z4 z4 |"])
   })

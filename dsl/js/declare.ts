@@ -1,5 +1,5 @@
 /* Declarations: name = value, with its type in front. A declaration's value is read as
-   the type it says (steps, sticking, notes, chords) and defined in its scope, or, for a
+   the type it says (steps, notes, chords) and defined in its scope, or, for a
    pattern, kept as lines to play where it's played. A value that isn't the type it says,
    or a missing type, is said here. */
 import { buildChord, isRoman } from "./chords.ts"
@@ -39,8 +39,6 @@ import {
   STEP_HELP,
   stepBlock,
   stepParts,
-  STICKING_HELP,
-  STICKING_RE,
   isOf,
   tokenize,
   withoutOf,
@@ -48,7 +46,7 @@ import {
 import { among, SETTINGS, TYPES, type Type } from "./vocab.ts"
 
 // What a value reads as, from how it's written
-type Shape = "steps" | "sticking" | "notes" | "chords" | "pattern"
+type Shape = "steps" | "notes" | "chords" | "pattern"
 
 export const CHORDS_BLOCK =
   "Chords play one at a time, so they can't be layered in a block. Put them on one line: piano: chords Am F|C G"
@@ -97,21 +95,6 @@ export function defineWord(
   const braces = bracesIn(parts)
   const problem = new Scope(state).problem(type, name, value)
   if (problem) return err(ln, problem)
-  if (type === "sticking") {
-    // sticking para = RLRR LRLL: a hand for each step
-    const tokens: string[] = []
-    for (const t of pieces(parts)) {
-      if (isBraces(t)) return err(ln, `"{ ... }" isn't a sticking. ${STICKING_HELP}`)
-      const w = state.words[t]
-      if (t === "|" || STICKING_RE.test(t)) tokens.push(t)
-      else if (w?.type === "sticking") tokens.push(...w.tokens)
-      else if (w) return err(ln, `${t} is ${w.type}, so it can't go in a sticking`)
-      else return err(ln, `"${t}" isn't a sticking. ${STICKING_HELP}`)
-    }
-    if (!tokens.length) return err(ln, `sticking ${name} = needs something after the =`)
-    new Scope(state).defineWord(name, { type, tokens, line: ln })
-    return
-  }
   if (type === "notes") {
     // notes riff = E---F# E-E--: one line of notes, drawn on the steps, with any lengths
     // written out as the steps they hold
@@ -189,7 +172,9 @@ export function defineWord(
     else if (state.sections[t]) {
       return err(ln, `${t} is a pattern, so it can't go in ${type}`)
     } else if (
-      type === "steps" ? isStepRun(t) || t === "|" : CHORD_MARKS.includes(t) || buildChord(t, key)
+      type === "steps"
+        ? isStepRun(t) || t === "|"
+        : CHORD_MARKS.includes(t) || buildChord(t, key, 3, true)
     ) {
       tokens.push(t)
     } else if (NAME_LIKE.test(t) && !isRoman(t) && !/^[-xd]+$/.test(t)) {
@@ -279,12 +264,9 @@ function shapeOf(value: Piece[], st: State): Shape {
   const parts = commaGroups(value)
   if (parts.some(measured) && parts.every((p) => measured(p) || drawn(p))) return "steps"
   const tokens = pieces(value)
-  // The words, without the blocks, which are never sticking, chords or notes
+  // The words, without the blocks, which are never chords or notes
   const words = tokens.filter((t): t is string => !isBraces(t))
   const all = (test: (t: string) => unknown) => words.length === tokens.length && words.every(test)
-  if (all((t) => t === "|" || STICKING_RE.test(t) || st.words[t]?.type === "sticking")) {
-    return "sticking"
-  }
   const stepsLike = tokens.every((t) => stepsToken(t, st))
   if (stepsLike && tokens.some(isBraces)) return "steps"
   if (patternText(value)) return "pattern"

@@ -53,7 +53,7 @@ export function namesOf(state: State): { type: string; name: string; line?: numb
 // The kit pieces and instruments that play in an output, in the order the grid draws them.
 export function playersOf(output: Output): string[] {
   const drums = new Set<string>()
-  for (const e of output.drumEvents) if (!e.hidden && e.lane !== "sticking") drums.add(e.lane)
+  for (const e of output.drumEvents) if (!e.hidden) drums.add(e.lane)
   const pitched = new Set<string>()
   for (const e of output.events) if ("note" in e || "chord" in e) pitched.add(e.instrument)
   return [...pitched, ...drums]
@@ -68,7 +68,6 @@ export function gridText(block: GridBlock, maxBars = MAX_BARS_SHOWN): string[] {
   if (!rows.length) return []
   const cellText = (e: GridCell | undefined, pitched: boolean): string => {
     if (!e) return pitched ? "." : "-"
-    if (e.sticking) return e.text!
     if (e.hit) {
       if (e.note) return (e.accent ? "^" : e.ghost ? "~" : "") + e.text
       return e.double ? "d" : e.ghost ? "~" : e.accent ? "^" : "x"

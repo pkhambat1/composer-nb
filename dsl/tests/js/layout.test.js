@@ -4,6 +4,18 @@
 import { describe, it, expect } from "vitest"
 import { realCells } from "./real-cells.js"
 
+// What each setting is until a cell sets it, which no cell says again
+const DEFAULTS = {
+  time: "4 over 4",
+  tempo: "120",
+  swing: "off",
+  key: "C",
+  mode: "major",
+  octave: "3",
+  kit: "rock",
+  "guitar.electric": "clean",
+}
+
 function problems(source) {
   const out = []
   source.split("\n").forEach((line, i) => {
@@ -14,6 +26,9 @@ function problems(source) {
     if (/\}\s*\{\s*$/.test(code))
       out.push(`${at}: one block a line in a group that runs over lines`)
     if (/\s$/.test(line)) out.push(`${at}: a trailing space`)
+    const set = /^set (\S+) (.*)$/.exec(code)
+    if (set && DEFAULTS[set[1]] === set[2])
+      out.push(`${at}: ${code} sets what is already the default`)
     if (/^\s*[a-z][\w.]*:\S/.test(code)) out.push(`${at}: one space after the colon`)
     if (/\S {2,}\S/.test(code)) out.push(`${at}: one space between words, no columns`)
     if (/^ */.exec(line)[0].length % 2) out.push(`${at}: two spaces a level`)

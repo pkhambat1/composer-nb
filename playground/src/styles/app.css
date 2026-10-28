@@ -1927,13 +1927,6 @@ body {
   margin-top: -2px;
   background: color-mix(in srgb, var(--accent) 62%, var(--paper));
 }
-/* A sticking's R or L: a letter in the hit's cell, not a hit of its own */
-.dg-stk {
-  background: transparent;
-  color: var(--text-dim);
-  border: 1px dashed var(--border);
-  line-height: 14px;
-}
 /* A double stroke: a full brick like any hit, with two thin strokes in it, one a stroke */
 .dg-dbl {
   position: relative;

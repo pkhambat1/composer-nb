@@ -14,7 +14,6 @@ import {
   nearWhole,
   sayTicks,
   swingWarp,
-  TPQ,
   type Report,
 } from "./time.ts"
 import type { ChordEvent } from "./values/chart.ts"
@@ -95,31 +94,6 @@ export const paceCtx = (ln: number): Ctx => ({
 export const placeCtx = (l: { ln: number; from: number; to: number }): Ctx => {
   const bars = l.from === l.to ? `bar ${l.from}` : `bar ${l.from} to ${l.to}`
   return { ln: l.ln, repeats: true, where: `in ${bars}`, what: `What's in ${bars}` }
-}
-
-// A sticking names a hand on a step where no hand plays: said at the end, once the whole
-// play is together, since the hits may come from another pattern than the sticking.
-export function checkStickings(clip: Clip, err: Report): void {
-  const feet = new Set(["kick", "hat.pedal", "sticking"])
-  const moment = (e: HitEvent) => Math.round(e.secStart * 1e6)
-  const played = new Set(clip.drumEvents.filter((e) => !feet.has(e.lane)).map(moment))
-  for (const e of clip.drumEvents) {
-    if (e.lane !== "sticking" || played.has(moment(e))) continue
-    const span = clip.spans.find(
-      (s) => e.secStart >= s.startSec - 1e-9 && e.secStart < s.startSec + s.durSec,
-    )
-    let where = ""
-    if (span) {
-      const tick = Math.round((e.secStart - span.startSec) / span.secPerTick)
-      const bar = Math.floor(tick / span.barTicks) + 1
-      const beat = Math.floor((tick % span.barTicks) / TPQ) + 1
-      const sub =
-        ({ 0: "", 24: "e", 48: "&", 72: "a" } as Record<number, string>)[tick % TPQ] ?? "+"
-      where = ` on bar ${bar}, beat ${beat}${sub}`
-    }
-    err(e.line, `${e.hand}${where} names a hand, but no hand plays there`)
-    return
-  }
 }
 
 // `clip` played end to end until `durSec`. The last time through may be cut short.

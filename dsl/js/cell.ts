@@ -2,7 +2,6 @@
    top, names, withs and plays. Each play is evaluated into a clip (eval.ts), and the clips
    are put back to back into one timeline, with the blocks the grid and the sheet draw. */
 import {
-  checkStickings,
   isChord,
   isNote,
   outputCtx,
@@ -367,7 +366,6 @@ export function parseCell(src: unknown, inherited: State = initialState()) {
         }
         noteTranspose(arg)
         const out = ok ? blockClip(arg, state, err, outputCtx(ln), [], bars) : null
-        if (out) checkStickings(out, err)
         if (out && out.durSec > MAX_SECONDS) {
           err(ln, "This plays for over 10 minutes. Use a shorter length")
         } else if (out) {

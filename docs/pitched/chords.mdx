@@ -47,7 +47,6 @@ Uppercase is a major chord and lowercase a minor one, on that degree of the curr
 <Cell>
 
 ```composer-nb
-set key C
 play piano: chords I vi|IV V7|bVII IV|ii7 viidim
 ```
 
@@ -67,6 +66,10 @@ play piano: chords i ii|III iv|v VI|VII i
 
 In A minor, this plays every chord of the mode in turn: `Am Bdim`, `C Dm`, `Em F`, `G Am`.
 
+## Digits
+
+A digit, `1` to `7`, is the chord the key's scale has on that degree, so a chart follows the mode: `chords 1 2|3 4|5 6|7 1` plays D Em F#m G A Bm C#dim D in D major, Dm Edim F Gm Am Bb C Dm in D minor, and Dm Em F G Am Bdim C Dm in D dorian. Use a numeral when the chord should be the same whatever the mode, and a digit when the mode should decide.
+
 ## Counting from a chord
 
 `of` counts a numeral from another chord's root instead of from the key's: `V7 of V` is the `V7` built on the key's `V`, a secondary dominant. The numeral counts on the major scale of that root, so in C, `V7 of V` is `D7` and `ii7 of IV` is `Gm7`. After `of` goes a numeral of the key. Only its root counts, so `V of v` is the same as `V of V`. A bass note goes at the end: `V7 of V/F#`.
@@ -76,7 +79,6 @@ To count from a chord that is itself counted with `of`, put it in brackets, as w
 <Cell>
 
 ```composer-nb
-set key C
 play piano: chords V7 of (V of V)|V7 of V|V7|I
 ```
 

@@ -205,15 +205,43 @@ function romanToSymbol(main: string, key: Key): string | null {
   return root + quality
 }
 
-// A chord token ("Cmaj7", "C/E", "ii7", "bVII") → voicing, or null if it isn't a chord.
-export function buildChord(token: string, key?: Key | null, octave = 3): Voiced | null {
+// A digit, 1 to 7, is the scale's own chord on that degree: in D lydian 4 is G#dim and in D
+// dorian it's G. This is how a chart follows the mode, where a numeral's case sets its third
+// whatever the mode is. A chord off the scale is a numeral with a b or # in front.
+const DEGREE_CHORD_RE = /^[1-7]$/
+function degreeChord(main: string, key: Key): { symbol: string; fromKey: number } | null {
+  if (!DEGREE_CHORD_RE.test(main)) return null
+  const d = Number(main) - 1
+  const at = (k: number) => key.scale[(d + k) % 7] + (d + k >= 7 ? 12 : 0) - key.scale[d]
+  const [third, fifth] = [at(2), at(4)]
+  const quality = third === 3 ? (fifth === 6 ? "dim" : "m") : fifth === 8 ? "aug" : ""
+  return {
+    symbol: degreeName(key, d + 1) + quality,
+    fromKey: degreeSemitones(d + 1, "", key.scale),
+  }
+}
+
+// A chord token ("Cmaj7", "C/E", "ii7", "bVII", 4) → voicing, or null if it isn't a chord.
+export function buildChord(
+  token: string,
+  key?: Key | null,
+  octave = 3,
+  degrees = false,
+): Voiced | null {
   if (!token) return null
   const [main, bassStr, extra] = chordParts(token)
   if (extra !== undefined) return null
   let symbol: string | null
   let fromKey: number | null = null // a numeral's root, in semitones up from the key's root
   const numeral = ROMAN_RE.exec(main)
-  if (numeral) {
+  // A digit is only a chord in a chart: anywhere else it's a number
+  const digit =
+    degrees && DEGREE_CHORD_RE.test(main) ? degreeChord(main, key || parseKey("C")!) : null
+  if (digit) {
+    key = key || parseKey("C")!
+    symbol = digit.symbol
+    fromKey = digit.fromKey
+  } else if (numeral) {
     key = key || parseKey("C")!
     symbol = romanToSymbol(main, key)
     fromKey = degreeSemitones(DEGREE[numeral[2].toLowerCase()] + 1, numeral[1], key.scale)

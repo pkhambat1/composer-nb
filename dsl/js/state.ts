@@ -4,7 +4,7 @@
 import { TPQ, timeLabel, type Timing } from "./time.ts"
 import type { Setting, Type } from "./vocab.ts"
 
-// A name of steps, sticking, notes or chords, and what it holds, as tokens
+// A name of steps, notes or chords, and what it holds, as tokens
 export type Word = {
   type: Type
   tokens: string[]
@@ -38,7 +38,7 @@ export type State = Timing & {
   octave: number
   kit: string
   sounds: Record<string, string> // instrument → its sound, where it isn't the first one
-  words: Record<string, Word> // names for steps, sticking, notes and chords
+  words: Record<string, Word> // names for steps, notes and chords
   sections: Record<string, Section> // names for patterns
 }
 

@@ -21,7 +21,7 @@ SPLIT = ["tom"]  # drums that are only their variations: tom is three drums
 # Instruments that play notes and chords, each on a line of its own like a drum
 PITCHED = ["guitar", "guitar.electric", "piano", "piano.electric", "organ", "bass"]
 SETTINGS = ["time", "tempo", "swing", "key", "mode", "transpose", "octave", "kit"]
-TYPES = ["steps", "sticking", "notes", "chords", "pattern"]
+TYPES = ["steps", "notes", "chords", "pattern"]
 KITS = ["rock", "synth"]
 SWING = ["on", "off"]
 MODES = ["major", "minor", "dorian", "phrygian", "lydian", "mixolydian", "locrian"]

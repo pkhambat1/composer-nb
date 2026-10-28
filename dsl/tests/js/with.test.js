@@ -287,3 +287,17 @@ describe("with", () => {
     expect(parseSource("play kick: x", initialState()).fromAbove).toEqual([])
   })
 })
+
+describe("a digit in a chart", () => {
+  const labels = (mode) =>
+    clean(`with key D, mode ${mode} { play piano: chords 1 2|3 4|5 6|7 1 }`).chords.map(
+      (e) => e.chord.label,
+    )
+  it("is the chord the scale has on that degree, so the mode changes it", () => {
+    expect(labels("major")).toEqual(["D", "Em", "F#m", "G", "A", "Bm", "C#dim", "D"])
+    expect(labels("minor")).toEqual(["Dm", "Edim", "F", "Gm", "Am", "Bb", "C", "Dm"])
+    expect(labels("dorian")).toEqual(["Dm", "Em", "F", "G", "Am", "Bdim", "C", "Dm"])
+    expect(labels("lydian")).toEqual(["D", "E", "F#m", "G#dim", "A", "Bm", "C#m", "D"])
+    expect(labels("locrian")[0]).toBe("Ddim")
+  })
+})

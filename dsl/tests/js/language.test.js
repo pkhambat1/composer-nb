@@ -365,9 +365,6 @@ describe("types", () => {
     expect(firstError("notes riff F---")).toMatch(
       /notes riff needs = before what it holds: notes riff = F---/,
     )
-    expect(firstError("sticking para RLRR")).toMatch(
-      /sticking para needs = before what it holds: sticking para = RLRR/,
-    )
     // chords and no name is a chart with no instrument to play it
     expect(firstError("play chords Am F")).toMatch(
       /Chords go on an instrument's line: piano: chords Am F/,
@@ -727,15 +724,14 @@ describe("names", () => {
       ),
     ).toEqual(["C", "G", "C"])
     const src =
-      "steps countIn = x---\nsticking handsA = R---\nnotes riffB = C4---\nchords verseA = Am F\n" +
-      "pattern at100 = {\n  hat: countIn\n  sticking: handsA\n  piano: notes riffB\n  guitar: chords verseA\n}\nplay at100"
+      "steps countIn = x---\nnotes riffB = C4---\nchords verseA = Am F\n" +
+      "pattern at100 = {\n  hat: countIn\n  piano: notes riffB\n  guitar: chords verseA\n}\nplay at100"
     expect(parseSource(src).errors).toEqual([])
   })
 
   it("say what's wrong with a name, the same for every type", () => {
     const values = {
       steps: "x-",
-      sticking: "RL",
       notes: "C4---",
       chords: "Am F",
       pattern: "{ kick: x }",
@@ -1137,17 +1133,6 @@ describe("patterns repeat, and a play's own lines play once", () => {
   })
 })
 
-describe("a name of one type where another goes", () => {
-  it("is sent to the line its type goes on, from the one table that says which", () => {
-    const sticking = "sticking para = RLRR\n"
-    const goes = "para is a sticking, so it goes on the sticking line: sticking: para"
-    expect(firstError(sticking + play("piano: notes para"))).toBe(goes)
-    expect(firstError(sticking + play("piano: chords para"))).toBe(goes)
-    expect(firstError(sticking + play("kick: para"))).toBe(goes)
-    expect(firstError(sticking + "play para")).toBe(goes)
-  })
-})
-
 describe("events", () => {
   it("count their ticks from the start of their block, as the block's own events do", () => {
     const p = parseSource(
@@ -1519,60 +1504,6 @@ describe("hits spread over steps: 3 in 8", () => {
     expect(firstError("play kick: x in 8")).toMatch(/in goes between two numbers/)
     expect(firstError("tresillo = 3 in 8")).toMatch(
       /Put its type in front: steps tresillo = 3 in 8/,
-    )
-  })
-})
-
-describe("stickings", () => {
-  const PARA = "play {\n  snare: ^xxx xxxx\n  sticking: RLRR LRLL\n}"
-
-  it("names the hand on each step, on the hands' hits", () => {
-    const p = parseSource(PARA)
-    expect(p.errors).toEqual([])
-    const hands = p.outputs[0].drumEvents.filter((e) => e.lane === "sticking")
-    expect(hands.map((e) => e.hand).join("")).toBe("RLRRLRLL")
-    expect(hands.every((e) => e.vel === 0)).toBe(true)
-    // the grid draws it as a row of letters under the drums
-    const rows = gridRows(p.outputs[0].blocks[0]).rows
-    expect(rows.at(-1).label).toBe("sticking")
-    expect(rows.at(-1).cells.get(1)).toEqual({ hit: true, sticking: true, text: "L" })
-  })
-
-  it("can be named, and repeats in a pattern like any line", () => {
-    expect(sound("sticking para = RLRR LRLL\n" + PARA.replace("RLRR LRLL", "para"))).toBe(
-      sound(PARA),
-    )
-    expect(sound("pattern pp = {\n  snare: x\n  sticking: RL\n}\nplay 1 bars pp")).toBe(
-      sound("play {\n  snare: 1 bars x\n  sticking: RLRL RLRL RLRL RLRL\n}"),
-    )
-  })
-
-  it("has to land on a hand's hit, which the feet aren't", () => {
-    expect(firstError("play {\n  snare: x---\n  sticking: -R--\n}")).toMatch(
-      /R on bar 1, beat 1e names a hand, but no hand plays there/,
-    )
-    expect(firstError("play {\n  kick: x-xx\n  sticking: RLRL\n}")).toMatch(
-      /R on bar 1, beat 1 names a hand, but no hand plays there/,
-    )
-    // the hits may come from another pattern: it's checked once the play is together
-    expect(
-      parseSource(
-        "pattern hands = {\n  sticking: RLRR LRLL\n}\nplay {\n  snare: ^xxx xxxx\n  hands\n}",
-      ).errors,
-    ).toEqual([])
-  })
-
-  it("is R, L or - on each step, and nothing else", () => {
-    expect(firstError("play sticking: RLxx")).toMatch(
-      /"RLxx" isn't a sticking. A sticking is a hand for each step, R, L or -: sticking: RLRR LRLL/,
-    )
-    expect(firstError("play sticking: ----")).toMatch(/This sticking names no hand/)
-    expect(firstError("sticking para = RLRR\nplay snare: para")).toMatch(
-      /para is a sticking, so it goes on the sticking line: sticking: para/,
-    )
-    expect(firstError("pattern sticking = { kick: x }")).toMatch(/sticking already means something/)
-    expect(firstError("para = RLRR LRLL")).toMatch(
-      /Put its type in front: sticking para = RLRR LRLL/,
     )
   })
 })
