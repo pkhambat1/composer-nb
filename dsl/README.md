@@ -161,7 +161,7 @@ Every number is arithmetic (`set tempo 60*2`, `(1+2) bars groove`), so `*` and `
 `with` gives settings to a block only, with commas between them, and puts back what was set at its `}`: `with key E, mode minor { ... }`. At the top of a cell its block holds statements, such as `play`. In a play or a pattern its block plays together with the other lines, and in brackets it's one part in order, so the bass can sit an octave below the chart, or one chart can play in two keys:
 
 ```
-chords walk = i iidim|III iv|v VI|VII i
+chords walk = i ii|III iv|v VI|VII i
 chords prog = I vi|IV V
 
 with key E, mode minor {
