@@ -91,18 +91,18 @@ describe("a line that starts with |", () => {
 
 describe("a notes line", () => {
   it("paints degrees as notes, with their marks", () => {
-    for (const d of ["1", "b3", "#4", "1'", "'5", "''b7", "^5", "~b6"]) {
+    for (const d of ["i", "biii", "#iv", "i'", "'v", "''bvii", "^v", "~bvi"]) {
       expect(marked(`play piano: notes ${d}---`)).toEqual([])
       expect(painted(`play piano: notes ${d}---`, d)[0]).toMatch(/tk-note/)
     }
   })
 
   it("paints two degrees that touch as a mistake", () => {
-    expect(marked("play piano: notes 13--")).toEqual(["3"])
+    expect(marked("play piano: notes iiv--")).toEqual(["v"])
   })
 
   it("paints lengths, rest and ... as a kit piece's line has them", () => {
-    const src = "play bass: notes 3 beats C2, 2 beats rest, b3---, ...G1"
+    const src = "play bass: notes 3 beats C2, 2 beats rest, biii---, ...G1"
     expect(marked(src)).toEqual([])
     expect(painted(src, "3")).toEqual(["tk-directive-val"])
     expect(painted(src, "beats")).toEqual(["tk-directive-key", "tk-directive-key"])
@@ -173,10 +173,10 @@ describe("settings, and with", () => {
       ["{", "tk-punct"],
     ])
     const clean = [
-      "with key E, mode minor {\n  play {\n    piano: chords verse\n    with octave 2 { bass: notes 1---5--- }\n  }\n}",
+      "with key E, mode minor {\n  play {\n    piano: chords verse\n    with octave 2 { bass: notes i---v--- }\n  }\n}",
       "play (\n  with key E { piano: chords prog }\n  with key G { piano: chords prog }\n)",
       "play (with key E { piano: chords prog } with key G { piano: chords prog })",
-      "play {\n  bar 2 with octave 5 { piano: notes 1--- }\n}",
+      "play {\n  bar 2 with octave 5 { piano: notes i--- }\n}",
       "with tempo 60*2, time 7 over 8, guitar.electric muted {\n  play kick: x\n}",
     ]
     for (const src of clean) expect(marked(src), src).toEqual([])
@@ -192,7 +192,7 @@ describe("settings, and with", () => {
 
   it("paints set inside braces, where settings go on a with", () => {
     expect(painted("set octave 2", "set")).toEqual(["tk-directive-key"])
-    expect(painted("play {\n  set octave 2\n  bass: notes 1---\n}", "set")).toEqual(["tk-error"])
+    expect(painted("play {\n  set octave 2\n  bass: notes i---\n}", "set")).toEqual(["tk-error"])
     expect(painted("with key E {\n  set mode minor\n}", "set")).toEqual(["tk-error"])
     expect(painted("play { set octave 2 }", "set")).toEqual(["tk-error"])
   })

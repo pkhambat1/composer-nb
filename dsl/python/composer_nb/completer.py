@@ -64,7 +64,7 @@ SUM_RE = re.compile(r"[\d\s./+*()-]*\d[\d\s./+*()-]*")
 ARITHMETIC_RE = re.compile(r"[\d./+*-]*\d")
 # A degree, or a numeral with what follows it, which of can count from another note or chord:
 # 5 of C3, V7 of V
-DEGREE_RE = re.compile(r"[\^~]?'*[#b]?[1-7]'*")
+DEGREE_RE = re.compile(r"[\^~]?'*[#b]?(?:vii|vi|iv|v|iii|ii|i)'*")
 NUMERAL_RE = re.compile(r"[#b]?(vii|vi|iv|v|iii|ii|i)[A-Za-z0-9#+]*")
 # What makes a { an instrument's block of layers: kick: or piano: in front of it, or
 # steps name =
@@ -144,7 +144,7 @@ def _pitched(written: List[str], names: Names) -> List[Option]:
         return notes
     of = [("of ", "keyword")] if DEGREE_RE.fullmatch(last) else []
     if NUMBER_RE.search(last) or ARITHMETIC_RE.fullmatch(last):
-        # a length, 3 beats C2, or a degree of a note, 3 of C2
+        # a length, 3 beats C2, or a degree of a note, iii of C2
         return _options([u + " " for u in UNITS], "keyword") + of
     if last in UNITS:
         return [("rest", "keyword")] + notes

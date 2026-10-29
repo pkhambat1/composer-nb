@@ -168,7 +168,7 @@ chords prog = i vi|iv v
 with key E, mode minor {
   play {
     piano: chords walk
-    with octave 2 { bass: notes 1---5--- }
+    with octave 2 { bass: notes i---v--- }
   }
 }
 
@@ -201,18 +201,18 @@ play groove
 
 A note is a capital letter, `A` to `G`, with `#` or `b` after it and an octave when it needs one: `F`, `F#`, `Bb`, `E2`. Without a number it's in the `octave` setting, so `set octave 2` above puts the riff on the guitar's low E string. One note is one step, however many characters it takes, and two notes never touch: a space goes between them (`F# E`). `-` means nothing new happens, so the note rings on, and `_` stops it. `^` in front accents a note and `~` softens it.
 
-A degree goes where a note goes: a digit from `1` to `7`, counted on the scale of the `key` and its `mode`, with `b` or `#` in front to move it off the scale. In C major `3` is E and in C minor it's Eb, and a name that holds degrees plays in whichever key and mode are set. `1` is the root in the `octave` setting; `'` after the digit is an octave up and `'` before it an octave down:
+A degree goes where a note goes: a Roman numeral from `i` to `vii`, counted on the scale of the `key` and its `mode`, with `b` or `#` in front to move it off the scale. In C major `iii` is E and in C minor it's Eb, and a name that holds degrees plays in whichever key and mode are set. `i` is the root in the `octave` setting; `'` after the numeral is an octave up and `'` before it an octave down:
 
 ```
 set key A
 set mode minor
 
-notes scale = 1---2---3---4---|5---6---7---1'---
+notes scale = i---ii---iii---iv---|v---vi---vii---i'---
 
 play piano: notes scale
 ```
 
-`of` counts a degree from another note instead of from the key, on that note's major scale: `5 of C3` is `G3` and `b3 of C3` is `Eb3`. A note counted that way goes in brackets to count from it, so the circle of fifths from C3 is `C3--- 5 of C3--- 5 of (5 of C3)--- 5 of (5 of (5 of C3))---`.
+`of` counts a degree from another note instead of from the key, on that note's major scale: `v of C3` is `G3` and `biii of C3` is `Eb3`. A note counted that way goes in brackets to count from it, so the circle of fifths from C3 is `C3--- 5 of C3--- 5 of (5 of C3)--- 5 of (5 of (5 of C3))---`.
 
 A length in front of one note holds it, as a length in front of `rest` is silence: `bass: notes 3 beats C2, 3 beats G1`. `...G1` holds G1 to the end of the block. A length holds one note, so a figure is drawn and a long note takes a length. A line plays one note at a time. For more, its line takes a block of lines, which play together:
 

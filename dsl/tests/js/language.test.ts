@@ -1177,27 +1177,27 @@ describe("settings", () => {
     const by = (src) =>
       Object.fromEntries(parseSource(src).notes.map((e) => [e.instrument, e.note.name]))
     expect(
-      by("play {\n  with octave 4 { piano: notes 1--- }\n  with octave 2 { bass: notes 1--- }\n}"),
+      by("play {\n  with octave 4 { piano: notes i--- }\n  with octave 2 { bass: notes i--- }\n}"),
     ).toEqual({
       piano: "C4",
       bass: "C2",
     })
     expect(
-      by("pattern aa = {\n  piano: notes 1---\n  with key E { bass: notes 1--- }\n}\nplay aa"),
+      by("pattern aa = {\n  piano: notes i---\n  with key E { bass: notes i--- }\n}\nplay aa"),
     ).toEqual({
       piano: "C3",
       bass: "E3",
     })
     // a pattern plays with the settings where it's played
     expect(
-      by("pattern up = { piano: notes 1--- }\nplay {\n  up\n  with key E { bass: notes 1--- }\n}"),
+      by("pattern up = { piano: notes i--- }\nplay {\n  up\n  with key E { bass: notes i--- }\n}"),
     ).toEqual({
       piano: "C3",
       bass: "E3",
     })
     // the header shows the key the block starts in
     const b = parseSource(
-      "play {\n  with key G { piano: notes 1--- }\n  with key E { bass: notes 1--- }\n}",
+      "play {\n  with key G { piano: notes i--- }\n  with key E { bass: notes i--- }\n}",
     ).outputs[0].blocks[0]
     expect(b.key).toBe("G")
   })
@@ -1206,10 +1206,10 @@ describe("settings", () => {
     expect(firstError("play {\n  kick: x---\n  set tempo 60\n}")).toBe(
       "Inside a block, settings go on a with: with tempo 60 { ... }",
     )
-    expect(firstError("pattern pp = {\n  set octave 2\n  bass: notes 1---\n}\nplay pp")).toBe(
+    expect(firstError("pattern pp = {\n  set octave 2\n  bass: notes i---\n}\nplay pp")).toBe(
       "Inside a block, settings go on a with: with octave 2 { ... }",
     )
-    expect(firstError("with key E {\n  set mode minor\n  play piano: notes 1---\n}")).toBe(
+    expect(firstError("with key E {\n  set mode minor\n  play piano: notes i---\n}")).toBe(
       "Inside a block, settings go on a with: with mode minor { ... }",
     )
     expect(durations("set tempo 60\nplay kick: 1")).toEqual([4])
@@ -2081,7 +2081,7 @@ describe("notes", () => {
     expect(firstError("play guitar: notes ^---")).toMatch(/\^ and ~ go in front of a note: \^F, ~G/)
     expect(firstError("play guitar: notes C9--")).toMatch(/"C9--": octaves run from 0 to 8/)
     expect(firstError("play guitar: notes H---")).toMatch(
-      /"H---" isn't a note. Notes are A to G, with # or b after them and an octave when it's needed \(F, F#, Bb, E2\), or degrees of the key, 1 to 7/,
+      /"H---" isn't a note. Notes are A to G, with # or b after them and an octave when it's needed \(F, F#, Bb, E2\), or degrees of the key as Roman numerals, i to vii/,
     )
     expect(firstError("play guitar: notes Am---")).toMatch(
       /chord names don't go on the steps. Chords are written in a chart, where _ leaves a slot silent: guitar: chords _ Am _ Am/,
@@ -2089,7 +2089,7 @@ describe("notes", () => {
     expect(firstError("play guitar: notes 2 beats C2-E2-")).toMatch(
       /2 beats holds one note. To draw a figure, leave the length off: C2-E2-/,
     )
-    expect(firstError("play guitar: notes 8---")).toMatch(/degrees run from 1 to 7/)
+    expect(firstError("play guitar: notes 8---")).toMatch(/degrees are the Roman numerals i to vii/)
     expect(firstError("play piano: F---")).toBe(
       "piano takes notes or chords, and says which: piano: notes F---",
     )
@@ -2166,7 +2166,7 @@ describe("notes", () => {
   })
 
   it("take degrees of the key, counted on its mode's scale", () => {
-    const major = "notes major = 1---2---3---4---|5---6---7---1'---\n"
+    const major = "notes major = i---ii---iii---iv---|v---vi---vii---i'---\n"
     expect(notes("set key C\nset octave 4\n" + major + "play piano: notes major")).toEqual([
       "C4",
       "D4",
@@ -2189,7 +2189,7 @@ describe("notes", () => {
       "F#5",
     ])
     // b and # move a degree a semitone off the key's scale
-    expect(notes("set key A\nset octave 4\nplay piano: notes 1-2-b3-4-5-b6-7-1'-")).toEqual([
+    expect(notes("set key A\nset octave 4\nplay piano: notes i-ii-biii-iv-v-bvi-vii-i'-")).toEqual([
       "A4",
       "B4",
       "C5",
@@ -2201,29 +2201,46 @@ describe("notes", () => {
     ])
     // the scale is the mode's: in A minor, 3 is C and #7 the raised seventh, G#
     expect(
-      notes("set key A\nset mode minor\nset octave 4\nplay piano: notes 1-2-3-4-5-6-7-#7-"),
+      notes(
+        "set key A\nset mode minor\nset octave 4\nplay piano: notes i-ii-iii-iv-v-vi-vii-#vii-",
+      ),
     ).toEqual(["A4", "B4", "C5", "D5", "E5", "F5", "G5", "G#5"])
-    expect(notes("set key D\nset mode dorian\nset octave 4\nplay piano: notes 3-6-")).toEqual([
+    expect(notes("set key D\nset mode dorian\nset octave 4\nplay piano: notes iii-vi-")).toEqual([
       "F4",
       "B4",
     ])
     // ' after a degree is an octave up, before it an octave down
-    expect(notes("set key C\nset octave 3\nplay bass: notes 1-'5-''1-1''-")).toEqual([
+    expect(notes("set key C\nset octave 3\nplay bass: notes i-'v-''i-i''-")).toEqual([
       "C3",
       "G2",
       "C1",
       "C5",
     ])
     // letters and degrees can share a line
-    expect(notes("set key D\nset octave 4\nplay piano: notes 1-F#4-5-")).toEqual([
+    expect(notes("set key D\nset octave 4\nplay piano: notes i-F#4-v-")).toEqual([
       "D4",
       "F#4",
       "A4",
     ])
     // Cb4 sits just below C4, so key Cb's root in octave 4 is the B below middle C
-    expect(midis("set key Cb\nset octave 4\nplay piano: notes 1-4-")).toEqual([59, 64])
-    expect(firstError("play piano: notes 13--")).toMatch(
-      /notes don't touch, so put a space between them: 1 3--/,
+    expect(midis("set key Cb\nset octave 4\nplay piano: notes i-iv-")).toEqual([59, 64])
+    expect(firstError("play piano: notes iiv--")).toMatch(
+      /notes don't touch, so put a space between them: ii v--/,
+    )
+  })
+
+  it("write a degree as a Roman numeral, as a chord's is, and not as a digit", () => {
+    expect(
+      parseSource("set key C\nset octave 4\nplay piano: notes i-ii-iii-iv-v-vi-vii-i'-").notes.map(
+        (e) => e.note.name,
+      ),
+    ).toEqual(["C4", "D4", "E4", "F4", "G4", "A4", "B4", "C5"])
+    // a digit is no degree, and the message gives the numerals, spaced where they would touch
+    expect(firstError("play piano: notes 1---3---")).toBe(
+      '"1---3---": degrees are Roman numerals, as a chord\'s are: i---iii---',
+    )
+    expect(firstError("play piano: notes 13--")).toBe(
+      '"13--": degrees are Roman numerals, as a chord\'s are: i iii--',
     )
   })
 
@@ -2378,13 +2395,15 @@ describe("key", () => {
   })
   it("has no 7th degree in whole tone, and says so", () => {
     const errs = (src) => parseCell(src, initialState()).errors.map((e) => e.msg)
-    const msg = "wholeTone has 6 degrees, 1 to 6: there is no 7 or vii in it"
+    const msg = "wholeTone has 6 degrees, i to vi: there is no vii in it"
     expect(errs("set mode wholeTone\nplay piano: chords i|vii")).toEqual([`"vii": ${msg}`])
     expect(errs("set mode wholeTone\nplay piano: chords i|vii7")).toEqual([`"vii7": ${msg}`])
-    expect(errs("set mode wholeTone\nplay piano: notes 6---7---")).toEqual([`"6---7---": ${msg}`])
-    expect(errs("set mode wholeTone\nplay piano: notes 1-3-5-6-1'-")).toEqual([])
+    expect(errs("set mode wholeTone\nplay piano: notes vi---vii---")).toEqual([
+      `"vi---vii---": ${msg}`,
+    ])
+    expect(errs("set mode wholeTone\nplay piano: notes i-iii-v-vi-i'-")).toEqual([])
     // a degree of another note counts on major, so it has a 7th
-    expect(errs("set mode wholeTone\nplay piano: notes 7 of C3---")).toEqual([])
+    expect(errs("set mode wholeTone\nplay piano: notes vii of C3---")).toEqual([])
   })
   it("counts numerals on the key's own scale, so the mode changes them", () => {
     const chart = "play piano: chords i iii|iv v|vi vii"
@@ -2423,7 +2442,7 @@ describe("key", () => {
     expect(errs("set key e")).toEqual([
       "A key is a note, A to G with # or b after it: set key E, set key Bb",
     ])
-    expect(errs("with key Em { play piano: notes 1--- }")).toEqual([
+    expect(errs("with key Em { play piano: notes i--- }")).toEqual([
       "A key is a note: with key E, mode minor { ... }",
     ])
   })

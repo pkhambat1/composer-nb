@@ -29,8 +29,9 @@ const STEPS_RE = /^[-x^~d]+$/
 // A beat, with how it's hit in front when that isn't a plain hit: 4, 2e, ^4, ~3a, d3&
 const BEAT_RE = /^[\^~d]?\d+(e|&|a)?$/
 // Notes drawn on steps: E---F# E-E--, with # or b, an octave, and ^ or ~ in front; or
-// degrees of the key, 1 to 7, with b or # in front and ' for each octave: 1---b3---5'---
-const NOTE = "[\\^~]?(?:[A-G][#b]?[0-8]?|'*[#b]?[1-7]'*)"
+// degrees of the key, Roman numerals i to vii, with b or # in front and ' for each octave:
+// i---biii---v'---
+const NOTE = "[\\^~]?(?:[A-G][#b]?[0-8]?|'*[#b]?(?:vii|vi|iv|v|iii|ii|i)'*)"
 const NOTES_RE = new RegExp(`^(?:-|_|${NOTE})+$`)
 const NOTE_AT = new RegExp(`-|_|${NOTE}`, "g")
 const NAME_RE = /^[A-Za-z][A-Za-z0-9]*$/
@@ -98,7 +99,7 @@ function stepRun(t: string): Part[] {
   )
 }
 
-// F---G~F-^E2, 1---b3---: each note coloured as the step it is, with its mark and octave.
+// F---G~F-^E2, i---biii---: each note coloured as the step it is, with its mark and octave.
 // A note straight after another one is a mistake: notes don't touch.
 function noteRun(t: string): Part[] {
   let afterNote = false
@@ -192,7 +193,7 @@ const isCount = (w: string | undefined) => /^[\d(][\d.()+*/-]*$/.test(w || "")
 function values(text: string, kind: Kind): Part[] {
   const all = pieces(text, /(\s+|\||[{},])/)
   const words = all.filter((p) => !/^\s+$/.test(p))
-  // piano: chords Am F|C G, bass: notes 1---5---: the word that says the type, then its value
+  // piano: chords Am F|C G, bass: notes i---v---: the word that says the type, then its value
   const lead = kind === "pitched" && (words[0] === "chords" || words[0] === "notes")
   if (kind === "pitched") kind = words[0] === "chords" ? "chord" : "notes"
   lastKind = kind
@@ -206,8 +207,8 @@ function values(text: string, kind: Kind): Part[] {
     if (mistakes.has(k)) return [part("tk-error", p)]
     if (lead && k === 0) return [part("tk-directive-key", p)]
     if (p === ",") return [part("tk-punct", p)]
-    // 5 of C3, V7 of V: of counts from what comes after it, and a chain of of's takes
-    // brackets, 5 of (5 of C3), so an of straight after another one is a mistake
+    // v of C3, V7 of V: of counts from what comes after it, and a chain of of's takes
+    // brackets, v of (v of C3), so an of straight after another one is a mistake
     if (ofs && p === "of") {
       const chained = words[k - 2] === "of" && !words[k - 1].startsWith("(")
       const alone = k === (lead ? 1 : 0) || k === words.length - 1

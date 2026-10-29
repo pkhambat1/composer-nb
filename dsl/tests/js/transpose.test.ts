@@ -31,7 +31,7 @@ describe("transpose", () => {
     expect(p.notes.map((e) => e.note.name)).toEqual(["F#3", "F#3", "F#3", "F#3"])
     expect(
       parseSource(
-        "set key C\nset octave 4\nset transpose -3\nplay piano: notes 1---3---",
+        "set key C\nset octave 4\nset transpose -3\nplay piano: notes i---iii---",
       ).notes.map((e) => e.note.name),
     ).toEqual(["A3", "C#4"])
     // what's written stays: the grid shows the note as written

@@ -28,18 +28,18 @@ const painted = (src, word) =>
 
 describe("of in notes", () => {
   it("counts a degree on the major scale of the note after it", () => {
-    expect(names("play piano: notes 5 of C3--- b3 of C3--- 3 of D3--- 5' of C3---")).toEqual([
+    expect(names("play piano: notes v of C3--- biii of C3--- iii of D3--- v' of C3---")).toEqual([
       "G3",
       "D#3",
       "F#3",
       "G4",
     ])
     // whatever the key: of counts from its own note
-    expect(names("set key Eb\nset mode dorian\nplay piano: notes 5 of C3---")).toEqual(["G3"])
+    expect(names("set key Eb\nset mode dorian\nplay piano: notes v of C3---")).toEqual(["G3"])
   })
 
   it("counts from a degree of the key", () => {
-    expect(names("set key D\nset octave 3\nplay piano: notes 5 of 2--- 5 of 5---")).toEqual([
+    expect(names("set key D\nset octave 3\nplay piano: notes v of ii--- v of v---")).toEqual([
       "B3",
       "E4",
     ])
@@ -47,14 +47,14 @@ describe("of in notes", () => {
 
   it("chains in brackets: the circle of fifths", () => {
     const src =
-      "set octave 3\nplay piano: notes C3--- 5 of C3--- 5 of (5 of C3)--- 5 of (5 of (5 of C3))---"
+      "set octave 3\nplay piano: notes C3--- v of C3--- v of (v of C3)--- v of (v of (v of C3))---"
     expect(names(src)).toEqual(["C3", "G3", "D4", "A4"])
-    expect(names("play piano: notes 3 of (5 of D3)---")).toEqual(["C#4"])
+    expect(names("play piano: notes iii of (v of D3)---")).toEqual(["C#4"])
   })
 
   it("is one note: it takes marks, lengths and a name", () => {
     const p = parseSource(
-      "notes lift = ^5 of C3---, 2 beats 5 of (5 of C3)\nplay piano: notes lift",
+      "notes lift = ^v of C3---, 2 beats v of (v of C3)\nplay piano: notes lift",
     )
     expect(p.errors).toEqual([])
     expect(p.notes.map((e) => [e.note.name, !!e.accent])).toEqual([
@@ -64,7 +64,7 @@ describe("of in notes", () => {
   })
 
   it("shows and spells the note it is", () => {
-    const p = parseSource("play piano: notes b3 of C4--- 5 of (5 of C3)---")
+    const p = parseSource("play piano: notes biii of C4--- v of (v of C3)---")
     expect(p.notes.map((e) => e.label)).toEqual(["Eb4", "D4"])
     // b3 of C is an E flat on the staff, not a D sharp
     const abc = sheetAbc(p.outputs[0].blocks[0])
@@ -74,24 +74,24 @@ describe("of in notes", () => {
   })
 
   it("moves with transpose, and keeps the note as written", () => {
-    const p = parseSource("set transpose 2\nplay piano: notes 5 of C3---")
+    const p = parseSource("set transpose 2\nplay piano: notes v of C3---")
     expect([p.notes[0].note.name, p.notes[0].label]).toEqual(["A3", "G3"])
   })
 
   it("says what's wrong", () => {
-    expect(firstError("play piano: notes 5 of 5 of C3")).toBe(
-      "A chain of of's takes brackets: 5 of (5 of C3)",
+    expect(firstError("play piano: notes v of v of C3")).toBe(
+      "A chain of of's takes brackets: v of (v of C3)",
     )
     expect(firstError("play piano: notes C3 of C3")).toMatch(/^of takes a degree in front of it/)
-    expect(firstError("play piano: notes 5 of")).toMatch(/^After of goes the note to count from/)
-    expect(firstError("play piano: notes 5 of [C3]")).toMatch(
+    expect(firstError("play piano: notes v of")).toMatch(/^After of goes the note to count from/)
+    expect(firstError("play piano: notes v of [C3]")).toMatch(
       /^After of goes the note to count from/,
     )
-    expect(firstError("play piano: notes 5 of (5 of C3")).toBe(
-      "The ( after of closes on its line: 5 of (5 of C3)",
+    expect(firstError("play piano: notes v of (v of C3")).toBe(
+      "The ( after of closes on its line: v of (v of C3)",
     )
     // only of joins a note to the one it counts from
-    expect(firstError("play piano: notes 5@C3")).toMatch(/isn't a note/)
+    expect(firstError("play piano: notes v@C3")).toMatch(/isn't a note/)
     expect(firstError("set key C\nplay piano: chords v7@v")).toMatch(/isn't a chord I know/)
     expect(firstError("notes of = C3---\nplay piano: notes of")).toBe(
       "of already means something, so pick another name",
@@ -165,7 +165,7 @@ describe("of in charts", () => {
 
 describe("of in the editor", () => {
   it("is a keyword, and its brackets are punctuation", () => {
-    const src = "play piano: notes 5 of (5 of C3)---\nplay piano: chords v7 of (v of v)/F#"
+    const src = "play piano: notes v of (v of C3)---\nplay piano: chords v7 of (v of v)/F#"
     expect(painted(src, "of")).toEqual(Array(4).fill("tk-directive-key"))
     expect(painted(src, "(")).toEqual(["tk-punct", "tk-punct"])
     expect(painted(src, ")")).toEqual(["tk-punct", "tk-punct"])
@@ -174,11 +174,11 @@ describe("of in the editor", () => {
   })
 
   it("marks a chain without brackets, and an of with nothing on one side", () => {
-    expect(painted("play piano: notes 5 of 5 of C3", "of")).toEqual([
+    expect(painted("play piano: notes v of v of C3", "of")).toEqual([
       "tk-directive-key",
       "tk-error",
     ])
-    expect(painted("play piano: notes 5 of", "of")).toEqual(["tk-error"])
+    expect(painted("play piano: notes v of", "of")).toEqual(["tk-error"])
     expect(painted("play piano: chords of v", "of")).toEqual(["tk-error"])
   })
 })
@@ -193,7 +193,7 @@ describe("of is read as written", () => {
     const src =
       "pattern verse = {\n  kick: x---\n}\npattern chorus = {\n  snare: --x-\n}\nplay (verse of chorus)"
     expect(firstError(src)).toBe(
-      "of counts a note or a chord from another: piano: notes 5 of C3, or piano: chords v7 of v",
+      "of counts a note or a chord from another: piano: notes v of C3, or piano: chords v7 of v",
     )
   })
 })

@@ -160,7 +160,7 @@ export function readSequence(
     // between patterns
     if (name[0] === "of") {
       fail(
-        "of counts a note or a chord from another: piano: notes 5 of C3, or piano: chords v7 of v",
+        "of counts a note or a chord from another: piano: notes v of C3, or piano: chords v7 of v",
       )
       return null
     }
