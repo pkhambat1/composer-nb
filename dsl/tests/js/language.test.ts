@@ -2366,25 +2366,25 @@ describe("key", () => {
         `set key D\nset mode ${mode}\nplay piano: chords ` +
           ["i", "ii", "iii", "iv", "v", "vi", "vii"].map((n) => n + suffix).join("|"),
       )
-    expect(run("harmonicminor")).toBe("Dm Edim Faug Gm A Bb C#dim")
-    expect(run("harmonicminor", "7")).toBe("DmMaj7 Em7b5 Fmaj7#5 Gm7 A7 Bbmaj7 C#dim7")
-    expect(run("melodicminor")).toBe("Dm Em Faug G A Bdim C#dim")
-    expect(run("melodicminor", "7")).toBe("DmMaj7 Em7 Fmaj7#5 G7 A7 Bm7b5 C#m7b5")
+    expect(run("harmonicMinor")).toBe("Dm Edim Faug Gm A Bb C#dim")
+    expect(run("harmonicMinor", "7")).toBe("DmMaj7 Em7b5 Fmaj7#5 Gm7 A7 Bbmaj7 C#dim7")
+    expect(run("melodicMinor")).toBe("Dm Em Faug G A Bdim C#dim")
+    expect(run("melodicMinor", "7")).toBe("DmMaj7 Em7 Fmaj7#5 G7 A7 Bm7b5 C#m7b5")
     // whole tone has six notes, spelt D E F# G# A# C
-    expect(labels("set key D\nset mode wholetone\nplay piano: chords i ii|iii iv|v vi")).toBe(
+    expect(labels("set key D\nset mode wholeTone\nplay piano: chords i ii|iii iv|v vi")).toBe(
       "Daug Eaug F#aug G#aug A#aug Caug",
     )
-    expect(labels("set key D\nset mode wholetone\nplay piano: chords i7 vi7")).toBe("D7#5 C7#5")
+    expect(labels("set key D\nset mode wholeTone\nplay piano: chords i7 vi7")).toBe("D7#5 C7#5")
   })
   it("has no 7th degree in whole tone, and says so", () => {
     const errs = (src) => parseCell(src, initialState()).errors.map((e) => e.msg)
-    const msg = "wholetone has 6 degrees, 1 to 6: there is no 7 or vii in it"
-    expect(errs("set mode wholetone\nplay piano: chords i|vii")).toEqual([`"vii": ${msg}`])
-    expect(errs("set mode wholetone\nplay piano: chords i|vii7")).toEqual([`"vii7": ${msg}`])
-    expect(errs("set mode wholetone\nplay piano: notes 6---7---")).toEqual([`"6---7---": ${msg}`])
-    expect(errs("set mode wholetone\nplay piano: notes 1-3-5-6-1'-")).toEqual([])
+    const msg = "wholeTone has 6 degrees, 1 to 6: there is no 7 or vii in it"
+    expect(errs("set mode wholeTone\nplay piano: chords i|vii")).toEqual([`"vii": ${msg}`])
+    expect(errs("set mode wholeTone\nplay piano: chords i|vii7")).toEqual([`"vii7": ${msg}`])
+    expect(errs("set mode wholeTone\nplay piano: notes 6---7---")).toEqual([`"6---7---": ${msg}`])
+    expect(errs("set mode wholeTone\nplay piano: notes 1-3-5-6-1'-")).toEqual([])
     // a degree of another note counts on major, so it has a 7th
-    expect(errs("set mode wholetone\nplay piano: notes 7 of C3---")).toEqual([])
+    expect(errs("set mode wholeTone\nplay piano: notes 7 of C3---")).toEqual([])
   })
   it("counts numerals on the key's own scale, so the mode changes them", () => {
     const chart = "play piano: chords i iii|iv v|vi vii"
@@ -2406,7 +2406,7 @@ describe("key", () => {
     expect(labels("set key A\nplay piano: chords bvii bvi")).toBe("G F")
   })
   it("is a note, and its mode a setting of its own", () => {
-    expect(MODES).toContain("wholetone")
+    expect(MODES).toContain("wholeTone")
     const errs = (src) => parseCell(src, initialState()).errors.map((e) => e.msg)
     expect(errs("set key Em")).toEqual(["A key is a note: set key E, then set mode minor"])
     expect(errs("set key Ebm")).toEqual(["A key is a note: set key Eb, then set mode minor"])
@@ -2433,7 +2433,8 @@ describe("key", () => {
     expect(errs("set mode ionian")).toEqual([list])
     expect(errs("set mode aeolian")).toEqual([list])
     expect(errs("set mode m")).toEqual([list])
-    expect(errs("set mode Minor")).toEqual(["Modes are lowercase: set mode minor"])
+    expect(errs("set mode Minor")).toEqual(["Modes are camelCase: set mode minor"])
+    expect(errs("set mode harmonicminor")).toEqual(["Modes are camelCase: set mode harmonicMinor"])
     expect(errs("set mode")).toEqual(["set mode needs a value after it, e.g. set mode minor"])
     for (const mode of MODES) expect(errs(`set mode ${mode}`), mode).toEqual([])
   })

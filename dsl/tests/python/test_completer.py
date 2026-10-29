@@ -99,7 +99,7 @@ def test_settings_offer_their_values():
     assert texts("%%music\nset tempo ") == []
     assert texts("%%music\nset swing ") == completer.SWING
     assert texts("%%music\nset mode ") == completer.MODES
-    assert texts("%%music\nset mode m") == ["major", "minor", "mixolydian", "melodicminor"]
+    assert texts("%%music\nset mode m") == ["major", "minor", "mixolydian", "melodicMinor"]
     assert texts("%%music\nset key ") == []
     assert texts("%%music\nset key D ") == []  # a key is a note, and its mode a setting of its own
     assert texts("%%music\nset guitar.electric ") == ["clean", "muted"]

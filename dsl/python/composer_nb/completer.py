@@ -32,9 +32,9 @@ MODES = [
     "lydian",
     "mixolydian",
     "locrian",
-    "harmonicminor",
-    "melodicminor",
-    "wholetone",
+    "harmonicMinor",
+    "melodicMinor",
+    "wholeTone",
 ]
 UNITS = ["steps", "beats", "bars"]  # what a length on a line is measured in
 

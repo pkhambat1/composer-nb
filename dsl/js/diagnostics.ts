@@ -61,8 +61,8 @@ export const MESSAGES = {
     verb === "with"
       ? "A key is a note, A to G with # or b after it: with key E { ... }"
       : "A key is a note, A to G with # or b after it: set key E, set key Bb",
-  "mode.lowercase": ({ verb, mode }: { verb: Verb; mode: string }) =>
-    `Modes are lowercase: ${verb} mode ${mode}`,
+  "mode.camelCase": ({ verb, mode }: { verb: Verb; mode: string }) =>
+    `Modes are camelCase: ${verb} mode ${mode}`,
   "mode.unknown": () => `mode is one of: ${MODES.join(", ")}`,
   "transpose.range": ({ verb }: { verb: Verb }) =>
     `transpose is a number of semitones from -12 to 12: ${verb} transpose 2 sounds a whole step up`,
