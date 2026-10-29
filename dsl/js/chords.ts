@@ -71,7 +71,8 @@ export function degreeSemitones(
 }
 
 // The modes a key can be in: semitones above the tonic. major and minor are the two common
-// ones, and the other five go by their modal names. A key is its root, and its mode a
+// ones, the next five go by their modal names, and harmonic minor, melodic minor (its
+// ascending form) and whole tone (six notes, so its degrees are 1 to 6) are scales of their own. A key is its root, and its mode a
 // setting of its own (set key E, set mode minor).
 export const MODE_SCALES: Record<string, readonly number[]> = {
   major: [0, 2, 4, 5, 7, 9, 11],
@@ -81,9 +82,14 @@ export const MODE_SCALES: Record<string, readonly number[]> = {
   lydian: [0, 2, 4, 6, 7, 9, 11],
   mixolydian: [0, 2, 4, 5, 7, 9, 10],
   locrian: [0, 1, 3, 5, 6, 8, 10],
+  harmonicminor: [0, 2, 3, 5, 7, 8, 11],
+  melodicminor: [0, 2, 3, 5, 7, 9, 11],
+  wholetone: [0, 2, 4, 6, 8, 10],
 }
 // How far round the circle of fifths a mode's tonic sits from the major key with the same
-// notes: D dorian has C major's notes, two fifths down from D.
+// notes: D dorian has C major's notes, two fifths down from D. Harmonic and melodic minor
+// take the signature of natural minor, and whole tone of major, with their other notes as
+// accidentals, since none of the three is a key signature's scale.
 const MODE_FIFTHS: Record<string, number> = {
   major: 0,
   lydian: -1,
@@ -92,6 +98,9 @@ const MODE_FIFTHS: Record<string, number> = {
   minor: 3,
   phrygian: 4,
   locrian: 5,
+  harmonicminor: 3,
+  melodicminor: 3,
+  wholetone: 0,
 }
 const LETTER_FIFTHS: Record<string, number> = { F: -1, C: 0, G: 1, D: 2, A: 3, E: 4, B: 5 }
 const DEGREE: Record<string, number> = { i: 0, ii: 1, iii: 2, iv: 3, v: 4, vi: 5, vii: 6 }
@@ -132,6 +141,16 @@ export function keySignature(key: Key): Map<string, string> {
   return marks
 }
 
+// Whether a mode's signature is a minor one: A minor's, as harmonic and melodic minor have
+export const isMinorMode = (mode: string) => /minor$/.test(mode)
+
+// Whether a key's scale has no such degree: whole tone has six, so its 7 and vii are past it
+export const pastScale = (key: Key, degree: number) => degree > key.scale.length
+
+// The message for a degree or numeral past the key's scale
+export const pastScaleMessage = (key: Key) =>
+  `${key.mode} has ${key.scale.length} degrees, 1 to ${key.scale.length}: there is no 7 or vii in it`
+
 // The key as ABC writes it in its K: field: D, Am, D dor.
 export function abcKey(key: Key): string {
   const short: Record<string, string> = {
@@ -141,6 +160,8 @@ export function abcKey(key: Key): string {
     mixolydian: " mix",
     locrian: " loc",
     minor: "m",
+    harmonicminor: "m",
+    melodicminor: "m",
   }
   return key.root + (short[key.mode] || "")
 }
@@ -167,19 +188,24 @@ export function chordParts(token: string): string[] {
 // The name tonal knows a chord by: it has a minor 6/9 as m69, not m6/9.
 export const tonalName = (head: string) => head.replace(/m6\/9$/, "m69")
 
-// A degree, 1 to 7, counted on the key's own scale, its mode's: in D minor 3 is F, and in D
+// A degree, 1 to 7 (1 to 6 in whole tone), counted on the key's own scale, its mode's: in D minor 3 is F, and in D
 // dorian 6 is B. b and # in front move it a semitone. Shared by a chord's numeral and a note
 // written as a degree.
 export function degreePc(key: Key, degree: number, acc = ""): number {
   return (key.tonicPc + degreeSemitones(degree, acc, key.scale) + 12) % 12
 }
 
+// How many letters up from the key's root a degree's name is: one a degree, except in whole
+// tone, whose 6th is spelt as a 7th (D E F# G# A# C, not B#)
+export const letterStep = (key: Key, degree: number) =>
+  key.mode === "wholetone" && degree === 6 ? 6 : degree - 1
+
 // A degree's name: the letter of its place in the scale, counted from the key's root, raised
 // or lowered to its pitch. So #7 in G minor is F#, not Gb, the 3rd of C# major is E#, and
 // VII in A minor is G.
 const LETTERS = "CDEFGAB"
 export function degreeName(key: Key, degree: number, acc = ""): string {
-  const letter = LETTERS[(LETTERS.indexOf(key.root[0]) + degree - 1) % 7]
+  const letter = LETTERS[(LETTERS.indexOf(key.root[0]) + letterStep(key, degree)) % 7]
   const alter = ((((degreePc(key, degree, acc) - LETTER_PC[letter]) % 12) + 18) % 12) - 6
   return letter + (alter > 0 ? "#".repeat(alter) : "b".repeat(-alter))
 }
@@ -195,18 +221,24 @@ function romanToSymbol(main: string, key: Key): string | null {
   if (!m) return null
   const [, acc, numeral, rest] = m
   const degree = DEGREE[numeral]
+  if (pastScale(key, degree + 1)) return null
+  const size = key.scale.length
   const root = degreeName(key, degree + 1, acc)
   // ° and ø are drawn, not typed: the chart says dim and m7b5
   if (/^[°ø]/.test(rest)) return null
   const above = (k: number) =>
-    key.scale[(degree + k) % 7] + (degree + k >= 7 ? 12 : 0) - key.scale[degree]
-  const [third, fifth, seventh] = [above(2), above(4), above(6)]
+    key.scale[(degree + k) % size] + (degree + k >= size ? 12 : 0) - key.scale[degree]
+  // Six notes stack no seventh of their own: whole tone's is the flat seventh, 10 semitones
+  const [third, fifth, seventh] = [above(2), above(4), size === 7 ? above(6) : 10]
   const triad = acc ? "" : third === 3 ? (fifth === 6 ? "dim" : "m") : fifth === 8 ? "aug" : ""
   // What follows the numeral: nothing is the scale's triad, a 7 its seventh chord, a number
   // (6/9, 9, 11) goes on the triad, and anything else says the chord outright
   if (!rest) return root + triad
   if (rest === "7" && !acc) {
-    if (third === 4) return root + (fifth === 8 ? "7#5" : seventh === 11 ? "maj7" : "7")
+    if (third === 4) {
+      if (fifth === 8) return root + (seventh === 11 ? "maj7#5" : "7#5")
+      return root + (seventh === 11 ? "maj7" : "7")
+    }
     if (fifth === 6) return root + (seventh === 10 ? "m7b5" : "dim7")
     return root + (seventh === 10 ? "m7" : "mMaj7")
   }

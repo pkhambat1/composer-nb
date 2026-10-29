@@ -24,7 +24,18 @@ SETTINGS = ["time", "tempo", "swing", "key", "mode", "transpose", "octave", "kit
 TYPES = ["steps", "notes", "chords", "pattern"]
 KITS = ["rock", "synth"]
 SWING = ["on", "off"]
-MODES = ["major", "minor", "dorian", "phrygian", "lydian", "mixolydian", "locrian"]
+MODES = [
+    "major",
+    "minor",
+    "dorian",
+    "phrygian",
+    "lydian",
+    "mixolydian",
+    "locrian",
+    "harmonicminor",
+    "melodicminor",
+    "wholetone",
+]
 UNITS = ["steps", "beats", "bars"]  # what a length on a line is measured in
 
 LANES = [

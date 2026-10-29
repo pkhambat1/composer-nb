@@ -911,6 +911,45 @@ chords:
   45 tick=2496 ticks=192 chord={"input":"ii","label":"Em","rootPc":4,"bassMidi":40,"notesMidi":[52,55,59],"noteNames":["E3","G3","B3"],"bassName":"E2"} label=Em instrument=piano transpose=0 line=5 secDur=1
   46 tick=2688 ticks=384 chord={"input":"i","label":"D","rootPc":2,"bassMidi":38,"notesMidi":[50,54,57],"noteNames":["D3","F#3","A3"],"bassName":"D2"} label=D instrument=piano transpose=0 line=5 secDur=2
 
+## pitched/key.mdx:30
+errors: none
+names: chart chords line 1
+from above: none
+length: 32 s
+block startSec=0 durSec=16 bars=8 time=4 over 4 tempo=120 key=D unit=4 barTicks=384 res=1
+block startSec=16 durSec=16 bars=8 time=4 over 4 tempo=120 key=D unit=4 barTicks=384 res=1
+chords:
+  0 tick=0 ticks=192 chord={"input":"i","label":"Dm","rootPc":2,"bassMidi":38,"notesMidi":[50,53,57],"noteNames":["D3","F3","A3"],"bassName":"D2"} label=Dm instrument=piano transpose=0 line=3 secDur=1
+  1 tick=192 ticks=192 chord={"input":"ii","label":"Edim","rootPc":4,"bassMidi":40,"notesMidi":[52,55,58],"noteNames":["E3","G3","Bb3"],"bassName":"E2"} label=Edim instrument=piano transpose=0 line=3 secDur=1
+  2 tick=384 ticks=192 chord={"input":"iii","label":"Faug","rootPc":5,"bassMidi":41,"notesMidi":[53,57,61],"noteNames":["F3","A3","C#4"],"bassName":"F2"} label=Faug instrument=piano transpose=0 line=3 secDur=1
+  3 tick=576 ticks=192 chord={"input":"iv","label":"Gm","rootPc":7,"bassMidi":43,"notesMidi":[55,58,62],"noteNames":["G3","Bb3","D4"],"bassName":"G2"} label=Gm instrument=piano transpose=0 line=3 secDur=1
+  4 tick=768 ticks=192 chord={"input":"v","label":"A","rootPc":9,"bassMidi":45,"notesMidi":[57,61,64],"noteNames":["A3","C#4","E4"],"bassName":"A2"} label=A instrument=piano transpose=0 line=3 secDur=1
+  5 tick=960 ticks=192 chord={"input":"vi","label":"Bb","rootPc":10,"bassMidi":46,"notesMidi":[58,62,65],"noteNames":["Bb3","D4","F4"],"bassName":"Bb2"} label=Bb instrument=piano transpose=0 line=3 secDur=1
+  6 tick=1152 ticks=192 chord={"input":"vii","label":"C#dim","rootPc":1,"bassMidi":49,"notesMidi":[61,64,67],"noteNames":["C#4","E4","G4"],"bassName":"C#3"} label=C#dim instrument=piano transpose=0 line=3 secDur=1
+  7 tick=1344 ticks=192 chord={"input":"i'","label":"Dm","rootPc":2,"bassMidi":50,"notesMidi":[62,65,69],"noteNames":["D4","F4","A4"],"bassName":"D3"} label=Dm instrument=piano transpose=0 line=3 secDur=1
+  8 tick=1536 ticks=192 chord={"input":"vii","label":"C#dim","rootPc":1,"bassMidi":49,"notesMidi":[61,64,67],"noteNames":["C#4","E4","G4"],"bassName":"C#3"} label=C#dim instrument=piano transpose=0 line=3 secDur=1
+  9 tick=1728 ticks=192 chord={"input":"vi","label":"Bb","rootPc":10,"bassMidi":46,"notesMidi":[58,62,65],"noteNames":["Bb3","D4","F4"],"bassName":"Bb2"} label=Bb instrument=piano transpose=0 line=3 secDur=1
+  10 tick=1920 ticks=192 chord={"input":"v","label":"A","rootPc":9,"bassMidi":45,"notesMidi":[57,61,64],"noteNames":["A3","C#4","E4"],"bassName":"A2"} label=A instrument=piano transpose=0 line=3 secDur=1
+  11 tick=2112 ticks=192 chord={"input":"iv","label":"Gm","rootPc":7,"bassMidi":43,"notesMidi":[55,58,62],"noteNames":["G3","Bb3","D4"],"bassName":"G2"} label=Gm instrument=piano transpose=0 line=3 secDur=1
+  12 tick=2304 ticks=192 chord={"input":"iii","label":"Faug","rootPc":5,"bassMidi":41,"notesMidi":[53,57,61],"noteNames":["F3","A3","C#4"],"bassName":"F2"} label=Faug instrument=piano transpose=0 line=3 secDur=1
+  13 tick=2496 ticks=192 chord={"input":"ii","label":"Edim","rootPc":4,"bassMidi":40,"notesMidi":[52,55,58],"noteNames":["E3","G3","Bb3"],"bassName":"E2"} label=Edim instrument=piano transpose=0 line=3 secDur=1
+  14 tick=2688 ticks=384 chord={"input":"i","label":"Dm","rootPc":2,"bassMidi":38,"notesMidi":[50,53,57],"noteNames":["D3","F3","A3"],"bassName":"D2"} label=Dm instrument=piano transpose=0 line=3 secDur=2
+  16 tick=0 ticks=192 chord={"input":"i","label":"Dm","rootPc":2,"bassMidi":38,"notesMidi":[50,53,57],"noteNames":["D3","F3","A3"],"bassName":"D2"} label=Dm instrument=piano transpose=0 line=4 secDur=1
+  17 tick=192 ticks=192 chord={"input":"ii","label":"Em","rootPc":4,"bassMidi":40,"notesMidi":[52,55,59],"noteNames":["E3","G3","B3"],"bassName":"E2"} label=Em instrument=piano transpose=0 line=4 secDur=1
+  18 tick=384 ticks=192 chord={"input":"iii","label":"Faug","rootPc":5,"bassMidi":41,"notesMidi":[53,57,61],"noteNames":["F3","A3","C#4"],"bassName":"F2"} label=Faug instrument=piano transpose=0 line=4 secDur=1
+  19 tick=576 ticks=192 chord={"input":"iv","label":"G","rootPc":7,"bassMidi":43,"notesMidi":[55,59,62],"noteNames":["G3","B3","D4"],"bassName":"G2"} label=G instrument=piano transpose=0 line=4 secDur=1
+  20 tick=768 ticks=192 chord={"input":"v","label":"A","rootPc":9,"bassMidi":45,"notesMidi":[57,61,64],"noteNames":["A3","C#4","E4"],"bassName":"A2"} label=A instrument=piano transpose=0 line=4 secDur=1
+  21 tick=960 ticks=192 chord={"input":"vi","label":"Bdim","rootPc":11,"bassMidi":47,"notesMidi":[59,62,65],"noteNames":["B3","D4","F4"],"bassName":"B2"} label=Bdim instrument=piano transpose=0 line=4 secDur=1
+  22 tick=1152 ticks=192 chord={"input":"vii","label":"C#dim","rootPc":1,"bassMidi":49,"notesMidi":[61,64,67],"noteNames":["C#4","E4","G4"],"bassName":"C#3"} label=C#dim instrument=piano transpose=0 line=4 secDur=1
+  23 tick=1344 ticks=192 chord={"input":"i'","label":"Dm","rootPc":2,"bassMidi":50,"notesMidi":[62,65,69],"noteNames":["D4","F4","A4"],"bassName":"D3"} label=Dm instrument=piano transpose=0 line=4 secDur=1
+  24 tick=1536 ticks=192 chord={"input":"vii","label":"C#dim","rootPc":1,"bassMidi":49,"notesMidi":[61,64,67],"noteNames":["C#4","E4","G4"],"bassName":"C#3"} label=C#dim instrument=piano transpose=0 line=4 secDur=1
+  25 tick=1728 ticks=192 chord={"input":"vi","label":"Bdim","rootPc":11,"bassMidi":47,"notesMidi":[59,62,65],"noteNames":["B3","D4","F4"],"bassName":"B2"} label=Bdim instrument=piano transpose=0 line=4 secDur=1
+  26 tick=1920 ticks=192 chord={"input":"v","label":"A","rootPc":9,"bassMidi":45,"notesMidi":[57,61,64],"noteNames":["A3","C#4","E4"],"bassName":"A2"} label=A instrument=piano transpose=0 line=4 secDur=1
+  27 tick=2112 ticks=192 chord={"input":"iv","label":"G","rootPc":7,"bassMidi":43,"notesMidi":[55,59,62],"noteNames":["G3","B3","D4"],"bassName":"G2"} label=G instrument=piano transpose=0 line=4 secDur=1
+  28 tick=2304 ticks=192 chord={"input":"iii","label":"Faug","rootPc":5,"bassMidi":41,"notesMidi":[53,57,61],"noteNames":["F3","A3","C#4"],"bassName":"F2"} label=Faug instrument=piano transpose=0 line=4 secDur=1
+  29 tick=2496 ticks=192 chord={"input":"ii","label":"Em","rootPc":4,"bassMidi":40,"notesMidi":[52,55,59],"noteNames":["E3","G3","B3"],"bassName":"E2"} label=Em instrument=piano transpose=0 line=4 secDur=1
+  30 tick=2688 ticks=384 chord={"input":"i","label":"Dm","rootPc":2,"bassMidi":38,"notesMidi":[50,53,57],"noteNames":["D3","F3","A3"],"bassName":"D2"} label=Dm instrument=piano transpose=0 line=4 secDur=2
+
 ## pitched/notes.mdx:12
 errors: none
 names: none

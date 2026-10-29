@@ -4,7 +4,7 @@
    comes with a tab staff. Pure, like grid.ts. */
 import type { Tablature } from "abcjs"
 import type { GridBlock } from "./cell.ts"
-import { abcKey, keySignature, parseKey, type Key } from "./chords.ts"
+import { abcKey, isMinorMode, keySignature, parseKey, type Key } from "./chords.ts"
 import type { HitEvent } from "./clips.ts"
 import { beatGroups, isCompound } from "./grid.ts"
 import { TPQ } from "./language.ts"
@@ -123,7 +123,7 @@ const FLAT_SPELL = ["C", "_D", "D", "_E", "E", "F", "_G", "G", "_A", "A", "_B", 
 function spelling(midi: number, sig: Sig): Spell {
   const pc = ((midi % 12) + 12) % 12
   // A minor key's raised seventh is a sharp whatever the key's spelling: F# in G minor
-  const leading = sig.key.mode === "minor"
+  const leading = isMinorMode(sig.key.mode)
   const flat = sig.key.flats && !(leading && pc === (sig.key.tonicPc + 11) % 12)
   const spelt = (flat ? FLAT_SPELL : SHARP_SPELL)[pc]
   const alter = spelt[0] === "^" ? 1 : spelt[0] === "_" ? -1 : 0

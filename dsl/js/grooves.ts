@@ -225,6 +225,51 @@ with key D, mode locrian, tempo 80 { play walk }`,
   },
   {
     section: "Harmony",
+    title: "Harmonic minor walk",
+    byline: "D harmonic minor: minor with a raised seventh",
+    body: "One chart, `chords i ii|iii iv|v vi|vii i'|vii vi|v iv|iii ii|i`, goes up the scale and back down, and a lowercase numeral is the chord the scale has on that degree. In D harmonic minor those are Dm Edim Faug Gm A Bb C#dim. The raised seventh makes 5 a major A, the dominant a minor key wants, and puts a diminished C#dim a half step under the root; it also leaves a gap of three half steps between 6 and 7 and makes 3 an augmented Faug: the sound of a classical minor cadence. Change `mode harmonicminor` in the with to `mode minor` and the same chart turns into natural minor's chords.",
+    link: null,
+    source: `pattern walk = {
+  piano: chords i ii|iii iv|v vi|vii i'|vii vi|v iv|iii ii|i
+  hat: x-
+  snare.cross: 2 4
+  kick: 1 3
+}
+
+with key D, mode harmonicminor, tempo 90 { play walk }`,
+  },
+  {
+    section: "Harmony",
+    title: "Melodic minor walk",
+    byline: "D melodic minor: minor with a raised sixth and seventh",
+    body: "One chart, `chords i ii|iii iv|v vi|vii i'|vii vi|v iv|iii ii|i`, goes up the scale and back down, and a lowercase numeral is the chord the scale has on that degree. In D melodic minor, going up, those are Dm Em Faug G A Bdim C#dim. Raising 6 and 7 makes 4 and 5 the major chords G and A, with a minor Em on 2 and an augmented Faug on 3, and turns 6 and 7 diminished: a minor key that sounds major above its third. Change `mode melodicminor` in the with to `mode minor` and the same chart turns into natural minor's chords.",
+    link: null,
+    source: `pattern walk = {
+  piano: chords i ii|iii iv|v vi|vii i'|vii vi|v iv|iii ii|i
+  hat: x-
+  snare.cross: 2 4
+  kick: 1 3
+}
+
+with key D, mode melodicminor, tempo 96 { play walk }`,
+  },
+  {
+    section: "Harmony",
+    title: "Whole tone walk",
+    byline: "D whole tone: six notes, a whole step apart",
+    body: "One chart, `chords i ii|iii iv|v vi|i' vi|v iv|iii ii`, goes up the scale and back down, and a lowercase numeral is the chord the scale has on that degree. Whole tone has six notes, so its degrees are 1 to 6, and a 7 or `vii` is an error. In D whole tone those are Daug Eaug F#aug G#aug A#aug Caug: every chord is augmented, and every step is the same size, so there is no root to settle on. Change `mode wholetone` in the with to `mode major` and the same chart turns into D major's chords.",
+    link: null,
+    source: `pattern walk = {
+  piano: chords i ii|iii iv|v vi|i' vi|v iv|iii ii
+  hat: x-
+  snare.cross: 2 4
+  kick: 1 3
+}
+
+with key D, mode wholetone, tempo 84 { play walk }`,
+  },
+  {
+    section: "Harmony",
     title: "Fifth of a fifth",
     byline: "of counts a note from another note: 5 of 5, 5 of (5 of 5)",
     body: "`5` is the 5th of the key's root, `5 of 5` the 5th of that, and `5 of (5 of 5)` the 5th of that again: one `of` a fifth up, and brackets chain them. This goes up the circle of fifths from the key's root, C G D A, and it follows the key: put `key F` in a with around the play and every note moves with it. Without the brackets, `5 of 5 of 5` is an error.",

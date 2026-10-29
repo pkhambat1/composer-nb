@@ -2,7 +2,15 @@
    chord before for another slot, _ rests, % plays the bar before again. A chord is a name
    (Am7, C6/9/E), a numeral counted from the key's root (V7, bVII), or a numeral of another
    chord's root (V7 of V). */
-import { applyTranspose, buildChord, isRoman, midiToName, parseKey } from "../chords.ts"
+import {
+  applyTranspose,
+  buildChord,
+  isRoman,
+  midiToName,
+  parseKey,
+  pastScale,
+  pastScaleMessage,
+} from "../chords.ts"
 import { misplaced } from "../check.ts"
 import { message } from "../diagnostics.ts"
 import { keyOf } from "../settings.ts"
@@ -142,9 +150,13 @@ function chordSlot(tok: string, part: Part, st: State, key: Key, err: Report): S
   }
   const chord = buildChord(tok, key, st.octave)
   if (!chord) {
+    const degree = /^'*[#b]?(vii|vi|iv|v|iii|ii|i)/.exec(tok)?.[1]
+    const past =
+      degree && pastScale(key, ["i", "ii", "iii", "iv", "v", "vi", "vii"].indexOf(degree) + 1)
     err(
       part.ln,
-      dimMarkProblem(tok) ||
+      (past && `"${tok}": ${pastScaleMessage(key)}`) ||
+        dimMarkProblem(tok) ||
         upperNumeral(tok) ||
         (drawsNotes(tok)
           ? `"${tok}" is notes, and this line says chords. A line of notes says notes in front: ${part.name}: notes ${spaceNotes(tok)}`
