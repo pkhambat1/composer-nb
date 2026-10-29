@@ -13,6 +13,43 @@ export type Groove = {
   source: string
 }
 
+// A walk through a mode: one chart goes up the scale and back down on the piano, over a
+// groove, with the key and mode on a with around it. The chart is the same in every mode, as a
+// numeral is the chord its scale has on that degree, so only the mode and what to listen for
+// change. `says` is what to listen for, `against` the mode to change it to and compare.
+const WALK_CHART = "i ii|iii iv|v vi|vii i'|vii vi|v iv|iii ii|i"
+function walk(w: {
+  title: string
+  mode: string
+  tempo: number
+  byline: string
+  says: string
+  chart?: string
+  against?: string
+}): Groove {
+  const chart = w.chart || WALK_CHART
+  const against = w.against || "major"
+  return {
+    section: "Harmony",
+    title: `${w.title} walk`,
+    byline: w.byline,
+    body:
+      `One chart, \`chords ${chart}\`, goes up the scale and back down, and a lowercase numeral is ` +
+      `the chord the scale has on that degree. ${w.says} Change \`mode ${w.mode}\` in the with to ` +
+      `\`mode ${against}\` and the same chart turns into ` +
+      `${against === "major" ? "D major" : "natural minor"}'s chords.`,
+    link: null,
+    source: `pattern walk = {
+  piano: chords ${chart}
+  hat: x-
+  snare.cross: 2 4
+  kick: 1 3
+}
+
+with key D, mode ${w.mode}, tempo ${w.tempo} { play walk }`,
+  }
+}
+
 export const GROOVES: Groove[] = [
   {
     section: "Transcriptions",
@@ -133,141 +170,72 @@ with time 3 over 4, tempo 82.5 { play 2 bars groove }`,
 
 with time 5 over 4 { play groove }`,
   },
-  {
-    section: "Harmony",
-    title: "Lydian walk",
+  walk({
+    title: "Lydian",
+    mode: "lydian",
+    tempo: 84,
     byline: "D lydian: major with a raised fourth",
-    body: "One chart, `chords i ii|iii iv|v vi|vii i'|vii vi|v iv|iii ii|i`, goes up the scale and back down, and a lowercase numeral is the chord the scale has on that degree. In D lydian those are D E F#m G#dim A Bm C#m. The G#dim on 4 is lydian's, and so is the major E on 2, a whole step above the root, where major has a minor one: the floating sound. Change `mode lydian` in the with to `mode major` and the same chart turns into D major's chords.",
-    link: null,
-    source: `pattern walk = {
-  piano: chords i ii|iii iv|v vi|vii i'|vii vi|v iv|iii ii|i
-  hat: x-
-  snare.cross: 2 4
-  kick: 1 3
-}
-
-with key D, mode lydian, tempo 84 { play walk }`,
-  },
-  {
-    section: "Harmony",
-    title: "Mixolydian walk",
+    says: "In D lydian those are D E F#m G#dim A Bm C#m. The G#dim on 4 is lydian's, and so is the major E on 2, a whole step above the root, where major has a minor one: the floating sound.",
+  }),
+  walk({
+    title: "Mixolydian",
+    mode: "mixolydian",
+    tempo: 104,
     byline: "D mixolydian: major with a flat seventh",
-    body: "One chart, `chords i ii|iii iv|v vi|vii i'|vii vi|v iv|iii ii|i`, goes up the scale and back down, and a lowercase numeral is the chord the scale has on that degree. In D mixolydian those are D Em F#dim G Am Bm C. The flat seventh makes 7 a major C, a whole step under the root, and turns 5 into a minor Am: the rock sound. Change `mode mixolydian` in the with to `mode major` and the same chart turns into D major's chords.",
-    link: null,
-    source: `pattern walk = {
-  piano: chords i ii|iii iv|v vi|vii i'|vii vi|v iv|iii ii|i
-  hat: x-
-  snare.cross: 2 4
-  kick: 1 3
-}
-
-with key D, mode mixolydian, tempo 104 { play walk }`,
-  },
-  {
-    section: "Harmony",
-    title: "Dorian walk",
+    says: "In D mixolydian those are D Em F#dim G Am Bm C. The flat seventh makes 7 a major C, a whole step under the root, and turns 5 into a minor Am: the rock sound.",
+  }),
+  walk({
+    title: "Dorian",
+    mode: "dorian",
+    tempo: 96,
     byline: "D dorian: minor with a major sixth",
-    body: "One chart, `chords i ii|iii iv|v vi|vii i'|vii vi|v iv|iii ii|i`, goes up the scale and back down, and a lowercase numeral is the chord the scale has on that degree. In D dorian those are Dm Em F G Am Bdim C. 6 is Bdim and 4 is a major G, where natural minor has Gm: a minor key with a major iv. Change `mode dorian` in the with to `mode major` and the same chart turns into D major's chords.",
-    link: null,
-    source: `pattern walk = {
-  piano: chords i ii|iii iv|v vi|vii i'|vii vi|v iv|iii ii|i
-  hat: x-
-  snare.cross: 2 4
-  kick: 1 3
-}
-
-with key D, mode dorian, tempo 96 { play walk }`,
-  },
-  {
-    section: "Harmony",
-    title: "Minor walk",
+    says: "In D dorian those are Dm Em F G Am Bdim C. 6 is Bdim and 4 is a major G, where natural minor has Gm: a minor key with a major iv.",
+  }),
+  walk({
+    title: "Minor",
+    mode: "minor",
+    tempo: 92,
     byline: "D minor: the natural minor scale",
-    body: "One chart, `chords i ii|iii iv|v vi|vii i'|vii vi|v iv|iii ii|i`, goes up the scale and back down, and a lowercase numeral is the chord the scale has on that degree. In D minor those are Dm Edim F Gm Am Bb C. 3, 6 and 7 are the major chords F, Bb and C, and 5 is the minor Am: the chords of natural minor. Change `mode minor` in the with to `mode major` and the same chart turns into D major's chords.",
-    link: null,
-    source: `pattern walk = {
-  piano: chords i ii|iii iv|v vi|vii i'|vii vi|v iv|iii ii|i
-  hat: x-
-  snare.cross: 2 4
-  kick: 1 3
-}
-
-with key D, mode minor, tempo 92 { play walk }`,
-  },
-  {
-    section: "Harmony",
-    title: "Phrygian walk",
+    says: "In D minor those are Dm Edim F Gm Am Bb C. 3, 6 and 7 are the major chords F, Bb and C, and 5 is the minor Am: the chords of natural minor.",
+  }),
+  walk({
+    title: "Phrygian",
+    mode: "phrygian",
+    tempo: 88,
     byline: "D phrygian: minor with a flat second",
-    body: "One chart, `chords i ii|iii iv|v vi|vii i'|vii vi|v iv|iii ii|i`, goes up the scale and back down, and a lowercase numeral is the chord the scale has on that degree. In D phrygian those are Dm Eb F Gm Adim Bb Cm. 2 is a major Eb, a half step above the root, and 5 is the diminished Adim: the dark, Spanish sound. Change `mode phrygian` in the with to `mode major` and the same chart turns into D major's chords.",
-    link: null,
-    source: `pattern walk = {
-  piano: chords i ii|iii iv|v vi|vii i'|vii vi|v iv|iii ii|i
-  hat: x-
-  snare.cross: 2 4
-  kick: 1 3
-}
-
-with key D, mode phrygian, tempo 88 { play walk }`,
-  },
-  {
-    section: "Harmony",
-    title: "Locrian walk",
+    says: "In D phrygian those are Dm Eb F Gm Adim Bb Cm. 2 is a major Eb, a half step above the root, and 5 is the diminished Adim: the dark, Spanish sound.",
+  }),
+  walk({
+    title: "Locrian",
+    mode: "locrian",
+    tempo: 80,
     byline: "D locrian: a diminished root",
-    body: "One chart, `chords i ii|iii iv|v vi|vii i'|vii vi|v iv|iii ii|i`, goes up the scale and back down, and a lowercase numeral is the chord the scale has on that degree. In D locrian those are Ddim Eb Fm Gm Ab Bb Cm. 1 is Ddim, so the root's own chord never sounds at rest: locrian is the mode that won't settle. Change `mode locrian` in the with to `mode major` and the same chart turns into D major's chords.",
-    link: null,
-    source: `pattern walk = {
-  piano: chords i ii|iii iv|v vi|vii i'|vii vi|v iv|iii ii|i
-  hat: x-
-  snare.cross: 2 4
-  kick: 1 3
-}
-
-with key D, mode locrian, tempo 80 { play walk }`,
-  },
-  {
-    section: "Harmony",
-    title: "Harmonic minor walk",
+    says: "In D locrian those are Ddim Eb Fm Gm Ab Bb Cm. 1 is Ddim, so the root's own chord never sounds at rest: locrian is the mode that won't settle.",
+  }),
+  walk({
+    title: "Harmonic minor",
+    mode: "harmonicminor",
+    tempo: 90,
     byline: "D harmonic minor: minor with a raised seventh",
-    body: "One chart, `chords i ii|iii iv|v vi|vii i'|vii vi|v iv|iii ii|i`, goes up the scale and back down, and a lowercase numeral is the chord the scale has on that degree. In D harmonic minor those are Dm Edim Faug Gm A Bb C#dim. The raised seventh makes 5 a major A, the dominant a minor key wants, and puts a diminished C#dim a half step under the root; it also leaves a gap of three half steps between 6 and 7 and makes 3 an augmented Faug: the sound of a classical minor cadence. Change `mode harmonicminor` in the with to `mode minor` and the same chart turns into natural minor's chords.",
-    link: null,
-    source: `pattern walk = {
-  piano: chords i ii|iii iv|v vi|vii i'|vii vi|v iv|iii ii|i
-  hat: x-
-  snare.cross: 2 4
-  kick: 1 3
-}
-
-with key D, mode harmonicminor, tempo 90 { play walk }`,
-  },
-  {
-    section: "Harmony",
-    title: "Melodic minor walk",
+    against: "minor",
+    says: "In D harmonic minor those are Dm Edim Faug Gm A Bb C#dim. The raised seventh makes 5 a major A, the dominant a minor key wants, and puts a diminished C#dim a half step under the root; it also leaves a gap of three half steps between 6 and 7 and makes 3 an augmented Faug: the sound of a classical minor cadence.",
+  }),
+  walk({
+    title: "Melodic minor",
+    mode: "melodicminor",
+    tempo: 96,
     byline: "D melodic minor: minor with a raised sixth and seventh",
-    body: "One chart, `chords i ii|iii iv|v vi|vii i'|vii vi|v iv|iii ii|i`, goes up the scale and back down, and a lowercase numeral is the chord the scale has on that degree. In D melodic minor, going up, those are Dm Em Faug G A Bdim C#dim. Raising 6 and 7 makes 4 and 5 the major chords G and A, with a minor Em on 2 and an augmented Faug on 3, and turns 6 and 7 diminished: a minor key that sounds major above its third. Change `mode melodicminor` in the with to `mode minor` and the same chart turns into natural minor's chords.",
-    link: null,
-    source: `pattern walk = {
-  piano: chords i ii|iii iv|v vi|vii i'|vii vi|v iv|iii ii|i
-  hat: x-
-  snare.cross: 2 4
-  kick: 1 3
-}
-
-with key D, mode melodicminor, tempo 96 { play walk }`,
-  },
-  {
-    section: "Harmony",
-    title: "Whole tone walk",
+    against: "minor",
+    says: "In D melodic minor, going up, those are Dm Em Faug G A Bdim C#dim. Raising 6 and 7 makes 4 and 5 the major chords G and A, with a minor Em on 2 and an augmented Faug on 3, and turns 6 and 7 diminished: a minor key that sounds major above its third.",
+  }),
+  walk({
+    title: "Whole tone",
+    mode: "wholetone",
+    tempo: 84,
     byline: "D whole tone: six notes, a whole step apart",
-    body: "One chart, `chords i ii|iii iv|v vi|i' vi|v iv|iii ii`, goes up the scale and back down, and a lowercase numeral is the chord the scale has on that degree. Whole tone has six notes, so its degrees are 1 to 6, and a 7 or `vii` is an error. In D whole tone those are Daug Eaug F#aug G#aug A#aug Caug: every chord is augmented, and every step is the same size, so there is no root to settle on. Change `mode wholetone` in the with to `mode major` and the same chart turns into D major's chords.",
-    link: null,
-    source: `pattern walk = {
-  piano: chords i ii|iii iv|v vi|i' vi|v iv|iii ii
-  hat: x-
-  snare.cross: 2 4
-  kick: 1 3
-}
-
-with key D, mode wholetone, tempo 84 { play walk }`,
-  },
+    chart: "i ii|iii iv|v vi|i' vi|v iv|iii ii",
+    says: "In D whole tone those are Daug Eaug F#aug G#aug A#aug Caug: every chord is augmented, and every step is the same size, so there is no root to settle on.",
+  }),
   {
     section: "Harmony",
     title: "Fifth of a fifth",

@@ -81,20 +81,41 @@ export const SETTING_EXAMPLE: Readonly<Record<Setting, string>> = {
 export const KITS = ["rock", "synth"] as const
 // Swing is on or off. On, the off-beat eighths fall late, as a triplet's third note does
 export const SWING = ["on", "off"] as const
-// The modes a key can be in, set on their own: set key D, set mode dorian. Major and minor
-// have one name each, so there is no ionian or aeolian.
-export const MODES = [
-  "major",
-  "minor",
-  "dorian",
-  "phrygian",
-  "lydian",
-  "mixolydian",
-  "locrian",
-  "harmonicminor",
-  "melodicminor",
-  "wholetone",
-] as const
+// What a mode is: its scale (semitones above the tonic), how far round the circle of fifths
+// its tonic sits from the major key with the same notes (D dorian has C major's notes, two
+// fifths down from D), how ABC writes it after the key's root, whether the sheet gives it a
+// minor signature, and, if its degrees skip a letter, the letter each is spelt on. Major and
+// minor have one name each, so there is no ionian or aeolian. Harmonic and melodic minor take
+// natural minor's signature, and whole tone major's, with their other notes as accidentals,
+// since none of the three is a key signature's scale. Whole tone has six degrees. A mode is
+// one entry here: the settings, the sheet, the MIDI and the completer's list follow from it.
+export type ModeInfo = {
+  scale: readonly number[]
+  fifths: number
+  abc: string
+  minor?: true
+  letters?: readonly number[]
+}
+export const MODE_TABLE = {
+  major: { scale: [0, 2, 4, 5, 7, 9, 11], fifths: 0, abc: "" },
+  minor: { scale: [0, 2, 3, 5, 7, 8, 10], fifths: 3, abc: "m", minor: true },
+  dorian: { scale: [0, 2, 3, 5, 7, 9, 10], fifths: 2, abc: " dor" },
+  phrygian: { scale: [0, 1, 3, 5, 7, 8, 10], fifths: 4, abc: " phr" },
+  lydian: { scale: [0, 2, 4, 6, 7, 9, 11], fifths: -1, abc: " lyd" },
+  mixolydian: { scale: [0, 2, 4, 5, 7, 9, 10], fifths: 1, abc: " mix" },
+  locrian: { scale: [0, 1, 3, 5, 6, 8, 10], fifths: 5, abc: " loc" },
+  harmonicminor: { scale: [0, 2, 3, 5, 7, 8, 11], fifths: 3, abc: "m", minor: true },
+  melodicminor: { scale: [0, 2, 3, 5, 7, 9, 11], fifths: 3, abc: "m", minor: true },
+  // D E F# G# A# C: the sixth is spelt as a seventh
+  wholetone: {
+    scale: [0, 2, 4, 6, 8, 10],
+    fifths: 0,
+    abc: "",
+    letters: [0, 1, 2, 3, 4, 6],
+  },
+} as const satisfies Record<string, ModeInfo>
+// The modes a key can be in, set on their own: set key D, set mode dorian
+export const MODES = Object.keys(MODE_TABLE) as (keyof typeof MODE_TABLE)[]
 // Instruments with more than one sound. Naming the instrument and a sound is a setting,
 // like kit: set guitar.electric muted. The first sound is the one it has until then.
 export const SOUNDS: Readonly<Partial<Record<Pitched, readonly string[]>>> = {

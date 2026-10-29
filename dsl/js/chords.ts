@@ -1,6 +1,10 @@
 /* Chord names and Roman numerals → voiced chords. Pure (no audio), so the parser, the
    renderer and the tests can all share it. */
 import { Chord, Note, Interval } from "tonal"
+import { MODE_TABLE, type ModeInfo } from "./vocab.ts"
+
+const modeInfo = (mode: string): ModeInfo | undefined =>
+  (MODE_TABLE as Record<string, ModeInfo>)[mode]
 
 // A key: its root and mode, where its tonic is (as a pitch class, and in semitones up from C
 // as its octave counts it), its scale, and its signature (sharps, negative for flats)
@@ -65,43 +69,11 @@ export function midiToName(m: number, flats = false): string {
 export function degreeSemitones(
   degree: number,
   acc = "",
-  scale: readonly number[] = MODE_SCALES.major,
+  scale: readonly number[] = MODE_TABLE.major.scale,
 ): number {
   return scale[degree - 1] + (acc === "#" ? 1 : acc === "b" ? -1 : 0)
 }
 
-// The modes a key can be in: semitones above the tonic. major and minor are the two common
-// ones, the next five go by their modal names, and harmonic minor, melodic minor (its
-// ascending form) and whole tone (six notes, so its degrees are 1 to 6) are scales of their own. A key is its root, and its mode a
-// setting of its own (set key E, set mode minor).
-export const MODE_SCALES: Record<string, readonly number[]> = {
-  major: [0, 2, 4, 5, 7, 9, 11],
-  minor: [0, 2, 3, 5, 7, 8, 10],
-  dorian: [0, 2, 3, 5, 7, 9, 10],
-  phrygian: [0, 1, 3, 5, 7, 8, 10],
-  lydian: [0, 2, 4, 6, 7, 9, 11],
-  mixolydian: [0, 2, 4, 5, 7, 9, 10],
-  locrian: [0, 1, 3, 5, 6, 8, 10],
-  harmonicminor: [0, 2, 3, 5, 7, 8, 11],
-  melodicminor: [0, 2, 3, 5, 7, 9, 11],
-  wholetone: [0, 2, 4, 6, 8, 10],
-}
-// How far round the circle of fifths a mode's tonic sits from the major key with the same
-// notes: D dorian has C major's notes, two fifths down from D. Harmonic and melodic minor
-// take the signature of natural minor, and whole tone of major, with their other notes as
-// accidentals, since none of the three is a key signature's scale.
-const MODE_FIFTHS: Record<string, number> = {
-  major: 0,
-  lydian: -1,
-  mixolydian: 1,
-  dorian: 2,
-  minor: 3,
-  phrygian: 4,
-  locrian: 5,
-  harmonicminor: 3,
-  melodicminor: 3,
-  wholetone: 0,
-}
 const LETTER_FIFTHS: Record<string, number> = { F: -1, C: 0, G: 1, D: 2, A: 3, E: 4, B: 5 }
 const DEGREE: Record<string, number> = { i: 0, ii: 1, iii: 2, iv: 3, v: 4, vi: 5, vii: 6 }
 const LETTER_PC: Record<string, number> = { C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, B: 11 }
@@ -112,9 +84,10 @@ const ROMAN_RE = /^([#b]?)(vii|vi|iv|v|iii|ii|i)(.*)$/
 // flats. null when the root isn't a note or the mode isn't one.
 export function parseKey(root: unknown, mode = "major"): Key | null {
   const m = /^([A-G])([#b]?)$/.exec(String(root || "").trim())
-  if (!m || !MODE_SCALES[mode]) return null
+  if (!m || !modeInfo(mode)) return null
   const [, letter, acc] = m
-  let sharps = LETTER_FIFTHS[letter] + (acc === "#" ? 7 : acc === "b" ? -7 : 0) - MODE_FIFTHS[mode]
+  let sharps =
+    LETTER_FIFTHS[letter] + (acc === "#" ? 7 : acc === "b" ? -7 : 0) - modeInfo(mode)!.fifths
   if (sharps > 7) sharps -= 12
   if (sharps < -7) sharps += 12
   return {
@@ -124,7 +97,7 @@ export function parseKey(root: unknown, mode = "major"): Key | null {
     tonicPc: NOTE_TO_PC[letter + acc],
     // Semitones from C up to the root as its octave counts it: Cb4 is just below C4, so -1
     tonicSemis: LETTER_PC[letter] + (acc === "#" ? 1 : acc === "b" ? -1 : 0),
-    scale: MODE_SCALES[mode],
+    scale: modeInfo(mode)!.scale,
     sharps,
     flats: sharps < 0,
   }
@@ -142,7 +115,7 @@ export function keySignature(key: Key): Map<string, string> {
 }
 
 // Whether a mode's signature is a minor one: A minor's, as harmonic and melodic minor have
-export const isMinorMode = (mode: string) => /minor$/.test(mode)
+export const isMinorMode = (mode: string) => !!modeInfo(mode)?.minor
 
 // Whether a key's scale has no such degree: whole tone has six, so its 7 and vii are past it
 export const pastScale = (key: Key, degree: number) => degree > key.scale.length
@@ -152,19 +125,7 @@ export const pastScaleMessage = (key: Key) =>
   `${key.mode} has ${key.scale.length} degrees, 1 to ${key.scale.length}: there is no 7 or vii in it`
 
 // The key as ABC writes it in its K: field: D, Am, D dor.
-export function abcKey(key: Key): string {
-  const short: Record<string, string> = {
-    dorian: " dor",
-    phrygian: " phr",
-    lydian: " lyd",
-    mixolydian: " mix",
-    locrian: " loc",
-    minor: "m",
-    harmonicminor: "m",
-    melodicminor: "m",
-  }
-  return key.root + (short[key.mode] || "")
-}
+export const abcKey = (key: Key) => key.root + modeInfo(key.mode)!.abc
 
 // Strict check: a numeral plus chord-suffix characters only, so words like "intro" or
 // "vibe" aren't mistaken for i and vi chords.
@@ -198,7 +159,7 @@ export function degreePc(key: Key, degree: number, acc = ""): number {
 // How many letters up from the key's root a degree's name is: one a degree, except in whole
 // tone, whose 6th is spelt as a 7th (D E F# G# A# C, not B#)
 export const letterStep = (key: Key, degree: number) =>
-  key.mode === "wholetone" && degree === 6 ? 6 : degree - 1
+  modeInfo(key.mode)?.letters?.[degree - 1] ?? degree - 1
 
 // A degree's name: the letter of its place in the scale, counted from the key's root, raised
 // or lowered to its pitch. So #7 in G minor is F#, not Gb, the 3rd of C# major is E#, and
