@@ -6,7 +6,7 @@
 import { describe, it, expect } from "vitest"
 import { readFileSync } from "node:fs"
 import { KEYWORDS } from "../../js/language.ts"
-import { KITS, PARTS, SETTINGS, SOUNDS, SWING, TYPES } from "../../js/vocab.ts"
+import { KITS, MODES, PARTS, SETTINGS, SOUNDS, SWING, TYPES } from "../../js/vocab.ts"
 
 const grammar = JSON.parse(
   readFileSync(new URL("../../../docs/languages/composer-nb.json", import.meta.url), "utf8"),
@@ -43,4 +43,20 @@ describe("the docs grammar knows every word", () => {
   it("swing on and off", () => {
     for (const v of SWING) expect(captured("value", `set swing ${v}`, 0), v).toBe(v)
   })
+})
+
+describe("every prose list of the modes has them all", () => {
+  // These are written by hand, so a mode missing from one is caught here
+  const files = [
+    "docs/pitched/key.mdx",
+    "docs/pitched/instruments.mdx",
+    "dsl/README.md",
+    "mcp/src/instructions.ts",
+  ]
+  for (const file of files) {
+    it(file, () => {
+      const text = readFileSync(new URL(`../../../${file}`, import.meta.url), "utf8")
+      for (const mode of MODES) expect(text, mode).toContain(mode)
+    })
+  }
 })

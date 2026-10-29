@@ -19,7 +19,7 @@ def texts(cell, songs=None):
 
 @pytest.mark.parametrize(
     "name",
-    ["DRUMS", "VARIATIONS", "SPLIT", "PITCHED", "SETTINGS", "TYPES", "KITS", "SWING", "MODES", "UNITS"],
+    ["DRUMS", "VARIATIONS", "SPLIT", "PITCHED", "SETTINGS", "TYPES", "KITS", "SWING", "UNITS"],
 )
 def test_words_match_the_language(name):
     # One line, or an object or a list over several lines up to its closing bracket, after
@@ -31,6 +31,12 @@ def test_words_match_the_language(name):
     )
     literal = re.sub(r",(\s*[}\]])", r"\1", found.group(1))  # no trailing commas in JSON
     assert getattr(completer, name) == json.loads(re.sub(r"(\w+):", r'"\1":', literal))
+
+
+def test_modes_match_the_language():
+    # The modes are the keys of the table in vocab.ts: one entry each, at two spaces' indent
+    table = re.search(r"^export const MODE_TABLE = \{\n(.*?)^\}", VOCAB_TS.read_text(), re.M | re.S)
+    assert completer.MODES == re.findall(r"^  (\w+): \{", table.group(1), re.M)
 
 
 def test_every_type_declares_a_name():
