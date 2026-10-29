@@ -119,8 +119,8 @@ export default function App({ host = null }: { host?: Host | null }) {
         return
       }
       hostRef.current?.onRun?.(cells.map(({ type, source }) => ({ type, source })))
-      // A cell that is playing keeps playing from where it was once its new audio is
-      // ready, so a groove can be edited while it runs
+      // Running a cell starts it over: a cell that is playing plays its new audio from the
+      // start, as the first run of it would
       setKernelStatus("busy")
       setActiveCellId(id)
       updateCell(id, { status: "running", output: null })
