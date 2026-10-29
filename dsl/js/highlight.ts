@@ -8,19 +8,9 @@
      .tk-note (a note on a pitched line),
      .tk-error
    Whitespace is kept exactly, so the layer lines up with the textarea under it. */
-import {
-  KEYWORDS,
-  LANES,
-  MODES,
-  PARTS,
-  PITCHED,
-  SETTINGS,
-  SWING,
-  TYPES,
-  UNITS,
-} from "./language.ts"
+import { KEYWORDS, LANES, PARTS, PITCHED, SETTINGS, SWING, TYPES, UNITS } from "./language.ts"
 import { chordParts, isRoman, parseKey } from "./chords.ts"
-import { among, soundsOf } from "./vocab.ts"
+import { among, modeNamed, soundsOf } from "./vocab.ts"
 
 // A run of a line's text, and the class it's coloured with (null for none)
 export type Part = { c: string | null; s: string }
@@ -422,7 +412,8 @@ function setting(text: string, bare = false): Part[] {
   if ((word === "key" || word === "mode" || word === "swing") && /^\s/.test(after)) {
     // a key is a note, a mode one of the modes, and swing on or off
     const m = /^(\s+)([\s\S]*?)(\s*)$/.exec(after)!
-    const ok = word === "key" ? parseKey(m[2]) : among(word === "mode" ? MODES : SWING, m[2])
+    const ok =
+      word === "key" ? parseKey(m[2]) : word === "mode" ? modeNamed(m[2]) : among(SWING, m[2])
     return [
       name,
       part(null, m[1]),

@@ -116,6 +116,8 @@ export const MODE_TABLE = {
 } as const satisfies Record<string, ModeInfo>
 // The modes a key can be in, set on their own: set key D, set mode dorian
 export const MODES = Object.keys(MODE_TABLE) as (keyof typeof MODE_TABLE)[]
+// The mode a word names: the mode itself, or its name all in lowercase (harmonicminor), for now
+export const modeNamed = (word: string) => MODES.find((m) => m === word || m.toLowerCase() === word)
 // Instruments with more than one sound. Naming the instrument and a sound is a setting,
 // like kit: set guitar.electric muted. The first sound is the one it has until then.
 export const SOUNDS: Readonly<Partial<Record<Pitched, readonly string[]>>> = {
