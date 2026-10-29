@@ -6,7 +6,7 @@ const { parseSource } = await import("../../js/music-engine.ts")
 
 const pitchClasses = (chord) =>
   chord.notesMidi.map((m) => ((m % 12) + 12) % 12).sort((a, b) => a - b)
-const firstError = (src, inherited) => parseSource(src, inherited).errors[0]?.msg
+const firstError = (src, inherited?) => parseSource(src, inherited).errors[0]?.msg
 
 describe("transpose", () => {
   it("moves a chord's sound and keeps its name, as a capo does a guitar's shape", () => {

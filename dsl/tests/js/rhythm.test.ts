@@ -6,7 +6,7 @@ const { parseSource } = await import("../../js/music-engine.ts")
 
 const play = (chords) => parseSource(`play piano: chords ${chords}`)
 // Chord lengths in beats (quarter notes).
-const beats = (chords) => play(chords).chords.map((e) => e.secDur * 2)
+const beats = (chords) => play(chords).chords.map((e) => e.secDur! * 2)
 const labels = (chords) => play(chords).chords.map((e) => e.label)
 
 describe("chord rhythm", () => {
@@ -26,7 +26,7 @@ describe("chord rhythm", () => {
   it("_ is silence", () => {
     const { chords } = play("C _ G _")
     expect(chords.map((e) => e.secStart * 2)).toEqual([0, 2])
-    expect(chords.map((e) => e.secDur * 2)).toEqual([1, 1])
+    expect(chords.map((e) => e.secDur! * 2)).toEqual([1, 1])
   })
 
   it("% repeats the bar before", () => {

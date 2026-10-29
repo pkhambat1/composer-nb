@@ -4,7 +4,8 @@ import { describe, it, expect } from "vitest"
 import { parseCell } from "../../js/language.ts"
 import { Lexer } from "../../js/lexer.ts"
 import { Parser } from "../../js/parser.ts"
-import { GROUPS, realCells } from "./real-cells.js"
+import type { Block, Text } from "../../js/syntax.ts"
+import { GROUPS, realCells } from "./real-cells.ts"
 
 // Every statement in a cell, inside blocks too
 function* walk(statements) {
@@ -88,14 +89,18 @@ describe("the parser", () => {
       "play (groove {...} )",
     ])
     const [, , , groove] = Parser.parse(src).statements
-    expect(groove.value.parts[1].statements.map((s) => s.kind)).toEqual(["track", "place", "pace"])
+    expect((groove.value.parts[1] as Block).statements.map((s) => s.kind)).toEqual([
+      "track",
+      "place",
+      "pace",
+    ])
   })
 
   it("reads a line that starts with | as the end of the line above", () => {
     expect(shape("play {\n  hat: x-x- x-x-\n  | xxxx xxxx\n}")).toEqual(["play {...}"])
     const [play] = Parser.parse("play {\n  hat: x-x- x-x-\n  | xxxx xxxx\n}").statements
-    const [hat] = play.value.parts[0].statements
-    expect(hat.value.parts[0].text).toBe("x-x- x-x-\n  | xxxx xxxx")
+    const [hat] = (play.value.parts[0] as Block).statements
+    expect((hat.value.parts[0] as Text).text).toBe("x-x- x-x-\n  | xxxx xxxx")
   })
 
   it("reads a group in brackets to its ), whatever lines it takes, and a block's lines in it", () => {
@@ -103,7 +108,7 @@ describe("the parser", () => {
     const [play] = Parser.parse(src).statements
     expect(play.kind).toBe("play")
     const block = play.value.parts.find((p) => p.kind === "block")
-    expect(block.statements.map((s) => s.kind)).toEqual(["track", "track"])
+    expect(block!.statements.map((s) => s.kind)).toEqual(["track", "track"])
   })
 
   it("leaves comments out", () => {

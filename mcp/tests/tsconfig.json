@@ -1,0 +1,7 @@
+{
+  // The server's tests, checked as the server is, except that a callback's parameter needs no
+  // type of its own.
+  "extends": "../tsconfig.json",
+  "compilerOptions": { "noImplicitAny": false, "allowImportingTsExtensions": true },
+  "include": ["../src", "."]
+}

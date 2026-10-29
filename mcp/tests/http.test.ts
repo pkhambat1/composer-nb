@@ -28,7 +28,7 @@ describe("over http", () => {
     const { tools } = await client.listTools()
     expect(tools.length).toBe(4)
     const r = await client.callTool({ name: "library", arguments: { query: "paradiddle" } })
-    expect(r.content[0].text).toContain(
+    expect((r.content as { text: string }[])[0].text).toContain(
       `http://localhost:${server.address().port}/grooves/gavin-harrison-s-paradiddle-challenge/`,
     )
     await client.close()

@@ -3,21 +3,28 @@
 import { readFileSync } from "node:fs"
 import { describe, it, expect } from "vitest"
 import { fingerprint, refreshStarters } from "../src/shared/starters.ts"
+import type { Notebook, SavedCell } from "../src/shared/types.ts"
 
 // The welcome notebook's cells as they first shipped, before notebooks were marked
 const FIRST = JSON.parse(
   readFileSync(new URL("./fixtures/welcome-2026-10-10.json", import.meta.url), "utf8"),
 )
 
-const OLD = [
+const OLD: SavedCell[] = [
   { type: "text", source: "# A music notebook" },
   { type: "music", source: "play { kick: x--- }" },
 ]
-const NEW = [
+const NEW: SavedCell[] = [
   { type: "text", source: "# A music notebook" },
   { type: "music", source: "time 4 over 4\nplay { kick: x--- }" },
 ]
-const welcome = (cells, starters) => ({ id: "n1", title: "Welcome", cells, starters, updated: 5 })
+const welcome = (cells: SavedCell[], starters?: string): Notebook => ({
+  id: "n1",
+  title: "Welcome",
+  cells,
+  starters,
+  updated: 5,
+})
 
 describe("fingerprint", () => {
   it("doesn't change, or every notebook made so far is forgotten", () => {
@@ -44,7 +51,7 @@ describe("refreshStarters", () => {
   })
 
   it("leaves a starter notebook that has been changed", () => {
-    const changed = [OLD[0], { type: "music", source: "play { snare: x--- }" }]
+    const changed: SavedCell[] = [OLD[0], { type: "music", source: "play { snare: x--- }" }]
     const store = { current: "n1", list: [welcome(changed, fingerprint(OLD))] }
     expect(refreshStarters(store, NEW)).toBe(store)
   })

@@ -170,7 +170,7 @@ The docs site is built by [Mintlify](https://mintlify.com) from the [`docs/`](do
 
 Mintlify publishes every `.md` and `.mdx` file in `docs/`, whether or not it is in the navigation. Folders that aren't pages are listed in [`docs/.mintignore`](docs/.mintignore).
 
-The `composer-nb` examples in the pages are parsed by `npm test` ([`dsl/tests/js/docs.test.js`](dsl/tests/js/docs.test.js)), so a page that falls behind the language fails CI.
+The `composer-nb` examples in the pages are parsed by `npm test` ([`dsl/tests/js/docs.test.ts`](dsl/tests/js/docs.test.ts)), so a page that falls behind the language fails CI.
 
 ## Releasing the playground
 

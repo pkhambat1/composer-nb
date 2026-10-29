@@ -31,7 +31,7 @@ describe("the docs grammar knows every word", () => {
   })
 
   it("every keyword that isn't a type", () => {
-    for (const word of KEYWORDS.filter((w) => !TYPES.includes(w))) {
+    for (const word of KEYWORDS.filter((w) => !(TYPES as readonly string[]).includes(w))) {
       expect(captured("keyword", word, 0), word).toBe(word)
     }
   })

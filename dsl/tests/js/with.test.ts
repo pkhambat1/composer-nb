@@ -8,7 +8,7 @@ const { parseSource } = await import("../../js/music-engine.ts")
 const { sheetAbc } = await import("../../js/sheet.ts")
 const { initialState } = await import("../../js/language.ts")
 
-const clean = (src, inherited) => {
+const clean = (src, inherited?) => {
   const p = parseSource(src, inherited)
   expect(p.errors).toEqual([])
   return p
@@ -45,7 +45,9 @@ describe("a key and its mode", () => {
     const cell =
       "play piano: {\n  chords i iii|vii iv\n  notes 3-------6-------|7-------1'-------\n}"
     const sounds = (mode) =>
-      clean(`set key D\nset mode ${mode}\n${cell}`).events.map((e) => e.note?.name ?? e.chord.label)
+      clean(`set key D\nset mode ${mode}\n${cell}`).events.map(
+        (e) => (e as any).note?.name ?? (e as any).chord.label,
+      )
     expect(sounds("minor")).toEqual(["Dm", "F3", "F", "Bb3", "C", "C4", "Gm", "D4"])
     expect(sounds("dorian")).toEqual(["Dm", "F3", "F", "B3", "C", "C4", "G", "D4"])
     expect(sounds("major")).toEqual(["D", "F#3", "F#m", "B3", "C#dim", "C#4", "G", "D4"])

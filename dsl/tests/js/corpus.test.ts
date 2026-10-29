@@ -7,7 +7,7 @@
    with `npx vitest run -u` and read the diff. */
 import { describe, it, expect } from "vitest"
 import { parseCell } from "../../js/language.ts"
-import { realCells } from "./real-cells.js"
+import { realCells } from "./real-cells.ts"
 
 // Times to four places, so float noise doesn't count as a change.
 const num = (n) => String(+n.toFixed(4))
@@ -34,8 +34,8 @@ const BLOCK = ["startSec", "durSec", "bars", "time", "tempo", "key", "unit", "ba
 function cellText(title, parsed) {
   const { state } = parsed
   const names = [
-    ...Object.entries(state.words).map(([n, w]) => `${n} ${w.type} line ${w.line}`),
-    ...Object.entries(state.sections).map(([n, s]) => `${n} pattern line ${s.ln}`),
+    ...Object.entries(state.words).map(([n, w]: [string, any]) => `${n} ${w.type} line ${w.line}`),
+    ...Object.entries(state.sections).map(([n, s]: [string, any]) => `${n} pattern line ${s.ln}`),
   ]
   const out = [`## ${title}`]
   out.push(`errors: ${parsed.errors.length ? "" : "none"}`)

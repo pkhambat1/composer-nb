@@ -90,7 +90,7 @@
   "scripts": {
     "build": "tsc -p . && vite build && vite build --mode npm",
     "build:lib": "tsc -p .",
-    "typecheck": "tsc -p . --noEmit",
+    "typecheck": "tsc -p . --noEmit && tsc -p tests",
     "prepack": "npm run build",
     "test": "vitest run",
     "test:watch": "vitest"
