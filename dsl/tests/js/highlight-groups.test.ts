@@ -67,9 +67,9 @@ describe("a second thing outside brackets", () => {
 
   it("still paints what a block holds as it would be painted", () => {
     const line = highlightMusic("play intro { snare: xxxx }")[0]
-    expect(line.find((p) => p.s === "snare").c).toBe("tk-inst")
+    expect(line.find((p) => p.s === "snare")!.c).toBe("tk-inst")
     expect(line.filter((p) => p.s === "x").every((p) => p.c === "tk-step")).toBe(true)
-    expect(line.find((p) => p.s === "}").c).toBe("tk-punct")
+    expect(line.find((p) => p.s === "}")!.c).toBe("tk-punct")
   })
 })
 

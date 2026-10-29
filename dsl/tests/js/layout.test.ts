@@ -2,7 +2,7 @@
    ( that runs over lines, no blocks side by side on a line that goes on, one space after a
    colon, no lined-up columns, no trailing spaces and never two blank lines. */
 import { describe, it, expect } from "vitest"
-import { realCells } from "./real-cells.js"
+import { realCells } from "./real-cells.ts"
 
 // What each setting is until a cell sets it, which no cell says again
 const DEFAULTS = {
@@ -17,7 +17,7 @@ const DEFAULTS = {
 }
 
 function problems(source) {
-  const out = []
+  const out: any[] = []
   source.split("\n").forEach((line, i) => {
     const code = line.replace(/\/\/.*/, "")
     const at = `line ${i + 1}`
@@ -31,7 +31,7 @@ function problems(source) {
       out.push(`${at}: ${code} sets what is already the default`)
     if (/^\s*[a-z][\w.]*:\S/.test(code)) out.push(`${at}: one space after the colon`)
     if (/\S {2,}\S/.test(code)) out.push(`${at}: one space between words, no columns`)
-    if (/^ */.exec(line)[0].length % 2) out.push(`${at}: two spaces a level`)
+    if (/^ */.exec(line)![0].length % 2) out.push(`${at}: two spaces a level`)
   })
   if (/\n\s*\n\s*\n/.test(source)) out.push("never two blank lines")
   return out

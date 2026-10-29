@@ -15,7 +15,7 @@ import type { SavedCell, Theme } from "../../playground/src/shared/types.ts"
 import playgroundCss from "../../playground/src/styles/app.css?inline"
 import themeCss from "./theme.css?inline"
 
-// The package's version, which Vite writes in (app/vite.config.js)
+// The package's version, which Vite writes in (app/vite.config.ts)
 declare const __VERSION__: string
 
 const style = document.createElement("style")

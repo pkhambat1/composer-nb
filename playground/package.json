@@ -9,7 +9,7 @@
     "build": "vite build && node --conditions=composer-nb-source scripts/grooves.ts",
     "preview": "vite preview",
     "test": "vitest run",
-    "typecheck": "tsc -p ."
+    "typecheck": "tsc -p . && tsc -p tests"
   },
   "dependencies": {
     "abcjs": "^6.7.1",

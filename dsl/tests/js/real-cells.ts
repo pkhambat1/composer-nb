@@ -6,14 +6,14 @@ import { readdirSync, readFileSync } from "node:fs"
 import { fileURLToPath } from "node:url"
 import { initialState, parseCell } from "../../js/language.ts"
 import { GROOVES } from "../../js/grooves.ts"
-import { examples, pages, read, readMagic } from "./docs-examples.js"
+import { examples, pages, read, readMagic } from "./docs-examples.ts"
 
 const SKILLS = fileURLToPath(new URL("../../../plugin/skills", import.meta.url))
 
 // [{ title, source, inherited }] for one group
 export function realCells(group) {
   if (group === "docs") {
-    const cells = []
+    const cells: any[] = []
     for (const page of pages) {
       const named = {}
       for (const block of examples(read(page))) {
@@ -29,7 +29,7 @@ export function realCells(group) {
     return GROOVES.map((g) => ({ title: g.title, source: g.source, inherited: initialState() }))
   }
   if (group === "skills") {
-    const cells = []
+    const cells: any[] = []
     for (const skill of readdirSync(SKILLS).sort()) {
       const text = readFileSync(`${SKILLS}/${skill}/SKILL.md`, "utf8")
       const blocks = [...text.matchAll(/^```composer-nb\n([\s\S]*?)\n```/gm)].map((m) => m[1])

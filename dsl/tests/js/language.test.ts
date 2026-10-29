@@ -1535,7 +1535,7 @@ describe("what plays in a bar", () => {
 
   it("takes braces, one line, a name, or a run of bars: bar 2 to 3", () => {
     const want = played(play(TWO, "bar 2 { snare: x }"))
-    expect(want[0][1].filter((e) => e.startsWith("snare"))).toHaveLength(16)
+    expect((want[0][1] as string[]).filter((e) => e.startsWith("snare"))).toHaveLength(16)
     expect(played(play(TWO, "bar 2 snare: x"))).toEqual(want)
     expect(played("pattern fill = { snare: x }\n" + play(TWO, "bar 2 fill"))).toEqual(want)
     expect(played(play(TWO, "bar 1+1 snare: x"))).toEqual(want)
@@ -1945,7 +1945,7 @@ describe("notes", () => {
   const heard = (src) => {
     const p = parseSource(src)
     expect(p.errors).toEqual([])
-    return p.notes.map((e) => [e.note.name, e.secStart / 0.125, e.secDur / 0.125])
+    return p.notes.map((e) => [e.note.name, e.secStart / 0.125, e.secDur! / 0.125])
   }
 
   it("are drawn on the steps, a note where a drum has its x", () => {

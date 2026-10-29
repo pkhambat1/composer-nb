@@ -5,13 +5,13 @@ vi.mock("tone", () => ({}))
 const { parseSource } = await import("../../js/music-engine.ts")
 const { sheetAbc } = await import("../../js/sheet.ts")
 
-const sheet = (src, opts) => {
+const sheet = (src, opts?) => {
   const p = parseSource(src)
   expect(p.errors).toEqual([])
   return sheetAbc(p.outputs[0].blocks[0], opts)
 }
 // The voice lines of the first block's ABC.
-const voices = (src, opts) =>
+const voices = (src, opts?) =>
   sheet(src, opts)
     .abc.split("\n")
     .filter((l) => l.startsWith("[V:") || l.startsWith("w:"))

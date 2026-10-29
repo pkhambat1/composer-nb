@@ -15,10 +15,10 @@ describe("lookupPosition", () => {
     expect(pos).toBeTruthy()
     // Compute pitch classes from frets + standard tuning. baseFret offsets fretted notes.
     const tuning = [40, 45, 50, 55, 59, 64] // E A D G B e
-    const pcs = new Set()
-    pos.frets.forEach((f, i) => {
+    const pcs = new Set<any>()
+    pos!.frets.forEach((f, i) => {
       if (f < 0) return
-      const abs = f > 0 ? f + (pos.baseFret || 1) - 1 : 0
+      const abs = f > 0 ? f + (pos!.baseFret || 1) - 1 : 0
       pcs.add((tuning[i] + abs) % 12)
     })
     // C9 must contain Bb (pc 10). The pre-fix code returned the open
@@ -38,7 +38,7 @@ describe("lookupPosition", () => {
     expect(pos).toBeTruthy()
     // x32030 has fret 2 on the D string (4th string from low, index 2);
     // x30030 leaves it open. The canonical Cadd9 voices E (3rd) there.
-    expect(pos.frets).toEqual([-1, 3, 2, 0, 3, 0])
+    expect(pos!.frets).toEqual([-1, 3, 2, 0, 3, 0])
   })
 })
 

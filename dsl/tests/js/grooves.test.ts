@@ -1,4 +1,5 @@
 import { describe, it, expect, vi } from "vitest"
+import type { State } from "../../js/state.ts"
 
 vi.mock("tone", () => ({}))
 
@@ -14,16 +15,16 @@ const plays = (r) => JSON.stringify({ events: r.events, drums: r.drumEvents, tot
 // them. Swing is off unless it's set, so the swung ones come last.
 describe("a starter plays the same after the starters above it", () => {
   const alone = new Map(GROOVES.map((g) => [g.title, parseSource(g.source, initialState())]))
-  const after = GROOVES.map((g) => [g.title, alone.get(g.title).state])
+  const after = GROOVES.map((g) => [g.title, alone.get(g.title)!.state])
 
   GROOVES.forEach((g, i) => {
     it(g.title, () => {
-      expect(alone.get(g.title).errors).toEqual([])
+      expect(alone.get(g.title)!.errors).toEqual([])
       const own = plays(alone.get(g.title))
       const wrong = after
         .slice(0, i)
         .map(([t, st]) => {
-          const r = parseSource(g.source, st)
+          const r = parseSource(g.source, st as State)
           if (r.errors.length) return `after ${t}: line ${r.errors[0].line} ${r.errors[0].msg}`
           return plays(r) === own ? null : `after ${t}: plays differently`
         })

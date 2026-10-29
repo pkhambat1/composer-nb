@@ -8,7 +8,7 @@ import { existsSync, readFileSync } from "node:fs"
 import { join } from "node:path"
 import { initialState, LANES, parseCell, PITCHED } from "../../js/language.ts"
 import { highlightMusic } from "../../js/highlight.ts"
-import { DOCS, examples, pages, read, readMagic } from "./docs-examples.js"
+import { DOCS, examples, pages, read, readMagic } from "./docs-examples.ts"
 
 describe("docs examples", () => {
   it("finds the pages", () => {
@@ -33,7 +33,7 @@ describe("docs examples", () => {
         if (!block.invalid) {
           const painted = highlightMusic(body)
             .map((parts, i) => [i + 1, parts.filter((p) => p.c === "tk-error").map((p) => p.s)])
-            .filter(([, marked]) => marked.length)
+            .filter(([, marked]) => (marked as any).length)
           expect(painted, `${page}:${block.line} is coloured as a mistake`).toEqual([])
         }
         if (name) cells[name] = parsed.state
@@ -91,7 +91,7 @@ describe("docs site", () => {
   for (const page of pages) {
     it(`${page} links to pages, headings and images that exist`, () => {
       const text = read(page)
-      const broken = []
+      const broken: any[] = []
       for (const [, path, hash] of text.matchAll(/\]\((\/[^)#\s]*)?(?:#([^)\s]+))?\)/g)) {
         if (!path && !hash) continue
         const target = path || address(page)

@@ -6,7 +6,7 @@ import { fileURLToPath } from "node:url"
 
 export const DOCS = fileURLToPath(new URL("../../../docs", import.meta.url))
 // Design notes sit beside the pages but aren't published (see docs/.mintignore).
-export const pages = readdirSync(DOCS, { recursive: true })
+export const pages = (readdirSync(DOCS, { recursive: true, encoding: "utf8" }) as string[])
   .filter((f) => f.endsWith(".mdx") && !f.startsWith("superpowers"))
   .sort()
 export const read = (file) => readFileSync(join(DOCS, file), "utf8")
@@ -14,7 +14,7 @@ export const read = (file) => readFileSync(join(DOCS, file), "utf8")
 // The composer-nb blocks on a page: each one's source, the line it starts on, and whether
 // it's titled Invalid. A block inside a list is indented, and so is its closing fence.
 export function examples(text) {
-  const found = []
+  const found: any[] = []
   const fence = /^([ \t]*)```composer-nb([^\n]*)\n([\s\S]*?)\n\1```/gm
   for (const m of text.matchAll(fence)) {
     found.push({

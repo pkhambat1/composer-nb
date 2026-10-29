@@ -23,7 +23,7 @@ const painted = (src, word) =>
 
 describe("a cell that is half typed", () => {
   it("is coloured, and its text kept, whichever character is missing", () => {
-    const broken = []
+    const broken: any[] = []
     for (const { title, source } of GROOVES) {
       for (let i = 0; i < source.length; i++) {
         const cut = source.slice(0, i) + source.slice(i + 1)
@@ -31,7 +31,7 @@ describe("a cell that is half typed", () => {
           if (text(cut) !== cut) broken.push(`${title}: lost text without character ${i}`)
         } catch (e) {
           broken.push(
-            `${title}: ${e.message} without character ${i} (${JSON.stringify(cut.slice(Math.max(0, i - 12), i + 12))})`,
+            `${title}: ${(e as Error).message} without character ${i} (${JSON.stringify(cut.slice(Math.max(0, i - 12), i + 12))})`,
           )
         }
       }
@@ -40,7 +40,7 @@ describe("a cell that is half typed", () => {
   })
 
   it("is coloured, and its text kept, with a break or a carriage return in the way", () => {
-    const broken = []
+    const broken: any[] = []
     for (const { title, source } of GROOVES) {
       for (let i = 0; i < source.length; i += 3) {
         for (const mark of ["\r", "\n", "{", "}", "("]) {
@@ -48,7 +48,7 @@ describe("a cell that is half typed", () => {
           try {
             if (text(cut) !== cut) broken.push(`${title}: lost text at ${i}`)
           } catch (e) {
-            broken.push(`${title}: ${e.message} at ${i} for ${JSON.stringify(mark)}`)
+            broken.push(`${title}: ${(e as Error).message} at ${i} for ${JSON.stringify(mark)}`)
           }
         }
       }

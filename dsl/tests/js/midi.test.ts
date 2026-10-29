@@ -15,7 +15,7 @@ const be16 = (b, i) => (b[i] << 8) | b[i + 1]
 
 // Splits the file into its chunks: [{ id, body }]
 function chunks(bytes) {
-  const out = []
+  const out: any[] = []
   let i = 0
   while (i < bytes.length) {
     const id = text(bytes, i, 4)
@@ -27,7 +27,7 @@ function chunks(bytes) {
 }
 // The events of a track as [delta, status, data...], reading the delta-times
 function events(body) {
-  const out = []
+  const out: any[] = []
   let i = 0
   while (i < body.length) {
     let delta = 0

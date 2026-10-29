@@ -9,7 +9,7 @@ const { parseSource } = await import("../../js/music-engine.ts")
 const { highlightMusic } = await import("../../js/highlight.ts")
 
 const C = parseKey("C")
-const notes = (t) => buildChord(t, C).noteNames.map((n) => n.replace(/\d+$/, ""))
+const notes = (t) => buildChord(t, C)!.noteNames.map((n) => n.replace(/\d+$/, ""))
 const painted = (src) =>
   highlightMusic(src)
     .flat()
@@ -20,16 +20,16 @@ describe("6/9", () => {
   it("is a 6 chord with the 9th added, major or minor", () => {
     expect(notes("C6/9")).toEqual(["C", "E", "G", "A", "D"])
     expect(notes("Cm6/9")).toEqual(["C", "Eb", "G", "A", "D"])
-    expect(buildChord("Cm6/9", C).label).toBe("Cm6/9")
+    expect(buildChord("Cm6/9", C)!.label).toBe("Cm6/9")
   })
 
   it("takes a numeral, and a bass after it", () => {
-    expect(buildChord("i6/9", C).label).toBe("C6/9")
-    expect(buildChord("vi6/9", C).label).toBe("Am6/9")
-    expect(buildChord("bvii6/9", C).label).toBe("Bb6/9")
+    expect(buildChord("i6/9", C)!.label).toBe("C6/9")
+    expect(buildChord("vi6/9", C)!.label).toBe("Am6/9")
+    expect(buildChord("bvii6/9", C)!.label).toBe("Bb6/9")
     expect(isRoman("i6/9")).toBe(true)
     const over = buildChord("C6/9/E", C)
-    expect([over.label, over.bassName]).toEqual(["C6/9/E", "E2"])
+    expect([over!.label, over!.bassName]).toEqual(["C6/9/E", "E2"])
     const p = parseSource("set key C\nplay piano: chords i6/9 vi6/9|v of i6/9 i6/9 of v")
     expect(p.errors).toEqual([])
     expect(p.chords.map((e) => e.chord.label)).toEqual(["C6/9", "Am6/9", "G", "G6/9"])
