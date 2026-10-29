@@ -99,8 +99,6 @@ export const MESSAGES = {
     "In a chart, of takes a numeral in front of it, counted from the chord after it: V7 of V",
   "of.openBracket": () => "The ( after of closes on its line: V7 of (V of V)",
   "of.chainBrackets": () => "A chain of of's takes brackets: V7 of (V of V)",
-  "of.rightNumeral": () => "After of, a chart takes a numeral to count from: V7 of V",
-  "of.rightName": () => "After of, a chart takes a numeral, not a chord name: V7 of V",
   "chord.unknown": ({ chord }: { chord: string }) => `"${chord}" isn't a chord I know`,
 } as const
 

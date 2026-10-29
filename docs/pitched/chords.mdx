@@ -23,7 +23,7 @@ play guitar: chords C - - G|Am - F G|%|F - _ -
 | --- | --- |
 | A chord symbol | Starts the chord. |
 | A Roman numeral | Starts the chord on that degree of the [`key`](/pitched/key). |
-| A numeral `of` a numeral | Starts the chord on that degree of another chord's root: [`v7 of v`](#counting-from-a-chord). |
+| A numeral `of` a chord | Starts the chord on that degree of another chord's root, a numeral or a name: [`v7 of v`](#counting-from-a-chord). |
 | `-` | Holds the chord. |
 | `_` | Silence. |
 | `%` | Repeats the bar before. It stands alone in its bar. |
@@ -62,7 +62,7 @@ The first plays Dm Em F G Am Bdim C Dm, the second Dm Edim F Gm Am Bb C Dm, and 
 
 ## Counting from a chord
 
-`of` counts a numeral from another chord's root instead of from the key's: `v7 of v` is the `v7` built on the key's `v`, a secondary dominant. The numeral counts on the major scale of that root, so in C, `v7 of v` is `D7` and `ii7 of iv` is `Gm7`. After `of` goes a numeral of the key. Only its root counts, so `v of ii` is the same as `v of vii`. A bass note goes at the end: `v7 of v/F#`.
+`of` counts a numeral from another chord's root instead of from the key's: `v7 of v` is the `v7` built on the key's `v`, a secondary dominant. The numeral counts on the major scale of that root, so in C, `v7 of v` is `D7` and `ii7 of iv` is `Gm7`. After `of` goes any chord, a numeral of the key or a name of any type: `v of Am` is `E`, and `v7 of Cmaj7` is `D7`. Only its root counts, so `v of Am` is the same as `v of Am7`. A bass note goes at the end: `v7 of v/F#`.
 
 To count from a chord that is itself counted with `of`, put it in brackets, as with notes. `v7 of (v of v)` is the `v7` of D, which is `A7`.
 
