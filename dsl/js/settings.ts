@@ -125,12 +125,8 @@ export function applySetting(
     // The key's scale: degrees and numerals count on it, so in D minor 3 is F and III is F
     // major. It also gives the sheet its signature and how accidentals are spelt.
     if (!among(MODES, value)) {
-      err(
-        ln,
-        among(MODES, value.toLowerCase())
-          ? message("mode.lowercase", { verb, mode: value.toLowerCase() })
-          : message("mode.unknown"),
-      )
+      const found = MODES.find((m) => m.toLowerCase() === value.toLowerCase())
+      err(ln, found ? message("mode.camelCase", { verb, mode: found }) : message("mode.unknown"))
       return false
     }
     state.mode = value

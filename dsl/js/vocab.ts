@@ -104,10 +104,10 @@ export const MODE_TABLE = {
   lydian: { scale: [0, 2, 4, 6, 7, 9, 11], fifths: -1, abc: " lyd" },
   mixolydian: { scale: [0, 2, 4, 5, 7, 9, 10], fifths: 1, abc: " mix" },
   locrian: { scale: [0, 1, 3, 5, 6, 8, 10], fifths: 5, abc: " loc" },
-  harmonicminor: { scale: [0, 2, 3, 5, 7, 8, 11], fifths: 3, abc: "m", minor: true },
-  melodicminor: { scale: [0, 2, 3, 5, 7, 9, 11], fifths: 3, abc: "m", minor: true },
+  harmonicMinor: { scale: [0, 2, 3, 5, 7, 8, 11], fifths: 3, abc: "m", minor: true },
+  melodicMinor: { scale: [0, 2, 3, 5, 7, 9, 11], fifths: 3, abc: "m", minor: true },
   // D E F# G# A# C: the sixth is spelt as a seventh
-  wholetone: {
+  wholeTone: {
     scale: [0, 2, 4, 6, 8, 10],
     fifths: 0,
     abc: "",
