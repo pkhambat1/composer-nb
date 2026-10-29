@@ -197,6 +197,20 @@ describe("the key signature", () => {
     expect(keyLine("set key D\nset mode dorian\nplay piano: notes C4---")).toBe("K:D dor")
     expect(keyLine("set key G\nset mode mixolydian\nplay piano: notes C4---")).toBe("K:G mix")
     expect(keyLine("set key A\nset mode minor\nplay piano: notes C4---")).toBe("K:Am")
+    // harmonic and melodic minor take natural minor's signature, whole tone major's
+    expect(keyLine("set key D\nset mode harmonicminor\nplay piano: notes C4---")).toBe("K:Dm")
+    expect(keyLine("set key D\nset mode melodicminor\nplay piano: notes C4---")).toBe("K:Dm")
+    expect(keyLine("set key D\nset mode wholetone\nplay piano: notes C4---")).toBe("K:D")
+  })
+  it("writes the raised notes of harmonic and melodic minor as accidentals", () => {
+    // D minor's signature has Bb: harmonic minor keeps it and raises the 7th to C#, and
+    // melodic minor raises the 6th to a B natural as well
+    const run = (mode, notes) =>
+      voice(`set key D\nset mode ${mode}\nset octave 4\nplay piano: notes ${notes}`)
+    expect(run("harmonicminor", "6-7-1'-")).toBe("[V:P1] B2^c2 d2z2 z4 z4 |")
+    expect(run("melodicminor", "6-7-1'-")).toBe("[V:P1] =B2^c2 d2z2 z4 z4 |")
+    // whole tone in D takes D major's signature: F# is in it, G# and A# and C are not
+    expect(run("wholetone", "3-4-5-6-")).toBe("[V:P1] F2^G2 ^A2=c2 z4 z4 |")
   })
   it("leaves out the accidentals the signature has, and writes the naturals it needs", () => {
     expect(voice("set key D\nplay piano: notes F#4--- C#4---")).toBe("[V:P1] F4 C4 z4 z4 |")

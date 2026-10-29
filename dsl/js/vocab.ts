@@ -82,7 +82,7 @@ export const KITS = ["rock", "synth"] as const
 // Swing is on or off. On, the off-beat eighths fall late, as a triplet's third note does
 export const SWING = ["on", "off"] as const
 // The modes a key can be in, set on their own: set key D, set mode dorian. Major and minor
-// have one name each.
+// have one name each, so there is no ionian or aeolian.
 export const MODES = [
   "major",
   "minor",
@@ -91,6 +91,9 @@ export const MODES = [
   "lydian",
   "mixolydian",
   "locrian",
+  "harmonicminor",
+  "melodicminor",
+  "wholetone",
 ] as const
 // Instruments with more than one sound. Naming the instrument and a sound is a setting,
 // like kit: set guitar.electric muted. The first sound is the one it has until then.

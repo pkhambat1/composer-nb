@@ -146,16 +146,16 @@ A name of any type starts with a lowercase letter and takes a capital for each n
 
 A setting is `set`, then the setting and its value: `set key A`. It applies from its line to the end of the cell, and on into later cells. `set` goes at the top of a cell only.
 
-| Setting     | Default    | Meaning                                                                                                        |
-| ----------- | ---------- | -------------------------------------------------------------------------------------------------------------- |
-| `time`      | `4 over 4` | Notes in a bar, over which note: `7 over 8`, or felt in groups: `3+4 over 4`                                   |
-| `tempo`     | `120`      | Quarter notes per minute                                                                                       |
-| `swing`     | `off`      | Swung eighths, a triplet feel: `on` or `off`                                                                   |
-| `key`       | `C`        | The root degrees and Roman numerals count from: a note, `E`, `F#`, `Bb`                                        |
-| `mode`      | `major`    | How the key is written on the sheet: `major`, `minor`, `dorian`, `phrygian`, `lydian`, `mixolydian`, `locrian` |
-| `transpose` | `0`        | Semitones every pitched instrument sounds from what's written, -12 to 12                                       |
-| `octave`    | `3`        | Octave for chords, degrees and notes written without one, 1 to 6                                               |
-| `kit`       | `rock`     | Drum sound: `rock` or `synth`                                                                                  |
+| Setting     | Default    | Meaning                                                                                                                                                      |
+| ----------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `time`      | `4 over 4` | Notes in a bar, over which note: `7 over 8`, or felt in groups: `3+4 over 4`                                                                                 |
+| `tempo`     | `120`      | Quarter notes per minute                                                                                                                                     |
+| `swing`     | `off`      | Swung eighths, a triplet feel: `on` or `off`                                                                                                                 |
+| `key`       | `C`        | The root degrees and Roman numerals count from: a note, `E`, `F#`, `Bb`                                                                                      |
+| `mode`      | `major`    | How the key is written on the sheet: `major`, `minor`, `dorian`, `phrygian`, `lydian`, `mixolydian`, `locrian`, `harmonicminor`, `melodicminor`, `wholetone` |
+| `transpose` | `0`        | Semitones every pitched instrument sounds from what's written, -12 to 12                                                                                     |
+| `octave`    | `3`        | Octave for chords, degrees and notes written without one, 1 to 6                                                                                             |
+| `kit`       | `rock`     | Drum sound: `rock` or `synth`                                                                                                                                |
 
 Every number is arithmetic (`set tempo 60*2`, `(1+2) bars groove`), so `*` and `/` only ever multiply and divide. That's why a time is `7 over 8` rather than `7/8`.
 

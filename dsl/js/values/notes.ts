@@ -2,7 +2,15 @@
    or a degree of the key (b3, 5'), or a degree of another note (5 of C3); - lets it ring
    and _ stops it. Parts with lengths hold one note (3 beats C2), and ... holds one to the
    end. A block holds layers that sound together, each a voice of its own. */
-import { buildChord, degreeSemitones, isRoman, midiToName } from "../chords.ts"
+import {
+  buildChord,
+  degreeSemitones,
+  isRoman,
+  letterStep,
+  midiToName,
+  pastScale,
+  pastScaleMessage,
+} from "../chords.ts"
 import { misplaced } from "../check.ts"
 import { CHORDS_BLOCK } from "../declare.ts"
 import { bracesIn, headOf, onlyBraces, textOf } from "../parts.ts"
@@ -85,7 +93,7 @@ function spellOf(s: NoteStep, midi: number, key: Key) {
 function letterOf(s: NoteStep, key: Key): string {
   if (!s.degree) return s.name![0]
   const from = s.of ? letterOf(s.of, key) : key.root[0]
-  return LETTERS[(LETTERS.indexOf(from) + s.degree - 1) % 7]
+  return LETTERS[(LETTERS.indexOf(from) + (s.of ? s.degree - 1 : letterStep(key, s.degree))) % 7]
 }
 // A note as its letter, accidental and octave: 5 of C3 is G3, 3 of (5 of D3) is C#4.
 function spelledName(s: NoteStep, midi: number, key: Key): string {
@@ -474,7 +482,14 @@ function noteVoice(line: Line, part: PitchedPart, st: State, err: Report): Voice
   const add = (tok: string, viaWord?: string) => {
     const run = noteSteps(tok)
     const spaced = run && spacedNotes(tok)
-    if (spaced) fail(notesTouch(tok, spaced))
+    // A degree counts on the key's scale, and whole tone has six notes: no 7 in it
+    const past = run?.some((s) => {
+      if (!s) return false
+      while (s.of) s = s.of
+      return s.degree !== undefined && pastScale(key, s.degree)
+    })
+    if (past) fail(`"${tok}": ${pastScaleMessage(key)}`)
+    else if (spaced) fail(notesTouch(tok, spaced))
     else if (run) steps.push(...run)
     else if (viaWord) fail(`"${tok}" (in ${viaWord}) isn't a note. ${NOTE_HELP}`)
     else fail(notNotes(tok, st, part.name, `${part.name}: chords ${text}`))

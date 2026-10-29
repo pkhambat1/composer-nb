@@ -3,7 +3,7 @@
    pitched instrument. Times come from the events' seconds, so what swings in the audio
    swings here too. Pure, like grid.ts. */
 import type { Output } from "./cell.ts"
-import { parseKey } from "./chords.ts"
+import { isMinorMode, parseKey } from "./chords.ts"
 import type { SoundEvent } from "./clips.ts"
 import { TPQ } from "./language.ts"
 
@@ -125,7 +125,7 @@ export function midiFile(outputs: Output | Output[]): Uint8Array {
       })
       // The key signature: sharps (or flats, as a negative count) and whether it's minor
       const key = parseKey(s.key, s.mode) || parseKey("C")!
-      const minor = key.mode === "minor" ? 1 : 0
+      const minor = isMinorMode(key.mode) ? 1 : 0
       meta.push({ tick, order: order++, bytes: [0xff, 0x59, 0x02, key.sharps & 0xff, minor] })
     }
     for (const e of output.drumEvents) {
