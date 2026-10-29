@@ -117,7 +117,7 @@ function drumNote(hits: DrumMark[], u: number): string {
 // bar's accidentals so far, by letter and octave; `sig` is the key: its signature's marks
 // by letter, and how it spells its black keys. A note that says how it is spelt (`spell`:
 // its letter and how far that is raised or lowered) is written that way: Db as Db, and a
-// degree by its place in the scale, b3 in C as Eb.
+// degree by its place in the scale, biii in C as Eb.
 const SHARP_SPELL = ["C", "^C", "D", "^D", "E", "F", "^F", "G", "^G", "A", "^A", "B"]
 const FLAT_SPELL = ["C", "_D", "D", "_E", "E", "F", "_G", "G", "_A", "A", "_B", "B"]
 function spelling(midi: number, sig: Sig): Spell {

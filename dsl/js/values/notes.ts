@@ -1,5 +1,5 @@
 /* Notes: what a pitched instrument's line draws on the steps. A note is a letter (E, F#4)
-   or a degree of the key (b3, 5'), or a degree of another note (5 of C3); - lets it ring
+   or a degree of the key (biii, v'), or a degree of another note (v of C3); - lets it ring
    and _ stops it. Parts with lengths hold one note (3 beats C2), and ... holds one to the
    end. A block holds layers that sound together, each a voice of its own. */
 import {
@@ -8,6 +8,7 @@ import {
   isRoman,
   letterStep,
   midiToName,
+  NUMERALS,
   pastScale,
   pastScaleMessage,
 } from "../chords.ts"
@@ -83,7 +84,7 @@ const LETTERS = "CDEFGAB"
 
 // How a note is spelt, for the sheet: its letter and how far that is raised or lowered. A
 // letter note is spelt as written, so Db stays Db. A degree takes the letter of its place in
-// the scale, counted from the key's root, so b3 in C is Eb and 7 in F# is E#.
+// the scale, counted from the key's root, so biii in C is Eb and vii in F# is E#.
 function spellOf(s: NoteStep, midi: number, key: Key) {
   const letter = letterOf(s, key)
   return { letter, alter: ((((midi - NOTE_BASE[letter]) % 12) + 18) % 12) - 6 }
@@ -95,7 +96,7 @@ function letterOf(s: NoteStep, key: Key): string {
   const from = s.of ? letterOf(s.of, key) : key.root[0]
   return LETTERS[(LETTERS.indexOf(from) + (s.of ? s.degree - 1 : letterStep(key, s.degree))) % 7]
 }
-// A note as its letter, accidental and octave: 5 of C3 is G3, 3 of (5 of D3) is C#4.
+// A note as its letter, accidental and octave: v of C3 is G3, iii of (v of D3) is C#4.
 function spelledName(s: NoteStep, midi: number, key: Key): string {
   const { letter, alter } = spellOf(s, midi, key)
   return (
@@ -104,18 +105,19 @@ function spelledName(s: NoteStep, midi: number, key: Key): string {
     (Math.floor((midi - alter) / 12) - 1)
   )
 }
-// A note (F#4), or a degree ('b3'): ^ or ~ in front; then for a note the letter, # or b and
-// the octave; for a degree ' for each octave below, b or # and the digit, 1 to 7, and ' for
-// each octave above. A degree is counted on the key's own scale, its mode's: in minor 1 to 7
-// is the natural minor scale, and b or # moves a degree off it.
-const NOTE_AT = /([\^~])?(?:([A-G])([#b])?(\d)?|('*)([#b])?([1-7])('*))/y
+// A note (F#4), or a degree (biii): ^ or ~ in front; then for a note the letter, # or b and
+// the octave; for a degree ' for each octave below, b or # and the Roman numeral, i to vii,
+// and ' for each octave above. A degree is counted on the key's own scale, its mode's: in
+// minor i to vii is the natural minor scale, and b or # moves a degree off it. A numeral is
+// as long as it reads, so iii is one note, and two in a row take a space: i i.
+const NOTE_AT = /([\^~])?(?:([A-G])([#b])?(\d)?|('*)([#b])?(vii|vi|iv|v|iii|ii|i)('*))/y
 export const NOTE_HELP =
-  "Notes are A to G, with # or b after them and an octave when it's needed (F, F#, Bb, E2), or degrees of the key, 1 to 7 (1, b3, 5, 1')"
+  "Notes are A to G, with # or b after them and an octave when it's needed (F, F#, Bb, E2), or degrees of the key as Roman numerals, i to vii (i, biii, v, i')"
 
 // One note at `i` in `run`: a note by name, a degree, or a degree of another note, counted on
-// that note's major scale (5 of C3, b3 of (5 of C3)), with ^ or ~ in front. Returns
+// that note's major scale (v of C3, biii of (v of C3)), with ^ or ~ in front. Returns
 // { step, end }, or null when there isn't one, or when a chain of of's has no brackets
-// (5 of 5 of C3).
+// (v of v of C3).
 function noteAt(run: string, i: number): { step: NoteStep; end: number } | null {
   NOTE_AT.lastIndex = i
   const m = NOTE_AT.exec(run)
@@ -129,7 +131,7 @@ function noteAt(run: string, i: number): { step: NoteStep; end: number } | null 
         label: m[2] + (m[3] || "") + (m[4] || ""),
       }
     : {
-        degree: Number(m[7]),
+        degree: NUMERALS.indexOf(m[7]) + 1,
         acc: m[6] || "",
         shift: m[8].length - m[5].length,
         label: m[5] + (m[6] || "") + m[7] + m[8],
@@ -165,7 +167,7 @@ function noteAt(run: string, i: number): { step: NoteStep; end: number } | null 
   }
 }
 
-// A run of notes (E---F#, 1---b3---) → its steps: one for each note, - or _, however many
+// A run of notes (E---F#, i---biii---) → its steps: one for each note, - or _, however many
 // characters a note takes. A step is null for -, { cut } for _, or the note, with whether
 // ^ or ~ is in front of it: a note by name ({ name, octave }) or a degree ({ degree, acc,
 // shift }, where shift is octaves up), which may count from another note (`of`). null when
@@ -186,7 +188,7 @@ export function noteSteps(run: string): Step[] | null {
   return steps.length ? steps : null
 }
 
-// A note's step as it's written: ^C2, b3'
+// A note's step as it's written: ^C2, biii'
 const writtenNote = (s: NoteStep) => (s.accent ? "^" : s.ghost ? "~" : "") + s.label
 
 // The shortest run `s` repeats, when it is nothing but that run more than once: x-x-x-x-
@@ -232,8 +234,8 @@ export const notesTouch = (run: string, spaced: string) =>
   `"${run}": notes don't touch, so put a space between them: ${spaced}`
 
 // Whether a token can only be notes drawn on steps: more than one step, with a note among
-// them (F---G, E2 G2, 1---3). One letter on its own could be a chord's name, and digits on
-// their own a number (15 bars), so they aren't told here.
+// them (F---G, E2 G2, i---iii). One letter on its own could be a chord's name, so it isn't
+// told here.
 export function drawsNotes(tok: string): boolean {
   const steps = noteSteps(tok)
   return !!steps && steps.length > 1 && steps.some((s) => s && !s.cut) && /[A-G_-]/.test(tok)
@@ -404,21 +406,27 @@ export function notNotes(tok: string, st: State, inst: string, chart: string): s
   if (isOf(tok)) {
     const at = tok.indexOf(" of")
     const right = tok.slice(at + 4)
-    if (!/^[\^~]?'*[#b]?[1-7]'*$/.test(tok.slice(0, at))) {
-      return "of takes a degree in front of it, counted on the major scale of the note after it: 5 of C3"
+    if (!/^[\^~]?'*[#b]?(vii|vi|iv|v|iii|ii|i)'*$/.test(tok.slice(0, at))) {
+      return "of takes a degree in front of it, counted on the major scale of the note after it: v of C3"
     }
     if (right.startsWith("(") && openParens(right) > 0) {
-      return "The ( after of closes on its line: 5 of (5 of C3)"
+      return "The ( after of closes on its line: v of (v of C3)"
     }
     if (!right.startsWith("(") && isOf(right))
-      return "A chain of of's takes brackets: 5 of (5 of C3)"
-    return "After of goes the note to count from: 5 of C3, or a degree of the key: 5 of 2"
+      return "A chain of of's takes brackets: v of (v of C3)"
+    return "After of goes the note to count from: v of C3, or a degree of the key: v of ii"
   }
   if (/^[-_^~A-G#b\d]+$/.test(tok) && /[A-G][#b]?9/.test(tok)) {
     return `"${tok}": octaves run from 0 to 8`
   }
-  if (/^[-_^~'#b]*[089]/.test(tok)) {
-    return `"${tok}": degrees run from 1 to 7, counted on the key's scale. The octave above 1 is 1'`
+  if (/^[-_^~'#b]*\d/.test(tok) && /^[-_^~'#b\d]+$/.test(tok) && !/[A-G]/.test(tok)) {
+    // A degree is a Roman numeral, as a chord's is: 1---3---5 is i---iii---v
+    const numerals = tok.replace(/\d/g, (d, at) =>
+      /[1-7]/.test(d) ? (/\d/.test(tok[at - 1] || "") ? " " : "") + NUMERALS[Number(d) - 1] : d,
+    )
+    return /[089]/.test(tok)
+      ? `"${tok}": degrees are the Roman numerals i to vii, counted on the key's scale. The octave above i is i'`
+      : `"${tok}": degrees are Roman numerals, as a chord's are: ${numerals}`
   }
   if (/^[-_x^~d]+$/.test(tok)) {
     return /[xd]/.test(tok)

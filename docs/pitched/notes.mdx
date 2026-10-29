@@ -5,7 +5,7 @@ description: "The notes type: what an instrument plays, one note at a time, by n
 
 import { Cell } from "/snippets/cell.jsx"
 
-An [instrument](/pitched/instruments)'s line holds a `notes` value when the word `notes` comes first: `bass: notes 1---5---`. It is drawn on steps, and a step is a sixteenth note, so a bar of `4 over 4` is 16 steps.
+An [instrument](/pitched/instruments)'s line holds a `notes` value when the word `notes` comes first: `bass: notes i---v---`. It is drawn on steps, and a step is a sixteenth note, so a bar of `4 over 4` is 16 steps.
 
 <Cell>
 
@@ -33,14 +33,14 @@ In a pattern, the last note rings over the repeat until the first note or `_`. A
 
 ## Degrees
 
-A degree is a digit from `1` to `7` where a note goes, counted on the scale of the [`key`](/pitched/key) and its mode: in C major `3` is E, and in C minor it's Eb. A `b` or `#` in front moves it a semitone off the scale. Degree 1 is the root in the current `octave`; `'` after the digit is an octave up for each mark, and `'` before it an octave down.
+A degree is a Roman numeral from `i` to `vii` where a note goes, written as a chord's is, counted on the scale of the [`key`](/pitched/key) and its mode: in C major `iii` is E, and in C minor it's Eb. A `b` or `#` in front moves it a semitone off the scale. Degree `i` is the root in the current `octave`; `'` after the numeral is an octave up for each mark, and `'` before it an octave down. A numeral is as long as it reads, so `iii` is one note, and two numerals in a row take a space: `i i`.
 
 <Cell>
 
 ```composer-nb
 set octave 4
 
-notes scale = 1---2---3---4---|5---6---7---1'---
+notes scale = i---ii---iii---iv---|v---vi---vii---i'---
 
 play piano: notes scale
 with mode minor { play piano: notes scale }
@@ -51,23 +51,23 @@ play piano: notes scale
 
 </Cell>
 
-A name holds degrees, not pitches, so it is read under whichever key and mode play it: the second play is C minor, and the last F# major. Letters and degrees can share a line, as a chart holds `I vi|F G`. On a kit piece's line a number is a [beat](/drums/steps#beats), so `kick: 1 3` hits beats 1 and 3 and `bass: notes 1 3` plays two degrees: the line's name says which.
+A name holds degrees, not pitches, so it is read under whichever key and mode play it: the second play is C minor, and the last F# major. Letters and degrees can share a line, as a chart holds `I vi|F G`. On a kit piece's line a number is a [beat](/drums/steps#beats), so `kick: 1 3` hits beats 1 and 3 and `bass: notes i iii` plays two degrees: the line's name says which.
 
 ## Counting from a note
 
-`of` counts a degree from another note instead of from the key: `5 of C3` is the 5th of C3, which is `G3`. The degree counts on the major scale of that note, in any key or mode, so `b3 of C3` is `Eb3`. On the left of `of` goes a degree, with `'` marks for octaves as usual: `5' of C3` is `G4`. On the right goes a note, or a degree of the key: under `set key D`, `5 of 2` is the 5th of E, the key's 2nd. Counting from the key's own `1` is the identity, so `5 of 1` is just `5`. `^` or `~` goes in front of the whole note: `^5 of C3`.
+`of` counts a degree from another note instead of from the key: `v of C3` is the 5th of C3, which is `G3`. The degree counts on the major scale of that note, in any key or mode, so `biii of C3` is `Eb3`. On the left of `of` goes a degree, with `'` marks for octaves as usual: `v' of C3` is `G4`. On the right goes a note, or a degree of the key: under `set key D`, `v of ii` is the 5th of E, the key's 2nd. Counting from the key's own `i` is the identity, so `v of i` is just `v`. `^` or `~` goes in front of the whole note: `^v of C3`.
 
 To count from a note that is itself counted with `of`, put that note in brackets. Here is the circle of fifths, counted up from C3:
 
 <Cell>
 
 ```composer-nb
-play piano: notes C3--- 5 of C3--- 5 of (5 of C3)--- 5 of (5 of (5 of C3))---
+play piano: notes C3--- v of C3--- v of (v of C3)--- v of (v of (v of C3))---
 ```
 
 </Cell>
 
-This plays C3, G3, D4 and A4. Without the brackets, `5 of 5 of C3` is an error. A note counted with `of` is still one note, so `-`, `_` and lengths work on it the same way.
+This plays C3, G3, D4 and A4. Without the brackets, `v of v of C3` is an error. A note counted with `of` is still one note, so `-`, `_` and lengths work on it the same way.
 
 ## Lengths
 
@@ -113,7 +113,7 @@ set octave 4
 
 play piano: {
   chords vi iv|i v
-  notes 6-------4-------|6---5---4---3---
+  notes vi-------iv-------|vi---v---iv---iii---
 }
 ```
 

@@ -64,7 +64,7 @@ export function midiToName(m: number, flats = false): string {
 }
 
 // Semitones from a root to a degree of a scale, major unless another is given, moved by b
-// or # in front: in major 3 is 4 semitones and b3 is 3; in minor 3 is 3. Shared by a chord's
+// or # in front: in major iii is 4 semitones and biii is 3; in minor iii is 3. Shared by a chord's
 // numeral and a note written as a degree.
 export function degreeSemitones(
   degree: number,
@@ -117,12 +117,14 @@ export function keySignature(key: Key): Map<string, string> {
 // Whether a mode's signature is a minor one: A minor's, as harmonic and melodic minor have
 export const isMinorMode = (mode: string) => !!modeInfo(mode)?.minor
 
+export const NUMERALS = ["i", "ii", "iii", "iv", "v", "vi", "vii"]
+
 // Whether a key's scale has no such degree: whole tone has six, so its 7 and vii are past it
 export const pastScale = (key: Key, degree: number) => degree > key.scale.length
 
 // The message for a degree or numeral past the key's scale
 export const pastScaleMessage = (key: Key) =>
-  `${key.mode} has ${key.scale.length} degrees, 1 to ${key.scale.length}: there is no 7 or vii in it`
+  `${key.mode} has ${key.scale.length} degrees, i to ${NUMERALS[key.scale.length - 1]}: there is no vii in it`
 
 // The key as ABC writes it in its K: field: D, Am, D dor.
 export const abcKey = (key: Key) => key.root + modeInfo(key.mode)!.abc
@@ -149,7 +151,7 @@ export function chordParts(token: string): string[] {
 // The name tonal knows a chord by: it has a minor 6/9 as m69, not m6/9.
 export const tonalName = (head: string) => head.replace(/m6\/9$/, "m69")
 
-// A degree, 1 to 7 (1 to 6 in whole tone), counted on the key's own scale, its mode's: in D minor 3 is F, and in D
+// A degree, i to vii (i to vi in whole tone), counted on the key's own scale, its mode's: in D minor 3 is F, and in D
 // dorian 6 is B. b and # in front move it a semitone. Shared by a chord's numeral and a note
 // written as a degree.
 export function degreePc(key: Key, degree: number, acc = ""): number {
@@ -162,7 +164,7 @@ export const letterStep = (key: Key, degree: number) =>
   modeInfo(key.mode)?.letters?.[degree - 1] ?? degree - 1
 
 // A degree's name: the letter of its place in the scale, counted from the key's root, raised
-// or lowered to its pitch. So #7 in G minor is F#, not Gb, the 3rd of C# major is E#, and
+// or lowered to its pitch. So #vii in G minor is F#, not Gb, the 3rd of C# major is E#, and
 // VII in A minor is G.
 const LETTERS = "CDEFGAB"
 export function degreeName(key: Key, degree: number, acc = ""): string {

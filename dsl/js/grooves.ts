@@ -240,10 +240,10 @@ with time 5 over 4 { play groove }`,
     section: "Harmony",
     title: "Fifth of a fifth",
     byline: "of counts a note from another note: 5 of 5, 5 of (5 of 5)",
-    body: "`5` is the 5th of the key's root, `5 of 5` the 5th of that, and `5 of (5 of 5)` the 5th of that again: one `of` a fifth up, and brackets chain them. This goes up the circle of fifths from the key's root, C G D A, and it follows the key: put `key F` in a with around the play and every note moves with it. Without the brackets, `5 of 5 of 5` is an error.",
+    body: "`v` is the 5th of the key's root, `v of v` the 5th of that, and `v of (v of v)` the 5th of that again: one `of` a fifth up, and brackets chain them. This goes up the circle of fifths from the key's root, C G D A, and it follows the key: put `key F` in a with around the play and every note moves with it. Without the brackets, `v of v of v` is an error.",
     link: null,
     source: `pattern fifths = {
-  piano: notes 1--- 5--- 5 of 5--- 5 of (5 of 5)---
+  piano: notes i--- v--- v of v--- v of (v of v)---
   hat: x-
   kick: 1 3
 }
@@ -316,7 +316,7 @@ play (
     source: `with tempo 92 {
   play {
     with octave 2 {
-      notes walk = 1---5---4---5---
+      notes walk = i---v---iv---v---
       bass: notes walk
     }
     with octave 4 { piano: chords i v|vi iv }
@@ -334,8 +334,8 @@ play (
     source: `pattern turnaround = {
   piano: chords ii7 v7|imaj7 -
   with octave 2 {
-    bass: notes 2---4---5---7---|1'---3'---5'---6'---
-      |2'---4'---5---4---|3---5---6---7---
+    bass: notes ii---iv---v---vii---|i'---iii'---v'---vi'---
+      |ii'---iv'---v---iv---|iii---v---vi---vii---
   }
   ride: x-
   hat.pedal: 2 4

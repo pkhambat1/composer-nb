@@ -26,7 +26,7 @@ When the user wants to write the cell themselves ("give me a cell", "I'll write 
 
 - Every cell makes musical sense on its own: one idea, with names that say what each part is.
 - No figure written twice. A pattern repeats its lines, so `hat: x-`, not `hat: x-x- x-x-`. The parser rejects the repeat.
-- Scales, lines and chord formulas by degree (`1 2 3 4 5 6 7`) and charts by numeral, so they play in any key. In a mode, write the plain degrees and numerals and let `set mode` make them minor, dorian, harmonicMinor, melodicMinor, wholeTone (six degrees, 1 to 6) and so on: no `b` or `#` for what the mode already does. Letters only where the note names are the point.
+- Scales, lines and chord formulas by degree (`i ii iii iv v vi vii`) and charts by numeral, so they play in any key. In a mode, write the plain degrees and numerals and let `set mode` make them minor, dorian, harmonicMinor, melodicMinor, wholeTone (six degrees, i to vi) and so on: no `b` or `#` for what the mode already does. Letters only where the note names are the point.
 - A note held over two beats gets a stated length, `3 beats C2` or `1 bars rest`, not a long run of dashes.
 - Brackets for order: `play (intro 4 bars verse)`.
 - `set` in front of every setting.
@@ -45,10 +45,10 @@ set tempo 96
 set key D
 set mode dorian
 
-notes scale = 1---2---3---4---|5---6---7---1'---
-  |1'---7---6---5---|4---3---2-------|1 bars 1
-notes roots = 1-------3-------|5-------7-------
-  |1'-------6-------|4-------2-------|1 bars 1
+notes scale = i---ii---iii---iv---|v---vi---vii---i'---
+  |i'---vii---vi---v---|iv---iii---ii-------|1 bars i
+notes roots = i-------iii-------|v-------vii-------
+  |i'-------vi-------|iv-------ii-------|1 bars i
 
 pattern groove = {
   hat: x-

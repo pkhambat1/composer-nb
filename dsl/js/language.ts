@@ -16,7 +16,7 @@
                               with the note where a drum has its x (two notes never
                               touch: F# E), or a chart of chords with chords in front.
                               A note is a letter (E2) or a degree of the key, counted
-                              on the key's scale, its mode's (1 2 3, 1' an octave up).
+                              on the key's scale, its mode's (i ii iii, i' an octave up).
                               Lines play together, so two drums on
                               one step is two lines. Each instrument has one line in a
                               block; to layer it, its line takes a block of its own.

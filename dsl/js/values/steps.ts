@@ -89,8 +89,8 @@ const openIn = (text: string) =>
   [...text].reduce((depth, c) => depth + (c === "(" ? 1 : c === ")" ? -1 : 0), 0)
 
 // X of Y is one token, written as it reads, so a notes line takes it as one note and a chart
-// as one chord: 5 of C3, V7 of V, and a chain in brackets, 5 of (5 of C3), which runs to
-// its ). An of with nothing after it (5 of) is joined too, to be told what goes there. One
+// as one chord: v of C3, V7 of V, and a chain in brackets, v of (v of C3), which runs to
+// its ). An of with nothing after it (v of) is joined too, to be told what goes there. One
 // after a colon or a bar line, or before an =, isn't joined, to be told that of is taken.
 function joinOf(words: string[]): string[] {
   const out: string[] = []
@@ -125,7 +125,7 @@ function joinOf(words: string[]): string[] {
 
 // Whether a token is X of Y
 export const isOf = (token: string) => / of( |$)/.test(token)
-// `text` without its X of Y, so the brackets of a chain (5 of (5 of C3)) aren't read as a
+// `text` without its X of Y, so the brackets of a chain (v of (v of C3)) aren't read as a
 // group of patterns
 export const withoutOf = (text: string) =>
   tokenize(text)

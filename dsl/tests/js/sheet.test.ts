@@ -207,10 +207,10 @@ describe("the key signature", () => {
     // melodic minor raises the 6th to a B natural as well
     const run = (mode, notes) =>
       voice(`set key D\nset mode ${mode}\nset octave 4\nplay piano: notes ${notes}`)
-    expect(run("harmonicMinor", "6-7-1'-")).toBe("[V:P1] B2^c2 d2z2 z4 z4 |")
-    expect(run("melodicMinor", "6-7-1'-")).toBe("[V:P1] =B2^c2 d2z2 z4 z4 |")
+    expect(run("harmonicMinor", "vi-vii-i'-")).toBe("[V:P1] B2^c2 d2z2 z4 z4 |")
+    expect(run("melodicMinor", "vi-vii-i'-")).toBe("[V:P1] =B2^c2 d2z2 z4 z4 |")
     // whole tone in D takes D major's signature: F# is in it, G# and A# and C are not
-    expect(run("wholeTone", "3-4-5-6-")).toBe("[V:P1] F2^G2 ^A2=c2 z4 z4 |")
+    expect(run("wholeTone", "iii-iv-v-vi-")).toBe("[V:P1] F2^G2 ^A2=c2 z4 z4 |")
   })
   it("leaves out the accidentals the signature has, and writes the naturals it needs", () => {
     expect(voice("set key D\nplay piano: notes F#4--- C#4---")).toBe("[V:P1] F4 C4 z4 z4 |")
@@ -224,14 +224,14 @@ describe("the key signature", () => {
   it("spells a note as written, and a degree by its place in the scale", () => {
     expect(voice("play piano: notes Db4--- C#4---")).toBe("[V:P1] _D4 ^C4 z4 z4 |")
     // b3, b6 and b7 in C are Eb, Ab and Bb, not D#, G# and A#
-    expect(voice("set key C\nset octave 4\nplay piano: notes b3---b6---b7---")).toBe(
+    expect(voice("set key C\nset octave 4\nplay piano: notes biii---bvi---bvii---")).toBe(
       "[V:P1] _E4 _A4 _B4 z4 |",
     )
     // F# major's seventh is E#, and Gb major's fourth is Cb: both in the signature already
-    expect(voice("set key F#\nset octave 4\nplay piano: notes 7---1'---")).toBe(
+    expect(voice("set key F#\nset octave 4\nplay piano: notes vii---i'---")).toBe(
       "[V:P1] e4 f4 z4 z4 |",
     )
-    expect(voice("set key Gb\nset octave 4\nplay piano: notes 4---7---")).toBe(
+    expect(voice("set key Gb\nset octave 4\nplay piano: notes iv---vii---")).toBe(
       "[V:P1] c4 f4 z4 z4 |",
     )
     // a chord's notes as the chord spells them: B# major is B# D## F##, not C E G

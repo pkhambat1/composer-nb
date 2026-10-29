@@ -1410,12 +1410,12 @@ drums:
   5.5263 inst=hat art=hit lane=hat kit=rock tick=672 vel=0.7 line=3
   5.9211 inst=hat art=hit lane=hat kit=rock tick=720 vel=0.7 line=3
 notes:
-  0 tick=0 ticks=96 note={"midi":48,"name":"C3","spell":{"letter":"C","alter":0}} label=1 instrument=piano voice=0 vel=0.7 line=2 secDur=0.7895
-  0.7895 tick=96 ticks=96 note={"midi":55,"name":"G3","spell":{"letter":"G","alter":0}} label=5 instrument=piano voice=0 vel=0.7 line=2 secDur=0.7895
+  0 tick=0 ticks=96 note={"midi":48,"name":"C3","spell":{"letter":"C","alter":0}} label=i instrument=piano voice=0 vel=0.7 line=2 secDur=0.7895
+  0.7895 tick=96 ticks=96 note={"midi":55,"name":"G3","spell":{"letter":"G","alter":0}} label=v instrument=piano voice=0 vel=0.7 line=2 secDur=0.7895
   1.5789 tick=192 ticks=96 note={"midi":62,"name":"D4","spell":{"letter":"D","alter":0}} label=D4 instrument=piano voice=0 vel=0.7 line=2 secDur=0.7895
   2.3684 tick=288 ticks=96 note={"midi":69,"name":"A4","spell":{"letter":"A","alter":0}} label=A4 instrument=piano voice=0 vel=0.7 line=2 secDur=0.7895
-  3.1579 tick=384 ticks=96 note={"midi":48,"name":"C3","spell":{"letter":"C","alter":0}} label=1 instrument=piano voice=0 vel=0.7 repeat=true line=2 secDur=0.7895
-  3.9474 tick=480 ticks=96 note={"midi":55,"name":"G3","spell":{"letter":"G","alter":0}} label=5 instrument=piano voice=0 vel=0.7 repeat=true line=2 secDur=0.7895
+  3.1579 tick=384 ticks=96 note={"midi":48,"name":"C3","spell":{"letter":"C","alter":0}} label=i instrument=piano voice=0 vel=0.7 repeat=true line=2 secDur=0.7895
+  3.9474 tick=480 ticks=96 note={"midi":55,"name":"G3","spell":{"letter":"G","alter":0}} label=v instrument=piano voice=0 vel=0.7 repeat=true line=2 secDur=0.7895
   4.7368 tick=576 ticks=96 note={"midi":62,"name":"D4","spell":{"letter":"D","alter":0}} label=D4 instrument=piano voice=0 vel=0.7 repeat=true line=2 secDur=0.7895
   5.5263 tick=672 ticks=96 note={"midi":69,"name":"A4","spell":{"letter":"A","alter":0}} label=A4 instrument=piano voice=0 vel=0.7 repeat=true line=2 secDur=0.7895
 
@@ -1652,14 +1652,14 @@ drums:
   0 inst=kick art=hit lane=kick kit=rock tick=0 vel=0.7 line=9
   1.3043 inst=kick art=hit lane=kick kit=rock tick=192 vel=0.7 line=9
 notes:
-  0 tick=0 ticks=96 note={"midi":36,"name":"C2","spell":{"letter":"C","alter":0}} label=1 instrument=bass voice=0 vel=0.7 line=5 secDur=0.6522
-  0.6522 tick=96 ticks=96 note={"midi":43,"name":"G2","spell":{"letter":"G","alter":0}} label=5 instrument=bass voice=0 vel=0.7 line=5 secDur=0.6522
-  1.3043 tick=192 ticks=96 note={"midi":41,"name":"F2","spell":{"letter":"F","alter":0}} label=4 instrument=bass voice=0 vel=0.7 line=5 secDur=0.6522
-  1.9565 tick=288 ticks=96 note={"midi":43,"name":"G2","spell":{"letter":"G","alter":0}} label=5 instrument=bass voice=0 vel=0.7 line=5 secDur=0.6522
-  2.6087 tick=384 ticks=96 note={"midi":36,"name":"C2","spell":{"letter":"C","alter":0}} label=1 instrument=bass voice=0 vel=0.7 repeat=true line=5 secDur=0.6522
-  3.2609 tick=480 ticks=96 note={"midi":43,"name":"G2","spell":{"letter":"G","alter":0}} label=5 instrument=bass voice=0 vel=0.7 repeat=true line=5 secDur=0.6522
-  3.913 tick=576 ticks=96 note={"midi":41,"name":"F2","spell":{"letter":"F","alter":0}} label=4 instrument=bass voice=0 vel=0.7 repeat=true line=5 secDur=0.6522
-  4.5652 tick=672 ticks=96 note={"midi":43,"name":"G2","spell":{"letter":"G","alter":0}} label=5 instrument=bass voice=0 vel=0.7 repeat=true line=5 secDur=0.6522
+  0 tick=0 ticks=96 note={"midi":36,"name":"C2","spell":{"letter":"C","alter":0}} label=i instrument=bass voice=0 vel=0.7 line=5 secDur=0.6522
+  0.6522 tick=96 ticks=96 note={"midi":43,"name":"G2","spell":{"letter":"G","alter":0}} label=v instrument=bass voice=0 vel=0.7 line=5 secDur=0.6522
+  1.3043 tick=192 ticks=96 note={"midi":41,"name":"F2","spell":{"letter":"F","alter":0}} label=iv instrument=bass voice=0 vel=0.7 line=5 secDur=0.6522
+  1.9565 tick=288 ticks=96 note={"midi":43,"name":"G2","spell":{"letter":"G","alter":0}} label=v instrument=bass voice=0 vel=0.7 line=5 secDur=0.6522
+  2.6087 tick=384 ticks=96 note={"midi":36,"name":"C2","spell":{"letter":"C","alter":0}} label=i instrument=bass voice=0 vel=0.7 repeat=true line=5 secDur=0.6522
+  3.2609 tick=480 ticks=96 note={"midi":43,"name":"G2","spell":{"letter":"G","alter":0}} label=v instrument=bass voice=0 vel=0.7 repeat=true line=5 secDur=0.6522
+  3.913 tick=576 ticks=96 note={"midi":41,"name":"F2","spell":{"letter":"F","alter":0}} label=iv instrument=bass voice=0 vel=0.7 repeat=true line=5 secDur=0.6522
+  4.5652 tick=672 ticks=96 note={"midi":43,"name":"G2","spell":{"letter":"G","alter":0}} label=v instrument=bass voice=0 vel=0.7 repeat=true line=5 secDur=0.6522
 chords:
   0 tick=0 ticks=192 chord={"input":"i","label":"C","rootPc":0,"bassMidi":48,"notesMidi":[60,64,67],"noteNames":["C4","E4","G4"],"bassName":"C3"} label=C instrument=piano transpose=0 line=7 secDur=1.3043
   1.3043 tick=192 ticks=192 chord={"input":"v","label":"G","rootPc":7,"bassMidi":55,"notesMidi":[67,71,74],"noteNames":["G4","B4","D5"],"bassName":"G3"} label=G instrument=piano transpose=0 line=7 secDur=1.3043
@@ -1722,22 +1722,22 @@ drums:
   6.8182 inst=ride art=hit lane=ride kit=rock tick=1440 vel=0.7 line=7 secSwing=0
   7.0455 inst=ride art=hit lane=ride kit=rock tick=1488 vel=0.7 line=7 secSwing=0.0758
 notes:
-  0 tick=0 ticks=96 note={"midi":38,"name":"D2","spell":{"letter":"D","alter":0}} label=2 instrument=bass voice=0 vel=0.7 line=4 secDur=0.4545 secSwing=0
-  0.4545 tick=96 ticks=96 note={"midi":41,"name":"F2","spell":{"letter":"F","alter":0}} label=4 instrument=bass voice=0 vel=0.7 line=4 secDur=0.4545 secSwing=0
-  0.9091 tick=192 ticks=96 note={"midi":43,"name":"G2","spell":{"letter":"G","alter":0}} label=5 instrument=bass voice=0 vel=0.7 line=4 secDur=0.4545 secSwing=0
-  1.3636 tick=288 ticks=96 note={"midi":47,"name":"B2","spell":{"letter":"B","alter":0}} label=7 instrument=bass voice=0 vel=0.7 line=4 secDur=0.4545 secSwing=0
-  1.8182 tick=384 ticks=96 note={"midi":48,"name":"C3","spell":{"letter":"C","alter":0}} label=1' instrument=bass voice=0 vel=0.7 line=4 secDur=0.4545 secSwing=0
-  2.2727 tick=480 ticks=96 note={"midi":52,"name":"E3","spell":{"letter":"E","alter":0}} label=3' instrument=bass voice=0 vel=0.7 line=4 secDur=0.4545 secSwing=0
-  2.7273 tick=576 ticks=96 note={"midi":55,"name":"G3","spell":{"letter":"G","alter":0}} label=5' instrument=bass voice=0 vel=0.7 line=4 secDur=0.4545 secSwing=0
-  3.1818 tick=672 ticks=96 note={"midi":57,"name":"A3","spell":{"letter":"A","alter":0}} label=6' instrument=bass voice=0 vel=0.7 line=4 secDur=0.4545 secSwing=0
-  3.6364 tick=768 ticks=96 note={"midi":50,"name":"D3","spell":{"letter":"D","alter":0}} label=2' instrument=bass voice=0 vel=0.7 line=4 secDur=0.4545 secSwing=0
-  4.0909 tick=864 ticks=96 note={"midi":53,"name":"F3","spell":{"letter":"F","alter":0}} label=4' instrument=bass voice=0 vel=0.7 line=4 secDur=0.4545 secSwing=0
-  4.5455 tick=960 ticks=96 note={"midi":43,"name":"G2","spell":{"letter":"G","alter":0}} label=5 instrument=bass voice=0 vel=0.7 line=4 secDur=0.4545 secSwing=0
-  5 tick=1056 ticks=96 note={"midi":41,"name":"F2","spell":{"letter":"F","alter":0}} label=4 instrument=bass voice=0 vel=0.7 line=4 secDur=0.4545 secSwing=0
-  5.4545 tick=1152 ticks=96 note={"midi":40,"name":"E2","spell":{"letter":"E","alter":0}} label=3 instrument=bass voice=0 vel=0.7 line=4 secDur=0.4545 secSwing=0
-  5.9091 tick=1248 ticks=96 note={"midi":43,"name":"G2","spell":{"letter":"G","alter":0}} label=5 instrument=bass voice=0 vel=0.7 line=4 secDur=0.4545 secSwing=0
-  6.3636 tick=1344 ticks=96 note={"midi":45,"name":"A2","spell":{"letter":"A","alter":0}} label=6 instrument=bass voice=0 vel=0.7 line=4 secDur=0.4545 secSwing=0
-  6.8182 tick=1440 ticks=96 note={"midi":47,"name":"B2","spell":{"letter":"B","alter":0}} label=7 instrument=bass voice=0 vel=0.7 line=4 secDur=0.4545 secSwing=0
+  0 tick=0 ticks=96 note={"midi":38,"name":"D2","spell":{"letter":"D","alter":0}} label=ii instrument=bass voice=0 vel=0.7 line=4 secDur=0.4545 secSwing=0
+  0.4545 tick=96 ticks=96 note={"midi":41,"name":"F2","spell":{"letter":"F","alter":0}} label=iv instrument=bass voice=0 vel=0.7 line=4 secDur=0.4545 secSwing=0
+  0.9091 tick=192 ticks=96 note={"midi":43,"name":"G2","spell":{"letter":"G","alter":0}} label=v instrument=bass voice=0 vel=0.7 line=4 secDur=0.4545 secSwing=0
+  1.3636 tick=288 ticks=96 note={"midi":47,"name":"B2","spell":{"letter":"B","alter":0}} label=vii instrument=bass voice=0 vel=0.7 line=4 secDur=0.4545 secSwing=0
+  1.8182 tick=384 ticks=96 note={"midi":48,"name":"C3","spell":{"letter":"C","alter":0}} label=i' instrument=bass voice=0 vel=0.7 line=4 secDur=0.4545 secSwing=0
+  2.2727 tick=480 ticks=96 note={"midi":52,"name":"E3","spell":{"letter":"E","alter":0}} label=iii' instrument=bass voice=0 vel=0.7 line=4 secDur=0.4545 secSwing=0
+  2.7273 tick=576 ticks=96 note={"midi":55,"name":"G3","spell":{"letter":"G","alter":0}} label=v' instrument=bass voice=0 vel=0.7 line=4 secDur=0.4545 secSwing=0
+  3.1818 tick=672 ticks=96 note={"midi":57,"name":"A3","spell":{"letter":"A","alter":0}} label=vi' instrument=bass voice=0 vel=0.7 line=4 secDur=0.4545 secSwing=0
+  3.6364 tick=768 ticks=96 note={"midi":50,"name":"D3","spell":{"letter":"D","alter":0}} label=ii' instrument=bass voice=0 vel=0.7 line=4 secDur=0.4545 secSwing=0
+  4.0909 tick=864 ticks=96 note={"midi":53,"name":"F3","spell":{"letter":"F","alter":0}} label=iv' instrument=bass voice=0 vel=0.7 line=4 secDur=0.4545 secSwing=0
+  4.5455 tick=960 ticks=96 note={"midi":43,"name":"G2","spell":{"letter":"G","alter":0}} label=v instrument=bass voice=0 vel=0.7 line=4 secDur=0.4545 secSwing=0
+  5 tick=1056 ticks=96 note={"midi":41,"name":"F2","spell":{"letter":"F","alter":0}} label=iv instrument=bass voice=0 vel=0.7 line=4 secDur=0.4545 secSwing=0
+  5.4545 tick=1152 ticks=96 note={"midi":40,"name":"E2","spell":{"letter":"E","alter":0}} label=iii instrument=bass voice=0 vel=0.7 line=4 secDur=0.4545 secSwing=0
+  5.9091 tick=1248 ticks=96 note={"midi":43,"name":"G2","spell":{"letter":"G","alter":0}} label=v instrument=bass voice=0 vel=0.7 line=4 secDur=0.4545 secSwing=0
+  6.3636 tick=1344 ticks=96 note={"midi":45,"name":"A2","spell":{"letter":"A","alter":0}} label=vi instrument=bass voice=0 vel=0.7 line=4 secDur=0.4545 secSwing=0
+  6.8182 tick=1440 ticks=96 note={"midi":47,"name":"B2","spell":{"letter":"B","alter":0}} label=vii instrument=bass voice=0 vel=0.7 line=4 secDur=0.4545 secSwing=0
 chords:
   0 tick=0 ticks=192 chord={"input":"ii7","label":"Dm7","rootPc":2,"bassMidi":50,"notesMidi":[62,65,69,72],"noteNames":["D4","F4","A4","C5"],"bassName":"D3"} label=Dm7 instrument=piano transpose=0 line=2 secDur=0.9091 secSwing=0
   0.9091 tick=192 ticks=192 chord={"input":"v7","label":"G7","rootPc":7,"bassMidi":55,"notesMidi":[67,71,74,77],"noteNames":["G4","B4","D5","F5"],"bassName":"G3"} label=G7 instrument=piano transpose=0 line=2 secDur=0.9091 secSwing=0
