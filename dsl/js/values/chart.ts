@@ -71,9 +71,10 @@ export function dimMarkProblem(tok: string): string | null {
 }
 
 // V7 of V: a numeral counted on the major scale of the root of the chord after of, so
-// in C it's D7, the V7 of G. A chain takes brackets: V7 of (V of V). The chord after of gives
-// only its root, and a bass note goes at the end: V7 of V/F#. Returns { chord } or { error }.
-// Each side is a numeral, with whatever a chart takes after one (V7alt).
+// in C it's D7, the V7 of G, and v of Am is E. The chord after of is any chord, a numeral or
+// a name of any type (Am, Cmaj7, F#dim), and gives only its root. A chain takes brackets:
+// V7 of (V of V). A bass note goes at the end: V7 of V/F#. Returns { chord } or { error }.
+// The left side is a numeral, with whatever a chart takes after one (V7alt).
 const numeral = (t: string) => /^[#b]?[IViv]/.test(t)
 export function ofChord(tok: string, key: Key, octave: number): Of {
   const at = tok.indexOf(" of")
@@ -92,23 +93,12 @@ export function ofChord(tok: string, key: Key, octave: number): Of {
   if (right.startsWith("(")) {
     if (!right.endsWith(")")) return { error: message("of.chainBrackets") }
     const inner = right.slice(1, -1)
-    const r: { chord?: Chord | null; error?: string } | null = isOf(inner)
-      ? ofChord(inner, key, octave)
-      : numeral(inner)
-        ? { chord: buildChord(inner, key, octave) }
-        : null
-    if (r?.error) return { error: r.error }
-    if (!r?.chord) return { error: message("of.rightNumeral") }
+    const r = isOf(inner) ? ofChord(inner, key, octave) : { chord: buildChord(inner, key, octave) }
+    if ("error" in r && r.error) return { error: r.error }
+    if (!r.chord) return { error: message("chord.unknown", { chord: inner }) }
     root = r.chord
   } else {
     if (isOf(right)) return { error: message("of.chainBrackets") }
-    if (!numeral(right)) {
-      return {
-        error: buildChord(right, key, octave)
-          ? message("of.rightName")
-          : message("of.rightNumeral"),
-      }
-    }
     root = buildChord(right, key, octave)
     if (!root) return { error: message("chord.unknown", { chord: right }) }
   }

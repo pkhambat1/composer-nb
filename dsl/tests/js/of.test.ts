@@ -135,6 +135,15 @@ describe("of in charts", () => {
     ).toEqual(["A7", "D7"])
   })
 
+  it("counts on any chord's root, a name of any type", () => {
+    const of = (chart) => chords("set key C\nplay piano: chords " + chart)
+    expect(of("v of Am")).toEqual(["E"])
+    expect(of("v7 of G")).toEqual(["D7"])
+    expect(of("v of Cmaj7|v of F#dim|v of Bbm7")).toEqual(["G", "C#", "F"])
+    expect(of("v of (v of Am)")).toEqual(["B"])
+    expect(of("v7 of Am/G")).toEqual(["E7/G"])
+  })
+
   it("keeps its name under transpose", () => {
     const p = parseSource("set key C\nset transpose 2\nplay guitar: chords v7 of v")
     expect([p.chords[0].chord.label, p.chords[0].transpose]).toEqual(["D7", 2])
@@ -143,14 +152,13 @@ describe("of in charts", () => {
   it("says what's wrong", () => {
     const err = (chart) => firstError("set key C\nplay piano: chords " + chart)
     expect(err("V7 of V of V")).toBe("A chain of of's takes brackets: V7 of (V of V)")
-    expect(err("V7 of G")).toBe("After of, a chart takes a numeral, not a chord name: V7 of V")
     expect(err("5 of V")).toBe(
       "In a chart, of takes a numeral in front of it, counted from the chord after it: V7 of V",
     )
-    expect(err("V7 of [V]")).toBe("After of, a chart takes a numeral to count from: V7 of V")
+    expect(err("V7 of [V]")).toBe(`"[V]" isn't a chord I know`)
     expect(err("V7 of (V of V")).toBe("The ( after of closes on its line: V7 of (V of V)")
-    expect(firstError("set key C\nchords turn = v7 of G\nplay piano: chords turn")).toBe(
-      "After of, a chart takes a numeral, not a chord name: V7 of V",
+    expect(firstError("set key C\nchords turn = v7 of Hm\nplay piano: chords turn")).toBe(
+      `"Hm" isn't a chord I know`,
     )
   })
 })
