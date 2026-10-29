@@ -2434,7 +2434,10 @@ describe("key", () => {
     expect(errs("set mode aeolian")).toEqual([list])
     expect(errs("set mode m")).toEqual([list])
     expect(errs("set mode Minor")).toEqual(["Modes are camelCase: set mode minor"])
-    expect(errs("set mode harmonicminor")).toEqual(["Modes are camelCase: set mode harmonicMinor"])
+    // for now the all-lowercase spelling is read too, and is the camelCase mode
+    expect(errs("set mode harmonicminor")).toEqual([])
+    expect(parseCell("set mode wholetone", initialState()).state.mode).toBe("wholeTone")
+    expect(errs("set mode HarmonicMinor")).toEqual(["Modes are camelCase: set mode harmonicMinor"])
     expect(errs("set mode")).toEqual(["set mode needs a value after it, e.g. set mode minor"])
     for (const mode of MODES) expect(errs(`set mode ${mode}`), mode).toEqual([])
   })

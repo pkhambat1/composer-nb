@@ -11,6 +11,7 @@ import {
   among,
   KITS,
   MODES,
+  modeNamed,
   PITCHED,
   SETTINGS,
   SOUNDS,
@@ -33,9 +34,8 @@ export const keyOf = (st: State) => parseKey(st.key, st.mode)
 // to write after `verb` (set, or with in a with's header).
 function keyProblem(value: string, verb: Verb): string {
   const both = /^([A-G][#b]?)(?:(m)|\s*([A-Za-z]+))$/.exec(value)
-  const mode = both && (both[2] ? "minor" : both[3].toLowerCase())
-  if (both && mode && among(MODES, mode))
-    return message("key.withMode", { verb, root: both[1], mode })
+  const mode = both && modeNamed(both[2] ? "minor" : both[3].toLowerCase())
+  if (both && mode) return message("key.withMode", { verb, root: both[1], mode })
   if (both) return message("key.notAMode", { verb, root: both[1] })
   return message("key.notANote", { verb })
 }
@@ -124,12 +124,13 @@ export function applySetting(
   if (name === "mode") {
     // The key's scale: degrees and numerals count on it, so in D minor 3 is F and III is F
     // major. It also gives the sheet its signature and how accidentals are spelt.
-    if (!among(MODES, value)) {
+    const mode = modeNamed(value)
+    if (!mode) {
       const found = MODES.find((m) => m.toLowerCase() === value.toLowerCase())
       err(ln, found ? message("mode.camelCase", { verb, mode: found }) : message("mode.unknown"))
       return false
     }
-    state.mode = value
+    state.mode = mode
     return true
   }
   if (name === "transpose") {
