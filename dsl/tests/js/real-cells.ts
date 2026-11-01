@@ -4,18 +4,19 @@
    corpus and the parser's tests. */
 import { readdirSync, readFileSync } from "node:fs"
 import { fileURLToPath } from "node:url"
-import { initialState, parseCell } from "../../js/language.ts"
+import { initialState, parseCell, type State } from "../../js/language.ts"
 import { GROOVES } from "../../js/grooves.ts"
 import { examples, pages, read, readMagic } from "./docs-examples.ts"
 
 const SKILLS = fileURLToPath(new URL("../../../plugin/skills", import.meta.url))
 
 // [{ title, source, inherited }] for one group
-export function realCells(group) {
+type RealCell = { title: string; source: string; inherited: State }
+export function realCells(group: string): RealCell[] {
   if (group === "docs") {
-    const cells: any[] = []
+    const cells: RealCell[] = []
     for (const page of pages) {
-      const named = {}
+      const named: Record<string, State> = {}
       for (const block of examples(read(page))) {
         const { body, name, after } = readMagic(block.source)
         const inherited = after ? named[after] : initialState()
@@ -29,13 +30,13 @@ export function realCells(group) {
     return GROOVES.map((g) => ({ title: g.title, source: g.source, inherited: initialState() }))
   }
   if (group === "skills") {
-    const cells: any[] = []
+    const cells: RealCell[] = []
     for (const skill of readdirSync(SKILLS).sort()) {
       const text = readFileSync(`${SKILLS}/${skill}/SKILL.md`, "utf8")
       const blocks = [...text.matchAll(/^```composer-nb\n([\s\S]*?)\n```/gm)].map((m) => m[1])
       // Each example follows the ones above it in the same skill, as cells in a notebook.
       let inherited = initialState()
-      blocks.forEach((source, i) => {
+      blocks.forEach((source: string, i) => {
         cells.push({ title: `${skill} example ${i + 1}`, source, inherited })
         inherited = parseCell(source, inherited).state
       })

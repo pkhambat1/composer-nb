@@ -323,7 +323,7 @@ chords:
   9.6 tick=1152 ticks=192 chord={"input":"G","label":"G","rootPc":7,"bassMidi":45,"notesMidi":[57,61,64],"noteNames":["A3","C#4","E4"],"bassName":"A2"} label=G instrument=guitar transpose=2 line=1 secDur=1.6
   11.2 tick=1344 ticks=192 chord={"input":"D","label":"D","rootPc":2,"bassMidi":40,"notesMidi":[52,56,59],"noteNames":["E3","G#3","B3"],"bassName":"E2"} label=D instrument=guitar transpose=2 line=1 secDur=1.6
 
-## language/overview.mdx:39
+## language/overview.mdx:41
 errors: none
 names: backbeat steps line 1, walk notes line 2, verse chords line 3, groove pattern line 5
 from above: none
@@ -361,7 +361,7 @@ chords:
   2 tick=384 ticks=192 chord={"input":"C","label":"C","rootPc":0,"bassMidi":36,"notesMidi":[48,52,55],"noteNames":["C3","E3","G3"],"bassName":"C2"} label=C instrument=piano transpose=0 line=9 secDur=1
   3 tick=576 ticks=192 chord={"input":"G","label":"G","rootPc":7,"bassMidi":43,"notesMidi":[55,59,62],"noteNames":["G3","B3","D4"],"bassName":"G2"} label=G instrument=piano transpose=0 line=9 secDur=1
 
-## language/overview.mdx:79
+## language/overview.mdx:81
 errors: none
 names: none
 from above: none
@@ -432,6 +432,39 @@ drums:
 
 ## language/patterns.mdx:38
 errors: none
+names: accent block line 1, beat pattern line 2
+from above: none
+length: 4 s
+block startSec=0 durSec=4 bars=2 time=4 over 4 tempo=120 key=C unit=4 barTicks=384 res=2
+drums:
+  0 inst=crash art=hit lane=crash kit=rock tick=0 vel=0.7 line=1 oneShot=true
+  0 inst=hat art=hit lane=hat kit=rock tick=0 vel=0.7 line=5
+  0 inst=kick art=hit lane=kick kit=rock tick=0 vel=0.7 line=3
+  0.25 inst=hat art=hit lane=hat kit=rock tick=48 vel=0.7 line=5
+  0.5 inst=hat art=hit lane=hat kit=rock tick=96 vel=0.7 line=5
+  0.5 inst=snare art=hit lane=snare kit=rock tick=96 vel=0.7 line=4
+  0.75 inst=hat art=hit lane=hat kit=rock tick=144 vel=0.7 line=5
+  1 inst=hat art=hit lane=hat kit=rock tick=192 vel=0.7 line=5
+  1 inst=kick art=hit lane=kick kit=rock tick=192 vel=0.7 line=3
+  1.25 inst=hat art=hit lane=hat kit=rock tick=240 vel=0.7 line=5
+  1.5 inst=hat art=hit lane=hat kit=rock tick=288 vel=0.7 line=5
+  1.5 inst=snare art=hit lane=snare kit=rock tick=288 vel=0.7 line=4
+  1.75 inst=hat art=hit lane=hat kit=rock tick=336 vel=0.7 line=5
+  2 inst=hat art=hit lane=hat kit=rock tick=384 vel=0.7 line=5
+  2 inst=kick art=hit lane=kick kit=rock tick=384 vel=0.7 line=3
+  2.25 inst=hat art=hit lane=hat kit=rock tick=432 vel=0.7 line=5
+  2.5 inst=hat art=hit lane=hat kit=rock tick=480 vel=0.7 line=5
+  2.5 inst=snare art=hit lane=snare kit=rock tick=480 vel=0.7 line=4
+  2.75 inst=hat art=hit lane=hat kit=rock tick=528 vel=0.7 line=5
+  3 inst=hat art=hit lane=hat kit=rock tick=576 vel=0.7 line=5
+  3 inst=kick art=hit lane=kick kit=rock tick=576 vel=0.7 line=3
+  3.25 inst=hat art=hit lane=hat kit=rock tick=624 vel=0.7 line=5
+  3.5 inst=hat art=hit lane=hat kit=rock tick=672 vel=0.7 line=5
+  3.5 inst=snare art=hit lane=snare kit=rock tick=672 vel=0.7 line=4
+  3.75 inst=hat art=hit lane=hat kit=rock tick=720 vel=0.7 line=5
+
+## language/patterns.mdx:58
+errors: none
 names: intro pattern line 1, verse pattern line 2, chorus pattern line 3
 from above: none
 length: 12 s
@@ -468,7 +501,7 @@ drums:
   9.75 inst=snare art=hit lane=snare kit=rock tick=1872 vel=0.7 line=5
   10 inst=crash art=hit lane=crash kit=rock tick=1920 vel=0.7 line=1
 
-## language/patterns.mdx:55
+## language/patterns.mdx:75
 errors: none
 names: none
 from above: none
@@ -485,7 +518,7 @@ notes:
   3.5 tick=672 ticks=96 note={"midi":72,"name":"C5","spell":{"letter":"C","alter":0}} label=i' instrument=piano voice=0 vel=0.7 line=3 secDur=0.5
   4 tick=768 ticks=384 note={"midi":72,"name":"C5","spell":{"letter":"C","alter":0}} label=i' instrument=piano voice=0 vel=0.7 line=6 secDur=2
 
-## language/patterns.mdx:71
+## language/patterns.mdx:91
 errors: none
 names: beat pattern line 1, verse pattern line 6, chorus pattern line 11, song pattern line 16
 from above: none
@@ -549,7 +582,7 @@ chords:
   5 tick=960 ticks=192 chord={"input":"G","label":"G","rootPc":7,"bassMidi":43,"notesMidi":[55,59,62],"noteNames":["G3","B3","D4"],"bassName":"G2"} label=G instrument=piano transpose=0 line=12 secDur=1
   6 tick=1152 ticks=384 chord={"input":"C","label":"C","rootPc":0,"bassMidi":36,"notesMidi":[48,52,55],"noteNames":["C3","E3","G3"],"bassName":"C2"} label=C instrument=piano transpose=0 line=12 secDur=2
 
-## language/patterns.mdx:100
+## language/patterns.mdx:120
 errors: none
 names: groove pattern line 4
 from above: none
@@ -592,7 +625,7 @@ drums:
   4.3333 inst=hat art=pedal lane=hat.pedal kit=rock tick=624 vel=0.7 line=12
   4.3333 inst=snare art=hit lane=snare kit=rock tick=624 vel=0.7 line=6
 
-## language/patterns.mdx:132
+## language/patterns.mdx:152
 errors: none
 names: pa steps line 4, radiddle steps line 5, hands pattern line 7, feet pattern line 12
 from above: none

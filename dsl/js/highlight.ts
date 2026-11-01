@@ -475,6 +475,38 @@ function line(code: string, depth = 0, inside = false): Part[] {
   const word = /^[A-Za-z][A-Za-z0-9]*/.exec(body)?.[0] || ""
   const after = body.slice(word.length)
 
+  // A play's output length follows its music, including a closing } or ) on a later line.
+  if (word === "play" || /^[})]/.test(body)) {
+    let level = depth
+    let blocks = 0
+    for (let i = 0; i < code.length; i++) {
+      if (code[i] === "(") level++
+      else if (code[i] === ")") level--
+      else if (code[i] === "{") blocks++
+      else if (code[i] === "}") blocks = Math.max(0, blocks - 1)
+      if (
+        level !== 0 ||
+        blocks !== 0 ||
+        !/^for\b/.test(code.slice(i)) ||
+        (i > 0 && !/\s/.test(code[i - 1]))
+      )
+        continue
+      const before = code.slice(0, i)
+      const gap = /\s*$/.exec(before)?.[0] ?? ""
+      const afterFor = code.slice(i + 3)
+      const space = /^\s*/.exec(afterFor)?.[0] ?? ""
+      const duration = length(afterFor.slice(space.length))
+      return [
+        ...line(before.slice(0, before.length - gap.length), depth, inside),
+        part(null, gap),
+        part("tk-directive-key", "for"),
+        part(null, space),
+        ...duration.parts,
+        ...(duration.rest ? [part("tk-directive-val", duration.rest)] : []),
+      ]
+    }
+  }
+
   let soundSetting = /^([a-z.]+)(\s+)([a-z]+)(\s*)$/.exec(body)
   if (soundSetting && !soundsOf(soundSetting[1])) soundSetting = null
   const typed = among(TYPES, word) && /^(\s+)([A-Za-z][A-Za-z0-9]*)(\s*)(=)(\s*)(.*)$/.exec(after)
@@ -495,14 +527,14 @@ function line(code: string, depth = 0, inside = false): Part[] {
     out.push(part("tk-directive-key", word), part(null, gap))
     out.push(part(taken ? "tk-error" : "tk-word", name), part(null, before))
     out.push(part("tk-punct", "="), part(null, afterEq))
-    if (word === "pattern") {
+    if (word === "pattern" || word === "block") {
       const len = length(value)
       out.push(...len.parts, ...playable(len.rest, st))
     } else {
       const holds: Record<string, Kind> = { chords: "chord", notes: "notes" }
       out.push(...values(value, holds[word] || "drum"))
     }
-  } else if (["pattern", "steps", "notes"].includes(word) && /^(\s|$)/.test(after)) {
+  } else if (["pattern", "block", "steps", "notes"].includes(word) && /^(\s|$)/.test(after)) {
     // pattern groove {: a type without its name and =
     out.push(part("tk-error", word), ...names(after, st))
   } else if ((word === "bar" || word === "bars") && /^\s+\S/.test(after)) {
@@ -526,11 +558,11 @@ function line(code: string, depth = 0, inside = false): Part[] {
       else if (m[8]) out.push(...playable(m[8]))
     }
   } else if (word === "play" && /^(\s|$)/.test(after)) {
-    // play groove, play 3 bars { ... }, play kick: x--x
+    // play groove, play { ... } for 3 bars, play kick: x--x
     const space = /^\s*/.exec(after)![0]
     out.push(part("tk-directive-key", word), part(null, space))
     const len = length(after.slice(space.length))
-    out.push(...len.parts)
+    out.push(...len.parts.map((token) => (token.c ? { ...token, c: "tk-error" } : token)))
     if (len.rest.startsWith("{")) out.push(...braces(len.rest, st))
     else if (len.rest) out.push(...playable(len.rest, st))
   } else if (word === "set" && /^(\s|$)/.test(after)) {
@@ -595,7 +627,8 @@ export function highlightMusic(src: string): Part[][] {
     if (code.slice(lead.length).startsWith("|") && continues) {
       // |C G: the line above goes on, so it's coloured as that line's value
       parts = [part(null, lead), ...values(code.slice(lead.length), continues)]
-    } else if (holds === "steps" || holds === "pitched") parts = layerLine(code, holds)
+    } else if ((holds === "steps" || holds === "pitched") && !/^\s*}/.test(code))
+      parts = layerLine(code, holds)
     else parts = line(code, groups, open.length > 0)
     if (code.trim()) continues = lastKind
     else if (!text.trim()) continues = null

@@ -8,16 +8,18 @@ const { parseSource } = await import("../../js/music-engine.ts")
 const { sheetAbc } = await import("../../js/sheet.ts")
 const { initialState } = await import("../../js/language.ts")
 
-const clean = (src, inherited?) => {
+const clean = (src: string, inherited?: import("../../js/language.ts").State) => {
   const p = parseSource(src, inherited)
   expect(p.errors).toEqual([])
   return p
 }
-const midis = (src) => clean(src).notes.map((e) => e.note.midi)
-const errors = (src) => parseSource(src).errors.map((e) => e.msg)
-const firstError = (src) => errors(src)[0]
-const notes = (o) => o.notes.map((e) => `${e.instrument} ${e.note.name}`)
-const chords = (o) => o.chords.map((e) => e.chord.label)
+const midis = (src: string) => clean(src).notes.map((e) => e.note.midi)
+const errors = (src: string) => parseSource(src).errors.map((e) => e.msg)
+const firstError = (src: string) => errors(src)[0]
+const notes = (o: ReturnType<typeof parseSource>["outputs"][number]) =>
+  o.notes.map((e) => `${e.instrument} ${e.note.name}`)
+const chords = (o: ReturnType<typeof parseSource>["outputs"][number]) =>
+  o.chords.map((e) => e.chord.label)
 
 describe("a key and its mode", () => {
   const scale = "play piano: notes i-ii-iii-iv-v-vi-vii-i'-"
@@ -44,9 +46,9 @@ describe("a key and its mode", () => {
   it("change the pitch: the same degrees and numerals sound in each mode's own scale", () => {
     const cell =
       "play piano: {\n  chords i iii|vii iv\n  notes iii-------vi-------|vii-------i'-------\n}"
-    const sounds = (mode) =>
-      clean(`set key D\nset mode ${mode}\n${cell}`).events.map(
-        (e) => (e as any).note?.name ?? (e as any).chord.label,
+    const sounds = (mode: string) =>
+      clean(`set key D\nset mode ${mode}\n${cell}`).events.map((e) =>
+        "note" in e ? e.note.name : e.chord.label,
       )
     expect(sounds("minor")).toEqual(["Dm", "F3", "F", "Bb3", "C", "C4", "Gm", "D4"])
     expect(sounds("dorian")).toEqual(["Dm", "F3", "F", "B3", "C", "C4", "G", "D4"])
@@ -107,7 +109,9 @@ describe("with", () => {
       ["D", "G"],
       ["Dm", "G"],
     ])
-    expect(p.outputs.map((o) => o.blocks[0].mode)).toEqual(["major", "dorian"])
+    expect(
+      p.outputs.map((o: ReturnType<typeof parseSource>["outputs"][number]) => o.blocks[0].mode),
+    ).toEqual(["major", "dorian"])
   })
 
   it("is a block in a play: on its own line it sounds with the others, and repeats as a block does", () => {
@@ -161,8 +165,9 @@ describe("with", () => {
     ).outputs[0]
     expect(notes(o)).toEqual(["piano C3", "bass C2"])
     // what's in a bar repeats to fill it
-    const bar = clean("play 2 bars {\n  bar 2 with octave 5 { piano: notes i--- }\n  kick: x---\n}")
-      .outputs[0]
+    const bar = clean(
+      "play {\n  bar 2 with octave 5 { piano: notes i--- }\n  kick: x---\n} for 2 bars",
+    ).outputs[0]
     expect(bar.notes.map((e) => [e.note.name, e.secStart])).toEqual([
       ["C5", 2],
       ["C5", 2.5],
@@ -292,7 +297,7 @@ describe("with", () => {
 
 describe("a numeral's octave marks", () => {
   it("lift the chord an octave, as a degree's do", () => {
-    const low = (src) => clean(src).chords.map((e) => e.chord.notesMidi[0])
+    const low = (src: string) => clean(src).chords.map((e) => e.chord.notesMidi[0])
     expect(low("with key D { play piano: chords i i'|'i - }")).toEqual([50, 62, 38])
   })
 })

@@ -24,6 +24,7 @@ export type Line = { ln: number; parts: Piece[]; st?: State }
 
 // A pattern with a name: its lines and the length written in front of it, if any
 export type Section = {
+  type: "pattern" | "block"
   name: string
   ln: number
   lines: Line[]

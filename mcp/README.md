@@ -1,60 +1,103 @@
-# composer-nb-mcp
+# composer-nb MCP App
 
-The [composer-nb](https://github.com/pkhambat1/composer-nb) language as an [MCP](https://modelcontextprotocol.io) server: an assistant writes drums, notes and chords as a text cell, checks it against the parser, draws the sheet music and writes a MIDI file.
+The MCP server checks and renders music and can open an editable notebook inside an
+MCP Apps host. The website and embedded app share cells, bricks, sheet music, chord
+diagrams, editing and audio playback through `playground/src/notebook`.
 
-## Install the plugin
+## Run from this checkout
 
-In Claude, the [plugin](../plugin/README.md) brings this server as its connector, with skills for writing cells, grooves, practice routines and theory.
+Use Node 22.18 or later. From the repository root:
 
-**Claude.ai and Claude Desktop:** Customize → Plugins → Add → Add marketplace, with the repository `pkhambat1/composer-nb`. Select composer-nb, then Add, and add its connector on the plugin's Connectors tab.
-
-**Claude Code:**
-
-```text
-/plugin marketplace add pkhambat1/composer-nb
-/plugin install composer-nb@composer-nb
+```sh
+npm ci
+npm run build
+npm run mcp -- --http 4179 --notebook /absolute/path/to/song.json
 ```
 
-## Connect it
+The endpoint is `http://localhost:4179/mcp`. The explicit notebook file is created
+empty if missing. Edits survive restarting the server. Revision checks reject stale
+writes; editor drafts are saved even while their music is incomplete. Model edits
+are validated against inherited settings and definitions before saving.
 
-For the server alone, or another assistant.
+Omit `--http 4179` for stdio. Omit `--notebook` for the stateless music tools alone.
+The package is not published on npm. The public deployment must be rebuilt and
+available before using a published connector URL.
 
-**Claude.ai and Claude Desktop:** Settings → Connectors → Add custom connector, with the URL `https://composer-nb.vercel.app/mcp`.
+For a remote host such as ChatGPT, expose the HTTP endpoint through an HTTPS service
+you control. Set `COMPOSER_NB_APP_ORIGIN=https://your-server.example` before starting
+this server so it serves the renderer at `/app.js` from that same origin. Without an
+asset origin, the UI resource contains the complete bundle for stdio hosts.
+`COMPOSER_NB_SITE` sets the website used by music download and library links.
 
-**Claude Code:**
+This local file-backed server is for one notebook owner. A hosted service should
+supply an authenticated, owner-scoped `NotebookRepository`; do not share one store
+between unrelated accounts.
 
-```bash
-claude mcp add --transport http composer-nb https://composer-nb.vercel.app/mcp
+## Interaction
+
+1. Invoke `open_notebook` in the host.
+2. Select a cell, source lines, drum brick, sheet or chord in the notebook.
+3. Use the host's native chat composer, for example “Make a drum groove in this cell.”
+4. The app shares the stable cell ID, selected target and current source through
+   MCP Apps `updateModelContext`. Brick context includes the grid resolution and exact
+   tick position, so compressed grids cannot be mistaken for source steps. The model
+   reads the revision and calls
+   `update_music_cell`. The open notebook refreshes the saved result.
+
+The product contains no chat composer, model credentials or agent loop. Hosts
+control where an app appears and whether native context attachments are shown.
+The protocol and UI bridge are standard MCP Apps; an ordinary MCP client can still
+use the tools without displaying the app. ChatGPT and Claude have both been exercised
+directly in Chrome, including native selection, saved model edits, notation and
+advancing audio playback. See `VERIFICATION.md` for the exact checks and remaining
+host launch/retry limitations.
+
+| Tool                | Purpose                                                   |
+| ------------------- | --------------------------------------------------------- |
+| `open_notebook`     | Open the notebook app and read the document               |
+| `get_notebook`      | Read stable cell IDs, sources and revision                |
+| `update_music_cell` | Validate and replace one cell at an expected revision     |
+| `add_music_cell`    | Append an empty cell                                      |
+| `save_notebook`     | App-only editor autosave, including drafts and cell order |
+| `parse`             | Check a cell and display its music UI                     |
+| `render`            | Export sheet PNG, MIDI or ABC notation                    |
+| `library`           | Search the groove library                                 |
+| `reference`         | Read the current language reference                       |
+
+Declarations require explicit types: `pattern groove = { kick: x- }` repeats;
+`block accent = { crash: 1 }` plays once. A play duration follows its music:
+`play groove for 2 bars`. Untyped declarations and prefix play durations are rejected.
+
+## Development host
+
+With the MCP server running on port 4179:
+
+```sh
+npm run build:app -w mcp
+npm run dev:app -w mcp -- --host 127.0.0.1 --port 4178 --strictPort
 ```
 
-**Cursor, Windsurf, VS Code and the rest** take the same URL as a remote server.
+Open `http://localhost:4178/`. `app/dev/` contains a development-only host using the
+real MCP client, AppBridge, iframe handshake and server tools. Its clearly labeled
+fixed example edit substitutes for a model; its prompt controls are outside the
+product iframe and excluded from production bundles. Rebuild the app after UI edits
+because this host loads the server's production resource.
 
-This package is not on npm. To run it from a checkout, `npm run mcp` serves it over stdio and `npm run mcp -- --http 3333` serves it at `localhost:3333/mcp`. `COMPOSER_NB_SITE` sets the site the groove pages and the sheet and MIDI downloads are linked at.
+`app/NotebookApp.tsx` owns document synchronization and model context.
+`app/main.ts` connects the SDK. `app/bootstrap.ts` completes the host handshake before
+loading the renderer. Neither adapter duplicates the shared notebook UI.
+`npm run build -w mcp` builds the generated reference, server and both UI bundles;
+packaging includes `app/dist`. Tests exercise parsing, transport, persistence,
+revision conflicts and UI selection stability.
 
-The server is TypeScript, in `src/`. `npm run mcp` runs it as it is (Node 22.18 or later runs TypeScript), and `npm run build:lib -w mcp` compiles it into `lib/`, which the Vercel functions in `api/` run. `src/reference.ts` is written from the docs' reference pages by `npm run reference -w mcp`.
+## Embedding a backend
 
-## Tools
+```ts
+import { createServer, FileNotebookStore } from "composer-nb-mcp"
 
-| Tool        | Does                                                                                                                                                                       |
-| ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `parse`     | Checks a cell: the errors with their line numbers, the settings and names in effect, and for each play a grid of every hit and note, bar by bar, with the chords it heard. |
-| `render`    | The sheet music as a PNG, a MIDI file, or the ABC notation.                                                                                                                |
-| `library`   | Searches the grooves: transcriptions and harmony to start from.                                                                                                            |
-| `reference` | The language reference, page by page.                                                                                                                                      |
-
-The reference pages and the grooves are resources too.
-
-## The cell, in the conversation
-
-Where the client renders [MCP Apps](https://claude.com/docs/connectors/building/mcp-apps/getting-started) (claude.ai and Claude Desktop do), `parse` draws the cell under its result as the playground's own: the code in its editor, the player, the hits as bricks or as sheet music, and the chords. The code can be changed there: Play or Shift+Enter renders it and plays it. A cell continues from the cells above it. `parse` with an empty source draws an empty cell with the playground's prompt, for the user to write in. Once the user has changed a cell and played it, the view passes what it now reads to the client as context for the next message. The client asks once whether to show the view. A client that doesn't render apps, Claude Code among them, reads the same text as before.
-
-The view is `app/main.ts`: the playground's `App` (`playground/src/App.tsx`, given the cells through its `host` prop) and its styles, with the MCP Apps client, built into `app/dist/app.js` by `npm run build:app -w mcp` and served inline in one page as the resource `ui://composer-nb/cell`. Nothing is framed, since Claude shows frames only from sites it allows a connector. The page fetches its sounds and fonts from the same hosts as the playground, which its policy names. `npm run dev:app -w mcp` serves it at `localhost:5184/?src=<a cell>` for a look outside a host; the handshake needs a host, so the tool's input is read from the address there.
-
-## In a page of your own
-
-```js
-import { createServer } from "composer-nb-mcp"
-import { handleMcp } from "composer-nb-mcp/http"
+const server = createServer({ notebook: new FileNotebookStore("/path/to/song.json") })
+// Connect server to the desired MCP transport.
 ```
 
-`createServer({ site })` is the server for any transport; `handleMcp(req, res, { site })` answers one HTTP request with no session, as a serverless function does.
+For hosted storage, implement the exported `NotebookRepository` interface and pass
+it to `createServer({ notebook })` or `handleMcp(req, res, { notebook })`.

@@ -3,6 +3,8 @@
 import React from "react"
 import type { Settings } from "../shared/types.ts"
 
+import { themeSettings } from "../shared/stored.ts"
+
 const KEY = "composer-nb:settings"
 
 // Changes one setting, or several at once
@@ -13,8 +15,8 @@ export type SetSetting = {
 
 function load(defaults: Settings): Settings {
   try {
-    const saved = JSON.parse(localStorage.getItem(KEY) || "null")
-    return saved && typeof saved === "object" ? { ...defaults, ...saved } : defaults
+    const saved: unknown = JSON.parse(localStorage.getItem(KEY) || "null")
+    return themeSettings(saved, defaults)
   } catch {
     return defaults
   }

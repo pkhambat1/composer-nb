@@ -90,13 +90,13 @@ with time 7 over 8, tempo 90 {
   snare.ghost: -xx, ...rest
 }
 
-with time 9 over 8, tempo 100 { play 4 bars manias }`,
+with time 9 over 8, tempo 100 { play manias for 4 bars }`,
   },
   {
     section: "Transcriptions",
     title: "What Happens Now?",
     byline: "**Porcupine Tree** · *Nil Recurring* (2007) · drums by Gavin Harrison",
-    body: "Lines of different lengths in one pattern. The kick and snare repeat every 7 steps, the ride bell every 3 and the guitar riff every 10, so they drift against each other and only all meet again on a bar line after 15 bars. The play opens with a two-step pickup, an accented rim hit, and the groove starts after it: the two blocks are in brackets, so they play one after the other. The crash plays once, in the groove's first bar, and `play 3 bars` stops it after three bars, pickup included. `octave 2` in the with puts the riff right at the bottom of the guitar's range.",
+    body: "Lines of different lengths in one pattern. The kick and snare repeat every 7 steps, the ride bell every 3 and the guitar riff every 10, so they drift against each other and only all meet again on a bar line after 15 bars. The play opens with a two-step pickup, an accented rim hit, and the groove starts after it: the two blocks are in brackets, so they play one after the other. The crash plays once, in the groove's first bar, and `for 3 bars` stops it after three bars, pickup included. `octave 2` in the with puts the riff right at the bottom of the guitar's range.",
     link: "https://www.youtube.com/watch?v=v0Iv4SYJW-k",
     source: `pattern groove = {
   kick: x--x---
@@ -106,13 +106,13 @@ with time 9 over 8, tempo 100 { play 4 bars manias }`,
 }
 
 with time 7 over 8, tempo 110, octave 2, guitar.electric muted {
-  play 3 bars (
+  play (
     { snare.rim: ^- }
     {
       bar 1 crash: 1
       groove
     }
-  )
+  ) for 3 bars
 }`,
   },
   {
@@ -154,7 +154,7 @@ with time 3 over 4, tempo 100 {
   kick: x-x--x
 }
 
-with time 3 over 4, tempo 82.5 { play 2 bars groove }`,
+with time 3 over 4, tempo 82.5 { play groove for 2 bars }`,
   },
   {
     section: "Transcriptions",
@@ -248,7 +248,7 @@ with time 5 over 4 { play groove }`,
   kick: 1 3
 }
 
-with tempo 76 { play 2 bars fifths }`,
+with tempo 76 { play fifths for 2 bars }`,
   },
   {
     section: "Harmony",
@@ -263,7 +263,7 @@ with tempo 76 { play 2 bars fifths }`,
   kick: 1 3
 }
 
-with tempo 84 { play 4 bars pulls }`,
+with tempo 84 { play pulls for 4 bars }`,
   },
   {
     section: "Harmony",
@@ -277,7 +277,7 @@ with tempo 84 { play 4 bars pulls }`,
   kick: 1 3
 }
 
-with tempo 76 { play 4 bars fourths }`,
+with tempo 76 { play fourths for 4 bars }`,
   },
   {
     section: "Harmony",
@@ -291,7 +291,7 @@ with tempo 76 { play 4 bars fourths }`,
   kick: 1 3
 }
 
-with tempo 80 { play 4 bars fifths }`,
+with tempo 80 { play fifths for 4 bars }`,
   },
   {
     section: "Harmony",

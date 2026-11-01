@@ -270,7 +270,8 @@ function renderPlayer(
   })
 
   play.addEventListener("click", () => {
-    if (audio.paused) audio.play().catch((err) => console.warn("composer-nb: playback failed", err))
+    if (audio.paused)
+      audio.play().catch((err: unknown) => console.warn("composer-nb: playback failed", err))
     else audio.pause()
   })
   wave.addEventListener("click", (e) => {
@@ -278,7 +279,8 @@ function renderPlayer(
     audio.currentTime = ((e.clientX - rect.left) / rect.width) * duration
     tick()
   })
-  if (autoplay) audio.play().catch((err) => console.warn("composer-nb: playback failed", err))
+  if (autoplay)
+    audio.play().catch((err: unknown) => console.warn("composer-nb: playback failed", err))
 
   return () => {
     cancelAnimationFrame(frame)
@@ -368,9 +370,9 @@ function renderOutput(
       disposePlayer = renderPlayer(slot, buffer, setTime, autoplay)
       for (const msg of output.warnings || []) messages.add(msg)
     })
-    .catch((err) => {
+    .catch((err: unknown) => {
       if (disposed) return
-      status.textContent = `Couldn't render audio: ${err?.message || err}`
+      status.textContent = `Couldn't render audio: ${err instanceof Error ? err.message : String(err)}`
       status.classList.add("cnb-status-error")
     })
 

@@ -1,4 +1,5 @@
 // components/DrumSheet.tsx — A play's output as sheet music, a system per block, with a playhead
+import { NotebookTarget } from "../notebook/SelectionContext.tsx"
 import React from "react"
 import abcjs, { type NoteTimingEvent, type TuneObject } from "abcjs"
 import type { GridBlock } from "composer-nb/language"
@@ -50,13 +51,13 @@ function SheetBlock({
   }, [abc, tablature, index, setTimings])
 
   return (
-    <div className="ds-block">
+    <NotebookTarget className="ds-block" kind="sheet" label={`Sheet music, block ${index + 1}`}>
       <div className="dg-head">
         time {block.time} · tempo {block.tempo} · key {block.key} {block.mode} · {block.bars} bar
         {block.bars === 1 ? "" : "s"}
       </div>
       <div ref={mountRef} className="ds-staff" />
-    </div>
+    </NotebookTarget>
   )
 }
 

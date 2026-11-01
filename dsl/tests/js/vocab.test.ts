@@ -5,15 +5,14 @@
    tests/python/test_completer.py.) */
 import { describe, it, expect } from "vitest"
 import { readFileSync } from "node:fs"
+import grammar from "../../../docs/languages/composer-nb.json" with { type: "json" }
 import { KEYWORDS } from "../../js/language.ts"
 import { KITS, MODES, PARTS, SETTINGS, SOUNDS, SWING, TYPES } from "../../js/vocab.ts"
 
-const grammar = JSON.parse(
-  readFileSync(new URL("../../../docs/languages/composer-nb.json", import.meta.url), "utf8"),
-)
 // A rule's pattern, anchored to the start, and the name it captured from `text`
-const rule = (name) => new RegExp(grammar.repository[name].match)
-const captured = (name, text, group = 1) => rule(name).exec(text)?.[group]
+const rule = (name: keyof typeof grammar.repository) => new RegExp(grammar.repository[name].match)
+const captured = (name: keyof typeof grammar.repository, text: string, group = 1) =>
+  rule(name).exec(text)?.[group]
 
 describe("the docs grammar knows every word", () => {
   it("every kit piece and instrument, before its colon", () => {

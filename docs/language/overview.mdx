@@ -30,6 +30,8 @@ Every value has one of five types. A line is a kit piece or an instrument, a col
 | `chords` | Bars of chords. | `Am F\|C G` | After `chords` on an instrument's line. | [Chords](/pitched/chords) |
 | `pattern` | Lines that play together and repeat. | `{ kick: x--- }` | After `play`, on a line of its own, or in a group. | [Patterns](/language/patterns) |
 
+| `block` | Lines that play together once. | `{ crash: 1 }` | After `play`, on a line of its own, or in a group. | [Blocks](/language/patterns#groups) |
+
 ## Names
 
 A declaration binds a name to a value: `<type> <name> = <value>`. The type is required. A name is accepted only where its type is, and only below its declaration.

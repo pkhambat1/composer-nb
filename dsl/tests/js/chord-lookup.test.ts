@@ -15,7 +15,7 @@ describe("lookupPosition", () => {
     expect(pos).toBeTruthy()
     // Compute pitch classes from frets + standard tuning. baseFret offsets fretted notes.
     const tuning = [40, 45, 50, 55, 59, 64] // E A D G B e
-    const pcs = new Set<any>()
+    const pcs = new Set<number>()
     pos!.frets.forEach((f, i) => {
       if (f < 0) return
       const abs = f > 0 ? f + (pos!.baseFret || 1) - 1 : 0
@@ -44,7 +44,10 @@ describe("lookupPosition", () => {
 
 // The pitch classes a guitar shape sounds, named with flats
 const PC = ["C", "Db", "D", "Eb", "E", "F", "Gb", "G", "Ab", "A", "Bb", "B"]
-const sounds = (pos) => [...new Set(pos.midi.map((m) => PC[m % 12]))].sort()
+const sounds = (pos: ReturnType<Awaited<ReturnType<typeof loadLib>>["lookupPosition"]>) => {
+  if (!pos?.midi) throw new Error("Missing chord position")
+  return [...new Set(pos.midi.map((m) => PC[m % 12]))].sort()
+}
 
 describe("a chord's guitar shape sounds that chord", () => {
   it("a minor-major seventh keeps its minor third", async () => {

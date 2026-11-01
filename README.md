@@ -30,10 +30,10 @@ pattern groove = 3 bars {
   ride.bell: x--
 }
 
-play 6 bars {
+play {
   crash: 1
   groove
-}
+} for 6 bars
 ```
 
 <p align="center">
@@ -85,10 +85,10 @@ pattern groove = {
   }
 }
 
-play 6 bars {
+play {
   crash: 1
   groove
-}
+} for 6 bars
 ```
 
 <p align="center">
@@ -98,6 +98,12 @@ play 6 bars {
 ## From an assistant
 
 composer-nb is an [MCP](https://modelcontextprotocol.io) server too, so Claude, Cursor or any assistant that speaks MCP can write a cell, check it against the parser and draw the sheet; in claude.ai and Claude Desktop the cell plays right in the chat. In Claude, install the plugin, which brings the connector with skills: add `pkhambat1/composer-nb` as a marketplace (Customize → Plugins → Add → Add marketplace; in Claude Code, `/plugin marketplace add pkhambat1/composer-nb`), then install `composer-nb` (`/plugin install composer-nb@composer-nb`). Or add a custom connector with the URL `https://composer-nb.vercel.app/mcp`; elsewhere, give that URL to the assistant as a remote MCP server. See [Assistants](https://pkhambat.mintlify.site/assistants) in the docs.
+
+The editable notebook MCP App in this checkout shares the website's cells, bricks,
+sheet music, chords and playback. It uses the host's own chat composer and an explicit
+saved notebook file. See [MCP development setup](mcp/README.md) and the
+[verification checklist](mcp/VERIFICATION.md); this development integration has not
+yet been deployed through the published connector above.
 
 ## In Jupyter
 

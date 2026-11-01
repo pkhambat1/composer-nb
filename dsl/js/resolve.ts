@@ -40,7 +40,7 @@ export class Scope {
     return this.#st.words[name]
   }
 
-  pattern(name: string): Section | undefined {
+  section(name: string): Section | undefined {
     return this.#st.sections[name]
   }
 
@@ -56,7 +56,7 @@ export class Scope {
   }
 
   // A named pattern, which keeps the names it was written with
-  definePattern(sec: Section): void {
+  defineSection(sec: Section): void {
     const st = this.#st
     delete st.words[sec.name]
     st.sections[sec.name] = {

@@ -6,9 +6,14 @@ import { fingerprint, refreshStarters } from "../src/shared/starters.ts"
 import type { Notebook, SavedCell } from "../src/shared/types.ts"
 
 // The welcome notebook's cells as they first shipped, before notebooks were marked
-const FIRST = JSON.parse(
+import { isSavedCell } from "../src/shared/stored.ts"
+
+const first: unknown = JSON.parse(
   readFileSync(new URL("./fixtures/welcome-2026-10-10.json", import.meta.url), "utf8"),
 )
+if (!Array.isArray(first) || !first.every((cell: unknown) => isSavedCell(cell)))
+  throw new Error("Invalid historical notebook fixture")
+const FIRST: SavedCell[] = first
 
 const OLD: SavedCell[] = [
   { type: "text", source: "# A music notebook" },

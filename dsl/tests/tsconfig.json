@@ -1,10 +1,10 @@
 {
-  // The library's tests, checked as the library is, except that a callback's parameter needs no
-  // type of its own: a test says what it calls, and tsc checks that call.
+  // Tests use the same strict types as the library.
   "extends": "../tsconfig.json",
   "compilerOptions": {
     "types": ["node"],
-    "noImplicitAny": false,
+    "resolveJsonModule": true,
+    "noImplicitAny": true,
     "allowImportingTsExtensions": true,
     "declaration": false,
     "rootDir": "..",

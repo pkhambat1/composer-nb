@@ -46,7 +46,7 @@ export function settingsOf(state: State): Record<string, string | number> {
 export function namesOf(state: State): { type: string; name: string; line?: number }[] {
   return [
     ...Object.entries(state.words).map(([name, w]) => ({ type: w.type, name, line: w.line })),
-    ...Object.entries(state.sections).map(([name, s]) => ({ type: "pattern", name, line: s.ln })),
+    ...Object.entries(state.sections).map(([name, s]) => ({ type: s.type, name, line: s.ln })),
   ].sort((a, b) => (a.line ?? 0) - (b.line ?? 0))
 }
 

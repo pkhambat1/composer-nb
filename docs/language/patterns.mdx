@@ -5,7 +5,7 @@ description: "The pattern type: lines that play together and repeat, how long a 
 
 import { Cell } from "/snippets/cell.jsx"
 
-A `pattern` value is a block of lines that start together and repeat. Declaring one plays nothing. [`play`](/language/play) renders it.
+A `pattern` value holds lines that start together and repeat. A `block` holds lines that play once. Both require an explicit type before the name: `pattern groove = { ... }` or `block myBlock = { ... }`. An untyped `myBlock = { ... }` is an error and defines nothing. Declaring either plays nothing. [`play`](/language/play) renders it.
 
 <Cell>
 
@@ -30,6 +30,26 @@ Each line repeats at its own length, and the pattern lasts until they end togeth
 A length in front sets the duration instead: `pattern groove = 4 bars { ... }`. Everything inside must then fit it a whole number of times, and the error names the shortest length that would. A pattern whose lines don't meet within 64 bars needs a length.
 
 ## Groups
+
+A named `block` plays its instrument lines once, even when a repeating pattern beside or around it runs longer. A longer play leaves silence after the block rather than repeating it. Use a `pattern` when the material should loop.
+
+<Cell>
+
+```composer-nb
+block accent = { crash: 1 }
+pattern beat = {
+  kick: 1 3
+  snare: 2 4
+  hat: x-
+}
+
+play {
+  accent
+  beat
+} for 2 bars
+```
+
+</Cell>
 
 `( )` holds what plays in order: names, blocks, other groups, and lines of their own, one after another, separated by spaces or new lines. It is the one way to put things in order. On lines of their own, things play together, and two things on one line without brackets are an error. See [Blocks](/language/overview#blocks). A length in front of a name or a group repeats it for that long; in front of braces it is the block's own length, which comes to the same thing, and is what a block of lines ending in `...` needs.
 

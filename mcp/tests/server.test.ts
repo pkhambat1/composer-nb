@@ -1,5 +1,6 @@
 /* The server as a client sees it: every tool called over an in-memory transport, the
    resources listed and read. */
+import { CallToolResultSchema, type CallToolResult } from "@modelcontextprotocol/sdk/types.js"
 import { describe, it, expect, beforeAll } from "vitest"
 import { Client } from "@modelcontextprotocol/sdk/client/index.js"
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js"
@@ -34,9 +35,10 @@ play piano: {
   notes E5-------C5-------|E5---D5---C5---B4---
 }`
 
-let client
-const call = async (name, args) => client.callTool({ name, arguments: args })
-const textOf = (r) =>
+let client: Client
+const call = async (name: string, args: Record<string, unknown>) =>
+  CallToolResultSchema.parse(await client.callTool({ name, arguments: args }))
+const textOf = (r: CallToolResult) =>
   r.content
     .filter((c) => c.type === "text")
     .map((c) => c.text)
@@ -87,7 +89,7 @@ describe("tools", () => {
 
   it("parse starts from the cells in after", async () => {
     const r = await call("parse", {
-      source: "play 1 bars groove",
+      source: "play groove for 1 bars",
       after: "set tempo 70\npattern groove = { kick: x--- }",
     })
     expect(r.isError).toBeFalsy()
@@ -115,6 +117,7 @@ describe("tools", () => {
     const r = await call("render", { source: MUZAK, format: "sheet" })
     expect(r.isError).toBeFalsy()
     const image = r.content.find((c) => c.type === "image")
+    if (!image) throw new Error("Missing PNG output")
     expect(image.mimeType).toBe("image/png")
     const bytes = Buffer.from(image.data, "base64")
     expect(bytes.subarray(1, 4).toString()).toBe("PNG")
@@ -125,6 +128,7 @@ describe("tools", () => {
   it("render writes a MIDI file", async () => {
     const r = await call("render", { source: MUZAK, format: "midi" })
     const file = r.content.find((c) => c.type === "resource")
+    if (!file || !("blob" in file.resource)) throw new Error("Missing MIDI output")
     expect(file.resource.mimeType).toBe("audio/midi")
     expect(Buffer.from(file.resource.blob, "base64").subarray(0, 4).toString()).toBe("MThd")
     expect(textOf(r)).toContain("/api/midi?src=")
@@ -165,7 +169,7 @@ describe("the MCP App", () => {
   it("is what parse names for a host that renders UI", async () => {
     const { tools } = await client.listTools()
     const byName = Object.fromEntries(tools.map((t) => [t.name, t]))
-    expect(byName.parse._meta.ui.resourceUri).toBe("ui://composer-nb/cell")
+    expect(byName.parse._meta?.ui).toMatchObject({ resourceUri: "ui://composer-nb/cell" })
     expect(byName.render._meta?.ui).toBeUndefined()
   })
 
@@ -173,12 +177,21 @@ describe("the MCP App", () => {
     const { resources } = await client.listResources()
     expect(resources.map((r) => r.uri)).toContain("ui://composer-nb/cell")
     const [page] = (await client.readResource({ uri: "ui://composer-nb/cell" })).contents
+    if (!("text" in page)) throw new Error("Missing HTML page")
     expect(page.mimeType).toBe("text/html;profile=mcp-app")
     expect(page.text).not.toContain("Open in the playground")
     expect(page.text).toContain("play-btn") // the player's Play button, from the bundled playground
     expect(page.text.match(/<\/script>/g)).toHaveLength(1) // the inline bundle closes no tag of its own
-    expect(page._meta.ui.csp.connectDomains).toContain("https://cdn.jsdelivr.net")
-    expect(page._meta.ui.csp.resourceDomains).toContain("https://fonts.gstatic.com")
+    expect(page._meta).toMatchObject({
+      ui: {
+        csp: { connectDomains: expect.arrayContaining(["https://cdn.jsdelivr.net", "blob:"]) },
+      },
+    })
+    expect(page._meta).toMatchObject({
+      ui: {
+        csp: { resourceDomains: expect.arrayContaining(["https://fonts.gstatic.com", "blob:"]) },
+      },
+    })
   })
 
   it("leaves parse answering in text, with nothing structured to replace it", async () => {
@@ -198,7 +211,9 @@ describe("resources", () => {
 
   it("read as markdown", async () => {
     const r = await client.readResource({ uri: "composer-nb://grooves/the-sound-of-muzak" })
-    expect(r.contents[0].text).toContain("## The Sound of Muzak")
-    expect(r.contents[0].text).toContain("```composer-nb")
+    const content = r.contents[0]
+    if (!("text" in content)) throw new Error("Missing Markdown resource")
+    expect(content.text).toContain("## The Sound of Muzak")
+    expect(content.text).toContain("```composer-nb")
   })
 })

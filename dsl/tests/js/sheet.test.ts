@@ -5,17 +5,17 @@ vi.mock("tone", () => ({}))
 const { parseSource } = await import("../../js/music-engine.ts")
 const { sheetAbc } = await import("../../js/sheet.ts")
 
-const sheet = (src, opts?) => {
+const sheet = (src: string, opts?: Parameters<typeof sheetAbc>[1]) => {
   const p = parseSource(src)
   expect(p.errors).toEqual([])
   return sheetAbc(p.outputs[0].blocks[0], opts)
 }
 // The voice lines of the first block's ABC.
-const voices = (src, opts?) =>
+const voices = (src: string, opts?: Parameters<typeof sheetAbc>[1]) =>
   sheet(src, opts)
     .abc.split("\n")
     .filter((l) => l.startsWith("[V:") || l.startsWith("w:"))
-const head = (src) => sheet(src).abc.split("\n").slice(0, 5)
+const head = (src: string) => sheet(src).abc.split("\n").slice(0, 5)
 
 const X = "!style=x!g"
 
@@ -46,7 +46,7 @@ describe("drum sheet music", () => {
     expect(abc).toContain("%%score F\n")
     expect(abc).not.toContain("V:H")
     expect(abc).toContain("V:F clef=perc stem=down\n[V:F] F4 z4 F2F2 z4 |")
-    expect(sheet("pattern pp = { kick: x }\nplay 1 bars pp").abc).not.toBe("")
+    expect(sheet("pattern pp = { kick: x }\nplay pp for 1 bars").abc).not.toBe("")
   })
 
   it("writes the time and tempo, and beams an added-up meter by its groups", () => {
@@ -118,7 +118,7 @@ describe("drum sheet music", () => {
   })
 
   it("writes every bar of the block", () => {
-    expect(voices("pattern gg = { kick: x--- }\nplay 2 bars gg")).toEqual([
+    expect(voices("pattern gg = { kick: x--- }\nplay gg for 2 bars")).toEqual([
       "[V:F] F4 F4 F4 F4 | F4 F4 F4 F4 |",
     ])
   })
@@ -188,8 +188,8 @@ describe("pitched lines on the sheet", () => {
 })
 
 describe("the key signature", () => {
-  const keyLine = (src) => sheet(src).abc.split("\n")[4]
-  const voice = (src) => voices(src).find((l) => l.startsWith("[V:P1]"))
+  const keyLine = (src: string) => sheet(src).abc.split("\n")[4]
+  const voice = (src: string) => voices(src).find((l) => l.startsWith("[V:P1]"))
   it("comes from the key: a major key, a minor key, a mode", () => {
     expect(keyLine("play piano: notes C4---")).toBe("K:C")
     expect(keyLine("set key D\nplay piano: notes C4---")).toBe("K:D")
@@ -205,7 +205,7 @@ describe("the key signature", () => {
   it("writes the raised notes of harmonic and melodic minor as accidentals", () => {
     // D minor's signature has Bb: harmonic minor keeps it and raises the 7th to C#, and
     // melodic minor raises the 6th to a B natural as well
-    const run = (mode, notes) =>
+    const run = (mode: string, notes: string) =>
       voice(`set key D\nset mode ${mode}\nset octave 4\nplay piano: notes ${notes}`)
     expect(run("harmonicMinor", "vi-vii-i'-")).toBe("[V:P1] B2^c2 d2z2 z4 z4 |")
     expect(run("melodicMinor", "vi-vii-i'-")).toBe("[V:P1] =B2^c2 d2z2 z4 z4 |")
@@ -283,7 +283,7 @@ describe("the tab staff", () => {
 
 describe("systems", () => {
   it("break every four bars, each voice's bars on a line, the drums' key turned off once", () => {
-    const lines = voices("set key D\nplay 6 bars {\n  kick: x---\n  piano: notes F#4---\n}")
+    const lines = voices("set key D\nplay {\n  kick: x---\n  piano: notes F#4---\n} for 6 bars")
     expect(lines).toEqual([
       "[V:F] [K:none] F4 z4 z4 z4 | z4 z4 z4 z4 | z4 z4 z4 z4 | z4 z4 z4 z4 |",
       "[V:P1] F4 z4 z4 z4 | z4 z4 z4 z4 | z4 z4 z4 z4 | z4 z4 z4 z4 |",

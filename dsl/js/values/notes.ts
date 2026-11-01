@@ -421,7 +421,7 @@ export function notNotes(tok: string, st: State, inst: string, chart: string): s
   }
   if (/^[-_^~'#b]*\d/.test(tok) && /^[-_^~'#b\d]+$/.test(tok) && !/[A-G]/.test(tok)) {
     // A degree is a Roman numeral, as a chord's is: 1---3---5 is i---iii---v
-    const numerals = tok.replace(/\d/g, (d, at) =>
+    const numerals = tok.replace(/\d/g, (d: string, at: number) =>
       /[1-7]/.test(d) ? (/\d/.test(tok[at - 1] || "") ? " " : "") + NUMERALS[Number(d) - 1] : d,
     )
     return /[089]/.test(tok)
@@ -437,7 +437,12 @@ export function notNotes(tok: string, st: State, inst: string, chart: string): s
     return `"${tok}": notes are capital letters, A to G: ${inst}: notes F---G---`
   }
   if (st.sections[tok]) {
-    return misplaced(tok, "pattern", { line: "pitched", part: inst, text: "", chart: false })!
+    return misplaced(tok, st.sections[tok].type, {
+      line: "pitched",
+      part: inst,
+      text: "",
+      chart: false,
+    })!
   }
   if (NAME_LIKE.test(tok) && !isRoman(tok)) {
     return `"${tok}" isn't defined above. Name it first: notes ${tok} = F---G---`

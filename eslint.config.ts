@@ -5,14 +5,15 @@ import reactHooks from "eslint-plugin-react-hooks"
 import stylistic from "@stylistic/eslint-plugin"
 import tseslint from "typescript-eslint"
 
-const sharedStylistic = {
+import type { Linter } from "eslint"
+
+const sharedStylistic: Linter.RulesRecord = {
   semi: "off",
   "@stylistic/semi": ["error", "never"],
   "no-multiple-empty-lines": ["error", { max: 1, maxBOF: 0, maxEOF: 0 }],
 }
 
-/** @type {import('eslint').Linter.Config[]} */
-export default [
+const config: Linter.Config[] = [
   {
     ignores: [
       "**/node_modules",
@@ -26,7 +27,7 @@ export default [
     ],
   },
   {
-    files: ["**/*.config.js"],
+    files: ["**/*.config.ts"],
     languageOptions: {
       ecmaVersion: 2022,
       sourceType: "module",
@@ -123,3 +124,12 @@ export default [
     },
   },
 ]
+
+config.push({
+  files: ["**/*.ts", "**/*.tsx"],
+  languageOptions: { parser: tseslint.parser },
+  plugins: { "@typescript-eslint": tseslint.plugin },
+  rules: { "@typescript-eslint/no-explicit-any": "error" },
+})
+
+export default config

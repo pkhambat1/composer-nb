@@ -35,7 +35,7 @@
    plays them one after another, and two things on one line outside brackets are a
    mistake. A length goes in front of what it measures,
    and a pattern given a length repeats for that long: pattern groove = 3 bars {,
-   play 6 bars groove. Anything that repeats has to fit what it's in a whole number of
+   play groove for 6 bars. Anything that repeats has to fit what it's in a whole number of
    times, and a value written as the same figure twice is a mistake (x-x- is x-), since
    the pattern repeats it. A line that starts with | continues the line above.
    On a drum's line a length measures rest or steps, in steps, beats or bars, and on a

@@ -15,6 +15,7 @@ import {
 import { checkBars, classifyDecl, defineBlock, defineWord, patternHint } from "./declare.ts"
 import { blockClip, checkSection } from "./eval.ts"
 import { classify, EVERY_RE, PLACE_RE, TYPED_RE } from "./lines.ts"
+import { playDuration } from "./play-duration.ts"
 import { Scope } from "./resolve.ts"
 import { applySetting, readWithHeader, setInBlock, WITH_HELP, withState } from "./settings.ts"
 import { Parser } from "./parser.ts"
@@ -244,12 +245,7 @@ export function parseCell(src: unknown, inherited: State = initialState()) {
   const checkTail = (tail: string, ln: number, front: (n: string) => string) => {
     if (!tail) return true
     const after = /^(\S+)\s+bars$/.exec(tail)
-    err(
-      ln,
-      after
-        ? `A length goes in front of what it measures: ${front(after[1])}`
-        : "Nothing can follow a }",
-    )
+    err(ln, after ? `Write the length like this: ${front(after[1])}` : "Nothing can follow a }")
     return false
   }
 
@@ -306,22 +302,21 @@ export function parseCell(src: unknown, inherited: State = initialState()) {
       if (s.kind === "play") {
         // play plays what's after it: a block in braces, or one line. play groove and
         // play { groove } are the same thing.
-        let parts = s.value.parts
-        let bars = 0
-        let ok = true
+        const duration = playDuration(s.value.parts, ln, err)
+        if (!duration) continue
+        const parts = duration.parts
+        const bars = duration.bars
+        let ok = !duration.has || checkBars(bars, ln, err)
         const lead = parts[0]?.kind === "text" ? lengthPrefix(tidy(parts[0].text)) : null
         if (lead?.has) {
-          // play 3 bars { ... }, play 3 bars groove: how long the output is
-          ok = checkBars(lead.bars, ln, err)
-          bars = lead.bars
-          const rest = lead.rest.trim()
-          parts = rest ? [{ ...(parts[0] as Text), text: rest }, ...parts.slice(1)] : parts.slice(1)
+          err(ln, "A play's duration follows its music: play groove for 2 bars")
+          continue
         }
         if (!parts.length) {
           err(
             ln,
             bars
-              ? `${text} of what? Put a pattern or its name after it: ${text} { ... }`
+              ? "play needs music before for: play groove for 2 bars"
               : "play needs something after it: play groove, or play { ... }",
           )
           continue
@@ -334,7 +329,8 @@ export function parseCell(src: unknown, inherited: State = initialState()) {
           const block = firstPart
           if (unclosed.has(at(block))) err(block.span.line, "play needs a } to close it")
           const read = blockLines(block.statements)
-          if (block.span.endLine > ln) label = text.replace(/\{.*$/, "{ … }")
+          if (block.span.endLine > ln)
+            label = text.replace(/\{.*$/, "{ … }") + (duration.has ? ` for ${fmt(bars)} bars` : "")
           if (!read.body.length) {
             err(ln, "This play has nothing in its braces")
             ok = false
@@ -347,7 +343,7 @@ export function parseCell(src: unknown, inherited: State = initialState()) {
             // play { ... } outro: things in order go in brackets
             err(block.span.endLine, `What plays in order goes in brackets: play ({ ... } ${tail})`)
             ok = false
-          } else if (!checkTail(tail, block.span.endLine, (n) => `play ${n} bars { ... }`)) {
+          } else if (!checkTail(tail, block.span.endLine, (n) => `play { ... } for ${n} bars`)) {
             ok = false
           }
           arg = read.body
@@ -355,9 +351,9 @@ export function parseCell(src: unknown, inherited: State = initialState()) {
           // play ({ ... } outro): blocks in a group, or a group that runs over several lines
           const read = lineOf(parts, ln, "This {")
           if (s.span.endLine > ln) {
-            const size = bars ? `${fmt(bars)} bars ` : ""
+            const size = bars ? ` for ${fmt(bars)} bars` : ""
             const shown = read.line.parts.map((p) => (isBraces(p) ? "{ … }" : p)).join(" ")
-            label = `play ${size}${shown.replace(/\s+/g, " ").trim()}`
+            label = `play ${shown.replace(/\s+/g, " ").trim()}${size}`
           }
           arg = read.line.parts.length ? [read.line] : []
           if (!arg.length) ok = false
@@ -390,19 +386,16 @@ export function parseCell(src: unknown, inherited: State = initialState()) {
       }
 
       // steps pair = ^-x-, chords verse = Am F, pattern groove = 3 bars { ... }: a name.
-      // pattern groove { without its =: said once, and still named, so nothing else breaks
-      let decl: { type: string | null; name: string; parts: (Text | Block)[] } | null =
-        s.kind === "decl" ? { type: s.type, name: s.name, parts: s.value.parts } : null
-      const noEquals = !decl && /^pattern\s+([A-Za-z][A-Za-z0-9]*)\s+(.+)$/.exec(text)
+      const decl = s.kind === "decl" ? { type: s.type, name: s.name, parts: s.value.parts } : null
+      const noEquals = !decl && /^(pattern|block)\s+([A-Za-z][A-Za-z0-9]*)\s+(.+)$/.exec(text)
       if (noEquals) {
-        err(ln, patternHint(text))
-        const first = s.parts[0] as Text
-        const rest = tidy(first.text).replace(/^pattern\s+[A-Za-z][A-Za-z0-9]*\s*/, "")
-        decl = {
-          type: "pattern",
-          name: noEquals[1],
-          parts: rest ? [{ ...first, text: rest }, ...s.parts.slice(1)] : s.parts.slice(1),
-        }
+        err(
+          ln,
+          noEquals[1] === "pattern"
+            ? patternHint(text)
+            : `A block gets its name with =: block ${noEquals[2]} = { ... }`,
+        )
+        continue
       }
       if (decl) {
         const read = lineOf(decl.parts, ln, decl.name)
@@ -453,7 +446,7 @@ export function parseCell(src: unknown, inherited: State = initialState()) {
       if (lengthPrefix(text).rest.startsWith("{")) {
         err(
           ln,
-          `Nothing plays this pattern. Put play in front: play ${text.replace(/\{.*$/, "{ ... }")}`,
+          `Nothing plays this pattern. Write play { ... }${lengthPrefix(text).has ? ` for ${fmt(lengthPrefix(text).bars)} bars` : ""}`,
         )
         lineOf(s.parts, ln, "This {")
         continue

@@ -63,15 +63,15 @@ export function patternHint(text: string): string {
 
 // pattern name = { ... }, = 3 bars { ... }, = intro verse: a pattern with a name. `value`
 // is what follows the =. A length in front is the pattern's own.
-function namedBlock(name: string, value: Piece[], ln: number): Section {
+function namedBlock(name: string, value: Piece[], ln: number, type: "pattern" | "block"): Section {
   const len = lengthIn(value)
   const only = onlyBraces(len.rest)
-  if (only) return { name, ln, lines: only.lines, bars: len.bars, has: len.has }
+  if (only) return { type, name, ln, lines: only.lines, bars: len.bars, has: len.has }
   if (len.has && TRACK_RE.test(headOf(len.rest))) {
-    return { name, ln, lines: [{ ln, parts: len.rest }], bars: len.bars, has: true }
+    return { type, name, ln, lines: [{ ln, parts: len.rest }], bars: len.bars, has: true }
   }
   // A length in front of anything else measures that, not the pattern: 8 bars loop verse
-  return { name, ln, lines: [{ ln, parts: value }], bars: 0, has: false }
+  return { type, name, ln, lines: [{ ln, parts: value }], bars: 0, has: false }
 }
 
 export function checkBars(bars: number, ln: number, err: Report): boolean {
@@ -170,7 +170,7 @@ export function defineWord(
     if (w && w.type !== type) return err(ln, `${t} is ${w.type}, so it can't go in ${type}`)
     else if (w) tokens.push(...(type === "steps" ? w.tokens : ["|", ...w.tokens, "|"]))
     else if (state.sections[t]) {
-      return err(ln, `${t} is a pattern, so it can't go in ${type}`)
+      return err(ln, `${t} is a ${state.sections[t].type}, so it can't go in ${type}`)
     } else if (
       type === "steps" ? isStepRun(t) || t === "|" : CHORD_MARKS.includes(t) || buildChord(t, key)
     ) {
@@ -286,15 +286,19 @@ function shapeOf(value: Piece[], st: State): Shape {
 
 // Names a pattern (pattern name = { ... }) in `st`, the state of the block it's written
 // in. Returns the pattern, or null if the name or length is a mistake.
-export function defineBlock(l: DeclLine, st: State, err: Report): Section | null {
-  const problem = new Scope(st).problem("pattern", l.name, "{")
+export function defineBlock(
+  l: Extract<DeclLine, { kind: "blockdef" }>,
+  st: State,
+  err: Report,
+): Section | null {
+  const problem = new Scope(st).problem(l.type, l.name, "{")
   if (problem) {
     err(l.ln, problem)
     return null
   }
-  const sec = namedBlock(l.name, l.value, l.ln)
+  const sec = namedBlock(l.name, l.value, l.ln, l.type)
   if (sec.has && !checkBars(sec.bars, l.ln, err)) return null
-  new Scope(st).definePattern(sec)
+  new Scope(st).defineSection(sec)
   return sec
 }
 
@@ -322,7 +326,7 @@ export function classifyDecl(
     err(ln, `${type ? type + " " : ""}${name} = needs something after the =`)
     return null
   }
-  if (type && type !== "pattern" && /^with(\s|\{|$)/.test(value)) {
+  if (type && type !== "pattern" && type !== "block" && /^with(\s|\{|$)/.test(value)) {
     // chords verse = with key E { ... }: a with holds what plays, which a value doesn't
     err(ln, `A with's block plays, so it goes around a line or a play, not after ${type} ${name} =`)
     return null
@@ -354,16 +358,11 @@ export function classifyDecl(
       err(ln, problem)
       return null
     }
-    // The name still gets defined, so one missing type is one message.
     err(ln, `Say what ${name} is. Put its type in front: ${shape} ${name} = ${shown}`)
-    type = shape
-  } else if (type === "pattern" && shape !== "pattern") {
-    const line = (
-      { steps: "kick: ", notes: "guitar: notes ", chords: "piano: chords " } as Record<
-        string,
-        string
-      >
-    )[shape]
+    return null
+  } else if ((type === "pattern" || type === "block") && shape !== "pattern") {
+    const prefixes = { steps: "kick: ", notes: "guitar: notes ", chords: "piano: chords " }
+    const line = prefixes[shape]
     err(
       ln,
       `${shown} is ${shape}, not a pattern. Write ${shape} ${name} = ${shown}, ` +
@@ -380,6 +379,7 @@ export function classifyDecl(
     err(ln, type === "chords" ? CHORDS_BLOCK : NOTES_BLOCK)
     return null
   } else if (
+    type !== "block" &&
     type !== shape &&
     (type === "notes"
       ? /[{(]/.test(withoutOf(value)) ||
@@ -393,7 +393,9 @@ export function classifyDecl(
     err(ln, `That's a pattern, not ${type}. Write pattern ${name} = ...`)
     return null
   }
-  return type === "pattern"
-    ? { kind: "blockdef", ln, name, value: parts }
-    : { kind: "word", ln, type: type as Type, name, value: parts }
+  const declaredType = TYPES.find((item) => item === type)
+  if (!declaredType) return null
+  return declaredType === "pattern" || declaredType === "block"
+    ? { kind: "blockdef", ln, type: declaredType, name, value: parts }
+    : { kind: "word", ln, type: declaredType, name, value: parts }
 }
