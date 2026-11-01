@@ -40,6 +40,9 @@ export default defineConfig(({ mode }) => ({
   build: {
     target: "es2022",
     minify: "esbuild",
+    // The MCP App is a portable single-file bundle, so shared notebook textures must travel
+    // inside app.js rather than depending on the website's public directory.
+    assetsInlineLimit: Number.MAX_SAFE_INTEGER,
     outDir: "dist",
     emptyOutDir: mode !== "bootstrap",
     lib: {

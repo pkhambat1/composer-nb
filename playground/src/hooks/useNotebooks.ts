@@ -1,224 +1,106 @@
-/* useNotebooks hook — notebooks kept on this device: the list of them, which one is open,
-   and saving the open one as it changes. A notebook is a title and its cells' sources;
-   an account would sync the same thing. */
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { cellId } from "./useCellManager.ts"
-import { fingerprint, refreshStarters } from "../shared/starters.ts"
-import type { Notebook, NotebookCell, SavedCell, Store } from "../shared/types.ts"
+import { supabase } from "../lib/supabase.ts"
+import type { Notebook, NotebookCell, SavedCell } from "../shared/types.ts"
+import type { Store } from "../shared/types.ts"
 
-import { notebookStore } from "../shared/stored.ts"
+type NotebookRow = { id: string; title: string; document: { version: 1; cells: SavedCell[] }; revision: number; updated_at: string }
+const bare = (cells: SavedCell[]): SavedCell[] => cells.map(({ id, type, source }) => ({ id, type, source }))
+const sameCells = (a: SavedCell[], b: SavedCell[]) => JSON.stringify(a) === JSON.stringify(b)
+const fromRow = (row: NotebookRow): Notebook => ({ id: row.id, title: row.title, cells: row.document.cells, revision: row.revision, updated: new Date(row.updated_at).getTime() })
 
-const KEY = "composer-nb:notebooks"
-
-const notebookId = () => "n" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6)
-const bare = (cells: SavedCell[]): SavedCell[] =>
-  cells.map((c) => ({ type: c.type, source: c.source }))
-const sameCells = (a: SavedCell[], b: SavedCell[]) =>
-  a.length === b.length && a.every((c, i) => c.type === b[i].type && c.source === b[i].source)
-
-// What's stored: { current, list: [{ id, title, cells, updated }] }, or null when there's
-// nothing yet or storage isn't there.
-export function loadStore(): Store | null {
-  try {
-    const store: unknown = JSON.parse(localStorage.getItem(KEY) || "null")
-    return notebookStore(store)
-  } catch {
-    return null
-  }
-  return null
-}
-
-function saveStore(store: Store): void {
-  try {
-    localStorage.setItem(KEY, JSON.stringify(store))
-  } catch {
-    // out of room, or storage not allowed: the notebook stays as it is on the page
-  }
-}
-
-// A notebook's title: its first heading when it has one, else what its first music cell
-// names and its time, or its key: "groove · 6 over 8", "cadence · Am".
-export function titleOf(cells: SavedCell[], fallback = "Untitled"): string {
-  for (const c of cells) {
-    if (c.type !== "text") continue
-    const m = /^#+\s+(.+)$/m.exec(c.source)
-    if (m) return m[1].trim()
-  }
-  const music = cells.find((c) => c.type === "music" && c.source.trim())
-  if (music) {
-    const name = /^\s*pattern\s+([A-Za-z][A-Za-z0-9]*)/m.exec(music.source)?.[1]
-    const time = /^\s*set\s+time\s+(\S.*?)\s*$/m.exec(music.source)?.[1]
-    const key = /^\s*set\s+key\s+(\S.*?)\s*$/m.exec(music.source)?.[1]
-    const parts = [name, time || key].filter(Boolean)
-    if (parts.length) return parts.join(" · ")
-  }
-  return fallback
-}
-
-// Cells for the page: each with its own id and no output yet.
-export function withIds(cells: SavedCell[]): NotebookCell[] {
-  return cells.map((c) => ({
-    id: cellId(),
-    type: c.type,
-    source: c.source,
-    runCount: null,
-    output: null,
-    status: "idle",
-  }))
-}
-
-// Notebooks kept from shared links, before sharing was taken out, went by the name a link
-// gave them when nothing in them named it. They go, and if one was open, the first notebook left opens.
-const SHARED_TITLES = ["Shared notebook", "Shared cell"]
 export function dropShared(store: Store): Store {
-  const list = store.list.filter((n) => !SHARED_TITLES.includes(n.title))
+  const list = store.list.filter((item) => item.title !== "Shared notebook" && item.title !== "Shared cell")
   if (list.length === store.list.length) return store
-  const current = list.some((n) => n.id === store.current) ? store.current : (list[0]?.id ?? null)
-  const next = { current, list }
-  saveStore(next)
-  return next
+  return { current: list.some((item) => item.id === store.current) ? store.current : (list[0]?.id ?? null), list }
 }
 
-// What the page opens with: the notebook that was open, else the starters as the first
-// notebook. Returns { store, cells }. A starter notebook nobody has changed gets the current
-// starters first.
-export function openingNotebook(starters: SavedCell[]): { store: Store; cells: SavedCell[] } {
-  let store = dropShared(loadStore() || { current: null, list: [] })
-  const refreshed = refreshStarters(store, starters)
-  if (refreshed !== store) {
-    store = refreshed
-    saveStore(store)
-  }
-  const current = store.list.find((n) => n.id === store.current)
-  if (current) return { store, cells: current.cells }
-  const first: Notebook = {
-    id: notebookId(),
-    title: "Welcome",
-    cells: bare(starters),
-    starters: fingerprint(starters),
-    updated: Date.now(),
-  }
-  store = { current: first.id, list: [first, ...store.list] }
-  saveStore(store)
-  return { store, cells: first.cells }
+export function withIds(cells: SavedCell[]): NotebookCell[] {
+  return cells.map((c) => ({ id: c.id || cellId(), type: c.type, source: c.source, runCount: null, output: null, status: "idle" }))
 }
 
-export function useNotebooks({
-  store: initial,
-  cells,
-  setCells,
-  setSelectedId,
-}: {
-  store: Store
-  cells: NotebookCell[]
-  setCells: (cells: NotebookCell[]) => void
-  setSelectedId: (id: string | null) => void
+export function useNotebooks({ starters, cells, setCells, setSelectedId }: {
+  starters: SavedCell[]; cells: NotebookCell[]; setCells: (cells: NotebookCell[]) => void; setSelectedId: (id: string | null) => void
 }) {
-  const [store, setStore] = useState(initial)
-  const storeRef = useRef(store)
-  storeRef.current = store
+  const [list, setList] = useState<Notebook[]>([])
+  const [currentId, setCurrentId] = useState<string | null>(null)
+  const [status, setStatus] = useState("Loading from Supabase…")
+  const listRef = useRef(list)
+  listRef.current = list
 
-  const put = useCallback((next: Store) => {
-    saveStore(next)
-    setStore(next)
-  }, [])
+  const show = useCallback((notebook: Notebook) => {
+    const fresh = withIds(notebook.cells)
+    setCells(fresh)
+    setSelectedId(fresh.find((cell) => cell.type === "music")?.id || fresh[0]?.id || null)
+    setCurrentId(notebook.id)
+  }, [setCells, setSelectedId])
 
-  // Save the open notebook as its cells change, a moment after the last change
-  const currentId = store.current
+  const createCloud = useCallback(async (title: string, contents: SavedCell[]) => {
+    if (!supabase) throw new Error("Supabase is not configured")
+    setStatus("Saving…")
+    const { data, error } = await supabase.from("notebooks")
+      .insert({ title, document: { version: 1, cells: bare(contents) } })
+      .select("id,title,document,revision,updated_at").single()
+    if (error) throw error
+    const notebook = fromRow(data as NotebookRow)
+    setList((items) => [notebook, ...items])
+    show(notebook)
+    setStatus("Saved to Supabase")
+    return notebook
+  }, [show])
+
   useEffect(() => {
-    const id = currentId
-    const t = setTimeout(() => {
-      if (!id) return
-      setStore((s) => {
-        const nb = s.list.find((n) => n.id === id)
-        if (!nb) return s
-        const next = bare(cells)
-        if (sameCells(nb.cells, next)) return s
-        const list = s.list.map((n) =>
-          n.id === id ? { ...n, cells: next, updated: Date.now() } : n,
-        )
-        const out = { ...s, list }
-        saveStore(out)
-        return out
-      })
-    }, 400)
-    return () => clearTimeout(t)
+    let live = true
+    void (async () => {
+      if (!supabase) return setStatus("Supabase is not configured")
+      const { data, error } = await supabase.from("notebooks")
+        .select("id,title,document,revision,updated_at").is("deleted_at", null).order("updated_at", { ascending: false })
+      if (!live) return
+      if (error) return setStatus(error.message)
+      const notebooks = (data as NotebookRow[]).map(fromRow)
+      setList(notebooks)
+      if (notebooks[0]) { show(notebooks[0]); setStatus("Saved to Supabase") }
+      else try { await createCloud("Welcome", starters) } catch (cause) { setStatus(cause instanceof Error ? cause.message : "Could not create notebook") }
+    })()
+    return () => { live = false }
+  }, [createCloud, show, starters])
+
+  useEffect(() => {
+    if (!currentId) return
+    const notebook = listRef.current.find((item) => item.id === currentId)
+    const next = bare(cells)
+    if (!notebook || sameCells(notebook.cells, next) || !supabase) return
+    setStatus("Unsaved changes")
+    const timer = window.setTimeout(() => {
+      const latest = listRef.current.find((item) => item.id === currentId)
+      if (!latest || !supabase) return
+      setStatus("Saving…")
+      void supabase.rpc("save_notebook", { notebook_id: currentId, expected_revision: latest.revision || 1, new_document: { version: 1, cells: next } })
+        .then(({ data, error }) => {
+          if (error) return setStatus(error.message.includes("Revision conflict") ? "Save conflict — reload this notebook" : error.message)
+          const saved = fromRow(data as NotebookRow)
+          setList((items) => items.map((item) => item.id === saved.id ? saved : item))
+          setStatus("Saved to Supabase")
+        })
+    }, 500)
+    return () => window.clearTimeout(timer)
   }, [cells, currentId])
 
-  const open = useCallback(
-    (id: string) => {
-      const s = storeRef.current
-      const nb = s.list.find((n) => n.id === id)
-      if (!nb) return
-      const fresh = withIds(nb.cells)
-      setCells(fresh)
-      setSelectedId(fresh.find((c) => c.type === "music")?.id || fresh[0]?.id || null)
-      put({ ...s, current: id })
-    },
-    [setCells, setSelectedId, put],
-  )
+  const open = useCallback((id: string) => { const notebook = listRef.current.find((item) => item.id === id); if (notebook) show(notebook) }, [show])
+  const create = useCallback(() => { void createCloud("Untitled", [{ type: "music", source: "" }]).catch((e: Error) => setStatus(e.message)) }, [createCloud])
+  const duplicate = useCallback((id: string) => { const notebook = listRef.current.find((item) => item.id === id); if (notebook) void createCloud(`${notebook.title} (copy)`, notebook.cells).catch((e: Error) => setStatus(e.message)) }, [createCloud])
+  const rename = useCallback((id: string, title: string) => {
+    const clean = title.trim() || "Untitled"
+    setList((items) => items.map((item) => item.id === id ? { ...item, title: clean } : item)); setStatus("Saving…")
+    void supabase?.from("notebooks").update({ title: clean }).eq("id", id).then(({ error }) => setStatus(error ? error.message : "Saved to Supabase"))
+  }, [])
+  const remove = useCallback((id: string) => {
+    const remaining = listRef.current.filter((item) => item.id !== id); setList(remaining)
+    if (currentId === id) { if (remaining[0]) show(remaining[0]); else create() }
+    void supabase?.from("notebooks").update({ deleted_at: new Date().toISOString() }).eq("id", id)
+  }, [create, currentId, show])
 
-  // `fields` are kept with the notebook: `starters` marks one made from the starters
-  const add = useCallback(
-    (title: string, cells: SavedCell[], fields: Partial<Notebook> = {}) => {
-      const nb: Notebook = {
-        id: notebookId(),
-        title,
-        cells: bare(cells),
-        ...fields,
-        updated: Date.now(),
-      }
-      put({ current: nb.id, list: [nb, ...storeRef.current.list] })
-      const fresh = withIds(nb.cells)
-      setCells(fresh)
-      setSelectedId(fresh.find((c) => c.type === "music")?.id || fresh[0]?.id || null)
-      return nb.id
-    },
-    [put, setCells, setSelectedId],
-  )
-
-  const create = useCallback(() => add("Untitled", [{ type: "music", source: "" }]), [add])
-
-  const duplicate = useCallback(
-    (id: string) => {
-      const nb = storeRef.current.list.find((n) => n.id === id)
-      if (nb) add(`${nb.title} (copy)`, nb.cells)
-    },
-    [add],
-  )
-
-  const rename = useCallback(
-    (id: string, title: string) => {
-      const s = storeRef.current
-      put({
-        ...s,
-        list: s.list.map((n) => (n.id === id ? { ...n, title: title.trim() || "Untitled" } : n)),
-      })
-    },
-    [put],
-  )
-
-  const remove = useCallback(
-    (id: string) => {
-      const s = storeRef.current
-      const list = s.list.filter((n) => n.id !== id)
-      if (s.current !== id) return put({ ...s, list })
-      // The open one is gone: open the next, or a new one
-      if (list.length) {
-        put({ current: list[0].id, list })
-        const fresh = withIds(list[0].cells)
-        setCells(fresh)
-        setSelectedId(fresh.find((c) => c.type === "music")?.id || fresh[0]?.id || null)
-      } else {
-        put({ current: null, list })
-        create()
-      }
-    },
-    [put, setCells, setSelectedId, create],
-  )
-
-  const current = useMemo(() => store.list.find((n) => n.id === store.current) || null, [store])
-  const list = useMemo(() => [...store.list].sort((a, b) => b.updated - a.updated), [store])
-
-  return { list, current, open, create, duplicate, rename, remove }
+  const current = useMemo(() => list.find((item) => item.id === currentId) || null, [list, currentId])
+  const sorted = useMemo(() => [...list].sort((a, b) => b.updated - a.updated), [list])
+  return { list: sorted, current, status, open, create, duplicate, rename, remove }
 }

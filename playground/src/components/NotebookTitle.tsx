@@ -43,15 +43,20 @@ export default function NotebookTitle({
   const item = (label: string, fn: () => void, cls = "") => (
     <button
       type="button"
-      className={"cell-menu-item " + cls}
+      className={"cell-menu-item nb-title-menu-item " + cls}
       onClick={() => {
         setOpen(false)
         fn()
       }}
     >
+      <span className="nb-title-menu-icon" aria-hidden="true">
+        {label === "Rename" ? "✎" : label === "Duplicate" ? "⧉" : "×"}
+      </span>
       {label}
     </button>
   )
+  const saveState = subtitle === "Saved to Supabase" ? "saved" : subtitle === "Saving…" ? "saving" : subtitle === "Unsaved changes" ? "unsaved" : subtitle.startsWith("Loading") ? "loading" : "error"
+  const saveLabel = saveState === "saved" ? "Saved" : saveState === "error" ? "Save failed" : subtitle
 
   return (
     <div className="nb-title-bar">
@@ -71,29 +76,30 @@ export default function NotebookTitle({
             }}
           />
         ) : menu ? (
-          <button
-            type="button"
-            className={"nb-title-btn" + (open ? " nb-title-btn-open" : "")}
-            onClick={() => setOpen((v) => !v)}
-            title="Rename, duplicate or delete this notebook"
-            aria-haspopup="menu"
-            aria-expanded={open}
-          >
-            <h1 className="panel-title">{title}</h1>
-            <svg
-              className="nb-title-chevron"
-              width="10"
-              height="10"
-              viewBox="0 0 10 10"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
+          <>
+            <h1
+              className="panel-title nb-title-name"
+              title="Double-click to rename"
+              onDoubleClick={() => setRenaming(title)}
             >
-              <path d="M2 3.5l3 3 3-3" />
-            </svg>
-          </button>
+              {title}
+            </h1>
+            <button
+              type="button"
+              className={"nb-title-actions" + (open ? " nb-title-actions-open" : "")}
+              onClick={() => setOpen((value) => !value)}
+              title="Notebook actions"
+              aria-label="Notebook actions"
+              aria-haspopup="menu"
+              aria-expanded={open}
+            >
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor" aria-hidden="true">
+                <circle cx="3" cy="7" r="1.2" />
+                <circle cx="7" cy="7" r="1.2" />
+                <circle cx="11" cy="7" r="1.2" />
+              </svg>
+            </button>
+          </>
         ) : (
           <h1 className="panel-title">{title}</h1>
         )}
@@ -101,12 +107,16 @@ export default function NotebookTitle({
           <div className="nb-title-menu" role="menu">
             {item("Rename", () => setRenaming(title))}
             {item("Duplicate", menu.duplicate)}
-            <div className="nb-title-menu-rule" />
             {item("Delete", menu.remove, "cell-menu-item-danger")}
           </div>
         )}
+        <div className={`save-indicator save-indicator-${saveState}`} role="status" title={saveState === "error" ? subtitle : saveLabel}>
+          <span className="save-indicator-icon" aria-hidden="true">
+            {saveState === "saved" ? "✓" : saveState === "error" ? "!" : ""}
+          </span>
+          <span>{saveLabel}</span>
+        </div>
       </div>
-      <p className="panel-subtitle">{subtitle}</p>
     </div>
   )
 }

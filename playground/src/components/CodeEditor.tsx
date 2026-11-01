@@ -15,7 +15,7 @@ type Props = {
   onRun?: () => void
   onInterrupt?: () => void
   runState: RunState
-  // The lines the last run found mistakes on
+  // The lines the last run found errors on
   errorLines: Set<number> | null
 }
 
@@ -110,7 +110,8 @@ const CodeEditor = React.forwardRef<HTMLTextAreaElement, Props>(function CodeEdi
       />
       {diagnosticLines.length > 0 && (
         <div className="code-diagnostics" role="status">
-          Check {diagnosticLines.length === 1 ? "line" : "lines"} {diagnosticLines.join(", ")}
+          {diagnosticLines.length === 1 ? "Error on line" : "Errors on lines"}{" "}
+          {diagnosticLines.join(", ")}
         </div>
       )}
       {runState === "waiting" && onInterrupt && (

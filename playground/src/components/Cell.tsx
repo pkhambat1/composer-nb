@@ -190,7 +190,7 @@ function Cell({
       : cell.status === "waiting"
         ? "waiting"
         : "idle"
-  // The lines the last run found mistakes on, for the editor to mark, as long as the
+  // The lines the last run found errors on, for the editor to mark, as long as the
   // source is still what that run saw
   const errorLines = React.useMemo(
     () =>
@@ -245,33 +245,6 @@ function Cell({
         ) : null}
       </div>
       <div className="cell-body">
-        <button
-          className={"cell-context-btn" + (selected ? " cell-context-btn-active" : "")}
-          type="button"
-          aria-pressed={selected}
-          title={
-            selected
-              ? "This whole cell is available to the assistant"
-              : "Make this whole cell available to the assistant"
-          }
-          onMouseDown={(e) => e.preventDefault()}
-          onClick={(e) => {
-            e.stopPropagation()
-            onSelect()
-          }}
-        >
-          <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true">
-            <path
-              d="M4.6 7.4 7.4 4.6M3.8 8.9l-1 .9a2.1 2.1 0 0 1-3-3l2-2a2.1 2.1 0 0 1 3 0M8.2 3.1l1-.9a2.1 2.1 0 1 1 3 3l-2 2a2.1 2.1 0 0 1-3 0"
-              transform="translate(-.5 -.5)"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.15"
-              strokeLinecap="round"
-            />
-          </svg>
-          <span>{selected ? "In assistant context" : "Use cell as context"}</span>
-        </button>
         <CellMenu
           onDelete={onDelete}
           onMoveUp={onMoveUp}

@@ -27,6 +27,10 @@ dist-ssr
 # Python
 .venv
 
+# Local Supabase CLI state and generated runtime secrets
+supabase/.branches/
+supabase/.temp/
+
 # The engine compiled from dsl/js by tsc (npm run build:lib -w dsl)
 dsl/lib
 # The MCP server compiled from mcp/src (npm run build:lib -w mcp)
