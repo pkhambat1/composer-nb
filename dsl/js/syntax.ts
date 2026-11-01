@@ -1,6 +1,6 @@
 /* A cell as the parser reads it: tokens, and a tree of statements and blocks, each with
    where it was written. Declared here once, so every phase after the parser (checking,
-   evaluating, highlighting) switches over the same kinds, and tsc lists every switch that
+   evaluating) switches over the same kinds, and tsc lists every switch that
    misses one when a kind is added: end a switch with `default: return unhandled(node)`.
 
    What a statement holds after its head stays text for now, with its span: steps, notes,

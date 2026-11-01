@@ -50,14 +50,15 @@
   },
   "files": [
     "lib",
-    "fonts"
+    "fonts",
+    "app/dist"
   ],
   "scripts": {
     "reference": "node scripts/reference.ts",
-    "build": "npm run reference && npm run build:lib",
+    "build": "npm run reference && npm run build:lib && npm run build:app",
     "build:lib": "tsc -p tsconfig.build.json",
     "typecheck": "tsc -p . && tsc -p app && tsc -p tests",
-    "build:app": "vite build --config app/vite.config.ts",
+    "build:app": "vite build --config app/vite.config.ts && vite build --config app/vite.config.ts --mode bootstrap",
     "dev:app": "vite --config app/vite.config.ts --port 5184",
     "prepack": "npm run build",
     "pretest": "npm run build:app",

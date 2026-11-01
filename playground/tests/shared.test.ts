@@ -3,7 +3,7 @@
 import { describe, it, expect } from "vitest"
 import { dropShared } from "../src/hooks/useNotebooks.ts"
 
-const nb = (id, title) => ({ id, title, cells: [], updated: 1 })
+const nb = (id: string, title: string) => ({ id, title, cells: [], updated: 1 })
 
 describe("notebooks from shared links", () => {
   it("go, and the first one left opens in place of one that was open", () => {

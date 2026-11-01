@@ -17,22 +17,26 @@ export function cellId(): string {
   return "c" + ++_cid + "_" + Date.now().toString(36)
 }
 
-export function useCellManager(starterCells: SavedCell[]) {
+export function useCellManager(starterCells: SavedCell[], initialSelectedId?: string | null) {
   // Initialize cells from starter data - add id, runCount, output, status
-  const initCells = starterCells.map(
-    (c): NotebookCell => ({
-      id: cellId(),
-      type: c.type,
-      source: c.source,
-      runCount: null,
-      output: null,
-      status: "idle",
-    }),
+  const [initCells] = useState(() =>
+    starterCells.map(
+      (c): NotebookCell => ({
+        id: c.id ?? cellId(),
+        type: c.type,
+        source: c.source,
+        runCount: null,
+        output: null,
+        status: "idle",
+      }),
+    ),
   )
 
   // State
   const [cells, setCells] = useState(initCells)
-  const [selectedId, setSelectedId] = useState<string | null>(initCells[1]?.id || null)
+  const [selectedId, setSelectedId] = useState<string | null>(
+    initialSelectedId === undefined ? (initCells[1]?.id ?? null) : initialSelectedId,
+  )
   const [editingId, setEditingId] = useState<string | null>(null)
   const [trash, setTrash] = useState<{ cell: NotebookCell; idx: number }[]>([])
 

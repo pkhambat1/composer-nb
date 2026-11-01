@@ -4,9 +4,10 @@ vi.mock("tone", () => ({}))
 
 const { parseSource } = await import("../../js/music-engine.ts")
 
-const pitchClasses = (chord) =>
+const pitchClasses = (chord: { notesMidi: number[] }) =>
   chord.notesMidi.map((m) => ((m % 12) + 12) % 12).sort((a, b) => a - b)
-const firstError = (src, inherited?) => parseSource(src, inherited).errors[0]?.msg
+const firstError = (src: string, inherited?: import("../../js/language.ts").State) =>
+  parseSource(src, inherited).errors[0]?.msg
 
 describe("transpose", () => {
   it("moves a chord's sound and keeps its name, as a capo does a guitar's shape", () => {
@@ -40,7 +41,7 @@ describe("transpose", () => {
 
   it("leaves drums alone", () => {
     const cell = "play {\n  kick: x-x-\n  tom.floor: --x-\n  piano: notes C4---\n}"
-    const drums = (src) => JSON.stringify(parseSource(src).drumEvents)
+    const drums = (src: string) => JSON.stringify(parseSource(src).drumEvents)
     expect(drums("set transpose 5\n" + cell)).toBe(drums(cell))
   })
 

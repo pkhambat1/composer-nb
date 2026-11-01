@@ -6,19 +6,20 @@
    so the diff is the list of real cells it changes. If the change is meant, update the files
    with `npx vitest run -u` and read the diff. */
 import { describe, it, expect } from "vitest"
-import { parseCell } from "../../js/language.ts"
+import { parseCell, type Parsed } from "../../js/language.ts"
 import { realCells } from "./real-cells.ts"
 
 // Times to four places, so float noise doesn't count as a change.
-const num = (n) => String(+n.toFixed(4))
-const value = (v) =>
+const num = (n: number) => String(+n.toFixed(4))
+const value = (v: unknown) =>
   typeof v === "number" ? num(v) : typeof v === "object" ? JSON.stringify(v) : String(v)
 
 // One event on one line: its start in seconds, then its fields in the order the engine
 // gives them. A field that's false or missing is left out, so a new field shows as an
 // addition and not as a change to every line.
-function event(e) {
-  const fields = Object.entries(e)
+function event(e: { secStart: number }) {
+  const entries: [string, unknown][] = Object.entries(e)
+  const fields = entries
     .filter(([k, v]) => k !== "secStart" && v !== false && v != null)
     .map(([k, v]) => `${k}=${value(v)}`)
   return `  ${num(e.secStart)} ${fields.join(" ")}`
@@ -26,16 +27,28 @@ function event(e) {
 
 // Events in time order, and in a fixed order within a moment, so a refactor that only
 // changes the order the engine pushes them in changes nothing here.
-const sorted = (events) =>
-  events.map((e) => [e.secStart, event(e)]).sort((a, b) => a[0] - b[0] || (a[1] < b[1] ? -1 : 1))
+const sorted = (events: { secStart: number }[]) =>
+  events
+    .map((e): [number, string] => [e.secStart, event(e)])
+    .sort((a, b) => a[0] - b[0] || (a[1] < b[1] ? -1 : 1))
 
-const BLOCK = ["startSec", "durSec", "bars", "time", "tempo", "key", "unit", "barTicks", "res"]
+const BLOCK: (keyof Parsed["blocks"][number])[] = [
+  "startSec",
+  "durSec",
+  "bars",
+  "time",
+  "tempo",
+  "key",
+  "unit",
+  "barTicks",
+  "res",
+]
 
-function cellText(title, parsed) {
+function cellText(title: string, parsed: Parsed) {
   const { state } = parsed
   const names = [
-    ...Object.entries(state.words).map(([n, w]: [string, any]) => `${n} ${w.type} line ${w.line}`),
-    ...Object.entries(state.sections).map(([n, s]: [string, any]) => `${n} pattern line ${s.ln}`),
+    ...Object.entries(state.words).map(([n, w]) => `${n} ${w.type} line ${w.line}`),
+    ...Object.entries(state.sections).map(([n, s]) => `${n} ${s.type} line ${s.ln}`),
   ]
   const out = [`## ${title}`]
   out.push(`errors: ${parsed.errors.length ? "" : "none"}`)
@@ -47,11 +60,12 @@ function cellText(title, parsed) {
     const fields = BLOCK.filter((k) => b[k] != null).map((k) => `${k}=${value(b[k])}`)
     out.push(`block ${fields.join(" ")}`)
   }
-  for (const [label, events] of [
+  const tracks: [string, { secStart: number }[]][] = [
     ["drums", parsed.drumEvents],
     ["notes", parsed.notes],
     ["chords", parsed.chords],
-  ]) {
+  ]
+  for (const [label, events] of tracks) {
     if (!events.length) continue
     out.push(`${label}:`)
     out.push(...sorted(events).map(([, line]) => line))
@@ -59,7 +73,7 @@ function cellText(title, parsed) {
   return out.join("\n")
 }
 
-const file = (cells) => cells.join("\n\n") + "\n"
+const file = (cells: string[]) => cells.join("\n\n") + "\n"
 
 // One file per group of cells
 const FILES = { docs: "docs.txt", grooves: "grooves.txt", skills: "skills.txt" }

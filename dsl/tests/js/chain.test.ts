@@ -4,7 +4,7 @@ vi.mock("tone", () => ({}))
 
 const { parseSource, parseChain } = await import("../../js/music-engine.ts")
 
-const labels = (p) => p.chords.map((e) => e.label)
+const labels = (p: ReturnType<typeof parseSource>) => p.chords.map((e) => e.label)
 
 describe("parseChain", () => {
   it("starts from the settings the earlier cells ended on", () => {

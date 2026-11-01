@@ -133,7 +133,7 @@ function chordSlot(tok: string, part: Part, st: State, key: Key, err: Report): S
     err(
       part.ln,
       st.sections[tok]
-        ? misplaced(tok, "pattern", { line: "chart" })!
+        ? misplaced(tok, st.sections[tok].type, { line: "chart" })!
         : `"${tok}" isn't defined above. Name it first: chords ${tok} = Am F|C G`,
     )
     return null

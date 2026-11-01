@@ -6,15 +6,9 @@ vi.mock("tone", () => ({}))
 
 const { buildChord, parseKey, isRoman } = await import("../../js/chords.ts")
 const { parseSource } = await import("../../js/music-engine.ts")
-const { highlightMusic } = await import("../../js/highlight.ts")
 
 const C = parseKey("C")
-const notes = (t) => buildChord(t, C)!.noteNames.map((n) => n.replace(/\d+$/, ""))
-const painted = (src) =>
-  highlightMusic(src)
-    .flat()
-    .filter((p) => p.c)
-    .map((p) => `${p.c}:${p.s}`)
+const notes = (t: string) => buildChord(t, C)!.noteNames.map((n) => n.replace(/\d+$/, ""))
 
 describe("6/9", () => {
   it("is a 6 chord with the 9th added, major or minor", () => {
@@ -49,13 +43,5 @@ describe("6/9", () => {
     await lib.load()
     expect(lib.lookupPosition("C6/9")).toBeTruthy()
     expect(lib.lookupPosition("Cm6/9")).toBeTruthy()
-  })
-
-  it("is coloured as a chord, and the other spellings as mistakes", () => {
-    expect(painted("play piano: chords C6/9 Cm6/9/E")).toEqual(
-      expect.arrayContaining(["tk-ext:6/9", "tk-quality:m", "tk-slash:/", "tk-bass:E"]),
-    )
-    expect(painted("play piano: chords C6/9")).not.toContain("tk-bass:9")
-    expect(painted("play piano: chords C69")).toContain("tk-error:69")
   })
 })

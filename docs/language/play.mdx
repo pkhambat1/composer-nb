@@ -8,7 +8,7 @@ import { Cell } from "/snippets/cell.jsx"
 `play` evaluates what follows it and renders one output. It is the only statement that makes sound, and it goes at the top level of a cell.
 
 ```text
-play [<length>] <pattern, group, block or line>
+play <pattern, group, block or line> [for <number> bars]
 ```
 
 <Cell>
@@ -20,11 +20,11 @@ pattern groove = {
 }
 
 play groove
-play 2 bars piano: chords Am F
-play 4 bars {
+play piano: chords Am F for 2 bars
+play {
   crash: 1
   groove
-}
+} for 4 bars
 ```
 
 </Cell>
@@ -38,13 +38,16 @@ A play is a timeline, and its statements start together.
 | In a play | Plays |
 | --- | --- |
 | A line | Once. |
+| A named block | Once, with silence after it if the play runs longer. |
 | A pattern, or a group in brackets | Repeated until the play ends. A group plays what's in it in order. |
 | `every` | Repeated until the play ends. |
 | `bar <n>` | In bar `n`. |
 
 ## Duration
 
-Without a length, a play lasts as long as its longest statement, and what repeats must fit that a whole number of times. With a length, it lasts exactly that long: whatever is repeating stops at the end, and silence fills any time left over. A play can't run past 10 minutes.
+Write `play groove for 2 bars` to set the whole output’s duration. The duration follows the music; `play 2 bars groove` is rejected.
+
+Without a duration, a play lasts as long as its longest statement, and what repeats must fit that a whole number of times. With a length, it lasts exactly that long: whatever is repeating stops at the end, and silence fills any time left over. A play can't run past 10 minutes.
 
 ## Output
 

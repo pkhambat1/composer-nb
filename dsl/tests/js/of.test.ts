@@ -6,25 +6,19 @@ import { describe, it, expect, vi } from "vitest"
 vi.mock("tone", () => ({}))
 
 const { parseSource } = await import("../../js/music-engine.ts")
-const { highlightMusic } = await import("../../js/highlight.ts")
 const { sheetAbc } = await import("../../js/sheet.ts")
 
-const names = (src) => {
+const names = (src: string) => {
   const p = parseSource(src)
   expect(p.errors).toEqual([])
   return p.notes.map((e) => e.note.name)
 }
-const chords = (src) => {
+const chords = (src: string) => {
   const p = parseSource(src)
   expect(p.errors).toEqual([])
   return p.chords.map((e) => e.chord.label)
 }
-const firstError = (src) => parseSource(src).errors[0]?.msg
-const painted = (src, word) =>
-  highlightMusic(src)
-    .flat()
-    .filter((p) => p.s === word)
-    .map((p) => p.c)
+const firstError = (src: string) => parseSource(src).errors[0]?.msg
 
 describe("of in notes", () => {
   it("counts a degree on the major scale of the note after it", () => {
@@ -136,7 +130,7 @@ describe("of in charts", () => {
   })
 
   it("counts on any chord's root, a name of any type", () => {
-    const of = (chart) => chords("set key C\nplay piano: chords " + chart)
+    const of = (chart: string) => chords("set key C\nplay piano: chords " + chart)
     expect(of("v of Am")).toEqual(["E"])
     expect(of("v7 of G")).toEqual(["D7"])
     expect(of("v of Cmaj7|v of F#dim|v of Bbm7")).toEqual(["G", "C#", "F"])
@@ -150,7 +144,7 @@ describe("of in charts", () => {
   })
 
   it("says what's wrong", () => {
-    const err = (chart) => firstError("set key C\nplay piano: chords " + chart)
+    const err = (chart: string) => firstError("set key C\nplay piano: chords " + chart)
     expect(err("V7 of V of V")).toBe("A chain of of's takes brackets: V7 of (V of V)")
     expect(err("5 of V")).toBe(
       "In a chart, of takes a numeral in front of it, counted from the chord after it: V7 of V",
@@ -160,26 +154,6 @@ describe("of in charts", () => {
     expect(firstError("set key C\nchords turn = v7 of Hm\nplay piano: chords turn")).toBe(
       `"Hm" isn't a chord I know`,
     )
-  })
-})
-
-describe("of in the editor", () => {
-  it("is a keyword, and its brackets are punctuation", () => {
-    const src = "play piano: notes v of (v of C3)---\nplay piano: chords v7 of (v of v)/F#"
-    expect(painted(src, "of")).toEqual(Array(4).fill("tk-directive-key"))
-    expect(painted(src, "(")).toEqual(["tk-punct", "tk-punct"])
-    expect(painted(src, ")")).toEqual(["tk-punct", "tk-punct"])
-    expect(painted(src, "C3")).toEqual(["tk-note"])
-    expect(painted(src, "F#")).toEqual(["tk-bass"])
-  })
-
-  it("marks a chain without brackets, and an of with nothing on one side", () => {
-    expect(painted("play piano: notes v of v of C3", "of")).toEqual([
-      "tk-directive-key",
-      "tk-error",
-    ])
-    expect(painted("play piano: notes v of", "of")).toEqual(["tk-error"])
-    expect(painted("play piano: chords of v", "of")).toEqual(["tk-error"])
   })
 })
 

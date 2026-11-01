@@ -9,7 +9,7 @@ export type { Theme }
 
 // A cell as it's kept: music, or text (markdown), and what's written in it
 export type CellType = "music" | "text"
-export type SavedCell = { type: CellType; source: string }
+export type SavedCell = { id?: string; type: CellType; source: string }
 
 // What a music cell shows under it once it has run: its mistakes, a note that nothing
 // plays, the parse while the audio renders, then the audio

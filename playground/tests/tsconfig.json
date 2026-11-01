@@ -1,7 +1,6 @@
 {
-  // The playground's tests, checked as the playground is, except that a callback's parameter
-  // needs no type of its own.
+  // Tests use the same strict types as the notebook.
   "extends": "../tsconfig.json",
-  "compilerOptions": { "noImplicitAny": false },
+  "compilerOptions": { "noImplicitAny": true },
   "include": ["../src", "."]
 }

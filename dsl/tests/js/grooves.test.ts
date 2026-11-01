@@ -8,7 +8,8 @@ const { initialState } = await import("../../js/language.ts")
 const { GROOVES } = await import("../../js/grooves.ts")
 
 // What a cell plays: its notes, chords and hits, with their times
-const plays = (r) => JSON.stringify({ events: r.events, drums: r.drumEvents, total: r.totalSec })
+const plays = (r: ReturnType<typeof parseSource>) =>
+  JSON.stringify({ events: r.events, drums: r.drumEvents, total: r.totalSec })
 
 // Settings carry on into the cells below, so a starter states every setting it relies on
 // that a starter above it in the welcome notebook changes, and plays the same after each of
@@ -20,7 +21,7 @@ describe("a starter plays the same after the starters above it", () => {
   GROOVES.forEach((g, i) => {
     it(g.title, () => {
       expect(alone.get(g.title)!.errors).toEqual([])
-      const own = plays(alone.get(g.title))
+      const own = plays(alone.get(g.title)!)
       const wrong = after
         .slice(0, i)
         .map(([t, st]) => {

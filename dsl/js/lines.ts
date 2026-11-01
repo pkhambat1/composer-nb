@@ -49,7 +49,7 @@ import {
 export type SettingLine = { kind: "setting"; ln: number; name: string; value: string }
 export type DeclLine =
   | { kind: "word"; ln: number; type: Type; name: string; value: Piece[] }
-  | { kind: "blockdef"; ln: number; name: string; value: Piece[] }
+  | { kind: "blockdef"; ln: number; type: "pattern" | "block"; name: string; value: Piece[] }
 export type PartLine = {
   kind: "part"
   ln: number
@@ -265,10 +265,7 @@ export function classify({ ln, parts }: Line, err: Report, st: State): ReadLine 
   const name = m[1].toLowerCase()
   const value = withHead(parts, m[2])
   if (name === "bars" || name === "bar") {
-    err(
-      ln,
-      "A length goes in front of what it measures: pattern groove = 3 bars {, or play 3 bars { ... }",
-    )
+    err(ln, "Write the length like this: pattern groove = 3 bars {, or play { ... } for 3 bars")
     return null
   }
   if (among(SETTINGS, name)) {

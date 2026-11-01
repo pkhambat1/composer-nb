@@ -7,7 +7,7 @@ export const INSTRUCTIONS = `composer-nb is a small, typed language for music: d
 HOW A CELL READS. Every line says what it is:
   set tempo 90              a setting, at the top only: set, then the setting and its value
   with octave 2 { ... }     settings for its block only
-  steps pair = ^-x-         a name, its type in front, = its value. Types: steps, notes, chords, pattern
+  steps pair = ^-x-         a name, its type in front, = its value. Types: steps, notes, chords, pattern, block
 Names, of every type, start with a lowercase letter, then letters and digits in camelCase (riff, partA, countIn), at least two characters, never a numeral. Two names that differ only in their capitals are an error. A name is defined once in a cell, inside its blocks too; a later cell may define it again.
   kick: x--x---             inside braces: a kit piece or instrument, a colon, what it plays
   play { ... }              plays what follows it. Nothing sounds outside a play
@@ -38,11 +38,12 @@ An instrument's line says which type it holds, notes or chords, in front of its 
   }
 CHORDS: the word chords, then bars: piano: chords Am F|C G. The chords in a bar split it evenly (Am - F G is four slots); - holds, _ is silence, % repeats the bar before. A chart written as the same bars twice is an error (Am F|Am F and Am F|% are Am F); a long chart continues on a line starting with |. Symbols: C, Am, F#m, Bb7, Cmaj7, G7sus4, Em7b5, Cadd9, C/E, and C6/9 or Cm6/9 (never C69 or C6add9; C6/9/E is over E). Roman numerals: uppercase major and lowercase minor, counted on the key's scale as degrees are, with b or # in front to move off it: under set key C, i vi iv v7 · ii7 · viidim · bvii; under set mode minor the chords of the scale are i ii iii iv v vi vii. To show a mode off, write one chart of plain numerals and play it in each mode: chords i ii|iii iv|v vi|vii i'. A plain lowercase numeral is diminished where the scale makes it so (vii in major, ii in minor, iv in lydian), so no dim is needed there. A quality follows the numeral as it follows a chord's root: v7, ivmaj7, viim7b5. A numeral's root counts up from the key's root in octave, so a progression keeps its shape in every key; a symbol's root is in octave counted from C. of counts a numeral from another's root: in C, v7 of v is D7 (a secondary dominant) and v7 of (v of v) is A7. Right of of is a numeral, never a chord symbol. Guitars play real fretboard shapes.
 
+BLOCKS: block accent = { crash: 1 }. A named block's instrument lines play once and do not loop, even beside or inside a longer repeating pattern. A longer play leaves silence after it. Untyped name = value declarations are errors and define nothing. The type always precedes the name; do not use name = pattern/block { ... }.
 PATTERNS: pattern groove = { lines }. The lines start together and every line repeats until the pattern ends, which is when they all line up again (lines of 4 and 6 steps meet after 12), or a length in front: pattern groove = 4 bars { ... }. Whatever repeats must fit a whole number of times; the error says where it lines up.
   bar 2 { ... } inside a pattern or play: what plays in bar 2 only, every time through. It adds and overrides, never removes. bar 3 to 4 { ... } covers a run. One line needs no braces: bar 2 hat.pedal: 4.
   every 3 steps { ... } or every 1/3 beats { ... } (triplets) says how long a step lasts inside it. every 2 steps is eighth notes.
   Braces hold what plays together and brackets what plays in order. A pattern's name on a line of its own plays under the lines beside it. ( ) is the one way to put things in order: play (intro verse verse chorus) · play (intro 4 bars (verse chorus) outro) · play ({ kick: x--- } { snare: x--- }). A group may run over several lines. A length in front of a name or group repeats it for that long. Two things on one line outside brackets are an error.
-PLAY: play groove · play 4 bars groove · play guitar: chords Am F|C G · play { crash: 1 / groove } on separate lines: a play's own lines play once, and a pattern or a group on a line of its own repeats to fill it. Without a length a play lasts as long as its longest line. Each play is one output; several play one after another.
+PLAY: play groove · play groove for 4 bars · play guitar: chords Am F|C G · play { crash: 1 / groove } on separate lines: a play's own lines play once, and a pattern or a group on a line of its own repeats to fill it. Without a length a play lasts as long as its longest line. Each play is one output; several play one after another.
 
 COMMON MISTAKES: piano: Am F (chords is missing in front) · piano: C4--- (notes is missing in front) · tempo 90 (a setting starts with set: set tempo 90) · set inside braces (use with) · set key Am (set key A, set mode minor) · set time 7/8 · a kit piece's line at the top level (it goes inside play { } or a pattern) · snare: ~x (ghost notes go on snare.ghost: x) · F#E (a space between notes) · 1 bar (lengths are plural: 1 bars) · hat.close (hat is the closed one) · hat: x-x- x-x- (a figure written twice: hat: x-) · 3 beats C2-E2- (a length holds one note) · a 6-step line beside 16-step lines (it must fit) · play inside braces (play goes at the top) · a name used above its line · play intro verse (in order takes brackets: play (intro verse)).
 
@@ -55,7 +56,7 @@ pattern beat = {
   kick: x--- --x- x--- ----
 }
 
-play 2 bars {
+play {
   crash: 1
   beat
-}`
+} for 2 bars`

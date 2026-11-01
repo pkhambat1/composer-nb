@@ -27,13 +27,13 @@ pattern funk = {
   kick: x--- --x- --x- ----
 }
 
-play 4 bars funk
+play funk for 4 bars
 
 set tempo 80
-play 4 bars funk
+play funk for 4 bars
 
 set tempo 90
-play 4 bars funk
+play funk for 4 bars
 ```
 
 A groove, then the same with the kick left out for the user to play, each with a bar of count-in.

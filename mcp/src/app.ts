@@ -1,15 +1,12 @@
-/* The MCP App: for a host that renders MCP Apps (claude.ai, Claude Desktop), parse draws
-   the cell inside the conversation as the playground's own: the code, which the user can
-   change and play again, and the player. The view is
-   app/main.js, the playground's App bundled by Vite into app/dist/app.js (npm run
-   build:app -w mcp) and put inline in one HTML page here, which the host loads in a
-   sandboxed frame. A host that doesn't render UI reads the tools' text
-   as before: the page is only fetched by a host that asks for it. */
+/* Shared notebook UI resources for MCP Apps hosts. Tools also return useful text
+   to clients without a UI. Hosted HTTP uses an inline handshake plus the renderer
+   asset; stdio embeds the full built renderer. See mcp/README.md. */
 import { readFile } from "node:fs/promises"
 import { RESOURCE_MIME_TYPE, registerAppResource } from "@modelcontextprotocol/ext-apps/server"
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 
 export const CELL_UI = "ui://composer-nb/cell"
+export const NOTEBOOK_UI = "ui://composer-nb/notebook"
 
 // Where the player fetches its sounds: the drum kit, the sampled instruments.
 export const SOUND_HOSTS = [
@@ -22,15 +19,20 @@ export const SOUND_HOSTS = [
 export const FONT_HOSTS = ["https://fonts.googleapis.com", "https://fonts.gstatic.com"]
 const FONTS =
   "https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Serif:wght@400;600&display=swap"
+const ASSET_ORIGIN = process.env.COMPOSER_NB_APP_ORIGIN
+  ? new URL(process.env.COMPOSER_NB_APP_ORIGIN).origin
+  : null
 
 let scriptLoading: Promise<string> | null = null
 // The build is in app/dist/, one folder up from both src/ and lib/
 function script(): Promise<string> {
   if (!scriptLoading) {
     scriptLoading = readFile(new URL("../app/dist/app.js", import.meta.url), "utf8").catch(
-      (err) => {
+      (err: unknown) => {
         scriptLoading = null
-        throw new Error(`The MCP App isn't built. Run: npm run build:app -w mcp (${err.message})`)
+        throw new Error(
+          `The MCP App isn't built. Run: npm run build:app -w mcp (${err instanceof Error ? err.message : String(err)})`,
+        )
       },
     )
   }
@@ -40,9 +42,11 @@ function script(): Promise<string> {
 // The page the host renders.
 export async function cellHtml(): Promise<string> {
   // Inline JS must not close its own tag; "<\/" is the same string to JavaScript.
-  const js = (await script()).replace(/<\/script/gi, "<\\/script")
+  const scriptTag = ASSET_ORIGIN
+    ? `<script type="module">${(await readFile(new URL("../app/dist/bootstrap.js", import.meta.url), "utf8")).replace(/<\/script/gi, "<\\/script")}</script>`
+    : `<script type="module">${(await script()).replace(/<\/script/gi, "<\\/script")}</script>`
   return `<!doctype html>
-<html lang="en">
+<html lang="en"${ASSET_ORIGIN ? ` data-composer-app="${ASSET_ORIGIN}/app.js"` : ""}>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -53,7 +57,7 @@ export async function cellHtml(): Promise<string> {
 <body>
 <div id="status">Loading the player…</div>
 <div id="cells"></div>
-<script type="module">${js}</script>
+${scriptTag}
 </body>
 </html>
 `
@@ -61,29 +65,45 @@ export async function cellHtml(): Promise<string> {
 
 // Registers the page as the resource parse names in its _meta.ui.resourceUri.
 export function registerCellApp(server: McpServer): void {
-  registerAppResource(
-    server,
-    "The cell, played",
-    CELL_UI,
-    {
-      description:
-        "The cells inside the conversation, as the playground draws them: the code, which the user can change and play again, the player, the hits as bricks or as sheet music, and the chords.",
-      mimeType: RESOURCE_MIME_TYPE,
-    },
-    async () => ({
-      contents: [
-        {
-          uri: CELL_UI,
-          mimeType: RESOURCE_MIME_TYPE,
-          text: await cellHtml(),
-          _meta: {
-            ui: {
-              csp: { connectDomains: SOUND_HOSTS, resourceDomains: FONT_HOSTS },
-              prefersBorder: true,
+  for (const resourceUri of [CELL_UI, NOTEBOOK_UI]) {
+    registerAppResource(
+      server,
+      "The cell, played",
+      resourceUri,
+      {
+        description:
+          "The cells inside the conversation, as the playground draws them: the code, which the user can change and play again, the player, the hits as bricks or as sheet music, and the chords.",
+        mimeType: RESOURCE_MIME_TYPE,
+      },
+      async () => {
+        if (process.env.COMPOSER_DEBUG) console.error("Read UI", resourceUri)
+        return {
+          contents: [
+            {
+              uri: resourceUri,
+              mimeType: RESOURCE_MIME_TYPE,
+              text: await cellHtml(),
+              _meta: {
+                "openai/ui": {
+                  availableDisplayModes:
+                    resourceUri === NOTEBOOK_UI ? ["fullscreen"] : ["inline", "fullscreen"],
+                },
+                ui: {
+                  csp: {
+                    connectDomains: [...SOUND_HOSTS, "blob:"],
+                    resourceDomains: [
+                      ...FONT_HOSTS,
+                      "blob:",
+                      ...(ASSET_ORIGIN ? [ASSET_ORIGIN] : []),
+                    ],
+                  },
+                  prefersBorder: true,
+                },
+              },
             },
-          },
-        },
-      ],
-    }),
-  )
+          ],
+        }
+      },
+    )
+  }
 }

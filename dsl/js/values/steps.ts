@@ -245,7 +245,7 @@ function readBeats(
     } else if (word) {
       fail(misplaced(tok, word.type, { line: "drum", beats: true })!)
     } else if (st.sections[tok]) {
-      fail(misplaced(tok, "pattern", { line: "drum", beats: true })!)
+      fail(misplaced(tok, st.sections[tok].type, { line: "drum", beats: true })!)
     } else {
       fail(`"${tok}" isn't a beat. Beats look like 1, 2&, 3e or 4a, or ^4 with a step in front`)
     }
@@ -354,8 +354,9 @@ function bjorklund(hits: number, steps: number): string {
 // D3---E3--- |1 bars rest is D3---E3--- | and 1 bars rest. The | stays, and is checked.
 export function partsOf(value: string): string[] {
   return value
-    .replace(/\|(?=\s*(?:\.\.\.|[\d(][^,|]*?\s(?:steps|beats|bars)(?![A-Za-z0-9])))/g, (bar, at) =>
-      value.slice(0, at).trim() ? "|," : bar,
+    .replace(
+      /\|(?=\s*(?:\.\.\.|[\d(][^,|]*?\s(?:steps|beats|bars)(?![A-Za-z0-9])))/g,
+      (bar: string, at: number) => (value.slice(0, at).trim() ? "|," : bar),
     )
     .split(",")
     .map((p) => p.trim())
@@ -609,7 +610,7 @@ export function stepPattern(
         err(
           part.ln,
           st.sections[tok]
-            ? misplaced(tok, "pattern", { line: "drum", part: part.name })!
+            ? misplaced(tok, st.sections[tok].type, { line: "drum", part: part.name })!
             : `"${tok}" isn't defined above. Name it first: steps ${tok} = ^-x-`,
         )
       } else if (noteSteps(tok)?.some((s: { cut?: boolean } | null) => s && !s.cut)) {
@@ -811,7 +812,7 @@ function stepLayerRun(
     } else if (w) {
       return fail(misplaced(tok, w.type, { line: "drum", layer: true })!)
     } else if (st.sections[tok]) {
-      return fail(misplaced(tok, "pattern", { line: "drum", layer: true })!)
+      return fail(misplaced(tok, st.sections[tok].type, { line: "drum", layer: true })!)
     } else if (NAME_LIKE.test(tok)) {
       return fail(`"${tok}" isn't defined above. Name it first: steps ${tok} = ^-x-`)
     } else return fail(`"${tok}" isn't a step. ${STEP_HELP}`)

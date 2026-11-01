@@ -1,18 +1,19 @@
 /* Every word the language knows, listed once: the types, the kit pieces and instruments,
    the settings and what they take. Each list is a value the engine reads and, through
    `as const`, a type the compiler checks, so a misspelt "stpes" is a compile error. The
-   highlighter, the Python completer (dsl/python/composer_nb/completer.py) and the docs
-   site's grammar (docs/languages/composer-nb.json) keep copies; tests/js/vocab.test.js and
+   Python completer (dsl/python/composer_nb/completer.py) and the docs site's grammar
+   (docs/languages/composer-nb.json) keep copies; tests/js/vocab.test.ts and
    tests/python/test_completer.py fail when a copy drifts from this file. */
 
 // The types a name can have. Its type goes in front of it: steps pair = ^-x-
-export const TYPES = ["steps", "notes", "chords", "pattern"] as const
+export const TYPES = ["steps", "notes", "chords", "pattern", "block"] as const
 export type Type = (typeof TYPES)[number]
 
 // Words with a meaning of their own, which can't be names
 export const KEYWORDS: readonly string[] = [
   ...TYPES,
   "play",
+  "for",
   "set",
   "with",
   "of",

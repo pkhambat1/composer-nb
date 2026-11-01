@@ -2,31 +2,13 @@
 import React from "react"
 import WaveSurfer from "wavesurfer.js"
 import * as MusicEngine from "composer-nb/engine"
-import type { GridBlock, Parsed } from "composer-nb/language"
-import type { DrumView, NotebookCell, Player, Theme } from "../shared/types.ts"
-import DrumGrid from "./DrumGrid.tsx"
+import type { NotebookCell } from "../shared/types.ts"
 
 // What a cell's output plays and draws with: which cell is playing, what plays and stops
 // it, and how the page draws the hits
-export type PlayerProps = {
-  focusedCellId: string | null
-  isPlaying: boolean
-  onTogglePlayback: (id: string) => void
-  onPlaybackFinished: (id: string) => void
-  registerPlayer: (id: string, player: Player) => void
-  unregisterPlayer: (id: string) => void
-  armAudio: () => Promise<void>
-  theme: Theme
-  accent: string
-  drumView: DrumView
-  onSetDrumView: (view: DrumView) => void
-  sheetCounts: boolean
-  onSetSheetCounts: (counts: boolean) => void
-}
-
-// Loaded when first shown: the chord shapes for the diagrams, abcjs for the sheet music
-const ChordDiagram = React.lazy(() => import("./ChordDiagram.tsx"))
-const DrumSheet = React.lazy(() => import("./DrumSheet.tsx"))
+import type { PlayerProps } from "../notebook/types.ts"
+import MusicViews from "../notebook/MusicViews.tsx"
+export type { PlayerProps } from "../notebook/types.ts"
 
 function themeColors(theme: string, accent: string) {
   if (theme === "retro") {
@@ -65,161 +47,6 @@ function themeColors(theme: string, accent: string) {
   }
 }
 
-const noTime = () => 0
-
-// Everything below the playback row: settings summary, the drums and notes as a grid of
-// bricks or as sheet music, chord diagrams, errors.
-function CellDetails({
-  parsed,
-  accent,
-  drumView,
-  onSetDrumView,
-  sheetCounts,
-  onSetSheetCounts,
-  getTime = noTime,
-  playing = false,
-}: Pick<
-  PlayerProps,
-  "accent" | "drumView" | "onSetDrumView" | "sheetCounts" | "onSetSheetCounts"
-> & {
-  parsed: Parsed
-  getTime?: () => number
-  playing?: boolean
-}) {
-  const chords = parsed.chords.filter((e) => !e.repeat)
-  const drawn = (b: GridBlock) =>
-    b.drumEvents.length > 0 || b.noteEvents.length > 0 || b.chordEvents.length > 0
-  const sheet = drumView === "sheet"
-  // Print: only this cell's sheet goes to the printer (see @media print)
-  const sheetRef = React.useRef<HTMLDivElement>(null)
-  const printSheet = () => {
-    const el = sheetRef.current
-    if (!el) return
-    el.classList.add("printing")
-    const done = () => {
-      el.classList.remove("printing")
-      window.removeEventListener("afterprint", done)
-    }
-    window.addEventListener("afterprint", done)
-    window.print()
-  }
-  const meta = parsed.blocks
-    .filter((b) => !drawn(b))
-    .map(
-      (b) =>
-        `time ${b.time} · tempo ${b.tempo}${b.swing ? " · swing" : ""} · key ${b.key} ${b.mode} · ${b.bars} bar${b.bars === 1 ? "" : "s"}`,
-    )
-  if (parsed.outputs.length > 1) meta.unshift(`${parsed.outputs.length} plays, one after another`)
-  if (parsed.fromAbove.length) meta.push(`from cells above: ${parsed.fromAbove.join(", ")}`)
-  return (
-    <>
-      {meta.length > 0 && <div className="music-meta">{meta.join("  ·  ")}</div>}
-      {parsed.warnings?.map((w) => (
-        <div key={w} className="music-meta music-warning">
-          {w}
-        </div>
-      ))}
-
-      {parsed.blocks.some(drawn) && (
-        <div className="out-section">
-          <div className="out-section-label out-section-row">
-            <span>{sheet ? "Sheet music" : parsed.notes.length ? "Steps" : "Drums"}</span>
-            <span className="view-toggle" role="group" aria-label="How the hits are drawn">
-              {(["bricks", "sheet"] as const).map((v) => (
-                <button
-                  key={v}
-                  type="button"
-                  className={"view-btn" + (drumView === v ? " view-btn-on" : "")}
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    onSetDrumView(v)
-                  }}
-                >
-                  {v}
-                </button>
-              ))}
-            </span>
-            {sheet && parsed.blocks.some((b) => b.drumEvents.length > 0) && (
-              <button
-                type="button"
-                className={"view-btn view-btn-lone" + (sheetCounts ? " view-btn-on" : "")}
-                onClick={(e) => {
-                  e.stopPropagation()
-                  onSetSheetCounts(!sheetCounts)
-                }}
-                title="Count the hands' notes under the staff"
-                aria-pressed={sheetCounts}
-              >
-                counts
-              </button>
-            )}
-            {sheet && (
-              <button
-                type="button"
-                className="view-btn view-btn-lone"
-                onClick={(e) => {
-                  e.stopPropagation()
-                  printSheet()
-                }}
-                title="Print the sheet, or save it as a PDF"
-              >
-                print
-              </button>
-            )}
-          </div>
-          {sheet ? (
-            <React.Suspense fallback={<div className="dg-head">Drawing the staff…</div>}>
-              <div className="sheet-print" ref={sheetRef}>
-                <DrumSheet
-                  blocks={parsed.blocks}
-                  counts={sheetCounts}
-                  getTime={getTime}
-                  playing={playing}
-                />
-              </div>
-            </React.Suspense>
-          ) : (
-            <DrumGrid blocks={parsed.blocks} getTime={getTime} playing={playing} />
-          )}
-        </div>
-      )}
-
-      {chords.length > 0 && (
-        <div className="out-section">
-          <div className="out-section-label">Chord diagrams</div>
-          <div className="chord-strip">
-            <React.Suspense fallback={null}>
-              {chords.map((e, i) => (
-                <div key={i} className="chord-chip">
-                  <span className="chord-label">{e.chord.label}</span>
-                  <ChordDiagram chord={e.chord} instrument={e.instrument} accent={accent} />
-                  <span className="chord-notes">
-                    {e.chord.noteNames.map((n) => n.replace(/\d+$/, "")).join(" ")}
-                  </span>
-                </div>
-              ))}
-            </React.Suspense>
-          </div>
-        </div>
-      )}
-
-      {parsed.errors && parsed.errors.length > 0 && (
-        <div className="parse-errors">
-          <span className="pe-icon">!</span>
-          <div className="pe-list">
-            {parsed.errors.slice(0, 4).map((e, i) => (
-              <div key={i} className="pe-row">
-                <span className="pe-line">line {e.line}</span>
-                <span className="pe-msg">{e.msg}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-    </>
-  )
-}
-
 function formatTime(sec: number): string {
   if (!sec || sec < 0) return "0:00"
   const m = Math.floor(sec / 60)
@@ -235,7 +62,6 @@ export default function MusicOutput({
   onPlaybackFinished,
   registerPlayer,
   unregisterPlayer,
-  armAudio,
   theme,
   accent,
   drumView,
@@ -296,6 +122,8 @@ export default function MusicOutput({
       interact: true,
       dragToSeek: true,
       autoplay: false,
+      // Web Audio works in sandboxed MCP hosts without an HTML media source.
+      backend: "WebAudio",
       // Pre-decoded peaks + duration: renders waveform instantly, skips decodeAudioData
       peaks: channelData,
       duration,
@@ -389,10 +217,21 @@ export default function MusicOutput({
       if (ws.isPlaying()) return
       // A browser refuses to play before the page is touched, and then the cell isn't
       // playing: the first press of Play is what plays it
-      ws.play().catch((err) => {
-        console.warn("Playback failed:", err.message)
-        onPlaybackFinishedRef.current(cell.id)
-      })
+      const media = ws.getMediaElement()
+      // WaveSurfer's bundled Web Audio player exposes its output node. Check the
+      // runtime shape rather than importing a second copy of its player class.
+      const node: unknown =
+        "getGainNode" in media && typeof media.getGainNode === "function"
+          ? media.getGainNode()
+          : null
+      const context = node instanceof GainNode ? node.context : null
+      const resumed = context instanceof AudioContext ? context.resume() : Promise.resolve()
+      resumed
+        .then(() => ws.play())
+        .catch((err: unknown) => {
+          console.warn("Playback failed:", err instanceof Error ? err.message : String(err))
+          onPlaybackFinishedRef.current(cell.id)
+        })
     } else if (ws.isPlaying()) ws.pause()
   }, [focusedCellId, isPlaying, cell.id, ready])
 
@@ -411,7 +250,7 @@ export default function MusicOutput({
             </div>
           </div>
 
-          <CellDetails
+          <MusicViews
             parsed={parsed}
             accent={accent}
             drumView={drumView}
@@ -475,9 +314,8 @@ export default function MusicOutput({
               className={
                 "play-btn" + (displayPlaying ? " playing" : "") + (displayPaused ? " paused" : "")
               }
-              onClick={async (e) => {
+              onClick={(e) => {
                 e.stopPropagation()
-                await armAudio()
                 const w = wsRef.current
                 if (!w || !ready) return
                 onTogglePlayback(cell.id)
@@ -510,7 +348,7 @@ export default function MusicOutput({
           </div>
         </div>
 
-        <CellDetails
+        <MusicViews
           parsed={parsed}
           accent={accent}
           drumView={drumView}

@@ -5,7 +5,7 @@ import { describe, it, expect } from "vitest"
 import { realCells } from "./real-cells.ts"
 
 // What each setting is until a cell sets it, which no cell says again
-const DEFAULTS = {
+const DEFAULTS: Record<string, string> = {
   time: "4 over 4",
   tempo: "120",
   swing: "off",
@@ -16,8 +16,8 @@ const DEFAULTS = {
   "guitar.electric": "clean",
 }
 
-function problems(source) {
-  const out: any[] = []
+function problems(source: string) {
+  const out: string[] = []
   source.split("\n").forEach((line, i) => {
     const code = line.replace(/\/\/.*/, "")
     const at = `line ${i + 1}`

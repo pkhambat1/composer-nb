@@ -17,10 +17,10 @@ pattern groove = 3 bars {
   ride.bell: x--
 }
 
-play 6 bars {
+play {
   crash: 1
   groove
-}
+} for 6 bars
 ```
 
 Each `play` renders to audio in the notebook, with a play button, a waveform, a grid of the drums and notes, the chords it heard and any mistakes it found.
@@ -76,7 +76,7 @@ Songs are ordinary Python values, so you can generate them with loops and functi
 
 ```python
 groove = "pattern groove = {\n  hat: x-\n  kick: 1 3\n  snare: 2 4\n}\n"
-rungs = "\n".join(f"with tempo {t} {{ play 2 bars groove }}" for t in (70, 80, 90))
+rungs = "\n".join(f"with tempo {t} {{ play groove for 2 bars }}" for t in (70, 80, 90))
 Song(groove + rungs, name="ladder")
 ```
 
@@ -243,10 +243,10 @@ pattern beat = {
   hat: x-
 }
 
-play 2 bars {
+play {
   crash: 1
   beat
-}
+} for 2 bars
 ```
 
 Each drum has one line in a block. To layer it, its line takes a block of steps, one layer a line. The layers repeat until they line up again, and where two hit the same step, the lower line wins. A rest never wins, so a layer only changes the steps it hits:
@@ -288,10 +288,10 @@ pattern groove = {
   }
 }
 
-play 6 bars {
+play {
   crash: 1
   groove
-}
+} for 6 bars
 ```
 
 <p align="center">
@@ -354,7 +354,7 @@ Putting something in a pattern is the one way to repeat it, and a length is the 
 | `8 bars (a b)`                 | Brackets play `a` and `b` in order, for 8 bars         |
 | `bar 2 { ... }`                | A bar, in front of what plays there and nowhere else   |
 
-Without a length, a pattern lasts until its lines line up again (and long enough to have any bar it names), and a play lasts as long as the longest thing in it. A play can be longer than its lines, and the rest is silent: `play 4 bars { crash: 1 }`.
+Without a length, a pattern lasts until its lines line up again (and long enough to have any bar it names), and a play lasts as long as the longest thing in it. A play can be longer than its lines, and the rest is silent: `play { crash: 1 } for 4 bars`.
 
 Whatever repeats has to fit what it's in a whole number of times. Lines of different lengths drift against each other, which is how you write a polyrhythm, and the pattern's length has to be one where they line up:
 

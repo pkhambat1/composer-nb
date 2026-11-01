@@ -6,6 +6,8 @@ import { cellId } from "./useCellManager.ts"
 import { fingerprint, refreshStarters } from "../shared/starters.ts"
 import type { Notebook, NotebookCell, SavedCell, Store } from "../shared/types.ts"
 
+import { notebookStore } from "../shared/stored.ts"
+
 const KEY = "composer-nb:notebooks"
 
 const notebookId = () => "n" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6)
@@ -18,8 +20,8 @@ const sameCells = (a: SavedCell[], b: SavedCell[]) =>
 // nothing yet or storage isn't there.
 export function loadStore(): Store | null {
   try {
-    const store = JSON.parse(localStorage.getItem(KEY) || "null")
-    if (store && Array.isArray(store.list)) return store
+    const store: unknown = JSON.parse(localStorage.getItem(KEY) || "null")
+    return notebookStore(store)
   } catch {
     return null
   }

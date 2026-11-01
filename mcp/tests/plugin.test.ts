@@ -4,10 +4,11 @@
 import { describe, it, expect } from "vitest"
 import { existsSync, readFileSync, readdirSync } from "node:fs"
 import { fileURLToPath } from "node:url"
+import { z } from "zod"
 import { parse } from "../src/cell.ts"
 
 const root = fileURLToPath(new URL("../../", import.meta.url))
-const json = (path) => JSON.parse(readFileSync(root + path, "utf8"))
+const json = (path: string): unknown => JSON.parse(readFileSync(root + path, "utf8"))
 const skills = readdirSync(root + "plugin/skills")
 
 describe("plugin skills", () => {
@@ -34,12 +35,20 @@ describe("plugin skills", () => {
 })
 
 it("the marketplace lists the plugin under its own name, and the plugin connects to /mcp", () => {
-  const market = json(".claude-plugin/marketplace.json")
+  const market = z
+    .object({ plugins: z.array(z.object({ name: z.string(), source: z.string() })) })
+    .parse(json(".claude-plugin/marketplace.json"))
   const [entry] = market.plugins
-  const manifest = json(entry.source + "/.claude-plugin/plugin.json")
+  const manifest = z
+    .object({ name: z.string() })
+    .parse(json(entry.source + "/.claude-plugin/plugin.json"))
   expect(entry.name).toBe(manifest.name)
   expect(existsSync(root + entry.source + "/skills")).toBe(true)
-  const { mcpServers } = json(entry.source + "/.mcp.json")
+  const { mcpServers } = z
+    .object({
+      mcpServers: z.record(z.string(), z.object({ type: z.literal("http"), url: z.string() })),
+    })
+    .parse(json(entry.source + "/.mcp.json"))
   expect(mcpServers[manifest.name]).toEqual({
     type: "http",
     url: "https://composer-nb.vercel.app/mcp",

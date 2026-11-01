@@ -1,7 +1,5 @@
-/* The composer-nb MCP server: the language for any assistant that speaks MCP. Four tools
-   wrap what the library does already (parse, render, library, reference), and the
-   reference pages and the grooves are resources too, for clients that read those. One
-   server is one McpServer; the transports are in bin.ts (stdio) and http.ts. */
+/* Music tools and optional owner-scoped notebook tools for MCP clients. UI resources
+   reuse the shared notebook editor. Transports live in bin.ts and http.ts. */
 import { createRequire } from "node:module"
 import { registerAppTool } from "@modelcontextprotocol/ext-apps/server"
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
@@ -15,14 +13,15 @@ import { describe, parse, playersOf } from "./cell.ts"
 import { INSTRUCTIONS } from "./instructions.ts"
 import { REFERENCE } from "./reference.ts"
 import { midiOf, pngOf, sheetOf } from "./render.ts"
+import { registerNotebookTools, type NotebookRepository } from "./notebook.ts"
 
 // The package's own file, one folder up from both src/ and lib/
-const { version: VERSION } = createRequire(import.meta.url)("../package.json") as {
-  version: string
-}
+const { version: VERSION } = z
+  .object({ version: z.string() })
+  .parse(createRequire(import.meta.url)("../package.json"))
 
 // What a server is made with: the playground its links open
-export type Options = { site?: string }
+export type Options = { site?: string; notebook?: NotebookRepository }
 
 const text = (t: string) => ({ type: "text" as const, text: t })
 const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? "" : "s"}`
@@ -55,12 +54,13 @@ function playLine(o: Output, i: number): string {
   )
 }
 
-export function createServer({ site = SITE }: Options = {}): McpServer {
+export function createServer({ site = SITE, notebook }: Options = {}): McpServer {
   const server = new McpServer(
     { name: "composer-nb", version: VERSION },
     { instructions: INSTRUCTIONS },
   )
   const grooveUrl = (g: Groove) => `${site}/grooves/${slugOf(g.title)}/`
+  if (notebook) registerNotebookTools(server, notebook)
   const query = (source: string, after?: string) =>
     `src=${encodeURIComponent(source)}` + (after ? `&after=${encodeURIComponent(after)}` : "")
 
@@ -245,3 +245,7 @@ export function createServer({ site = SITE }: Options = {}): McpServer {
 
   return server
 }
+
+export { FileNotebookStore } from "./notebook-file.ts"
+export { NotebookStore, type NotebookRepository } from "./notebook.ts"
+export type { NotebookDocument, DocumentCell } from "./notebook-document.ts"

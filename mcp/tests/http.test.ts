@@ -5,18 +5,20 @@ import { Client } from "@modelcontextprotocol/sdk/client/index.js"
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js"
 import { handleMcp, siteOf } from "../src/http.ts"
 
-let server
-let url
+let server: ReturnType<typeof createHttpServer>
+let url: string
 
 beforeAll(async () => {
   server = createHttpServer((req, res) => {
-    handleMcp(req, res, { site: siteOf(req, "https://fallback.test") }).catch((err) => {
+    handleMcp(req, res, { site: siteOf(req, "https://fallback.test") }).catch((err: unknown) => {
       console.error(err)
       if (!res.headersSent) res.writeHead(500).end()
     })
   })
-  await new Promise((r) => server.listen(0, r))
-  url = `http://localhost:${server.address().port}/mcp`
+  await new Promise<void>((resolve) => server.listen(0, resolve))
+  const address = server.address()
+  if (!address || typeof address === "string") throw new Error("Missing test port")
+  url = `http://localhost:${address.port}/mcp`
 })
 
 afterAll(() => server.close())
@@ -29,7 +31,7 @@ describe("over http", () => {
     expect(tools.length).toBe(4)
     const r = await client.callTool({ name: "library", arguments: { query: "paradiddle" } })
     expect((r.content as { text: string }[])[0].text).toContain(
-      `http://localhost:${server.address().port}/grooves/gavin-harrison-s-paradiddle-challenge/`,
+      `${new URL(url).origin}/grooves/gavin-harrison-s-paradiddle-challenge/`,
     )
     await client.close()
   })

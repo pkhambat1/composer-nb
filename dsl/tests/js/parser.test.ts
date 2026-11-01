@@ -4,11 +4,11 @@ import { describe, it, expect } from "vitest"
 import { parseCell } from "../../js/language.ts"
 import { Lexer } from "../../js/lexer.ts"
 import { Parser } from "../../js/parser.ts"
-import type { Block, Text } from "../../js/syntax.ts"
+import type { Block, Text, Statement, Value } from "../../js/syntax.ts"
 import { GROUPS, realCells } from "./real-cells.ts"
 
 // Every statement in a cell, inside blocks too
-function* walk(statements) {
+function* walk(statements: Statement[]): Generator<Statement> {
   for (const s of statements) {
     yield s
     const values = s.kind === "with" ? [s.settings, s.value] : [s.value]
@@ -35,7 +35,7 @@ describe("on every real cell", () => {
         // The names it declares
         const declared = all.filter((s) => s.kind === "decl").map((s) => s.name)
         const named = [...Object.keys(old.state.words), ...Object.keys(old.state.sections)]
-        const isNew = (n) => !(n in inherited.words) && !(n in inherited.sections)
+        const isNew = (n: string) => !(n in inherited.words) && !(n in inherited.sections)
         // (one declared inside a with stays inside it, so the state holds fewer)
         for (const n of named.filter(isNew)) expect(declared, n).toContain(n)
         // What it plays
@@ -49,9 +49,9 @@ describe("on every real cell", () => {
 })
 
 // Each statement's kind and the text it holds, blocks shown as {...}
-const shape = (src) =>
+const shape = (src: string) =>
   Parser.parse(src).statements.map((s) => {
-    const text = (v) => v.parts.map((p) => (p.kind === "text" ? p.text : "{...}")).join(" ")
+    const text = (v: Value) => v.parts.map((p) => (p.kind === "text" ? p.text : "{...}")).join(" ")
     if (s.kind === "with") return `with [${text(s.settings)}] ${text(s.value)}`
     const head =
       s.kind === "decl"

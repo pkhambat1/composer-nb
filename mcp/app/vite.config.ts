@@ -1,18 +1,36 @@
 import { createRequire } from "node:module"
 import { fileURLToPath } from "node:url"
-import { defaultClientConditions, defineConfig } from "vite"
+import { defaultClientConditions, defineConfig, transformWithEsbuild } from "vite"
 import react from "@vitejs/plugin-react"
+import { z } from "zod"
 
-// The MCP App's script: main.ts and everything it uses (the playground's App, React,
-// Tone.js, abcjs, the host client) as one ES module in dist/app.js, which mcp/src/app.ts puts inline in the HTML
-// the host loads. `npm run build:app -w mcp` builds it; `npm run dev:app -w mcp` serves
-// index.html for a look at the player in a browser, outside a host.
-const { version } = createRequire(import.meta.url)("../package.json")
+// Production entries are the portable MCP renderer and its small host bootstrap.
+// app/dev is a separate development host and is excluded from these bundles.
+const { version } = z
+  .object({ version: z.string() })
+  .parse(createRequire(import.meta.url)("../package.json"))
 const here = fileURLToPath(new URL(".", import.meta.url))
 
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
   root: here,
-  plugins: [react()],
+  plugins: [
+    react(),
+    {
+      name: "compact-mcp-bundle",
+      enforce: "post",
+      renderChunk: (code) => transformWithEsbuild(code, "app.js", { minify: true }),
+    },
+    {
+      name: "composer-development-host",
+      configureServer(server) {
+        server.middlewares.use((request, _response, next) => {
+          if (request.url === "/") request.url = "/dev/host.html"
+          next()
+        })
+      },
+    },
+  ],
+  server: { proxy: { "/mcp": "http://127.0.0.1:4179", "/widget": "http://127.0.0.1:4179" } },
   // The engine's source (dsl/js), not its build in dsl/lib
   resolve: { conditions: ["composer-nb-source", ...defaultClientConditions] },
   define: {
@@ -20,13 +38,15 @@ export default defineConfig({
     __VERSION__: JSON.stringify(version),
   },
   build: {
+    target: "es2022",
+    minify: "esbuild",
     outDir: "dist",
-    emptyOutDir: true,
+    emptyOutDir: mode !== "bootstrap",
     lib: {
-      entry: "main.ts",
+      entry: mode === "bootstrap" ? "bootstrap.ts" : "main.ts",
       formats: ["es"],
-      fileName: () => "app.js",
+      fileName: () => (mode === "bootstrap" ? "bootstrap.js" : "app.js"),
     },
     rollupOptions: { output: { inlineDynamicImports: true } },
   },
-})
+}))

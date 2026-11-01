@@ -16,7 +16,7 @@
 import { useState, useRef, useCallback } from "react"
 import type { Player } from "../shared/types.ts"
 
-export function usePlayback(armAudio: () => Promise<void>) {
+export function usePlayback() {
   // State: split single playingId into two values
   const [focusedCellId, setFocusedCellId] = useState<string | null>(null)
   const [isPlaying, setIsPlaying] = useState(false)
@@ -36,9 +36,7 @@ export function usePlayback(armAudio: () => Promise<void>) {
 
   // Play a specific cell (stops previous if different)
   const playCell = useCallback(
-    async (id: string) => {
-      await armAudio()
-
+    (id: string) => {
       // Stop different cell if playing
       if (focusedCellId && focusedCellId !== id) {
         const prevPlayer = playersRef.current[focusedCellId]
@@ -48,7 +46,7 @@ export function usePlayback(armAudio: () => Promise<void>) {
       setFocusedCellId(id)
       setIsPlaying(true)
     },
-    [armAudio, focusedCellId],
+    [focusedCellId],
   )
 
   // Pause the focused cell
@@ -58,9 +56,7 @@ export function usePlayback(armAudio: () => Promise<void>) {
 
   // Smart toggle: play/pause/switch
   const togglePlayback = useCallback(
-    async (id: string) => {
-      await armAudio()
-
+    (id: string) => {
       if (focusedCellId === id) {
         // Same cell: toggle play/pause
         setIsPlaying((prev) => !prev)
@@ -73,7 +69,7 @@ export function usePlayback(armAudio: () => Promise<void>) {
         setIsPlaying(true)
       }
     },
-    [armAudio, focusedCellId],
+    [focusedCellId],
   )
 
   // Stop a specific cell and clear focus if it matches

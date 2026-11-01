@@ -5,17 +5,18 @@ vi.mock("tone", () => ({}))
 const { parseSource } = await import("../../js/music-engine.ts")
 const { midiFile } = await import("../../js/midi.ts")
 
-const file = (src) => {
+const file = (src: string) => {
   const p = parseSource(src)
   expect(p.errors).toEqual([])
   return midiFile(p.outputs[0])
 }
-const text = (bytes, from, n) => String.fromCharCode(...bytes.slice(from, from + n))
-const be16 = (b, i) => (b[i] << 8) | b[i + 1]
+const text = (bytes: Uint8Array, from: number, n: number) =>
+  String.fromCharCode(...bytes.slice(from, from + n))
+const be16 = (b: Uint8Array, i: number) => (b[i] << 8) | b[i + 1]
 
 // Splits the file into its chunks: [{ id, body }]
-function chunks(bytes) {
-  const out: any[] = []
+function chunks(bytes: Uint8Array) {
+  const out: { id: string; body: Uint8Array }[] = []
   let i = 0
   while (i < bytes.length) {
     const id = text(bytes, i, 4)
@@ -26,8 +27,8 @@ function chunks(bytes) {
   return out
 }
 // The events of a track as [delta, status, data...], reading the delta-times
-function events(body) {
-  const out: any[] = []
+function events(body: Uint8Array) {
+  const out: number[][] = []
   let i = 0
   while (i < body.length) {
     let delta = 0
@@ -100,7 +101,7 @@ describe("MIDI export", () => {
 
 describe("the key signature", () => {
   it("is in the tempo track: sharps, or flats as a negative count, and minor", () => {
-    const meta = (src) => {
+    const meta = (src: string) => {
       const p = parseSource(src)
       expect(p.errors).toEqual([])
       const bytes = [...midiFile(p.outputs)]

@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Composer · MCP development host</title>
+    <style>
+      body {
+        margin: 0;
+        font: 14px system-ui;
+        color: #292929;
+        background: #fafafa;
+      }
+      header {
+        padding: 12px 20px;
+        border-bottom: 1px solid #ddd;
+      }
+      main {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 320px;
+        height: calc(100vh - 65px);
+      }
+      iframe {
+        border: 0;
+        width: 100%;
+        height: 100%;
+        background: white;
+      }
+      aside {
+        padding: 16px;
+        border-left: 1px solid #ddd;
+        overflow: auto;
+      }
+      #context {
+        white-space: pre-wrap;
+        font-size: 12px;
+      }
+      #messages {
+        white-space: pre-wrap;
+        line-height: 1.5;
+      }
+      @media (max-width: 800px) {
+        main {
+          grid-template-columns: 1fr;
+        }
+        aside {
+          display: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <strong>Composer notebook</strong> · MCP development host — real tools, fixed example edit; no
+      language model
+    </header>
+    <main>
+      <iframe id="notebook" title="Composer notebook"></iframe>
+      <aside>
+        <h3>Selection context</h3>
+        <div id="context">Select a cell or rendered component.</div>
+        <h3>Mock host composer</h3>
+        <form id="request-form">
+          <textarea
+            id="request"
+            aria-label="Development host request"
+            placeholder="Request a demo drum groove"
+          ></textarea
+          ><button type="submit">Apply example groove</button>
+        </form>
+        <h3>Host requests</h3>
+        <div id="messages"></div>
+      </aside>
+    </main>
+    <script type="module" src="/dev/host.ts"></script>
+  </body>
+</html>

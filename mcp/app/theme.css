@@ -1,4 +1,4 @@
-/* The page around the playground's cells inside Claude, after the playground's own styles.
+/* The page around the shared notebook cells in a host, after the notebook's own styles.
    The playground fills the window; here the page is as tall as its cells, so the host can
    size the frame to them. */
 body {

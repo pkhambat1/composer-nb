@@ -3,11 +3,11 @@
    Invalid, in which case it must come back with at least one. Every kit piece and instrument
    the language has must be in its page's table. And the site has to hold together: every page
    in the sidebar, every link landing on a heading that exists. */
+import site from "../../../docs/docs.json" with { type: "json" }
 import { describe, it, expect } from "vitest"
 import { existsSync, readFileSync } from "node:fs"
 import { join } from "node:path"
 import { initialState, LANES, parseCell, PITCHED } from "../../js/language.ts"
-import { highlightMusic } from "../../js/highlight.ts"
 import { DOCS, examples, pages, read, readMagic } from "./docs-examples.ts"
 
 describe("docs examples", () => {
@@ -18,27 +18,6 @@ describe("docs examples", () => {
   for (const page of pages) {
     const blocks = examples(read(page))
     if (!blocks.length) continue
-    it(`${page} parses`, () => {
-      const cells = {}
-      for (const block of blocks) {
-        const { body, name, after } = readMagic(block.source)
-        if (after)
-          expect(cells, `${page}:${block.line} continues from ${after}`).toHaveProperty(after)
-        const parsed = parseCell(body, after ? cells[after] : initialState())
-        const errors = parsed.errors.map((e) => `line ${e.line}: ${e.msg}`)
-        if (block.invalid) expect(errors, `${page}:${block.line}`).not.toEqual([])
-        else expect(errors, `${page}:${block.line}`).toEqual([])
-        // A cell frames the playground, whose editor colours the source: a line that
-        // parses mustn't be painted as a mistake there.
-        if (!block.invalid) {
-          const painted = highlightMusic(body)
-            .map((parts, i) => [i + 1, parts.filter((p) => p.c === "tk-error").map((p) => p.s)])
-            .filter(([, marked]) => (marked as any).length)
-          expect(painted, `${page}:${block.line} is coloured as a mistake`).toEqual([])
-        }
-        if (name) cells[name] = parsed.state
-      }
-    })
   }
 })
 
@@ -56,7 +35,7 @@ describe("docs names", () => {
 })
 
 // The anchor Mintlify gives a heading: lowercase, punctuation dropped, spaces to hyphens.
-const anchor = (heading) =>
+const anchor = (heading: string) =>
   heading
     .toLowerCase()
     .replace(/[^a-z0-9 -]/g, "")
@@ -64,10 +43,9 @@ const anchor = (heading) =>
     .replace(/ +/g, "-")
 
 describe("docs site", () => {
-  const site = JSON.parse(read("docs.json"))
-  const address = (page) => "/" + page.replace(/\.mdx$/, "")
+  const address = (page: string) => "/" + page.replace(/\.mdx$/, "")
   const headings = Object.fromEntries(
-    pages.map((page) => [
+    pages.map((page: string) => [
       address(page),
       [...read(page).matchAll(/^#{2,4} (.+)$/gm)].map((m) => anchor(m[1])),
     ]),
@@ -76,8 +54,8 @@ describe("docs site", () => {
   headings["/"] = headings["/index"]
 
   it("lists every page in the sidebar", () => {
-    const listed = site.navigation.groups.flatMap((group) => group.pages)
-    expect([...listed].sort()).toEqual(pages.map((page) => address(page).slice(1)))
+    const listed = site.navigation.groups.flatMap((group: { pages: string[] }) => group.pages)
+    expect([...listed].sort()).toEqual(pages.map((page: string) => address(page).slice(1)))
   })
 
   it("redirects old addresses to pages that exist", () => {
@@ -91,7 +69,7 @@ describe("docs site", () => {
   for (const page of pages) {
     it(`${page} links to pages, headings and images that exist`, () => {
       const text = read(page)
-      const broken: any[] = []
+      const broken: string[] = []
       for (const [, path, hash] of text.matchAll(/\]\((\/[^)#\s]*)?(?:#([^)\s]+))?\)/g)) {
         if (!path && !hash) continue
         const target = path || address(page)

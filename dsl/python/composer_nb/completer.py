@@ -21,7 +21,7 @@ SPLIT = ["tom"]  # drums that are only their variations: tom is three drums
 # Instruments that play notes and chords, each on a line of its own like a drum
 PITCHED = ["guitar", "guitar.electric", "piano", "piano.electric", "organ", "bass"]
 SETTINGS = ["time", "tempo", "swing", "key", "mode", "transpose", "octave", "kit"]
-TYPES = ["steps", "notes", "chords", "pattern"]
+TYPES = ["steps", "notes", "chords", "pattern", "block"]
 KITS = ["rock", "synth"]
 SWING = ["on", "off"]
 MODES = [
@@ -197,7 +197,7 @@ def _statement(
     inside = not all(h == "statements" for h, _ in blocks)
     grouped = _groups(body + head) > 0  # in a group, what plays in order goes on
     tail = head.rstrip()
-    patterns = _options(names["pattern"], "variable")
+    patterns = _options(names["pattern"] + names["block"], "variable")
     # After a block or a group, more follows only inside a group. A kit piece's or an
     # instrument's block is the whole of its line, so nothing goes beside it.
     if tail.endswith("}"):
@@ -221,8 +221,14 @@ def _statement(
     if tail.endswith("("):
         return patterns + parts + [("with ", "keyword")]  # a group starts: what plays in order
     if first == "play":
-        return _sequence(words[1:], patterns, parts, grouped)
-    if first == "pattern" and words[2:4] == ["=", "every"]:
+        if grouped:
+            return _sequence(words[1:], patterns, parts, grouped)
+        if len(words) == 1:
+            return patterns + parts
+        if len(words) == 2 and words[1] in names["pattern"] + names["block"]:
+            return [("for ", "keyword")]
+        return []
+    if first in ("pattern", "block") and words[2:4] == ["=", "every"]:
         words = words[3:]  # pattern feet = every 3 steps ...: a pattern at its own pace
         first = "every"
     if first == "every":
@@ -245,7 +251,7 @@ def _statement(
         if len(words) < 3 or words[2] != "=":
             return []  # still writing the name
         # After the =, what the type in front holds: steps pair = ^-x-
-        if first == "pattern":
+        if first in ("pattern", "block"):
             return _sequence(words[3:], patterns, parts, grouped)
         return _options(names[first], "variable")
     if first == "set":
@@ -304,6 +310,12 @@ def complete(text: str, cursor: int, songs: Optional[Dict[str, Song]] = None):
     open_blocks, closed = _open_blocks(body + head)
     unfinished = {name for _, name in open_blocks if name}
     names = {t: [n for n in found if n not in unfinished] for t, found in names.items()}
+
+    duration = re.search(r"\bfor\s+(.*)$", head)
+    if duration and (head.lstrip().startswith("play ") or re.match(r"^\s*[})]", head)):
+        written = duration.group(1).split()
+        options = [("bars ", "keyword")] if len(written) == 1 and (NUMBER_RE.search(written[0]) or ARITHMETIC_RE.fullmatch(written[0])) else []
+        return fragment, [o for o in options if o[0].startswith(fragment) and o[0] != fragment]
 
     variation = re.search(r"([a-z]+)\.$", head)
     part = PART_RE.search(head)

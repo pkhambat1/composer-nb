@@ -111,7 +111,9 @@ export function blockClip(
     const clip = sequenceClip(l.items, l.st!, err, l.ln, stack)
     if (!clip) return null
     // A pattern or a group on a line of its own repeats until what it's in ends.
-    repeated.push({ clip, what: loopName(l.items[0]), ln: l.ln })
+    const item = l.items[0]
+    if (item?.name && l.st?.sections[item.name]?.type === "block") once.push({ ...clip, ln: l.ln })
+    else repeated.push({ clip, what: loopName(item), ln: l.ln })
   }
   for (const l of read) {
     if (l.kind !== "paced") continue
@@ -156,14 +158,25 @@ export function sectionClip(
     err(ln, `${sec.name} plays itself, so it would never end`)
     return null
   }
-  return blockClip(
+  const clip = blockClip(
     sec.lines,
     Scope.playing(sec as Section, state),
     err,
-    blockCtx(sec.name!, ln),
+    {
+      ...blockCtx(sec.name!, ln),
+      repeats: sec.type !== "block",
+      sized: `${sec.type} ${sec.name} = 4 bars {`,
+    },
     [...stack, sec.name!],
     sec.bars,
   )
+  return clip && sec.type === "block"
+    ? {
+        ...clip,
+        events: clip.events.map((event) => ({ ...event, oneShot: true })),
+        drumEvents: clip.drumEvents.map((event) => ({ ...event, oneShot: true })),
+      }
+    : clip
 }
 
 // Checks a pattern when it's defined, so its mistakes show even if it's never played.
@@ -249,6 +262,13 @@ export function sequenceClip(
           )
         : sectionClip(sec!, state, err, ln, stack)
     if (!clip) return null
+    if (it.bars && sec?.type === "block") {
+      err(
+        ln,
+        `${sec.name} is a block and plays once. Put its length in its declaration, or use a pattern to repeat.`,
+      )
+      return null
+    }
     if (it.bars && !it.block) {
       const what = loopName(it)
       clip = layer([], [], [{ clip, what, ln }], state, it.bars, err, playCtx(ln))

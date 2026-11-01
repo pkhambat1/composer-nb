@@ -21,7 +21,13 @@ import type { NoteEvent } from "./values/notes.ts"
 import type { DrumHit } from "./values/steps.ts"
 
 // Where an event sounds, in seconds from its clip's start
-export type Timed = { secStart: number; secDur?: number; secSwing?: number; gapSec?: number }
+export type Timed = {
+  secStart: number
+  secDur?: number
+  secSwing?: number
+  gapSec?: number
+  oneShot?: boolean
+}
 export type SoundEvent = (NoteEvent | ChordEvent) & Timed
 export type NoteSound = NoteEvent & Timed
 export type ChordSound = ChordEvent & Timed
@@ -64,7 +70,7 @@ export const playCtx = (ln: number): Ctx => ({
   repeats: false,
   where: "in this play",
   what: "This play",
-  sized: "play 4 bars { ... }",
+  sized: "play { ... } for 4 bars",
 })
 // A play's own length is how long its output is: what's in it is cut there, so it doesn't
 // have to fit.
@@ -102,7 +108,15 @@ function tile(clip: Clip, durSec: number): Clip {
   if (!(clip.durSec > 0)) return { ...out, durSec } // nothing to repeat
   const times = Math.ceil(durSec / clip.durSec - 1e-6)
   for (let k = 0; k < times; k++) {
-    const moved = shift(clip, k * clip.durSec, k > 0)
+    const pass =
+      k === 0
+        ? clip
+        : {
+            ...clip,
+            events: clip.events.filter((event) => !event.oneShot),
+            drumEvents: clip.drumEvents.filter((event) => !event.oneShot),
+          }
+    const moved = shift(pass, k * clip.durSec, k > 0)
     out.events.push(...moved.events)
     out.drumEvents.push(...moved.drumEvents)
     out.spans.push(...moved.spans)

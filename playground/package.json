@@ -6,10 +6,11 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build && node --conditions=composer-nb-source scripts/grooves.ts",
+    "build": "vite build && node --conditions=composer-nb-source scripts/grooves.ts && npm run docs-cell",
     "preview": "vite preview",
     "test": "vitest run",
-    "typecheck": "tsc -p . && tsc -p tests"
+    "typecheck": "tsc -p . && tsc -p tests && npm run docs-cell -- --check",
+    "docs-cell": "node scripts/docs-cell.ts"
   },
   "dependencies": {
     "abcjs": "^6.7.1",

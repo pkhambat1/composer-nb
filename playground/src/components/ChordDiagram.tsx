@@ -1,3 +1,4 @@
+import { pianoRange, type PianoRange } from "../notebook/pianoRange.ts"
 // components/ChordDiagram.tsx — Chord diagrams: guitar fingering grid & piano keyboard
 import React from "react"
 import * as ChordLookup from "composer-nb/chord-lookup"
@@ -346,14 +347,12 @@ export const GuitarDiagram = React.memo(function GuitarDiagram({ chord }: { chor
   )
 })
 
-function PianoDiagram({ chord }: { chord: DiagramChord }) {
+function PianoDiagram({ chord, range }: { chord: DiagramChord; range: PianoRange }) {
   const notes = [...new Set(chord.notesMidi || [])]
   if (chord.bassMidi != null) notes.push(chord.bassMidi)
   if (!notes.length) return null
-  const minM = Math.min(...notes)
-  const maxM = Math.max(...notes)
-  const startC = Math.floor(minM / 12) * 12
-  const octs = Math.max(2, Math.ceil((maxM - startC + 1) / 12))
+  const startC = range.start
+  const octs = range.octaves
   const numWhite = octs * 7
 
   const W = 182,
@@ -453,12 +452,14 @@ function PianoDiagram({ chord }: { chord: DiagramChord }) {
 const ChordDiagram = React.memo(function ChordDiagram({
   chord,
   instrument,
+  range,
 }: {
   chord: DiagramChord
   instrument: string
   accent?: string
+  range?: PianoRange
 }) {
   if (instrument.split(".")[0] === "guitar") return <GuitarDiagram chord={chord} />
-  return <PianoDiagram chord={chord} />
+  return <PianoDiagram chord={chord} range={range ?? pianoRange([chord])} />
 })
 export default ChordDiagram

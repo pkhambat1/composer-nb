@@ -9,12 +9,12 @@ export const DOCS = fileURLToPath(new URL("../../../docs", import.meta.url))
 export const pages = (readdirSync(DOCS, { recursive: true, encoding: "utf8" }) as string[])
   .filter((f) => f.endsWith(".mdx") && !f.startsWith("superpowers"))
   .sort()
-export const read = (file) => readFileSync(join(DOCS, file), "utf8")
+export const read = (file: string) => readFileSync(join(DOCS, file), "utf8")
 
 // The composer-nb blocks on a page: each one's source, the line it starts on, and whether
 // it's titled Invalid. A block inside a list is indented, and so is its closing fence.
-export function examples(text) {
-  const found: any[] = []
+export function examples(text: string) {
+  const found: { line: number; invalid: boolean; source: string }[] = []
   const fence = /^([ \t]*)```composer-nb([^\n]*)\n([\s\S]*?)\n\1```/gm
   for (const m of text.matchAll(fence)) {
     found.push({
@@ -31,7 +31,7 @@ export function examples(text) {
 
 // %%music verse after intro: a Jupyter cell's name and the cell it continues from. Named
 // cells hand their state to later blocks on the same page.
-export function readMagic(source) {
+export function readMagic(source: string) {
   const m = /^%%music[ \t]*(.*)\n?/.exec(source)
   if (!m) return { body: source }
   const words = m[1].split(/\s+/).filter(Boolean)

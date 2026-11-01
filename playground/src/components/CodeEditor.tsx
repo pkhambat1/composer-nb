@@ -1,4 +1,4 @@
-// components/CodeEditor.tsx — Code editor with syntax highlighting overlay
+// Source editor with a grayscale semantic layer behind the native textarea.
 import React from "react"
 import { highlightMusic } from "composer-nb/highlight"
 import { editKey } from "composer-nb/editing"
@@ -65,29 +65,30 @@ const CodeEditor = React.forwardRef<HTMLTextAreaElement, Props>(function CodeEdi
     if (localRef.current) editKey(e, localRef.current, onChange)
   }
 
-  const lines = React.useMemo(() => {
-    return highlightMusic(value)
-  }, [value])
+  const diagnosticLines = [...(errorLines ?? [])].sort((a, b) => a - b)
+  const lines = React.useMemo(() => highlightMusic(value), [value])
 
   return (
     <div className="code-input">
       <pre className="code-hl" aria-hidden="true">
-        {lines.map((parts, li) => {
-          const painted = parts.map((p, pi) =>
-            p.c ? (
-              <span key={pi} className={p.c}>
-                {p.s}
+        {lines.map((parts, lineIndex) => {
+          const painted = parts.map((part, partIndex) =>
+            part.c ? (
+              <span key={partIndex} className={part.c}>
+                {part.s}
               </span>
             ) : (
-              p.s
+              part.s
             ),
           )
-          // A line the last run reported, tinted until the cell runs again
-          const wrong = errorLines?.has(li + 1)
           return (
-            <React.Fragment key={li}>
-              {li > 0 ? "\n" : null}
-              {wrong ? <span className="hl-error-line">{painted}</span> : painted}
+            <React.Fragment key={lineIndex}>
+              {lineIndex > 0 ? "\n" : null}
+              {errorLines?.has(lineIndex + 1) ? (
+                <span className="hl-error-line">{painted}</span>
+              ) : (
+                painted
+              )}
             </React.Fragment>
           )
         })}
@@ -98,6 +99,8 @@ const CodeEditor = React.forwardRef<HTMLTextAreaElement, Props>(function CodeEdi
         className="code-area"
         value={value}
         spellCheck={false}
+        aria-label="Music source"
+        aria-invalid={diagnosticLines.length > 0}
         placeholder={placeholder}
         onChange={(e) => onChange(e.target.value)}
         onKeyDown={handleKeyDown}
@@ -105,6 +108,11 @@ const CodeEditor = React.forwardRef<HTMLTextAreaElement, Props>(function CodeEdi
         onBlur={onBlur}
         onClick={(e) => e.stopPropagation()}
       />
+      {diagnosticLines.length > 0 && (
+        <div className="code-diagnostics" role="status">
+          Check {diagnosticLines.length === 1 ? "line" : "lines"} {diagnosticLines.join(", ")}
+        </div>
+      )}
       {runState === "waiting" && onInterrupt && (
         <button
           className="cell-run-btn cell-wait-btn"
