@@ -6,10 +6,11 @@
      with octave 2 { }        settings for a block only, restored at its }: with key E,
                               mode minor { ... }. At the top it holds statements; inside a
                               play or a pattern it is a block, played with those settings.
-     steps pair = ^-x-        a name, with its type in front. There are four types:
-     notes riff = E---F# E-E--  steps (a drum's hits), notes, chords, and pattern (lines
-     chords verse = Am E7|G D   in braces that play together). A name only ever holds
-     pattern groove = { }       its type, and only goes where that type goes.
+     steps pair = ^-x-        a name, with its type in front. There are five types:
+     notes riff = E---F# E-E--  steps (a drum's hits), notes, chords, pattern (lines in
+     chords verse = Am E7|G D   braces that repeat together) and block (lines that play
+     pattern groove = { }       together once). A name only ever holds its type, and only
+     block accent = { }         goes where that type goes.
      kick: x--x---            inside braces, an instrument and what it plays. The colon
      guitar: E---F# E-E--     only ever means this. A drum takes steps (or beats: 1 2& 3).
      piano: chords Am F|C G   A pitched instrument takes notes, drawn on the same steps
@@ -22,7 +23,7 @@
                               block; to layer it, its line takes a block of its own.
      play { }                 plays what's after it, a pattern or one line, and gives one
                               output with a player and a drum grid. Nothing plays unless
-                              it's inside a play.
+                              it's inside a play. play pattern { } repeats its lines.
      bar 2 { }                what plays in bar 2 of what it's in, and nowhere else. One
                               line needs no braces (bar 2 crash: 1), and bar 3 to 4 { }
                               takes a run of bars.
@@ -31,9 +32,10 @@
    A pattern is a loop: everything in it repeats until the pattern ends, and without a
    length it lasts until its lines line up again. A play is a timeline: its own lines play
    once, and a pattern on a line of its own repeats until the play ends. Braces hold what
-   plays together and brackets what plays in order: (intro { snare: ---- dddd } 2 bars verse)
-   plays them one after another, and two things on one line outside brackets are a
-   mistake. A length goes in front of what it measures,
+   plays together and brackets what plays in order: (intro block { snare: ---- dddd } 2 bars
+   verse) plays them one after another, and two things on one line outside brackets are a
+   mistake. Braces that are a value say their type: pattern { } repeats, block { } plays
+   once. A length goes in front of what it measures,
    and a pattern given a length repeats for that long: pattern groove = 3 bars {,
    play groove for 6 bars. Anything that repeats has to fit what it's in a whole number of
    times, and a value written as the same figure twice is a mistake (x-x- is x-), since

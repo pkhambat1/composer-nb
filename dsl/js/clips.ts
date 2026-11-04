@@ -80,7 +80,23 @@ export const anonCtx = (ln: number): Ctx => ({
   repeats: true,
   where: "in this pattern",
   what: "This pattern",
-  sized: "4 bars { ... }",
+  sized: "4 bars pattern { ... }",
+})
+// A block without a name plays once, as a named one does.
+export const onceCtx = (ln: number): Ctx => ({
+  ...anonCtx(ln),
+  repeats: false,
+  where: "in this block",
+  what: "This block",
+  sized: "4 bars block { ... }",
+})
+// play pattern { ... }: a play whose lines repeat, and which stops at its own length.
+export const patternPlayCtx = (ln: number): Ctx => ({
+  ...outputCtx(ln),
+  repeats: true,
+  where: "in this pattern",
+  what: "This pattern",
+  sized: "play pattern { ... } for 4 bars",
 })
 // A with's block is a pattern of its own, played with the with's settings.
 export const withCtx = (ln: number, shown: string): Ctx => ({

@@ -7,6 +7,8 @@
 
 // The types a name can have. Its type goes in front of it: steps pair = ^-x-
 export const TYPES = ["steps", "notes", "chords", "pattern", "block"] as const
+// Braces that are a value say their type in front of them: pattern { ... }, block { ... }
+export const TYPED_BRACES_RE = /^(pattern|block)\s*\{/
 export type Type = (typeof TYPES)[number]
 
 // Words with a meaning of their own, which can't be names

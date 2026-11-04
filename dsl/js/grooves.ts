@@ -96,7 +96,7 @@ with time 9 over 8, tempo 100 { play manias for 4 bars }`,
     section: "Transcriptions",
     title: "What Happens Now?",
     byline: "**Porcupine Tree** · *Nil Recurring* (2007) · drums by Gavin Harrison",
-    body: "Lines of different lengths in one pattern. The kick and snare repeat every 7 steps, the ride bell every 3 and the guitar riff every 10, so they drift against each other and only all meet again on a bar line after 15 bars. The play opens with a two-step pickup, an accented rim hit, and the groove starts after it: the two blocks are in brackets, so they play one after the other. The crash plays once, in the groove's first bar, and `for 3 bars` stops it after three bars, pickup included. `octave 2` in the with puts the riff right at the bottom of the guitar's range.",
+    body: "Lines of different lengths in one pattern. The kick and snare repeat every 7 steps, the ride bell every 3 and the guitar riff every 10, so they drift against each other and only all meet again on a bar line after 15 bars. The play opens with a two-step pickup, an accented rim hit, and the groove starts after it: the block and the pattern are in brackets, so they play one after the other. The crash plays once, in the groove's first bar, and `for 3 bars` stops it after three bars, pickup included. `octave 2` in the with puts the riff right at the bottom of the guitar's range.",
     link: "https://www.youtube.com/watch?v=v0Iv4SYJW-k",
     source: `pattern groove = {
   kick: x--x---
@@ -107,8 +107,8 @@ with time 9 over 8, tempo 100 { play manias for 4 bars }`,
 
 with time 7 over 8, tempo 110, octave 2, guitar.electric muted {
   play (
-    { snare.rim: ^- }
-    {
+    block { snare.rim: ^- }
+    pattern {
       bar 1 crash: 1
       groove
     }

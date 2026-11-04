@@ -118,14 +118,15 @@ Every line starts by saying what it is:
   <img src="https://raw.githubusercontent.com/pkhambat1/composer-nb/main/docs/images/how-a-cell-reads.svg" width="820" alt="A cell with each kind of line labelled: a setting, a named pattern, drum lines, play, chords, and a pattern played by name">
 </p>
 
-| Line                 | What it is                                                                         |
-| -------------------- | ---------------------------------------------------------------------------------- |
-| `set tempo 90`       | A setting: `set`, then the setting and its value. At the top only                  |
-| `with key E { ... }` | Settings for its block only: at the top, around statements; inside braces, a block |
-| `steps pair = ^-x-`  | A name, with its type in front: `steps`, `notes`, `chords` or `pattern`            |
-| `kick: x--x---`      | Inside braces, an instrument and what it plays                                     |
-| `bar 2 { ... }`      | Inside braces, what plays in one bar of the pattern or play it's in                |
-| `play { ... }`       | Plays what's after it, a pattern or one line. Nothing else makes sound             |
+| Line                   | What it is                                                                         |
+| ---------------------- | ---------------------------------------------------------------------------------- |
+| `set tempo 90`         | A setting: `set`, then the setting and its value. At the top only                  |
+| `with key E { ... }`   | Settings for its block only: at the top, around statements; inside braces, a block |
+| `steps pair = ^-x-`    | A name, with its type in front: `steps`, `notes`, `chords`, `pattern` or `block`   |
+| `kick: x--x---`        | Inside braces, an instrument and what it plays                                     |
+| `bar 2 { ... }`        | Inside braces, what plays in one bar of the pattern or play it's in                |
+| `play { ... }`         | Plays what's after it, a pattern or one line. Nothing else makes sound             |
+| `play pattern { ... }` | A play whose lines repeat, as a pattern's do                                       |
 
 `//` starts a comment. Blank lines and indentation mean nothing. Settings set at the top, and names, carry on into the cells below.
 
@@ -139,6 +140,9 @@ A name's type goes in front of it, and `=` gives it its value:
 | `notes`   | A line of notes or degrees: `notes riff = E---F# E-E--`                       | After `notes` on an instrument's line: `guitar: notes riff`   |
 | `chords`  | Bars of chords: `chords verse = Am F\|C G`                                    | After `chords` on an instrument's line: `piano: chords verse` |
 | `pattern` | Lines in braces that play together, over and over: `pattern groove = { ... }` | On a line of its own, or after `play`                         |
+| `block`   | Lines in braces that play together, once: `block accent = { ... }`            | On a line of its own, or after `play`                         |
+
+Braces without a name say their type too: `pattern { ... }` repeats and `block { ... }` plays once. A bare `{ ... }` on a line of its own or in brackets is an error.
 
 A name of any type starts with a lowercase letter and takes a capital for each new word: `riff`, `partA`, `countIn`. It's at least two characters and never a numeral, and two names that differ only in their capitals are an error. A name only holds its type, and only goes where that type goes. Chords on a drum's line, or steps where a pattern belongs, is an error that names both types. A name without a type is an error too, and the message shows the line to write.
 
@@ -337,7 +341,7 @@ pattern groove = {
 play (hit 2 bars groove hit)
 ```
 
-Inside braces, a pattern's name on a line of its own plays next to the lines beside it. In brackets, names, blocks and other groups play one after another, separated by spaces or new lines: `play (hit { snare: ---- x--- ---- dddd } hit)`. Two things on one line outside brackets are an error.
+Inside braces, a pattern's name on a line of its own plays next to the lines beside it. In brackets, names, blocks and other groups play one after another, separated by spaces or new lines: `play (hit pattern { snare: ---- x--- ---- dddd } hit)`. Two things on one line outside brackets are an error.
 
 ### Repeating and lengths
 
@@ -347,8 +351,9 @@ Putting something in a pattern is the one way to repeat it, and a length is the 
 | ------------------------------ | ------------------------------------------------------ |
 | `pattern beat = { hat: x- }`   | Everything in a pattern repeats until the pattern ends |
 | `play { crash: 1 ... }`        | A play is a timeline, and its own lines play once      |
+| `play pattern { hat: x- ... }` | Its lines repeat, as in any pattern                    |
 | `groove`, on a line of its own | In a play, the pattern repeats until the play ends     |
-| `3 bars { ... }`               | A length, always plural, in front of what it measures  |
+| `3 bars pattern { ... }`       | A length, always plural, in front of what it measures  |
 | `2 beats rest`                 | On a drum's line, silence for that long                |
 | `6 bars groove`                | `groove` repeats for 6 bars                            |
 | `8 bars (a b)`                 | Brackets play `a` and `b` in order, for 8 bars         |

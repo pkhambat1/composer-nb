@@ -47,7 +47,7 @@ A `with`'s block holds what could stand where the `with` is:
 | Where | The block holds | Plays |
 | --- | --- | --- |
 | At the top of a cell | Statements: declarations, `play` and other `with`s. | Each `play` in it, with the settings. |
-| In a `play`, a pattern, `bar` or `every` | Lines, groups, `bar`, `every` and other `with`s. | As a block on a line of its own: together with the other lines, repeating until what it's in ends. |
+| In a `play`, a pattern, `bar` or `every` | Lines, groups, `bar`, `every` and other `with`s. | As a `pattern` on a line of its own: together with the other lines, repeating until what it's in ends. |
 | In a [group](/language/patterns#groups) | The same. | As one part in order. |
 
 An instrument's block of layers and a named value hold values, not lines, so a `with` goes around the line instead: `with octave 5 { piano: { ... } }`.

@@ -28,9 +28,8 @@ Every value has one of five types. A line is a kit piece or an instrument, a col
 | `steps` | Hits for one kit piece, as steps or beats. | `x--x---`, `2 4` | After a kit piece's colon. | [Steps](/drums/steps) |
 | `notes` | Notes for one instrument, one at a time, by name or by degree of the key. | `E---F# E-E--`, `1---3---5---` | After `notes` on an instrument's line. | [Notes](/pitched/notes) |
 | `chords` | Bars of chords. | `Am F\|C G` | After `chords` on an instrument's line. | [Chords](/pitched/chords) |
-| `pattern` | Lines that play together and repeat. | `{ kick: x--- }` | After `play`, on a line of its own, or in a group. | [Patterns](/language/patterns) |
-
-| `block` | Lines that play together once. | `{ crash: 1 }` | After `play`, on a line of its own, or in a group. | [Blocks](/language/patterns#groups) |
+| `pattern` | Lines that play together and repeat. | `pattern { kick: x--- }` | After `play`, on a line of its own, or in a group. | [Patterns](/language/patterns) |
+| `block` | Lines that play together once. | `block { crash: 1 }` | On a line of its own, in a group, or by name after `play`. | [Blocks](/language/patterns#groups) |
 
 ## Names
 
@@ -59,11 +58,13 @@ A name of any type starts with a lowercase letter, then holds letters and digits
 
 ## Blocks
 
-A block is statements in braces, and it evaluates to a value. Where the block is decides its type.
+A block is statements in braces. What's in front of the braces decides what they evaluate to. Braces that are a value say their type, so a bare `{ ... }` on a line of its own or in a group is an error.
 
 | Block | Evaluates to |
 | --- | --- |
-| After `pattern <name> =`, `play`, `bar` or `every` | A `pattern`. |
+| After `pattern`, `pattern <name> =`, `bar` or `every` | A `pattern`. |
+| After `block` or `block <name> =` | A `block`. |
+| After `play` | No value: the play's own statements. See [What repeats](/language/play#what-repeats). |
 | After `with` and its settings | At the top of a cell, the statements in it. Anywhere else, a `pattern`, played with the settings. |
 | After a kit piece's colon | One `steps` value, from [layers](/drums/steps#layers). |
 | After an instrument's colon | [Layers](/pitched/notes#layers) of `notes` and `chords` that sound together. |
@@ -72,16 +73,16 @@ The statements in a block start together, one per line. What plays in order goes
 
 | Written | Plays |
 | --- | --- |
-| `{ ... }` on a line of its own | Together with the other lines. |
-| `({ ... } { ... })` | One after another. |
-| `intro verse`, `{ ... } outro` | An error: what plays in order goes in brackets. |
+| `pattern { ... }` on a line of its own | Together with the other lines. |
+| `(pattern { ... } block { ... })` | One after another. |
+| `intro verse`, `pattern { ... } outro` | An error: what plays in order goes in brackets. |
 
 <Cell>
 
 ```composer-nb
 play {
-  ({ kick: x--- } { snare: x--- })
-  { hat: x- }
+  (pattern { kick: x--- } pattern { snare: x--- })
+  pattern { hat: x- }
 }
 ```
 
@@ -91,7 +92,7 @@ The kick plays first and the snare after it, with the hats under both.
 
 A block holds one line per kit piece or instrument. To layer one, give its line a block.
 
-Where a line is decides whether it repeats. In a pattern, every line repeats until the pattern ends. Directly in a `play`, a line plays once. A value is not a loop: `x--x---` is seven steps, and the pattern around it does the repeating. So a `steps`, `notes` or `chords` value written as the same figure more than once is an error: `hat: x-x- x-x-` is `hat: x-`, and `chords Am F|Am F` is `chords Am F`.
+Where a line is decides whether it repeats. In a pattern, every line repeats until the pattern ends. In a block, or directly in a `play`, a line plays once. A value is not a loop: `x--x---` is seven steps, and the pattern around it does the repeating. So a `steps`, `notes` or `chords` value written as the same figure more than once is an error: `hat: x-x- x-x-` is `hat: x-`, and `chords Am F|Am F` is `chords Am F`.
 
 ## Lengths
 
