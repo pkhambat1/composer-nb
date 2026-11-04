@@ -70,7 +70,7 @@ export const playCtx = (ln: number): Ctx => ({
   repeats: false,
   where: "in this play",
   what: "This play",
-  sized: "play { ... } for 4 bars",
+  sized: "play block { ... } for 4 bars",
 })
 // A play's own length is how long its output is: what's in it is cut there, so it doesn't
 // have to fit.

@@ -27,7 +27,7 @@ pattern funk = {
   kick: x--- --x- --x- ---- | x--- --x- ---- -x--
 }
 
-play {
+play block {
   crash: 1
   funk
 } for 4 bars

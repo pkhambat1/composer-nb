@@ -21,17 +21,18 @@
                               Lines play together, so two drums on
                               one step is two lines. Each instrument has one line in a
                               block; to layer it, its line takes a block of its own.
-     play { }                 plays what's after it, a pattern or one line, and gives one
-                              output with a player and a drum grid. Nothing plays unless
-                              it's inside a play. play pattern { } repeats its lines.
+     play block { }           plays what's after it, a name, a group, one line or braces
+                              with their type, and gives one output with a player and a
+                              drum grid. Nothing plays unless it's inside a play. play
+                              block { } plays its lines once; play pattern { } repeats them.
      bar 2 { }                what plays in bar 2 of what it's in, and nowhere else. One
                               line needs no braces (bar 2 crash: 1), and bar 3 to 4 { }
                               takes a run of bars.
      every 3 steps { }        what plays at that pace: inside, one step lasts 3 steps. A step
                               is a 16th note otherwise. every 1/3 beats { } is triplets.
    A pattern is a loop: everything in it repeats until the pattern ends, and without a
-   length it lasts until its lines line up again. A play is a timeline: its own lines play
-   once, and a pattern on a line of its own repeats until the play ends. Braces hold what
+   length it lasts until its lines line up again. A block is a timeline: its lines play
+   once, and a pattern on a line of its own repeats until the block ends. Braces hold what
    plays together and brackets what plays in order: (intro block { snare: ---- dddd } 2 bars
    verse) plays them one after another, and two things on one line outside brackets are a
    mistake. Braces that are a value say their type: pattern { } repeats, block { } plays
