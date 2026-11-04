@@ -7,6 +7,7 @@
     { "include": "#magic" },
     { "include": "#instrument" },
     { "include": "#declaration" },
+    { "include": "#typedBraces" },
     { "include": "#setting" },
     { "include": "#keyword" },
     { "include": "#value" },
@@ -37,6 +38,10 @@
         "1": { "name": "storage.type.composer-nb" },
         "2": { "name": "variable.other.composer-nb" }
       }
+    },
+    "typedBraces": {
+      "name": "storage.type.composer-nb",
+      "match": "\\b(pattern|block)(?=\\s*\\{)"
     },
     "setting": {
       "match": "^\\s*(set)\\s+(time|tempo|swing|key|mode|transpose|octave|kit|guitar\\.electric)\\b",

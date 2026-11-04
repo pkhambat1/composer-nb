@@ -29,6 +29,7 @@ When the user wants to write the cell themselves ("give me a cell", "I'll write 
 - Scales, lines and chord formulas by degree (`i ii iii iv v vi vii`) and charts by numeral, so they play in any key. In a mode, write the plain degrees and numerals and let `set mode` make them minor, dorian, harmonicMinor, melodicMinor, wholeTone (six degrees, i to vi) and so on: no `b` or `#` for what the mode already does. Letters only where the note names are the point.
 - A note held over two beats gets a stated length, `3 beats C2` or `1 bars rest`, not a long run of dashes.
 - Brackets for order: `play (intro 4 bars verse)`.
+- Braces that are a value say their type: `pattern { ... }` repeats and `block { ... }` plays once. Lines directly in `play { ... }` play once; `play pattern { ... }` repeats them.
 - `set` in front of every setting.
 - A long line continues on a line starting with `|`.
 - Chord symbols and numerals spelt as `reference` (topic `chords`) spells them.

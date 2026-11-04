@@ -5,6 +5,7 @@ import {
   anonCtx,
   blockCtx,
   layer,
+  onceCtx,
   paceCtx,
   placeCtx,
   playCtx,
@@ -112,7 +113,8 @@ export function blockClip(
     if (!clip) return null
     // A pattern or a group on a line of its own repeats until what it's in ends.
     const item = l.items[0]
-    if (item?.name && l.st?.sections[item.name]?.type === "block") once.push({ ...clip, ln: l.ln })
+    const sec = item?.block ?? (item?.name ? l.st?.sections[item.name] : null)
+    if (sec?.type === "block") once.push({ ...clip, ln: l.ln })
     else repeated.push({ clip, what: loopName(item), ln: l.ln })
   }
   for (const l of read) {
@@ -143,7 +145,16 @@ export function blockClip(
   return layer(parts, once, repeated, head, bars, err, ctx)
 }
 
-// Plays a pattern, with or without a name, with the settings in effect where it's played.
+// A block's events play the first time through what it's in, and not when that repeats.
+const oneShot = (clip: Clip | null): Clip | null =>
+  clip && {
+    ...clip,
+    events: clip.events.map((event) => ({ ...event, oneShot: true })),
+    drumEvents: clip.drumEvents.map((event) => ({ ...event, oneShot: true })),
+  }
+
+// Plays a pattern or a block, with or without a name, with the settings in effect where it's
+// played.
 export function sectionClip(
   sec: Playable,
   state: State,
@@ -153,6 +164,8 @@ export function sectionClip(
 ): Clip | null {
   if (sec.shown)
     return blockClip(sec.lines, state, err, withCtx(sec.ln, sec.shown), stack, sec.bars)
+  if (sec.anon && sec.type === "block")
+    return oneShot(blockClip(sec.lines, state, err, onceCtx(sec.ln), stack, sec.bars))
   if (sec.anon) return blockClip(sec.lines, state, err, anonCtx(sec.ln), stack, sec.bars)
   if (stack.includes(sec.name!)) {
     err(ln, `${sec.name} plays itself, so it would never end`)
@@ -170,13 +183,7 @@ export function sectionClip(
     [...stack, sec.name!],
     sec.bars,
   )
-  return clip && sec.type === "block"
-    ? {
-        ...clip,
-        events: clip.events.map((event) => ({ ...event, oneShot: true })),
-        drumEvents: clip.drumEvents.map((event) => ({ ...event, oneShot: true })),
-      }
-    : clip
+  return sec.type === "block" ? oneShot(clip) : clip
 }
 
 // Checks a pattern when it's defined, so its mistakes show even if it's never played.
@@ -187,7 +194,7 @@ export function checkSection(
   err: Report,
   owner: string | null | undefined = sec.anon ? null : sec.name,
 ): void {
-  const where = sec.anon ? "this pattern" : sec.name
+  const where = sec.anon ? `this ${sec.type ?? "pattern"}` : sec.name
   const st = cloneState(state)
   const read = readLines(sec.lines, st, err, (named) => checkSection(named, st, err))
   const parts = read.filter((l) => l.kind === "part")
@@ -223,7 +230,12 @@ export function checkSection(
   // A line that's already been reported as a mistake doesn't need this too.
   const playable = read.some((l) => PLAYS.includes(l.kind))
   if (!playable && read.length === sec.lines.length) {
-    err(sec.ln, sec.anon ? "This pattern has nothing to play" : `${sec.name} has nothing to play`)
+    err(
+      sec.ln,
+      sec.anon
+        ? `This ${sec.type ?? "pattern"} has nothing to play`
+        : `${sec.name} has nothing to play`,
+    )
   }
 }
 
@@ -262,7 +274,7 @@ export function sequenceClip(
           )
         : sectionClip(sec!, state, err, ln, stack)
     if (!clip) return null
-    if (it.bars && sec?.type === "block") {
+    if (it.bars && !it.block && sec?.type === "block") {
       err(
         ln,
         `${sec.name} is a block and plays once. Put its length in its declaration, or use a pattern to repeat.`,

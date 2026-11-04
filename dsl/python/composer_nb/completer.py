@@ -172,6 +172,10 @@ def _groups(text: str) -> int:
     return max(0, code.count("(") - code.count(")"))
 
 
+# Braces that are a value say their type: pattern { ... }, block { ... }
+TYPED_BRACES: List[Option] = [("pattern ", "keyword"), ("block ", "keyword")]
+
+
 def _sequence(
     words: List[str], patterns: List[Option], parts: List[Option], grouped: bool = False
 ) -> List[Option]:
@@ -183,8 +187,8 @@ def _sequence(
     if NUMBER_RE.search(last) or ARITHMETIC_RE.fullmatch(last):
         return [("bars ", "keyword")]  # a length, always plural: 3 bars groove
     if last == "bars":
-        return patterns  # a length is followed by what it measures
-    return patterns if grouped else []
+        return patterns + TYPED_BRACES  # a length is followed by what it measures
+    return patterns + TYPED_BRACES if grouped else []
 
 
 def _statement(
@@ -201,15 +205,16 @@ def _statement(
     # After a block or a group, more follows only inside a group. A kit piece's or an
     # instrument's block is the whole of its line, so nothing goes beside it.
     if tail.endswith("}"):
-        return patterns if closed == "lines" and grouped else []
+        return patterns + TYPED_BRACES if closed == "lines" and grouped else []
     if tail.endswith(")") and _group_closed(tail):
-        return patterns if grouped else []
+        return patterns + TYPED_BRACES if grouped else []
     segment = re.split(r"[{}]", head)[-1]
     words = re.sub(r"[()=]", lambda m: " = " if m.group() == "=" else " ", segment).split()
     parts = _options([p + ": " for p in PARTS], "property")
     if not words:
         if grouped:
-            return patterns + parts + [("with ", "keyword")]  # the next thing in a group
+            # the next thing in a group
+            return patterns + parts + TYPED_BRACES + [("with ", "keyword")]
         types = _options([t + " " for t in TYPES], "keyword")
         if inside:
             # in braces, settings go on a with: with octave 2 { ... }
@@ -219,12 +224,13 @@ def _statement(
         return settings + types + [("play ", "keyword"), ("with ", "keyword")]
     first = words[0]
     if tail.endswith("("):
-        return patterns + parts + [("with ", "keyword")]  # a group starts: what plays in order
+        # a group starts: what plays in order
+        return patterns + parts + TYPED_BRACES + [("with ", "keyword")]
     if first == "play":
         if grouped:
             return _sequence(words[1:], patterns, parts, grouped)
         if len(words) == 1:
-            return patterns + parts
+            return patterns + parts + [("pattern ", "keyword")]
         if len(words) == 2 and words[1] in names["pattern"] + names["block"]:
             return [("for ", "keyword")]
         return []

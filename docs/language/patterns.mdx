@@ -5,7 +5,7 @@ description: "The pattern type: lines that play together and repeat, how long a 
 
 import { Cell } from "/snippets/cell.jsx"
 
-A `pattern` value holds lines that start together and repeat. A `block` holds lines that play once. Both require an explicit type before the name: `pattern groove = { ... }` or `block myBlock = { ... }`. An untyped `myBlock = { ... }` is an error and defines nothing. Declaring either plays nothing. [`play`](/language/play) renders it.
+A `pattern` value holds lines that start together and repeat. A `block` holds lines that play once. Braces that are a value always say which, in front of the name or, without one, in front of the braces: `pattern groove = { ... }`, `block myBlock = { ... }`, `pattern { ... }`, `block { ... }`. An untyped `myBlock = { ... }` is an error and defines nothing, and so is a bare `{ ... }` on a line of its own. Declaring either plays nothing. [`play`](/language/play) renders it.
 
 <Cell>
 
@@ -31,7 +31,7 @@ A length in front sets the duration instead: `pattern groove = 4 bars { ... }`. 
 
 ## Groups
 
-A named `block` plays its instrument lines once, even when a repeating pattern beside or around it runs longer. A longer play leaves silence after the block rather than repeating it. Use a `pattern` when the material should loop.
+A `block` plays its instrument lines once, even when a repeating pattern beside or around it runs longer. A longer play leaves silence after the block rather than repeating it. Use a `pattern` when the material should loop.
 
 <Cell>
 
@@ -51,7 +51,7 @@ play {
 
 </Cell>
 
-`( )` holds what plays in order: names, blocks, other groups, and lines of their own, one after another, separated by spaces or new lines. It is the one way to put things in order. On lines of their own, things play together, and two things on one line without brackets are an error. See [Blocks](/language/overview#blocks). A length in front of a name or a group repeats it for that long; in front of braces it is the block's own length, which comes to the same thing, and is what a block of lines ending in `...` needs.
+`( )` holds what plays in order: names, blocks, other groups, and lines of their own, one after another, separated by spaces or new lines. It is the one way to put things in order. On lines of their own, things play together, and two things on one line without brackets are an error. See [Blocks](/language/overview#blocks). A length in front of a name or a group repeats it for that long. In front of `pattern { ... }` or `block { ... }` it is that value's own length, as in a declaration, which is what lines ending in `...` need.
 
 <Cell>
 
@@ -68,7 +68,7 @@ play (intro 4 bars (verse chorus) intro)
 
 </Cell>
 
-A group can run over several lines, and a line of its own in it plays as a block of one line.
+A group can run over several lines, and a line of its own in it plays as a pattern of one line.
 
 <Cell>
 
@@ -78,7 +78,7 @@ set octave 4
 play (
   piano: notes i---ii---iii---iv---
   piano: notes v---vi---vii---i'---
-  { piano: notes 1 bars i' }
+  block { piano: notes 1 bars i' }
 )
 ```
 

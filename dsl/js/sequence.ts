@@ -15,6 +15,8 @@ export type Playable = Partial<Section> & {
   anon?: boolean
   shown?: string // a with's header, as written
 }
+// What a block without a type is told
+const UNTYPED_BRACES = "These braces need a type: pattern { ... } repeats, block { ... } plays once"
 // One thing a line plays
 export type Item = {
   name?: string
@@ -70,10 +72,17 @@ export function readSequence(
   const ws = () => {
     while (space(i)) i++
   }
-  const playable = (b: Braces): Playable => ({ anon: true, ln: b.ln, lines: b.lines, bars: 0 })
+  const playable = (b: Braces, type?: Playable["type"]): Playable => ({
+    anon: true,
+    type,
+    ln: b.ln,
+    lines: b.lines,
+    bars: 0,
+  })
   const undefinedItem = (it: Item) => (it.name && st && !st.sections[it.name] ? it.name : null)
   let last: Item | null = null // the thing read last, which a * after it would want repeated
-  const said = (it: Item | null) => it?.name || (it?.items ? "( ... )" : it ? "{ ... }" : "groove")
+  const said = (it: Item | null) =>
+    it?.name || (it?.items ? "( ... )" : it ? `${it.block?.type ?? "pattern"} { ... }` : "groove")
   // One thing, at i: what's written in front of it, then a group, a block, a line of its
   // own (in a group), or a name. null after saying what's wrong.
   const item = (inGroup: boolean): Item | null => {
@@ -127,10 +136,21 @@ export function readSequence(
       i = j + 1
       return { with: settings, shown: `with ${shown.trim()}`, block: playable(block), bars }
     }
+    // pattern { ... }, block { ... }: braces that are a value say their type
+    const word = /^(pattern|block)\s*$/.exec(textFrom(i))
+    const typed = word ? units[i + word[0].length] : undefined
+    if (word && isBraces(typed)) {
+      i += word[0].length + 1
+      return { block: playable(typed, word[1] as Playable["type"]), bars }
+    }
     const block = units[i]
     if (isBraces(block)) {
+      if (!block.type) {
+        fail(UNTYPED_BRACES)
+        return null
+      }
       i++
-      return { block: playable(block), bars }
+      return { block: playable(block, block.type), bars }
     }
     // piano: C4---D4---, in a group: a line of its own, which runs to the end of its line
     // or to the group's ), and plays as a block of one line
@@ -198,7 +218,13 @@ export function readSequence(
       fail("This ) doesn't close anything")
       return null
     }
-    // More on the line: what plays in order goes in brackets
+    // More on the line: what plays in order goes in brackets. A name that isn't defined is
+    // said first.
+    const unknown = undefinedItem(first)
+    if (unknown) {
+      fail(undefinedName(unknown, st!))
+      return null
+    }
     const row = [first]
     while (ok && i < end) {
       const it = ch(i) === ")" ? null : item(true)

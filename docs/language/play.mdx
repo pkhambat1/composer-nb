@@ -8,7 +8,9 @@ import { Cell } from "/snippets/cell.jsx"
 `play` evaluates what follows it and renders one output. It is the only statement that makes sound, and it goes at the top level of a cell.
 
 ```text
-play <pattern, group, block or line> [for <number> bars]
+play <name, group or line> [for <number> bars]
+play { <statements> } [for <number> bars]
+play pattern { <lines> } [for <number> bars]
 ```
 
 <Cell>
@@ -33,15 +35,35 @@ This cell renders three outputs.
 
 ## What repeats
 
-A play is a timeline, and its statements start together.
+A play is a timeline, and its statements start together. `play { ... }` holds those statements, and each plays as this table says.
 
 | In a play | Plays |
 | --- | --- |
 | A line | Once. |
-| A named block | Once, with silence after it if the play runs longer. |
+| A block | Once, with silence after it if the play runs longer. |
 | A pattern, or a group in brackets | Repeated until the play ends. A group plays what's in it in order. |
 | `every` | Repeated until the play ends. |
 | `bar <n>` | In bar `n`. |
+
+`play pattern { ... }` plays one value, a pattern, so every line in it repeats. The lines of `play { ... }` already play once, so `play block { ... }` is an error.
+
+<Cell>
+
+```composer-nb
+play {
+  kick: x---
+  snare: ---- x---
+} for 2 bars
+
+play pattern {
+  kick: x---
+  snare: ---- x---
+} for 2 bars
+```
+
+</Cell>
+
+The first output plays each line once, then silence. The second repeats both lines for two bars.
 
 ## Duration
 
