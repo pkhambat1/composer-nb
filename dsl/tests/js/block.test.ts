@@ -14,7 +14,7 @@ describe("explicit blocks", () => {
       const parsed = parseCell(
         `block one = { kick: x- }
 pattern looped = { snare: ---x }
-play {
+play block {
 ${lines}
 } for 2 bars`,
       )
@@ -51,7 +51,7 @@ describe("typed braces", () => {
   const CELL = "  snare.cross: ----x---\n  piano: notes i---v---iii---i'---"
 
   it("plays a play's own lines once", () => {
-    const parsed = clean(`play {\n${CELL}\n} for 2 bars`)
+    const parsed = clean(`play block {\n${CELL}\n} for 2 bars`)
     expect(lane(parsed, "snare.cross")).toHaveLength(1)
     expect(parsed.events).toHaveLength(4)
   })
@@ -84,10 +84,27 @@ describe("typed braces", () => {
     )
     clean(`play pattern {\n${lines.join("\n")}\n} for 4 bars`)
   })
-  it("has no play block, since a play's own lines play once", () => {
-    const rule = "A play's own lines play once, so it takes no block: play { ... }"
-    expect(firstError("play block { kick: x--- }")).toBe(rule)
-    expect(firstError("play block {\n  kick: x---\n} for 2 bars")).toBe(rule)
+  it("asks for a type on the braces after play, as on any others", () => {
+    const rule =
+      "These braces need a type: play pattern { ... } repeats, play block { ... } plays once"
+    expect(firstError("play { kick: x--- }")).toBe(rule)
+    expect(firstError("play {\n  kick: x---\n} for 2 bars")).toBe(rule)
+    expect(firstError("pattern gg = { kick: x--- }\nplay { gg }")).toBe(rule)
+  })
+  it("reads a length after block braces as theirs, and a name keeps its own", () => {
+    const groove = "pattern gg = { kick: x--- }\n"
+    const fills = clean(`${groove}play block {\n  crash: 1\n  gg\n} for 4 bars`)
+    expect(lane(fills, "kick")).toHaveLength(16)
+    expect(lane(fills, "crash")).toHaveLength(1)
+    const once = clean(`${groove}block bb = {\n  crash: 1\n  gg\n}\nplay bb for 4 bars`)
+    expect(lane(once, "kick")).toHaveLength(4)
+    expect(once.totalSec).toBe(8)
+  })
+  it("plays play block as it plays a named block", () => {
+    const named = clean("block bb = {\n  kick: x---\n}\nplay bb")
+    const typed = clean("play block {\n  kick: x---\n}")
+    expect(typed.drumEvents.map((e) => e.secStart)).toEqual(named.drumEvents.map((e) => e.secStart))
+    expect(typed.totalSec).toBe(named.totalSec)
   })
   it("keeps a play's duration behind its music", () => {
     expect(firstError("play 2 bars pattern { kick: x--- }")).toMatch(/follows its music/)
@@ -97,20 +114,20 @@ describe("typed braces", () => {
   })
   it("asks for a type on braces that are a value", () => {
     for (const source of [
-      "play {\n  { kick: x--- }\n}",
-      "play {\n  2 bars { kick: x--- }\n}",
+      "play block {\n  { kick: x--- }\n}",
+      "play block {\n  2 bars { kick: x--- }\n}",
       "play ({ kick: x--- } { snare: x--- })",
       "pattern gg = {\n  { kick: x--- }\n}\nplay gg",
       "pattern gg = ({ kick: x--- } { snare: x--- })\nplay gg",
-      "play {\n  bar 2 2 bars { kick: x--- }\n} for 2 bars",
+      "play block {\n  bar 2 2 bars { kick: x--- }\n} for 2 bars",
     ]) {
       expect(parseCell(source).errors.map((e) => e.msg)).toContain(UNTYPED)
     }
   })
   it("plays a pattern on a line of its own repeating, and a block once", () => {
-    const repeats = clean("play {\n  pattern { kick: x--- }\n} for 2 bars")
+    const repeats = clean("play block {\n  pattern { kick: x--- }\n} for 2 bars")
     expect(lane(repeats, "kick")).toHaveLength(8)
-    const once = clean("play {\n  block { kick: x--- }\n} for 2 bars")
+    const once = clean("play block {\n  block { kick: x--- }\n} for 2 bars")
     expect(lane(once, "kick")).toHaveLength(1)
   })
   it("keeps a block's lines once inside a pattern and a group that repeat", () => {
@@ -119,32 +136,37 @@ describe("typed braces", () => {
     )
     expect(lane(inPattern, "crash")).toHaveLength(1)
     expect(lane(inPattern, "kick")).toHaveLength(8)
-    const inGroup = clean("play {\n  (block { crash: x--- } pattern { kick: x--- })\n} for 2 bars")
+    const inGroup = clean(
+      "play block {\n  (block { crash: x--- } pattern { kick: x--- })\n} for 2 bars",
+    )
     expect(lane(inGroup, "crash")).toHaveLength(1)
     expect(lane(inGroup, "kick")).toHaveLength(4)
   })
   it("reads a length in front of typed braces as their own", () => {
-    const repeats = clean("play {\n  2 bars pattern { kick: x--- }\n}")
+    const repeats = clean("play block {\n  2 bars pattern { kick: x--- }\n}")
     expect(lane(repeats, "kick")).toHaveLength(8)
     expect(repeats.totalSec).toBe(4)
     const once = clean("play (2 bars block { crash: 1 } pattern { kick: x--- })")
     expect(lane(once, "crash")).toHaveLength(1)
     expect(once.totalSec).toBe(4.5)
-    expect(firstError("play {\n  pattern 2 bars { kick: x--- }\n}")).toBe(
+    expect(firstError("play block {\n  pattern 2 bars { kick: x--- }\n}")).toBe(
       "A length goes in front of what it measures: 2 bars pattern { ... }",
     )
   })
   it("leaves bar, every and with as they are, and refuses a type on bar and every", () => {
-    clean("play {\n  kick: x---\n  bar 2 { crash: 1 }\n} for 2 bars")
+    clean("play block {\n  kick: x---\n  bar 2 { crash: 1 }\n} for 2 bars")
     expect(lane(clean("play every 4 steps { kick: x }"), "kick")).toHaveLength(1)
-    expect(lane(clean("play {\n  every 4 steps 2 bars { kick: x }\n}"), "kick")).toHaveLength(8)
+    expect(lane(clean("play block {\n  every 4 steps 2 bars { kick: x }\n}"), "kick")).toHaveLength(
+      8,
+    )
     expect(
       lane(clean("pattern ss = every 4 steps { kick: x }\nplay ss for 1 bars"), "kick"),
     ).toHaveLength(4)
     expect(
-      clean("play {\n  with octave 2 { bass: notes i---v--- }\n  kick: x---\n} for 2 bars").events,
+      clean("play block {\n  with octave 2 { bass: notes i---v--- }\n  kick: x---\n} for 2 bars")
+        .events,
     ).toHaveLength(8)
-    expect(firstError("play {\n  kick: x---\n  bar 2 block { crash: 1 }\n} for 2 bars")).toBe(
+    expect(firstError("play block {\n  kick: x---\n  bar 2 block { crash: 1 }\n} for 2 bars")).toBe(
       "What's in a bar is a pattern, so its braces take no type: bar 2 { ... }",
     )
     expect(firstError("play every 3 steps pattern { kick: x }")).toBe(
@@ -164,8 +186,8 @@ describe("typed braces", () => {
     expect(firstError("pattern { kick: x--- }")).toBe(
       "Nothing plays this. Write play pattern { ... }",
     )
-    expect(firstError("block { kick: x--- }")).toBe("Nothing plays this. Write play { ... }")
-    expect(firstError("{ kick: x--- }")).toBe("Nothing plays this. Write play { ... }")
+    expect(firstError("block { kick: x--- }")).toBe("Nothing plays this. Write play block { ... }")
+    expect(firstError("{ kick: x--- }")).toBe("Nothing plays this. Write play block { ... }")
     expect(firstError("3 bars pattern { kick: x--- }")).toBe(
       "Nothing plays this. Write play pattern { ... } for 3 bars",
     )
@@ -174,7 +196,7 @@ describe("typed braces", () => {
     expect(parseCell("play pattern { }").errors.map((e) => e.msg)).toEqual([
       "This play has nothing in its braces",
     ])
-    expect(parseCell("play {\n  pattern { }\n}").errors.map((e) => e.msg)).toEqual([
+    expect(parseCell("play block {\n  pattern { }\n}").errors.map((e) => e.msg)).toEqual([
       "These braces have nothing in them",
     ])
   })
@@ -193,16 +215,17 @@ describe("typed braces", () => {
       "tk-directive-key:block",
       "tk-punct:{",
     ])
-    expect(red("play {\n  4 bars pattern { kick: x--- }\n  block {\n    crash: 1\n  }\n}")).toEqual(
-      [],
-    )
     expect(
-      red("play {\n  every 3 steps 4 bars { kick: x }\n}\npattern gg = 2 bars { kick: x }"),
+      red("play block {\n  4 bars pattern { kick: x--- }\n  block {\n    crash: 1\n  }\n}"),
+    ).toEqual([])
+    expect(
+      red("play block {\n  every 3 steps 4 bars { kick: x }\n}\npattern gg = 2 bars { kick: x }"),
     ).toEqual([])
     expect(red("play ({ kick: x--- })")).toEqual(["tk-error:{"])
-    expect(red("play {\n  { kick: x--- }\n}")).toEqual(["tk-error:{"])
-    expect(red("play {\n  4 bars { kick: x--- }\n}")).toEqual(["tk-error:{"])
-    expect(red("play block { kick: x--- }")).toEqual(["tk-error:block"])
+    expect(red("play block {\n  { kick: x--- }\n}")).toEqual(["tk-error:{"])
+    expect(red("play block {\n  4 bars { kick: x--- }\n}")).toEqual(["tk-error:{"])
+    expect(red("play { kick: x--- }")).toEqual(["tk-error:{"])
+    expect(words("play block { kick: x--- }")).toEqual(["tk-directive-key:block", "tk-punct:{"])
     expect(red("play (\n  { kick: x--- }\n)")).toEqual(["tk-error:{"])
   })
 })

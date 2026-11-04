@@ -48,22 +48,22 @@ def test_every_type_declares_a_name():
 
 
 def test_a_drum_and_a_dot_offers_its_other_sounds():
-    assert texts("%%music\nplay {\n  ride.") == ["bell: "]
-    assert texts("%%music\nplay {\n  hat.") == ["open: ", "pedal: "]
-    assert texts("%%music\nplay {\n  hat.p") == ["pedal: "]
-    assert texts("%%music\nplay {\n  snare.") == ["ghost: ", "rim: ", "cross: "]
-    assert texts("%%music\nplay {\n  tom.") == ["high: ", "low: ", "floor: "]
-    assert texts("%%music\nplay {\n  kick.") == []
+    assert texts("%%music\nplay block {\n  ride.") == ["bell: "]
+    assert texts("%%music\nplay block {\n  hat.") == ["open: ", "pedal: "]
+    assert texts("%%music\nplay block {\n  hat.p") == ["pedal: "]
+    assert texts("%%music\nplay block {\n  snare.") == ["ghost: ", "rim: ", "cross: "]
+    assert texts("%%music\nplay block {\n  tom.") == ["high: ", "low: ", "floor: "]
+    assert texts("%%music\nplay block {\n  kick.") == []
 
 
 def test_a_pitched_instrument_and_a_dot_offers_its_other_sound():
-    assert texts("%%music\nplay {\n  guitar.") == ["electric: "]
-    assert texts("%%music\nplay {\n  piano.") == ["electric: "]
-    assert texts("%%music\nplay {\n  organ.") == []
+    assert texts("%%music\nplay block {\n  guitar.") == ["electric: "]
+    assert texts("%%music\nplay block {\n  piano.") == ["electric: "]
+    assert texts("%%music\nplay block {\n  organ.") == []
 
 
 def test_tom_is_only_its_three_drums():
-    cell = "%%music\nplay {\n  "
+    cell = "%%music\nplay block {\n  "
     assert texts(cell + "to") == ["tom.high: ", "tom.low: ", "tom.floor: "]
     assert texts(cell + "fl") == []
 
@@ -83,7 +83,7 @@ def test_top_of_a_cell_offers_set_types_play_and_with():
 
 
 def test_inside_braces_offers_instruments_and_patterns():
-    cell = "%%music\npattern groove = { kick: x--x }\nplay {\n  "
+    cell = "%%music\npattern groove = { kick: x--x }\nplay block {\n  "
     assert {"kick: ", "ride.bell: ", "piano: ", "groove", "with ", "steps "} <= set(texts(cell))
     assert "set " not in texts(cell)  # inside braces, settings go on a with
     assert "chords: " not in texts(cell)  # chords go on their instrument's line
@@ -109,7 +109,7 @@ def test_settings_offer_their_values():
 
 
 def test_instrument_lines_offer_names_of_their_type():
-    cell = "%%music\nsteps pair = ^-x-\nnotes riff = F---G---\nchords verse = Am F\nplay {\n  "
+    cell = "%%music\nsteps pair = ^-x-\nnotes riff = F---G---\nchords verse = Am F\nplay block {\n  "
     assert texts(cell + "hat: ") == ["pair"]
     assert texts(cell + "hat: p") == ["pair"]
     assert texts(cell + "snare: 2 4 p") == []  # a line of beats holds only beats
@@ -149,7 +149,7 @@ def test_a_pitched_instruments_block_offers_notes_and_chords():
     assert texts(cell + "notes ") == ["riff"]
     assert texts(cell + "chords ") == ["verse"]
     assert texts(cell + "notes C4--- ") == ["riff"]
-    assert "kick: " in texts("%%music\nplay {\n  piano: {\n    notes C4---\n  }\n  ")  # closed
+    assert "kick: " in texts("%%music\nplay block {\n  piano: {\n    notes C4---\n  }\n  ")  # closed
 
 
 def test_a_name_is_not_offered_inside_its_own_braces():
@@ -183,7 +183,7 @@ def test_every_offers_units_then_what_plays():
 
 def test_play_offers_patterns_and_lengths():
     cell = "%%music\nsteps pair = x-x-\npattern groove = { kick: x--x }\n"
-    assert texts(cell + "play ") == ["groove", *[p + ": " for p in completer.PARTS], "pattern "]
+    assert texts(cell + "play ") == ["groove", *[p + ": " for p in completer.PARTS], "pattern ", "block "]
     assert texts(cell + "play 3 ") == []
     assert texts(cell + "play groove for 3 ") == ["bars "]
     assert texts(cell + "play (3 bars groove g") == ["groove"]
@@ -195,16 +195,16 @@ def test_a_line_plays_one_thing_and_a_group_plays_them_in_order():
     assert texts(cell + "play groove ") == ["for "]
     assert texts(cell + "play groove for 3 bars ") == []
     assert texts(cell + "pattern song = groove ") == []
-    assert texts(cell + "play {\n  groove ") == []
+    assert texts(cell + "play block {\n  groove ") == []
     # in a group, what plays in order goes on
     assert texts(cell + "play (groove ") == MORE
     assert texts(cell + "play (groove g") == ["groove"]
     assert texts(cell + "play (groove 3 ") == ["bars "]
     assert texts(cell + "play (groove 3 bars ") == MORE
     assert texts(cell + "pattern song = (groove ") == MORE
-    assert texts(cell + "play {\n  (groove ") == MORE
-    assert texts(cell + "play {\n  bar 2 (groove ") == MORE
-    assert texts(cell + "play {\n  every 2 steps (groove ") == MORE
+    assert texts(cell + "play block {\n  (groove ") == MORE
+    assert texts(cell + "play block {\n  bar 2 (groove ") == MORE
+    assert texts(cell + "play block {\n  every 2 steps (groove ") == MORE
     # a group starts with what plays: names, blocks, lines and withs
     parts = [p + ": " for p in completer.PARTS]
     assert texts(cell + "play (") == ["groove", *parts, "pattern ", "block ", "with "]
@@ -215,15 +215,15 @@ def test_a_line_plays_one_thing_and_a_group_plays_them_in_order():
 
 def test_after_a_block_or_a_group_more_follows_only_in_a_group():
     cell = "%%music\nsteps pair = x-x-\npattern groove = { kick: x--x }\n"
-    assert texts(cell + "play { kick: x } ") == []
-    assert texts(cell + "play { kick: x } for 3 bars ") == []
-    assert texts(cell + "play {\n  kick: x\n} ") == []
-    assert texts(cell + "play {\n  pattern { kick: x } ") == []
-    assert texts(cell + "play {\n  bar 2 { snare: 1 } ") == []
+    assert texts(cell + "play block { kick: x } ") == []
+    assert texts(cell + "play block { kick: x } for 3 bars ") == []
+    assert texts(cell + "play block {\n  kick: x\n} ") == []
+    assert texts(cell + "play block {\n  pattern { kick: x } ") == []
+    assert texts(cell + "play block {\n  bar 2 { snare: 1 } ") == []
     assert texts(cell + "pattern song = { kick: x } ") == []
     assert texts(cell + "play (groove) ") == []
     assert texts(cell + "play (groove groove) for 4 bars ") == []
-    assert texts(cell + "play {\n  (groove groove) ") == []
+    assert texts(cell + "play block {\n  (groove groove) ") == []
     # in a group, more follows a block or a group
     assert texts(cell + "play (pattern { kick: x } ") == MORE
     assert texts(cell + "play ((groove groove) ") == MORE
@@ -236,18 +236,18 @@ def test_after_a_block_or_a_group_more_follows_only_in_a_group():
     assert texts(cell + "play piano: {\n  notes C4---\n} ") == []
     assert texts(cell + "steps fig = {\n  x-\n} ") == []
     # and a new line starts again
-    assert "play " in texts(cell + "play { kick: x }\n")
+    assert "play " in texts(cell + "play block { kick: x }\n")
 
 
 def test_a_line_of_notes_takes_lengths():
-    cell = "%%music\nnotes riff = F---\nplay {\n  "
+    cell = "%%music\nnotes riff = F---\nplay block {\n  "
     assert texts(cell + "bass: notes 3 ") == ["steps ", "beats ", "bars "]
     assert texts(cell + "bass: notes 3 beats ") == ["rest", "riff"]
     assert texts(cell + "bass: notes 3 beats C2, ") == ["riff"]
 
 
 def test_a_degree_or_a_numeral_offers_of():
-    cell = "%%music\nnotes riff = F---\nchords verse = Am F\nplay {\n  "
+    cell = "%%music\nnotes riff = F---\nchords verse = Am F\nplay block {\n  "
     assert texts(cell + "piano: notes biii ") == ["of ", "riff"]
     assert texts(cell + "piano: notes C3 ") == ["riff"]
     assert texts(cell + "piano: chords v7 ") == ["of ", "verse"]
@@ -268,7 +268,7 @@ def test_a_type_offers_what_it_holds_after_the_equals():
 
 
 def test_a_name_given_again_means_the_new_thing():
-    cell = "%%music\nsteps riff = x-x-\nchords riff = Am F\nplay {\n  "
+    cell = "%%music\nsteps riff = x-x-\nchords riff = Am F\nplay block {\n  "
     assert texts(cell + "piano: chords ") == ["riff"]
     assert texts(cell + "hat: ") == []
 
@@ -315,8 +315,8 @@ def kernel_completions(shell, cell):
 
 
 def test_ipython_completes_music_cells(shell):
-    assert kernel_completions(shell, "%%music\nplay {\n  ride.") == [("", "bell: ")]
-    assert sorted(kernel_completions(shell, "%%music\nplay {\n  sn")) == [
+    assert kernel_completions(shell, "%%music\nplay block {\n  ride.") == [("", "bell: ")]
+    assert sorted(kernel_completions(shell, "%%music\nplay block {\n  sn")) == [
         ("sn", "snare.cross: "),
         ("sn", "snare.ghost: "),
         ("sn", "snare.rim: "),
@@ -331,7 +331,7 @@ def test_ipython_keeps_python_names_out_of_music_cells(shell):
     assert kernel_completions(shell, "%%music\np") == [("p", "pattern "), ("p", "play ")]
 
 
-@pytest.mark.parametrize("cell", ["%%music\nset tempo ", "%%music\nplay {\n  kick: x--- ", "%%music\n// i"])
+@pytest.mark.parametrize("cell", ["%%music\nset tempo ", "%%music\nplay block {\n  kick: x--- ", "%%music\n// i"])
 def test_ipython_offers_nothing_where_music_has_nothing(shell, cell):
     assert kernel_completions(shell, cell) == []
 
@@ -349,7 +349,7 @@ def test_with_offers_settings_then_their_values():
     assert texts("%%music\nwith key E, ") == texts("%%music\nset ")
     assert texts("%%music\nwith key E, mode ") == completer.MODES
     assert texts("%%music\nwith octave 2, k") == ["key ", "kit "]
-    assert texts("%%music\nplay {\n  with mode d") == ["dorian"]
+    assert texts("%%music\nplay block {\n  with mode d") == ["dorian"]
 
 
 def test_a_with_at_the_top_holds_statements_without_set():
@@ -358,4 +358,4 @@ def test_a_with_at_the_top_holds_statements_without_set():
     assert "set " not in texts(cell)
     assert "kick: " not in texts(cell)
     # a play inside it holds lines, as any play does
-    assert "kick: " in texts(cell + "play {\n    ")
+    assert "kick: " in texts(cell + "play block {\n    ")

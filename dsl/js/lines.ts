@@ -278,7 +278,7 @@ export function classify({ ln, parts }: Line, err: Report, st: State): ReadLine 
   const name = m[1].toLowerCase()
   const value = withHead(parts, m[2])
   if (name === "bars" || name === "bar") {
-    err(ln, "Write the length like this: pattern groove = 3 bars {, or play { ... } for 3 bars")
+    err(ln, "Write the length like this: pattern groove = 3 bars {, or play groove for 3 bars")
     return null
   }
   if (among(SETTINGS, name)) {

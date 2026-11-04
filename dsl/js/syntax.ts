@@ -28,7 +28,7 @@ export type Value = { parts: (Text | Block)[]; span: Span | null }
 // A line, by what it starts with:
 //   set      set tempo 90
 //   decl     steps pair = ^-x-, pattern groove = { ... }, or a name and = with no type
-//   play     play groove, play { ... }
+//   play     play groove, play block { ... }
 //   with     with key E, mode minor { ... }
 //   place    bar 2 { ... }, bar 3 to 4 fill
 //   pace     every 3 steps { ... }

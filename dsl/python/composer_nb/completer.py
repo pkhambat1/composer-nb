@@ -230,7 +230,7 @@ def _statement(
         if grouped:
             return _sequence(words[1:], patterns, parts, grouped)
         if len(words) == 1:
-            return patterns + parts + [("pattern ", "keyword")]
+            return patterns + parts + TYPED_BRACES
         if len(words) == 2 and words[1] in names["pattern"] + names["block"]:
             return [("for ", "keyword")]
         return []

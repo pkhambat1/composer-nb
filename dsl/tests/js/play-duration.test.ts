@@ -4,7 +4,7 @@ import { parseCell } from "../../js/language.ts"
 describe("play durations", () => {
   const definition = "pattern groove = { kick: x--- }\n"
   it("accepts postfix durations on names, blocks and sequences", () => {
-    for (const music of ["groove", "{ groove }", "(groove groove)"]) {
+    for (const music of ["groove", "block { groove }", "(groove groove)"]) {
       const parsed = parseCell(definition + `play ${music} for (1+1) bars`)
       expect(parsed.errors).toEqual([])
       expect(parsed.outputs[0].durSec).toBe(4)

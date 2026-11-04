@@ -70,7 +70,7 @@ export const GROOVES: Groove[] = [
 }
 
 with time 7 over 8, tempo 90 {
-  play {
+  play block {
     crash: 1
     groove
   }
@@ -135,7 +135,7 @@ pattern feet = every 3 steps {
 }
 
 with time 3 over 4, tempo 100 {
-  play {
+  play block {
     hands
     feet
   }
@@ -314,7 +314,7 @@ play (
     body: "A `with` in a pattern is a block that sounds with the other lines, so the bass can sit in octave 2 and the piano in octave 4 under one `set octave`. A name declared inside a `with`, like `walk` here, stays inside it: nothing below can use it, and it can't clash with a name of the same spelling elsewhere.",
     link: null,
     source: `with tempo 92 {
-  play {
+  play block {
     with octave 2 {
       notes walk = i---v---iv---v---
       bass: notes walk
