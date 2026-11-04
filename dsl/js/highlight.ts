@@ -10,7 +10,7 @@
    Whitespace is kept exactly, so the layer lines up with the textarea under it. */
 import { KEYWORDS, LANES, PARTS, PITCHED, SETTINGS, SWING, TYPES, UNITS } from "./language.ts"
 import { chordParts, isRoman, parseKey } from "./chords.ts"
-import { among, modeNamed, soundsOf } from "./vocab.ts"
+import { among, modeNamed, soundsOf, TYPED_BRACES_RE } from "./vocab.ts"
 
 // A run of a line's text, and the class it's coloured with (null for none)
 export type Part = { c: string | null; s: string }
@@ -22,7 +22,7 @@ type Kind = "drum" | "notes" | "chord" | "pitched" | "word"
 type Holds = "steps" | "pitched" | "lines"
 // Where a line stands: how many groups ( ) are open, and whether a thing has been written
 // outside them (see names)
-type Stand = { depth: number; took: boolean }
+type Stand = { depth: number; took: boolean; value?: boolean }
 
 const ROMAN_RE = /^([#b])?(VII|VI|IV|V|III|II|I|vii|vi|iv|v|iii|ii|i)(.*)$/
 const STEPS_RE = /^[-x^~d]+$/
@@ -268,11 +268,13 @@ function sum(text: string, at: number): boolean {
 // second thing on the line is a mistake, since what plays in order goes in brackets. `st`
 // is where the line stands: how many groups are open (`depth`), and whether a thing has
 // been written outside them (`took`). It carries on through a block on the line, and a
-// group that runs over several lines starts its later lines inside it.
+// group that runs over several lines starts its later lines inside it. Braces in a group, or
+// on a line of their own (`value`), are a value, so they say their type: pattern { ... }.
 function names(text: string, st: Stand = { depth: 0, took: false }): Part[] {
   const out: Part[] = []
   const open: boolean[] = [] // each ( still open on this line: whether it holds a length's arithmetic
   let number = false // whether the last thing was a number, which * can multiply
+  let typed = false // whether a type was written in front of the { that's next
   let at = 0
   // A second thing outside brackets is a mistake; marks that one is written
   const thing = () => {
@@ -307,7 +309,10 @@ function names(text: string, st: Stand = { depth: 0, took: false }): Part[] {
       else st.depth = Math.max(0, st.depth - 1)
     } else if (p === "{") {
       // a block takes the rest of its line, and what's after it
-      return [...out, ...braces(text.slice(here), st)]
+      return [...out, ...braces(text.slice(here), st, !typed && (st.depth > 0 || st.value))]
+    } else if (TYPED_BRACES_RE.test(text.slice(here)) && !wasNumber) {
+      out.push(part("tk-directive-key", p))
+      typed = true
     } else if (p === "with" && !wasNumber) {
       // with key E { ... }: a block with its settings, which takes the rest of the line too
       return [...out, part("tk-directive-key", p), ...withHead(text.slice(at), st)]
@@ -356,7 +361,12 @@ function playable(text: string, st?: Stand): Part[] {
       part(null, b),
       part(among(UNITS, unit) ? "tk-directive-key" : "tk-error", unit),
       part(null, c),
-      ...(rest.startsWith("{") ? braces(rest) : rest ? playable(rest, st) : []),
+      // its braces are a pattern, with a length in front of them or not
+      ...(rest.startsWith("{")
+        ? braces(rest)
+        : rest
+          ? playable(rest, st && { ...st, value: false })
+          : []),
     ]
   }
   const track = /^([A-Za-z][A-Za-z0-9]*(?:\.[A-Za-z0-9]+)?)(\s*)(:)(.*)$/.exec(text)
@@ -376,10 +386,10 @@ function playable(text: string, st?: Stand): Part[] {
 
 // { ... } on one line: the brace, what's inside, the closing brace and anything after.
 // `st` is where the line stands (see names): a block is a thing of its own.
-function braces(text: string, st: Stand = { depth: 0, took: false }): Part[] {
+function braces(text: string, st: Stand = { depth: 0, took: false }, untyped = false): Part[] {
   const extra = st.depth === 0 && st.took
   if (st.depth === 0) st.took = true
-  const out = [part(extra ? "tk-error" : "tk-punct", "{")]
+  const out = [part(extra || untyped ? "tk-error" : "tk-punct", "{")]
   const inner = text.slice(1)
   let close = -1
   for (let i = 0, depth = 0; i < inner.length && close < 0; i++) {
@@ -534,7 +544,11 @@ function line(code: string, depth = 0, inside = false): Part[] {
       const holds: Record<string, Kind> = { chords: "chord", notes: "notes" }
       out.push(...values(value, holds[word] || "drum"))
     }
-  } else if (["pattern", "block", "steps", "notes"].includes(word) && /^(\s|$)/.test(after)) {
+  } else if (
+    ["pattern", "block", "steps", "notes"].includes(word) &&
+    /^(\s|$)/.test(after) &&
+    !TYPED_BRACES_RE.test(body)
+  ) {
     // pattern groove {: a type without its name and =
     out.push(part("tk-error", word), ...names(after, st))
   } else if ((word === "bar" || word === "bars") && /^\s+\S/.test(after)) {
@@ -564,7 +578,10 @@ function line(code: string, depth = 0, inside = false): Part[] {
     const len = length(after.slice(space.length))
     out.push(...len.parts.map((token) => (token.c ? { ...token, c: "tk-error" } : token)))
     if (len.rest.startsWith("{")) out.push(...braces(len.rest, st))
-    else if (len.rest) out.push(...playable(len.rest, st))
+    // play block { ... }: a play's own lines already play once
+    else if (/^block\s*\{/.test(len.rest)) {
+      out.push(part("tk-error", "block"), ...names(len.rest.slice(5), st))
+    } else if (len.rest) out.push(...playable(len.rest, st))
   } else if (word === "set" && /^(\s|$)/.test(after)) {
     // set tempo 90, set key E, set guitar.electric muted: set, then a setting. Only at the top
     const space = /^\s*/.exec(after)![0]
@@ -587,7 +604,7 @@ function line(code: string, depth = 0, inside = false): Part[] {
     const len = length(m[4])
     const block = len.parts.length || m[4].includes("{") || TRACK_RE.test(m[4])
     out.push(...(block ? [...len.parts, ...playable(len.rest, st)] : values(m[4], "word")))
-  } else out.push(...playable(body, st))
+  } else out.push(...playable(body, { ...st, value: true }))
   return out
 }
 

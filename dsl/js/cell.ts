@@ -5,6 +5,7 @@ import {
   isChord,
   isNote,
   outputCtx,
+  patternPlayCtx,
   type ChordSound,
   type HitEvent,
   type NoteSound,
@@ -23,7 +24,7 @@ import { cloneState, describe, initialState, type Line, type Piece, type State }
 import { bracesIn, isBraces, plain } from "./parts.ts"
 import type { Block, Statement, Text } from "./syntax.ts"
 import { fmt, lengthPrefix, MAX_SECONDS, singularLength, TPQ } from "./time.ts"
-import { SETTINGS } from "./vocab.ts"
+import { SETTINGS, TYPED_BRACES_RE } from "./vocab.ts"
 
 // What one play plays
 // One block of a play's output, as the grid and the sheet draw it
@@ -201,6 +202,7 @@ export function parseCell(src: unknown, inherited: State = initialState()) {
       if (!inner.body.length) {
         // Unless what was in them was a mistake, already said
         if (!inner.dropped) err(ln, "These braces have nothing in them")
+        dropped = true
         out = []
         continue
       }
@@ -229,7 +231,7 @@ export function parseCell(src: unknown, inherited: State = initialState()) {
       const first = s.parts[0]
       const head = first?.kind === "text" ? tidy(first.text) : ""
       const braced = s.parts.some((p) => p.kind === "block")
-      if (braced && /^pattern(\s|$)/.test(head) && !TYPED_RE.test(head)) {
+      if (braced && /^pattern\s/.test(head) && !TYPED_RE.test(head)) {
         err(ln, patternHint(head))
         dropped = true
         continue
@@ -300,11 +302,21 @@ export function parseCell(src: unknown, inherited: State = initialState()) {
       }
 
       if (s.kind === "play") {
-        // play plays what's after it: a block in braces, or one line. play groove and
-        // play { groove } are the same thing.
+        // play plays what's after it: its own statements in braces, or one line. play groove
+        // and play { groove } are the same thing. Lines in play { ... } play once; a type
+        // makes the braces a value, and play pattern { ... } repeats every line in it.
         const duration = playDuration(s.value.parts, ln, err)
         if (!duration) continue
-        const parts = duration.parts
+        const typed =
+          duration.parts[0]?.kind === "text" && duration.parts[1]?.kind === "block"
+            ? tidy(duration.parts[0].text)
+            : ""
+        if (typed === "block") {
+          err(ln, "A play's own lines play once, so it takes no block: play { ... }")
+          continue
+        }
+        const repeats = typed === "pattern"
+        const parts = repeats ? duration.parts.slice(1) : duration.parts
         const bars = duration.bars
         let ok = !duration.has || checkBars(bars, ln, err)
         const lead = parts[0]?.kind === "text" ? lengthPrefix(tidy(parts[0].text)) : null
@@ -332,18 +344,29 @@ export function parseCell(src: unknown, inherited: State = initialState()) {
           if (block.span.endLine > ln)
             label = text.replace(/\{.*$/, "{ … }") + (duration.has ? ` for ${fmt(bars)} bars` : "")
           if (!read.body.length) {
-            err(ln, "This play has nothing in its braces")
+            // Unless what was in them was a mistake, already said
+            if (!read.dropped) err(ln, "This play has nothing in its braces")
             ok = false
           }
+          const kind = repeats ? "pattern" : "block"
           const tail = parts
             .slice(1)
-            .map((p) => (p.kind === "text" ? tidy(p.text) : "{ ... }"))
+            .map((p) => (p.kind === "text" ? tidy(p.text) : `${kind} { ... }`))
             .join(" ")
           if (tail && !lengthAfter(tail) && read.body.length) {
             // play { ... } outro: things in order go in brackets
-            err(block.span.endLine, `What plays in order goes in brackets: play ({ ... } ${tail})`)
+            err(
+              block.span.endLine,
+              `What plays in order goes in brackets: play (${kind} { ... } ${tail})`,
+            )
             ok = false
-          } else if (!checkTail(tail, block.span.endLine, (n) => `play { ... } for ${n} bars`)) {
+          } else if (
+            !checkTail(
+              tail,
+              block.span.endLine,
+              (n) => `play ${repeats ? "pattern " : ""}{ ... } for ${n} bars`,
+            )
+          ) {
             ok = false
           }
           arg = read.body
@@ -361,7 +384,8 @@ export function parseCell(src: unknown, inherited: State = initialState()) {
           arg = [lineOf(parts, ln, "This {").line]
         }
         noteTranspose(arg)
-        const out = ok ? blockClip(arg, state, err, outputCtx(ln), [], bars) : null
+        const ctx = repeats ? patternPlayCtx(ln) : outputCtx(ln)
+        const out = ok ? blockClip(arg, state, err, ctx, [], bars) : null
         if (out && out.durSec > MAX_SECONDS) {
           err(ln, "This plays for over 10 minutes. Use a shorter length")
         } else if (out) {
@@ -421,6 +445,15 @@ export function parseCell(src: unknown, inherited: State = initialState()) {
         }
         continue
       }
+      // { ... }, pattern { ... } or 3 bars { ... } on its own: a block, but nothing plays it
+      const alone = lengthPrefix(text)
+      if (alone.rest.startsWith("{") || TYPED_BRACES_RE.test(alone.rest)) {
+        const size = alone.has ? ` for ${fmt(alone.bars)} bars` : ""
+        const shown = alone.rest.startsWith("pattern") ? "pattern { ... }" : "{ ... }"
+        err(ln, `Nothing plays this. Write play ${shown}${size}`)
+        lineOf(s.parts, ln, "This {")
+        continue
+      }
       const bare = /^([A-Za-z][A-Za-z0-9]*)\s*\{/.exec(text)
       if (bare) {
         err(ln, `${bare[1]} needs a type and = to name its braces: pattern ${bare[1]} = {`)
@@ -438,15 +471,6 @@ export function parseCell(src: unknown, inherited: State = initialState()) {
         err(
           ln,
           `${text.replace(/\{.*$/, "{ ... }")} goes inside a pattern or a play, to say where in it`,
-        )
-        lineOf(s.parts, ln, "This {")
-        continue
-      }
-      // { ... } or 3 bars { ... } on its own: a block, but nothing plays it
-      if (lengthPrefix(text).rest.startsWith("{")) {
-        err(
-          ln,
-          `Nothing plays this pattern. Write play { ... }${lengthPrefix(text).has ? ` for ${fmt(lengthPrefix(text).bars)} bars` : ""}`,
         )
         lineOf(s.parts, ln, "This {")
         continue

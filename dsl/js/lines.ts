@@ -8,7 +8,7 @@ import { blockBeside } from "./eval.ts"
 import { readSequence, type Item } from "./sequence.ts"
 import { closest, unknownInstrument } from "./resolve.ts"
 import { keyOf, readSetting } from "./settings.ts"
-import { bracesIn, headOf, onlyBraces, textOf, withHead } from "./parts.ts"
+import { bracesIn, headOf, lengthIn, onlyBraces, textOf, withHead } from "./parts.ts"
 import type { Line, Piece, State } from "./state.ts"
 import {
   evalNumber,
@@ -40,6 +40,7 @@ import {
   SETTING_EXAMPLE,
   SETTINGS,
   SOUNDS,
+  TYPED_BRACES_RE,
   TYPES,
   type Setting,
   type Type,
@@ -130,6 +131,10 @@ export function readPlace(parts: Piece[], ln: number, err: Report): Placed | nul
     err(ln, `${shown} needs what plays there: ${shown} { ... }`)
     return null
   }
+  if (TYPED_BRACES_RE.test(textOf(rest))) {
+    err(ln, `What's in a bar is a pattern, so its braces take no type: ${shown} { ... }`)
+    return null
+  }
   // bar 2 { ... }: the braces are the bar's own lines, so they fill the bar directly
   const braces = onlyBraces(rest)
   const lines: Line[] = braces ? braces.lines : [{ ln, parts: rest }]
@@ -151,13 +156,19 @@ export function readPace(parts: Piece[], ln: number, err: Report): Paced | null 
     err(ln, `${shown} needs what plays at that pace: ${shown} { ... }`)
     return null
   }
+  if (TYPED_BRACES_RE.test(lengthPrefix(textOf(thing)).rest)) {
+    err(ln, `What plays at a pace is a pattern, so its braces take no type: ${shown} { ... }`)
+    return null
+  }
+  // every 3 steps { ... }, every 3 steps 4 bars { ... }: its braces are a pattern
+  const only = onlyBraces(lengthIn(thing).rest)
   return {
     kind: "paced",
     ln,
     n: len.n,
     unit: len.unit,
     shown,
-    line: { ln, parts: thing },
+    line: { ln, parts: thing.map((p) => (p === only ? { ...only, type: "pattern" } : p)) },
   }
 }
 
@@ -197,8 +208,10 @@ export function classify({ ln, parts }: Line, err: Report, st: State): ReadLine 
   if (decl) return classifyDecl(decl, ln, err, st)
 
   const m = TRACK_RE.exec(headOf(parts))
-  // ( ... ) or 4 bars ( ... ): what plays in order, whatever lines are in it
-  if (!m && lengthPrefix(text).rest.startsWith("(")) {
+  // ( ... ) or 4 bars ( ... ): what plays in order, whatever lines are in it. pattern { ... }
+  // or 4 bars block { ... }: lines with their type.
+  const lead = lengthPrefix(text).rest
+  if (!m && (lead.startsWith("(") || TYPED_BRACES_RE.test(lead))) {
     const items = readSequence(parts, ln, err, st)
     return items && { kind: "sequence", ln, items }
   }

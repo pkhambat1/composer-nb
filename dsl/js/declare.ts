@@ -4,7 +4,7 @@
    or a missing type, is said here. */
 import { buildChord, isRoman } from "./chords.ts"
 import { blockBeside } from "./eval.ts"
-import { EVERY_RE, PLACE_RE, TRACK_RE, TYPED_RE, DEF_RE, type DeclLine } from "./lines.ts"
+import { DEF_RE, EVERY_RE, PLACE_RE, TRACK_RE, TYPED_RE, type DeclLine } from "./lines.ts"
 import { closest, NAME_LIKE, nameProblem, Scope } from "./resolve.ts"
 import { keyOf } from "./settings.ts"
 import {
@@ -43,7 +43,7 @@ import {
   tokenize,
   withoutOf,
 } from "./values/steps.ts"
-import { among, SETTINGS, TYPES, type Type } from "./vocab.ts"
+import { among, SETTINGS, TYPED_BRACES_RE, TYPES, type Type } from "./vocab.ts"
 
 // What a value reads as, from how it's written
 type Shape = "steps" | "notes" | "chords" | "pattern"
@@ -53,8 +53,12 @@ export const CHORDS_BLOCK =
 export const NOTES_BLOCK =
   "A name holds one line of notes. Notes that play together go in a block on the instrument's line: piano: { ... }"
 
-// pattern groove 3 bars {: a pattern without its =.
+// pattern groove 3 bars {: a pattern without its =. pattern 3 bars {: a length behind its type.
 export function patternHint(text: string): string {
+  const behind = lengthPrefix(text.replace(/^pattern\s*/, ""))
+  if (behind.has) {
+    return `A length goes in front of what it measures: ${fmt(behind.bars)} bars pattern { ... }`
+  }
   const m = /^pattern\s+([A-Za-z][A-Za-z0-9]*)\s*([^{=]*)/.exec(text)
   const len = lengthPrefix((m?.[2] || "").trim())
   const size = len.has ? `${fmt(len.bars)} bars ` : ""
@@ -329,6 +333,11 @@ export function classifyDecl(
   if (type && type !== "pattern" && type !== "block" && /^with(\s|\{|$)/.test(value)) {
     // chords verse = with key E { ... }: a with holds what plays, which a value doesn't
     err(ln, `A with's block plays, so it goes around a line or a play, not after ${type} ${name} =`)
+    return null
+  }
+  if ((type === "pattern" || type === "block") && TYPED_BRACES_RE.test(lengthPrefix(value).rest)) {
+    // pattern groove = pattern { ... }: the declaration already says it
+    err(ln, `${name} is a ${type}, so its braces take no type: ${type} ${name} = { ... }`)
     return null
   }
   const shape = shapeOf(parts, st)

@@ -243,7 +243,7 @@ from above: none
 length: 5.7273 s
 block startSec=0 durSec=5.7273 bars=3 time=7 over 8 tempo=110 key=C unit=8 barTicks=336 res=4
 drums:
-  0 inst=snare art=rim lane=snare.rim kit=rock tick=0 vel=1 accent=true line=14
+  0 inst=snare art=rim lane=snare.rim kit=rock tick=0 vel=1 accent=true line=14 oneShot=true
   0.2727 inst=crash art=hit lane=crash kit=rock tick=48 vel=0.7 line=16
   0.2727 inst=kick art=hit lane=kick kit=rock tick=48 vel=0.7 line=7
   0.2727 inst=ride art=bell lane=ride.bell kit=rock tick=48 vel=0.7 line=9
@@ -323,7 +323,7 @@ chords:
   9.6 tick=1152 ticks=192 chord={"input":"G","label":"G","rootPc":7,"bassMidi":45,"notesMidi":[57,61,64],"noteNames":["A3","C#4","E4"],"bassName":"A2"} label=G instrument=guitar transpose=2 line=1 secDur=1.6
   11.2 tick=1344 ticks=192 chord={"input":"D","label":"D","rootPc":2,"bassMidi":40,"notesMidi":[52,56,59],"noteNames":["E3","G#3","B3"],"bassName":"E2"} label=D instrument=guitar transpose=2 line=1 secDur=1.6
 
-## language/overview.mdx:41
+## language/overview.mdx:40
 errors: none
 names: backbeat steps line 1, walk notes line 2, verse chords line 3, groove pattern line 5
 from above: none
@@ -361,7 +361,7 @@ chords:
   2 tick=384 ticks=192 chord={"input":"C","label":"C","rootPc":0,"bassMidi":36,"notesMidi":[48,52,55],"noteNames":["C3","E3","G3"],"bassName":"C2"} label=C instrument=piano transpose=0 line=9 secDur=1
   3 tick=576 ticks=192 chord={"input":"G","label":"G","rootPc":7,"bassMidi":43,"notesMidi":[55,59,62],"noteNames":["G3","B3","D4"],"bassName":"G2"} label=G instrument=piano transpose=0 line=9 secDur=1
 
-## language/overview.mdx:81
+## language/overview.mdx:82
 errors: none
 names: none
 from above: none
@@ -516,7 +516,7 @@ notes:
   2.5 tick=480 ticks=96 note={"midi":69,"name":"A4","spell":{"letter":"A","alter":0}} label=vi instrument=piano voice=0 vel=0.7 line=3 secDur=0.5
   3 tick=576 ticks=96 note={"midi":71,"name":"B4","spell":{"letter":"B","alter":0}} label=vii instrument=piano voice=0 vel=0.7 line=3 secDur=0.5
   3.5 tick=672 ticks=96 note={"midi":72,"name":"C5","spell":{"letter":"C","alter":0}} label=i' instrument=piano voice=0 vel=0.7 line=3 secDur=0.5
-  4 tick=768 ticks=384 note={"midi":72,"name":"C5","spell":{"letter":"C","alter":0}} label=i' instrument=piano voice=0 vel=0.7 line=6 secDur=2
+  4 tick=768 ticks=384 note={"midi":72,"name":"C5","spell":{"letter":"C","alter":0}} label=i' instrument=piano voice=0 vel=0.7 line=6 secDur=2 oneShot=true
 
 ## language/patterns.mdx:91
 errors: none
@@ -665,7 +665,7 @@ drums:
   3.3 inst=snare art=ghost lane=snare.ghost kit=rock tick=528 vel=0.3 ghost=true line=9
   3.45 inst=snare art=ghost lane=snare.ghost kit=rock tick=552 vel=0.3 ghost=true line=9
 
-## language/play.mdx:16
+## language/play.mdx:18
 errors: none
 names: groove pattern line 1
 from above: none
@@ -705,6 +705,29 @@ drums:
 chords:
   1 tick=0 ticks=192 chord={"input":"Am","label":"Am","rootPc":9,"bassMidi":45,"notesMidi":[57,60,64],"noteNames":["A3","C4","E4"],"bassName":"A2"} label=Am instrument=piano transpose=0 line=7 secDur=1
   2 tick=192 ticks=192 chord={"input":"F","label":"F","rootPc":5,"bassMidi":41,"notesMidi":[53,57,60],"noteNames":["F3","A3","C4"],"bassName":"F2"} label=F instrument=piano transpose=0 line=7 secDur=1
+
+## language/play.mdx:52
+errors: none
+names: none
+from above: none
+length: 8 s
+block startSec=0 durSec=4 bars=2 time=4 over 4 tempo=120 key=C unit=4 barTicks=384 res=1
+block startSec=4 durSec=4 bars=2 time=4 over 4 tempo=120 key=C unit=4 barTicks=384 res=1
+drums:
+  0 inst=kick art=hit lane=kick kit=rock tick=0 vel=0.7 line=2
+  0.5 inst=snare art=hit lane=snare kit=rock tick=96 vel=0.7 line=3
+  4 inst=kick art=hit lane=kick kit=rock tick=0 vel=0.7 line=7
+  4.5 inst=kick art=hit lane=kick kit=rock tick=96 vel=0.7 line=7
+  4.5 inst=snare art=hit lane=snare kit=rock tick=96 vel=0.7 line=8
+  5 inst=kick art=hit lane=kick kit=rock tick=192 vel=0.7 line=7
+  5.5 inst=kick art=hit lane=kick kit=rock tick=288 vel=0.7 line=7
+  5.5 inst=snare art=hit lane=snare kit=rock tick=288 vel=0.7 line=8
+  6 inst=kick art=hit lane=kick kit=rock tick=384 vel=0.7 line=7
+  6.5 inst=kick art=hit lane=kick kit=rock tick=480 vel=0.7 line=7
+  6.5 inst=snare art=hit lane=snare kit=rock tick=480 vel=0.7 line=8
+  7 inst=kick art=hit lane=kick kit=rock tick=576 vel=0.7 line=7
+  7.5 inst=kick art=hit lane=kick kit=rock tick=672 vel=0.7 line=7
+  7.5 inst=snare art=hit lane=snare kit=rock tick=672 vel=0.7 line=8
 
 ## language/settings.mdx:28
 errors: none
