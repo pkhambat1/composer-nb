@@ -6,11 +6,10 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build && node --conditions=composer-nb-source scripts/grooves.ts && npm run docs-cell",
+    "build": "vite build",
     "preview": "vite preview",
     "test": "vitest run",
-    "typecheck": "tsc -p . && tsc -p tests && npm run docs-cell -- --check",
-    "docs-cell": "node scripts/docs-cell.ts"
+    "typecheck": "tsc -p . && tsc -p tests"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.118.0",

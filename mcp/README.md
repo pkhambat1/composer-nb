@@ -19,15 +19,15 @@ empty if missing. Edits survive restarting the server. Revision checks reject st
 writes; editor drafts are saved even while their music is incomplete. Model edits
 are validated against inherited settings and definitions before saving.
 
-Omit `--http 4179` for stdio. Omit `--notebook` for the stateless music tools alone.
-The package is not published on npm. The public deployment must be rebuilt and
-available before using a published connector URL.
+Omit `--notebook` for the stateless music tools alone. This local server is for
+development; assistants connect to the hosted one at https://composer-nb.vercel.app/mcp
+(`api/mcp.ts`), which must be deployed before a change reaches them.
 
 For a remote host such as ChatGPT, expose the HTTP endpoint through an HTTPS service
 you control. Set `COMPOSER_NB_APP_ORIGIN=https://your-server.example` before starting
 this server so it serves the renderer at `/app.js` from that same origin. Without an
-asset origin, the UI resource contains the complete bundle for stdio hosts.
-`COMPOSER_NB_SITE` sets the website used by music download and library links.
+asset origin, the UI resource carries the complete bundle.
+`COMPOSER_NB_SITE` sets the website used by the sheet and MIDI download links.
 
 This local file-backed server is for one notebook owner. A hosted service should
 supply an authenticated, owner-scoped `NotebookRepository`; do not share one store
@@ -89,15 +89,3 @@ loading the renderer. Neither adapter duplicates the shared notebook UI.
 `npm run build -w mcp` builds the generated reference, server and both UI bundles;
 packaging includes `app/dist`. Tests exercise parsing, transport, persistence,
 revision conflicts and UI selection stability.
-
-## Embedding a backend
-
-```ts
-import { createServer, FileNotebookStore } from "composer-nb-mcp"
-
-const server = createServer({ notebook: new FileNotebookStore("/path/to/song.json") })
-// Connect server to the desired MCP transport.
-```
-
-For hosted storage, implement the exported `NotebookRepository` interface and pass
-it to `createServer({ notebook })` or `handleMcp(req, res, { notebook })`.

@@ -3,17 +3,11 @@ title: "Chords"
 description: "The chords type: a chart of bars on an instrument's line."
 ---
 
-import { Cell } from "/snippets/cell.jsx"
-
 An [instrument](/pitched/instruments)'s line says which type it holds: `chords` in front of a chart, or [`notes`](/pitched/notes) in front of notes. A line without one of them is an error.
-
-<Cell>
 
 ```composer-nb
 play guitar: chords C - - G|Am - F G|%|F - _ -
 ```
-
-</Cell>
 
 ## Charts
 
@@ -46,8 +40,6 @@ A Roman numeral is written in lowercase, and the key's mode makes its chord. A p
 
 Degrees count on the key's own scale, as [degrees in notes](/pitched/notes#degrees) do: in A minor `iii` is C and `vii` is G, and in A major they're C# and G#. A `b` or `#` in front moves the root off the scale, to a major chord: `bvii` in C major is Bb. A numeral takes `'` marks as a degree does: `i'` is the tonic chord an octave up and `'i` an octave down, so a chart that climbs the scale ends higher than it began. To say a chord outright instead of taking the scale's, write its quality after the numeral as you would after a chord's root: `vm`, `vM`, `vdim`, `vmaj7`, `v7alt`, and `vdom7` for a dominant seventh.
 
-<Cell>
-
 ```composer-nb
 chords chart = i ii|iii iv|v vi|vii i'
 
@@ -55,8 +47,6 @@ with key D, mode dorian { play piano: chords chart }
 with key D, mode minor { play piano: chords chart }
 with key D, mode lydian { play piano: chords chart }
 ```
-
-</Cell>
 
 The first plays Dm Em F G Am Bdim C Dm, the second Dm Edim F Gm Am Bb C Dm, and the third D E F#m G#dim A Bm C#m D.
 
@@ -66,13 +56,9 @@ The first plays Dm Em F G Am Bdim C Dm, the second Dm Edim F Gm Am Bb C Dm, and 
 
 To count from a chord that is itself counted with `of`, put it in brackets, as with notes. `v7 of (v of v)` is the `v7` of D, which is `A7`.
 
-<Cell>
-
 ```composer-nb
 play piano: chords v7 of (v of v)|v7 of v|v7|i
 ```
-
-</Cell>
 
 In C, this plays `A7`, `D7`, `G7`, `C`.
 

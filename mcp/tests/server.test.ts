@@ -140,11 +140,10 @@ describe("tools", () => {
     expect(textOf(r)).toContain("line 1")
   })
 
-  it("library finds grooves by words, with their code and their pages", async () => {
+  it("library finds grooves by words, with their code", async () => {
     const t = textOf(await call("library", { query: "paradiddle" }))
     expect(t).toContain("## Gavin Harrison's paradiddle challenge")
     expect(t).toContain("every 3 steps")
-    expect(t).toContain("https://example.test/grooves/gavin-harrison-s-paradiddle-challenge/")
     expect(t).not.toContain("?open")
   })
 

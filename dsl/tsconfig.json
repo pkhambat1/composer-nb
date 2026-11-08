@@ -1,7 +1,7 @@
 {
-  // The library is TypeScript. tsc checks it and compiles it into lib/, the JavaScript the npm
-  // package's subpaths point at, with a .d.ts for each module. Vite bundles the player and the
-  // Jupyter widget from the same source.
+  // The library is TypeScript. tsc checks it and compiles it into lib/, the JavaScript the
+  // package's subpaths point at, with a .d.ts for each module: the Vercel functions run that
+  // build, while the web app and the tests read the source.
   "compilerOptions": {
     "target": "es2022",
     "lib": ["es2023", "dom", "dom.iterable"],

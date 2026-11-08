@@ -49,7 +49,6 @@ describe("every prose list of the modes has them all", () => {
   const files = [
     "docs/pitched/key.mdx",
     "docs/pitched/instruments.mdx",
-    "dsl/README.md",
     "mcp/src/instructions.ts",
   ]
   for (const file of files) {

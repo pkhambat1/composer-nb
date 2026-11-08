@@ -1,32 +1,12 @@
 {
   "name": "composer-nb",
   "version": "0.6.0",
-  "description": "A small language for drums, notes and chords, with a player for Observable notebooks and web pages.",
-  "keywords": [
-    "music",
-    "chords",
-    "drums",
-    "observable",
-    "notebook",
-    "dsl"
-  ],
-  "homepage": "https://github.com/pkhambat1/composer-nb",
-  "bugs": "https://github.com/pkhambat1/composer-nb/issues",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/pkhambat1/composer-nb.git",
-    "directory": "dsl"
-  },
+  "private": true,
+  "description": "The composer-nb language and engine, used by the web app and the MCP server. Not published.",
   "author": "Pezanne Khambatta",
   "license": "MIT",
   "type": "module",
-  "main": "./dist/composer-nb.js",
-  "types": "./lib/music.d.ts",
   "exports": {
-    ".": {
-      "types": "./lib/music.d.ts",
-      "default": "./dist/composer-nb.js"
-    },
     "./engine": {
       "composer-nb-source": "./js/music-engine.ts",
       "types": "./lib/music-engine.d.ts",
@@ -83,15 +63,10 @@
       "default": "./lib/links.js"
     }
   },
-  "files": [
-    "dist",
-    "lib"
-  ],
   "scripts": {
-    "build": "npm run build:lib && vite build && vite build --mode npm",
+    "build": "npm run build:lib",
     "build:lib": "rm -rf lib && tsc -p .",
     "typecheck": "tsc -p . --noEmit && tsc -p tests",
-    "prepack": "npm run build",
     "test": "vitest run",
     "test:watch": "vitest"
   },

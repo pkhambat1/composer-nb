@@ -3,8 +3,6 @@ title: "play"
 description: "The statement that renders a value to audio."
 ---
 
-import { Cell } from "/snippets/cell.jsx"
-
 `play` evaluates what follows it and renders one output. It is the only statement that makes sound, and it goes at the top level of a cell.
 
 ```text
@@ -12,8 +10,6 @@ play <name, group or line> [for <number> bars]
 play block { <statements> } [for <number> bars]
 play pattern { <lines> } [for <number> bars]
 ```
-
-<Cell>
 
 ```composer-nb
 pattern groove = {
@@ -28,8 +24,6 @@ play block {
   groove
 } for 4 bars
 ```
-
-</Cell>
 
 This cell renders three outputs.
 
@@ -47,8 +41,6 @@ A play is a timeline, and its statements start together. The braces after `play`
 
 `play pattern { ... }` repeats every line in it, as any pattern does.
 
-<Cell>
-
 ```composer-nb
 play block {
   kick: x---
@@ -60,8 +52,6 @@ play pattern {
   snare: ---- x---
 } for 2 bars
 ```
-
-</Cell>
 
 The first output plays each line once, then silence. The second repeats both lines for two bars.
 
