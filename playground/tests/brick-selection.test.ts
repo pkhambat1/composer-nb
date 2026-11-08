@@ -27,3 +27,16 @@ it("hands the host the musical position of a compressed grid step", () => {
     vi.unstubAllGlobals()
   }
 })
+
+it("hands the host the lines the code editor's selection is on", () => {
+  const { window, document } = parseHTML(
+    `<div data-cell-id="groove"><div data-source-lines="" data-from-line="2" data-to-line="4"><span class="tk-inst">kick</span></div></div>`,
+  )
+  vi.stubGlobal("Element", window.Element)
+  try {
+    const selection = notebookSelection(document.querySelector(".tk-inst"))
+    expect(selection).toMatchObject({ cellId: "groove", kind: "source", fromLine: 2, toLine: 4, label: "Lines 2–4" })
+  } finally {
+    vi.unstubAllGlobals()
+  }
+})
