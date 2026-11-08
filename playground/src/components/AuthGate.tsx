@@ -68,13 +68,13 @@ export default function AuthGate({ children }: { children: (session: Session) =>
           <button type="button" role="tab" aria-selected={mode === "login"} className={mode === "login" ? "auth-tab-active" : ""} onClick={() => { setMode("login"); setMessage("") }}>Log in</button>
           <button type="button" role="tab" aria-selected={mode === "signup"} className={mode === "signup" ? "auth-tab-active" : ""} onClick={() => { setMode("signup"); setMessage("") }}>Sign up</button>
         </div>
-        <button className="auth-google" type="button" onClick={() => void signInWithGoogle()}><span aria-hidden="true">G</span> Continue with Google</button>
+        <button className="btn btn-secondary auth-google" type="button" onClick={() => void signInWithGoogle()}><span aria-hidden="true">G</span> Continue with Google</button>
         <div className="auth-divider"><span>or use email</span></div>
         <label htmlFor="email">Email</label>
         <input id="email" type="email" required autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" />
         <label htmlFor="password">Password</label>
         <input id="password" type="password" required minLength={8} autoComplete={mode === "login" ? "current-password" : "new-password"} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="At least 8 characters" />
-        <button className="auth-submit" type="submit">{mode === "login" ? "Log in" : "Create account"}</button>
+        <button className="btn btn-primary auth-submit" type="submit">{mode === "login" ? "Log in" : "Create account"}</button>
         {!hasSupabaseConfig && <div className="auth-config-note" role="status">Supabase configuration is required.</div>}
         {message && <div className="auth-message" role="status">{message}</div>}
       </form>

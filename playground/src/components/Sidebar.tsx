@@ -42,7 +42,7 @@ export default function Sidebar({
         <div className="lhs-theme-wrap">
           <button
             type="button"
-            className="lhs-theme-btn"
+            className="btn btn-ghost btn-icon"
             onClick={() => onSetTheme(theme === "light" ? "dark" : "light")}
             title={`Switch to ${theme === "light" ? "dark" : "light"} theme`}
             aria-label={`Switch to ${theme === "light" ? "dark" : "light"} theme`}
@@ -67,7 +67,7 @@ export default function Sidebar({
           <span className="lhs-section-label">Notebooks</span>
           <button
             type="button"
-            className="lhs-section-btn"
+            className="btn btn-ghost btn-icon lhs-section-btn"
             onClick={onNewNotebook}
             title="New notebook"
             aria-label="New notebook"
@@ -137,7 +137,7 @@ export default function Sidebar({
         <span className="lhs-account-email" title={accountEmail}>{accountEmail}</span>
         <button
           type="button"
-          className="lhs-signout"
+          className="btn btn-secondary lhs-signout"
           onClick={() => {
             if (window.confirm("Sign out of Composer.nb?")) onSignOut()
           }}

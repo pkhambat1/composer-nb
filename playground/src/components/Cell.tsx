@@ -37,7 +37,7 @@ function CellMenu({ onDelete, onMoveUp, onMoveDown, onDuplicate, first, last }: 
   return (
     <div className="cell-menu-wrap" ref={menuRef}>
       <button
-        className="cell-menu-btn"
+        className="btn btn-secondary btn-sm btn-icon cell-menu-btn"
         onClick={(e) => {
           e.stopPropagation()
           setOpen((v) => !v)
@@ -54,7 +54,7 @@ function CellMenu({ onDelete, onMoveUp, onMoveDown, onDuplicate, first, last }: 
       {open && (
         <div className="cell-menu-dropdown">
           <button
-            className="cell-menu-item"
+            className="menu-item"
             disabled={first}
             onClick={(e) => {
               e.stopPropagation()
@@ -65,7 +65,7 @@ function CellMenu({ onDelete, onMoveUp, onMoveDown, onDuplicate, first, last }: 
             Move up
           </button>
           <button
-            className="cell-menu-item"
+            className="menu-item"
             disabled={last}
             onClick={(e) => {
               e.stopPropagation()
@@ -76,7 +76,7 @@ function CellMenu({ onDelete, onMoveUp, onMoveDown, onDuplicate, first, last }: 
             Move down
           </button>
           <button
-            className="cell-menu-item"
+            className="menu-item"
             onClick={(e) => {
               e.stopPropagation()
               setOpen(false)
@@ -86,7 +86,7 @@ function CellMenu({ onDelete, onMoveUp, onMoveDown, onDuplicate, first, last }: 
             Duplicate
           </button>
           <button
-            className="cell-menu-item cell-menu-item-danger"
+            className="menu-item menu-item-danger"
             onClick={(e) => {
               e.stopPropagation()
               setOpen(false)
@@ -306,7 +306,7 @@ function Cell({
                   placeholder="Markdown — # heading, **bold**, *italic*, `code`, - lists, [link](url)"
                 />
                 <button
-                  className="cell-run-btn"
+                  className="btn btn-primary cell-run-btn"
                   onClick={(e) => {
                     e.stopPropagation()
                     onRun()
@@ -326,7 +326,7 @@ function Cell({
                 <MarkdownContent source={cell.source} />
               </div>
               <button
-                className="md-preview-toggle md-preview-toggle-on"
+                className="btn btn-secondary btn-sm btn-on md-preview-toggle"
                 onMouseDown={(e) => e.preventDefault()}
                 onClick={(e) => {
                   e.stopPropagation()
@@ -353,7 +353,7 @@ function Cell({
                 placeholder="Markdown — # heading, **bold**, *italic*, `code`, - lists, [link](url)"
               />
               <button
-                className="cell-run-btn"
+                className="btn btn-primary cell-run-btn"
                 onClick={(e) => {
                   e.stopPropagation()
                   onRun()
@@ -366,7 +366,7 @@ function Cell({
                 <span>Run</span>
               </button>
               <button
-                className="md-preview-toggle"
+                className="btn btn-secondary btn-sm md-preview-toggle"
                 onMouseDown={(e) => e.preventDefault()}
                 onClick={(e) => {
                   e.stopPropagation()
