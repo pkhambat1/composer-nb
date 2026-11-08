@@ -61,7 +61,7 @@ export default function Sidebar({
           <button
             ref={btnRef}
             type="button"
-            className={"lhs-theme-btn" + (themeOpen ? " lhs-theme-btn-open" : "")}
+            className={"btn btn-ghost btn-icon" + (themeOpen ? " btn-open" : "")}
             onClick={() => setThemeOpen((v) => !v)}
             title="Appearance"
           >
@@ -86,7 +86,7 @@ export default function Sidebar({
                 <button
                   key={t.id}
                   type="button"
-                  className={"theme-opt" + (theme === t.id ? " theme-opt-active" : "")}
+                  className={"menu-item theme-opt" + (theme === t.id ? " menu-item-on" : "")}
                   onClick={() => {
                     onSetTheme(t.id)
                     setThemeOpen(false)
@@ -134,7 +134,7 @@ export default function Sidebar({
           <span className="lhs-section-label">Notebooks</span>
           <button
             type="button"
-            className="lhs-section-btn"
+            className="btn btn-ghost btn-icon lhs-section-btn"
             onClick={onNewNotebook}
             title="New notebook"
             aria-label="New notebook"

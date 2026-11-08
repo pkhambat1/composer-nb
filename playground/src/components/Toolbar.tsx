@@ -30,7 +30,7 @@ function AddCellDropdown({
   return (
     <div className="tb-dropdown-wrap" ref={ref}>
       <button
-        className={"tb-btn" + (open ? " tb-btn-open" : "")}
+        className={"btn btn-secondary" + (open ? " btn-open" : "")}
         title="Add a cell at the end"
         aria-haspopup="menu"
         aria-expanded={open}
@@ -51,7 +51,7 @@ function AddCellDropdown({
       {open && (
         <div className="tb-dropdown" role="menu">
           <button
-            className="tb-dropdown-item"
+            className="menu-item"
             onClick={() => {
               onAddCode()
               setOpen(false)
@@ -60,7 +60,7 @@ function AddCellDropdown({
             Music cell
           </button>
           <button
-            className="tb-dropdown-item"
+            className="menu-item"
             onClick={() => {
               onAddText()
               setOpen(false)
@@ -100,7 +100,7 @@ export default function Toolbar({
   ) => (
     <button
       className={
-        "tb-btn" + (opts.primary ? " tb-btn-primary" : "") + (opts.danger ? " tb-btn-danger" : "")
+        "btn " + (opts.primary ? "btn-primary" : "btn-secondary") + (opts.danger ? " btn-danger" : "")
       }
       title={title}
       onClick={onClick}

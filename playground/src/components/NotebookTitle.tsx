@@ -43,7 +43,7 @@ export default function NotebookTitle({
   const item = (label: string, fn: () => void, cls = "") => (
     <button
       type="button"
-      className={"cell-menu-item " + cls}
+      className={"menu-item " + cls}
       onClick={() => {
         setOpen(false)
         fn()
@@ -102,7 +102,7 @@ export default function NotebookTitle({
             {item("Rename", () => setRenaming(title))}
             {item("Duplicate", menu.duplicate)}
             <div className="nb-title-menu-rule" />
-            {item("Delete", menu.remove, "cell-menu-item-danger")}
+            {item("Delete", menu.remove, "menu-item-danger")}
           </div>
         )}
       </div>

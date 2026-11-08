@@ -312,7 +312,7 @@ export default function MusicOutput({
             <button
               type="button"
               className={
-                "play-btn" + (displayPlaying ? " playing" : "") + (displayPaused ? " paused" : "")
+                "btn btn-primary btn-icon btn-round play-btn" + (displayPlaying ? " playing" : "") + (displayPaused ? " paused" : "")
               }
               onClick={(e) => {
                 e.stopPropagation()

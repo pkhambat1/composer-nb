@@ -18,8 +18,8 @@
   --pill-bg: #f0f0f0;
   --pill-fg: #444;
   --tb-bg: #fafafa;
-  --tb-btn-hover: #ececec;
-  --tb-btn-active: #e0e0e0;
+  --hover-bg: #ececec;
+  --press-bg: #e0e0e0;
   --kernel-idle: #5cb85c;
   --kernel-busy: #f0ad4e;
   --traceback: #b00020;
@@ -40,6 +40,15 @@
 
   --radius: 6px; /* buttons, inputs, menus, cells and the boxes that hold them */
   --radius-sm: 3px; /* bricks and inline marks */
+  /* Motion: how fast things answer the pointer, and how far a pressed button gives */
+  --motion-fast: 120ms;
+  --motion-slow: 200ms;
+  --motion-enter: 300ms; /* something arriving: an output, a hint */
+  --ease: ease;
+  --press-scale: 0.97;
+  /* How much of a filled button's colour stays on hover: the rest is the page, so it greys */
+  --hover-mix: 80%;
+  --shadow-menu: 0 4px 16px rgba(0, 0, 0, 0.12);
   --cell-pad-x: 12px;
   --cell-pad-y: 4px;
   --code-pad-x: 12px;
@@ -47,6 +56,7 @@
 }
 
 [data-theme="dark"] {
+  --shadow-menu: 0 4px 16px rgba(0, 0, 0, 0.35);
   color-scheme: dark;
   --bg: #181a1f;
   --paper: #21252b;
@@ -63,8 +73,8 @@
   --pill-bg: #2c313a;
   --pill-fg: #c5cad3;
   --tb-bg: #1c1f25;
-  --tb-btn-hover: #2c313a;
-  --tb-btn-active: #353b46;
+  --hover-bg: #2c313a;
+  --press-bg: #353b46;
   --kernel-idle: #56c270;
   --kernel-busy: #e8a44a;
   --traceback: #ff7b8b;
@@ -84,10 +94,140 @@
 * {
   box-sizing: border-box;
 }
+
+/* Buttons: one look per role, put together in the markup as `btn` plus a variant
+   (btn-primary, btn-secondary, btn-ghost) and, where needed, a size (btn-sm) and shape
+   (btn-icon, btn-round). A component's own class only places and sizes its button.
+   Every button greys on hover and gives a little when pressed. btn-open keeps the hover
+   look while its menu is open or its thing is chosen; btn-on marks a toggle that's on. */
+.btn {
+  --btn-h: 28px;
+  --btn-fill: var(--text);
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: var(--btn-h);
+  padding: 0 12px;
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--text-dim);
+  font: 600 12px var(--font-sans);
+  white-space: nowrap;
+  cursor: pointer;
+  user-select: none;
+  transition:
+    background-color var(--motion-fast) var(--ease),
+    border-color var(--motion-fast) var(--ease),
+    color var(--motion-fast) var(--ease),
+    opacity var(--motion-fast) var(--ease),
+    transform var(--motion-fast) var(--ease);
+}
+.btn:active:not(:disabled) {
+  transform: scale(var(--press-scale));
+}
+.btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.btn:disabled {
+  cursor: default;
+}
+.btn-sm {
+  --btn-h: 22px;
+  padding: 0 8px;
+  font-size: 11px;
+}
+.btn-icon {
+  width: var(--btn-h);
+  padding: 0;
+}
+.btn-round {
+  border-radius: 50%;
+}
+.btn-primary {
+  background: var(--btn-fill);
+  border-color: var(--btn-fill);
+  color: var(--paper);
+}
+.btn-primary:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--btn-fill) var(--hover-mix), var(--bg));
+  border-color: color-mix(in srgb, var(--btn-fill) var(--hover-mix), var(--bg));
+}
+.btn-secondary {
+  background: var(--paper);
+  border-color: var(--border);
+}
+.btn-ghost {
+  color: var(--text-mute);
+}
+.btn-secondary:hover:not(:disabled),
+.btn-ghost:hover:not(:disabled),
+.btn-open {
+  background: var(--hover-bg);
+  color: var(--text);
+}
+.btn-on,
+.btn-on:hover:not(:disabled) {
+  background: var(--accent-soft);
+  border-color: color-mix(in srgb, var(--accent) 45%, var(--border));
+  color: var(--accent);
+}
+.btn-danger:hover:not(:disabled) {
+  color: var(--traceback);
+}
+
+/* A row in a menu: the same hover as a button, a fill when pressed; menu-item-on is the
+   row that's chosen */
+.menu-item {
+  appearance: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 6px 10px;
+  border: 0;
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--text);
+  font: 12px var(--font-sans);
+  text-align: left;
+  cursor: pointer;
+  transition:
+    background-color var(--motion-fast) var(--ease),
+    color var(--motion-fast) var(--ease);
+}
+.menu-item:hover:not(:disabled) {
+  background: var(--hover-bg);
+}
+.menu-item:active:not(:disabled) {
+  background: var(--press-bg);
+}
+.menu-item:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+.menu-item:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+.menu-item-on,
+.menu-item-on:hover:not(:disabled) {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+.menu-item-danger {
+  color: var(--traceback);
+}
+.menu-item-danger:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--traceback) 8%, transparent);
+}
 html {
   transition:
-    background-color 200ms ease,
-    color 200ms ease;
+    background-color var(--motion-slow) var(--ease),
+    color var(--motion-slow) var(--ease);
 }
 html,
 body {
@@ -160,22 +300,6 @@ body {
   position: relative;
   margin-left: auto;
 }
-.lhs-theme-btn {
-  appearance: none;
-  border: none;
-  background: none;
-  color: var(--text-mute);
-  cursor: pointer;
-  padding: 4px;
-  border-radius: var(--radius);
-  display: flex;
-  align-items: center;
-}
-.lhs-theme-btn:hover,
-.lhs-theme-btn-open {
-  color: var(--text);
-  background: var(--tb-btn-hover);
-}
 .theme-popover {
   position: absolute;
   top: calc(100% + 6px);
@@ -184,12 +308,9 @@ body {
   background: var(--paper);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  box-shadow: var(--shadow-menu);
   padding: 4px;
   z-index: 100;
-}
-[data-theme="dark"] .theme-popover {
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
 }
 .theme-popover-label {
   padding: 6px 8px 4px;
@@ -199,29 +320,10 @@ body {
   letter-spacing: 0.04em;
   color: var(--text-mute);
 }
+/* A theme in the theme menu, a little larger than other menus' rows */
 .theme-opt {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  width: 100%;
   padding: 7px 8px;
-  border: none;
-  background: none;
-  border-radius: var(--radius);
-  cursor: pointer;
-  color: var(--text);
-  font: inherit;
   font-size: 13px;
-}
-.theme-opt:hover {
-  background: var(--tb-btn-hover);
-}
-.theme-opt-active {
-  background: var(--accent-soft);
-  color: var(--accent);
-}
-.theme-opt-active:hover {
-  background: var(--accent-soft);
 }
 .lhs-nav {
   display: flex;
@@ -250,23 +352,6 @@ body {
   letter-spacing: 0.05em;
   color: var(--text-mute);
 }
-.lhs-section-btn {
-  appearance: none;
-  border: none;
-  background: none;
-  color: var(--text-mute);
-  cursor: pointer;
-  width: 20px;
-  height: 20px;
-  margin: -4px -6px -4px 0;
-  border-radius: var(--radius);
-  display: grid;
-  place-items: center;
-}
-.lhs-section-btn:hover {
-  color: var(--text);
-  background: var(--tb-btn-hover);
-}
 .lhs-tab {
   appearance: none;
   border: none;
@@ -283,9 +368,12 @@ body {
   align-items: baseline;
   gap: 8px;
   min-width: 0;
+  transition:
+    background-color var(--motion-fast) var(--ease),
+    color var(--motion-fast) var(--ease);
 }
 .lhs-tab:hover {
-  background: var(--tb-btn-hover);
+  background: var(--hover-bg);
   color: var(--text);
 }
 .lhs-tab-active {
@@ -414,29 +502,6 @@ body {
 .tb-group + .tb-group {
   margin-left: 6px;
 }
-.tb-btn {
-  appearance: none;
-  background: var(--paper);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  color: var(--text-dim);
-  padding: 0 12px;
-  font: inherit;
-  font-size: 12px;
-  font-weight: 600;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  height: 28px;
-}
-.tb-btn:hover {
-  background: var(--tb-btn-hover);
-  color: var(--text);
-}
-.tb-btn:active {
-  background: var(--tb-btn-active);
-}
 .tb-dropdown-wrap {
   position: relative;
 }
@@ -448,51 +513,10 @@ body {
   background: var(--paper);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-menu);
   z-index: 30;
   min-width: 100px;
-  overflow: hidden;
-}
-.tb-dropdown-item {
-  display: block;
-  width: 100%;
-  text-align: left;
-  border: none;
-  background: none;
-  padding: 6px 12px;
-  font: inherit;
-  font-size: 12px;
-  color: var(--text);
-  cursor: pointer;
-}
-.tb-dropdown-item:hover {
-  background: var(--tb-btn-hover);
-}
-.tb-dropdown-item + .tb-dropdown-item {
-  border-top: 1px solid var(--border-soft);
-}
-.tb-btn-open {
-  background: var(--tb-btn-hover);
-  color: var(--text);
-}
-.tb-btn-primary {
-  background: var(--text);
-  border-color: var(--text);
-  color: var(--paper);
-}
-.tb-btn-primary:hover {
-  background: var(--text);
-  filter: brightness(1.08);
-  color: var(--paper);
-}
-.tb-btn-danger:hover {
-  color: var(--traceback);
-}
-.tb-btn-theme {
-  color: var(--text-dim);
-}
-.tb-btn-theme:hover {
-  color: var(--accent);
+  padding: 4px;
 }
 .nb-sticky-header {
   position: sticky;
@@ -530,6 +554,7 @@ body {
   align-items: center;
   gap: 7px;
   max-width: 100%;
+  transition: background-color var(--motion-fast) var(--ease);
 }
 .nb-title-btn .panel-title {
   overflow: hidden;
@@ -538,7 +563,7 @@ body {
 }
 .nb-title-btn:hover,
 .nb-title-btn-open {
-  background: var(--tb-btn-hover);
+  background: var(--hover-bg);
 }
 .nb-title-chevron {
   color: var(--text-mute);
@@ -572,13 +597,10 @@ body {
   background: var(--paper);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  box-shadow: var(--shadow-menu);
   padding: 4px;
   min-width: 170px;
   z-index: 30;
-}
-[data-theme="dark"] .nb-title-menu {
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
 }
 .nb-title-menu-rule {
   height: 1px;
@@ -634,7 +656,7 @@ body {
   border: 1px solid transparent;
   border-radius: var(--radius);
   position: relative;
-  transition: border-color 120ms ease;
+  transition: border-color var(--motion-fast) var(--ease);
 }
 .cell:hover {
   border-color: var(--border-soft);
@@ -651,31 +673,18 @@ body {
   align-items: center;
   justify-content: center;
 }
+/* The + between cells shows on hover */
 .cell-gap-btn {
-  appearance: none;
-  width: 22px;
-  height: 22px;
-  padding: 0;
-  border: 1px solid var(--border);
-  border-radius: 50%;
-  background: var(--paper);
-  color: var(--text-dim);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
   opacity: 0;
-  transition: opacity 120ms ease;
 }
 .cell-gap:hover .cell-gap-btn,
 .cell-gap-open .cell-gap-btn,
 .cell-gap-btn:focus-visible {
   opacity: 1;
 }
-.cell-gap-btn:hover,
 .cell-gap-open .cell-gap-btn {
-  color: var(--accent);
-  border-color: var(--accent);
+  background: var(--hover-bg);
+  color: var(--text);
 }
 /* While a cell is dragged: no +, and a line where the cell will land */
 .cells-dragging .cell-gap-btn {
@@ -709,7 +718,10 @@ body {
   color: var(--text-mute);
   cursor: grab;
   opacity: 0;
-  transition: opacity 120ms ease;
+  transition:
+    opacity var(--motion-fast) var(--ease),
+    background-color var(--motion-fast) var(--ease),
+    color var(--motion-fast) var(--ease);
 }
 .cell:hover .cell-drag,
 .cell-selected .cell-drag {
@@ -717,7 +729,7 @@ body {
 }
 .cell-drag:hover {
   color: var(--text);
-  background: var(--tb-btn-hover);
+  background: var(--hover-bg);
 }
 .cell-drag:active {
   cursor: grabbing;
@@ -751,44 +763,19 @@ body {
   align-items: flex-end;
   gap: 5px;
 }
+/* Run, top left of the code */
 .cell-run-btn {
-  appearance: none;
   position: absolute;
   top: 6px;
   left: 6px;
-  height: 26px;
-  padding: 0 10px;
-  border-radius: var(--radius);
-  border: 1px solid var(--text);
-  background: var(--text);
-  color: var(--paper);
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font: inherit;
-  font-size: 12px;
-  font-weight: 600;
   z-index: 3;
-  transition: background 120ms ease;
-}
-.cell-run-btn:hover {
-  background: color-mix(in srgb, var(--text) 85%, #000);
-}
-.cell-run-btn:active {
-  transform: scale(0.97);
 }
 .cell-wait-btn {
-  background: var(--text-mute);
-  cursor: pointer;
+  --btn-fill: var(--text-mute);
   animation: pulse 1.8s ease-in-out infinite;
 }
-.cell-wait-btn:hover {
-  background: color-mix(in srgb, var(--text-mute) 85%, #000);
-}
 .cell-run-btn:disabled {
-  cursor: default;
-  background: var(--busy-bar);
+  --btn-fill: var(--busy-bar);
 }
 .prompt-text {
   white-space: nowrap;
@@ -808,36 +795,14 @@ body {
   position: relative;
 }
 
+/* Markdown / preview, top right of a text cell: a toggle set in small mono */
 .md-preview-toggle {
   position: absolute;
   top: 6px;
   right: 8px;
-  appearance: none;
-  background: var(--paper);
-  border: 1px solid var(--border);
-  color: var(--text-mute);
-  font-family: var(--font-mono);
-  font-size: 10px;
-  letter-spacing: 0.04em;
-  padding: 2px 8px;
-  border-radius: var(--radius);
-  cursor: pointer;
   z-index: 2;
-  user-select: none;
-  transition:
-    color 120ms ease,
-    border-color 120ms ease,
-    background 120ms ease;
-}
-.md-preview-toggle:hover {
-  color: var(--accent);
-  border-color: var(--accent);
-  background: var(--accent-soft);
-}
-.md-preview-toggle-on {
-  background: var(--accent-soft);
-  color: var(--accent);
-  border-color: var(--accent);
+  font: 10px var(--font-mono);
+  letter-spacing: 0.04em;
 }
 
 .cell-menu-wrap {
@@ -846,71 +811,28 @@ body {
   right: 8px;
   z-index: 5;
 }
+/* Whether the assistant has this cell as context, shown on hover or when it does */
 .cell-context-btn {
   position: absolute;
   top: 6px;
   right: 38px;
   z-index: 4;
-  height: 22px;
-  appearance: none;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  background: var(--paper);
-  color: var(--text-mute);
-  padding: 0 8px;
-  display: inline-flex;
-  align-items: center;
   gap: 5px;
   font: 500 10px/1 var(--font-sans);
-  cursor: pointer;
   opacity: 0;
-  transition:
-    opacity 120ms ease,
-    color 120ms ease,
-    border-color 120ms ease,
-    background 120ms ease;
 }
 .cell:hover .cell-context-btn,
 .cell-context-btn:focus-visible,
-.cell-context-btn-active {
+.cell-context-btn.btn-open {
   opacity: 1;
 }
-.cell-context-btn:hover {
-  color: var(--text);
-  background: var(--tb-btn-hover);
-}
-.cell-context-btn-active {
-  color: var(--text);
-  border-color: var(--text-mute);
-  background: var(--tb-btn-hover);
-}
+/* The cell's ⋮, shown on hover or when the cell is selected */
 .cell-menu-btn {
-  width: 22px;
-  height: 22px;
-  appearance: none;
-  background: var(--paper);
-  border: 1px solid var(--border);
-  color: var(--text-mute);
-  border-radius: var(--radius);
-  cursor: pointer;
-  display: grid;
-  place-items: center;
-  padding: 0;
   opacity: 0;
-  transition:
-    opacity 120ms ease,
-    color 120ms ease,
-    border-color 120ms ease,
-    background 120ms ease;
 }
 .cell:hover .cell-menu-btn,
 .cell-selected .cell-menu-btn {
   opacity: 1;
-}
-.cell-menu-btn:hover {
-  background: var(--tb-btn-hover);
-  color: var(--text);
-  border-color: var(--border);
 }
 .cell-text.cell-editing .cell-menu-wrap {
   right: 86px;
@@ -923,39 +845,10 @@ body {
   background: var(--paper);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  box-shadow: var(--shadow-menu);
   padding: 4px;
   min-width: 140px;
   z-index: 10;
-}
-.cell-menu-item {
-  appearance: none;
-  background: transparent;
-  border: none;
-  color: var(--text);
-  font: inherit;
-  font-size: 12px;
-  padding: 6px 10px;
-  border-radius: var(--radius);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  width: 100%;
-  text-align: left;
-}
-.cell-menu-item:hover:not(:disabled) {
-  background: var(--tb-btn-hover);
-}
-.cell-menu-item:disabled {
-  opacity: 0.4;
-  cursor: default;
-}
-.cell-menu-item-danger {
-  color: var(--traceback);
-}
-.cell-menu-item-danger:hover {
-  background: rgba(176, 0, 32, 0.06);
 }
 
 .text-split {
@@ -1097,7 +990,7 @@ body {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   margin-top: 16px;
-  animation: fadeIn 300ms ease;
+  animation: fadeIn var(--motion-enter) var(--ease);
 }
 @keyframes fadeIn {
   from {
@@ -1173,35 +1066,21 @@ body {
 }
 .rendering-text {
   font-size: 12px;
-  color: var(--muted);
+  color: var(--text-mute);
   font-style: italic;
 }
 
+/* Play under an output: round; paused, it shows as an outline */
 .play-btn {
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-  border: 1px solid var(--border);
-  background: var(--text);
-  color: var(--paper);
-  cursor: pointer;
-  display: grid;
-  place-items: center;
+  --btn-h: 30px;
   flex-shrink: 0;
-  transition: all 120ms ease;
-}
-.play-btn:hover {
-  background: var(--text-dim);
-  border-color: var(--text);
-}
-.play-btn.playing {
-  background: var(--text);
-  color: var(--paper);
-  border-color: var(--text);
 }
 .play-btn.playing.paused {
   background: var(--paper);
   color: var(--text);
+}
+.play-btn.playing.paused:hover {
+  background: var(--hover-bg);
 }
 .play-btn svg {
   fill: currentColor;
@@ -1288,13 +1167,16 @@ body {
   padding: 1px 7px;
   cursor: pointer;
   user-select: none;
+  transition:
+    background-color var(--motion-fast) var(--ease),
+    color var(--motion-fast) var(--ease);
 }
 .view-btn + .view-btn {
   border-left: 1px solid var(--border);
 }
 .view-btn:hover {
-  color: var(--accent);
-  background: var(--accent-soft);
+  color: var(--text);
+  background: var(--hover-bg);
 }
 .view-btn-on {
   background: var(--accent-soft);
@@ -1337,9 +1219,10 @@ body {
   cursor: pointer;
   text-align: left;
   font: inherit;
+  transition: background-color var(--motion-fast) var(--ease);
 }
 .chord-chip-btn:hover {
-  border-color: var(--accent);
+  background: var(--hover-bg);
 }
 .chord-chip-copied .chord-label {
   color: var(--accent);
@@ -1540,8 +1423,8 @@ body {
   opacity: 0;
   white-space: nowrap;
   transition:
-    max-width 300ms ease,
-    opacity 200ms ease;
+    max-width var(--motion-enter) var(--ease),
+    opacity var(--motion-slow) var(--ease);
 }
 .status-bar:hover .sb-shortcuts {
   max-width: 500px;
