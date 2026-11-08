@@ -185,7 +185,7 @@ const CodeEditor = React.forwardRef<CodeEditorHandle, Props>(function CodeEditor
       )}
       {runState === "waiting" && onInterrupt && (
         <button
-          className="cell-run-btn cell-wait-btn"
+          className="btn btn-primary cell-run-btn cell-wait-btn"
           onClick={(e) => {
             e.stopPropagation()
             onInterrupt()
@@ -207,7 +207,7 @@ const CodeEditor = React.forwardRef<CodeEditorHandle, Props>(function CodeEditor
       )}
       {runState === "idle" && onRun && (
         <button
-          className="cell-run-btn"
+          className="btn btn-primary cell-run-btn"
           onClick={(e) => {
             e.stopPropagation()
             onRun()
@@ -222,7 +222,7 @@ const CodeEditor = React.forwardRef<CodeEditorHandle, Props>(function CodeEditor
       )}
       {runState === "running" && onInterrupt && (
         <button
-          className="cell-run-btn cell-wait-btn"
+          className="btn btn-primary cell-run-btn cell-wait-btn"
           onClick={(e) => {
             e.stopPropagation()
             onInterrupt()

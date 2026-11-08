@@ -43,7 +43,7 @@ export default function NotebookTitle({
   const item = (label: string, fn: () => void, cls = "") => (
     <button
       type="button"
-      className={"cell-menu-item nb-title-menu-item " + cls}
+      className={"menu-item nb-title-menu-item " + cls}
       onClick={() => {
         setOpen(false)
         fn()
@@ -86,7 +86,7 @@ export default function NotebookTitle({
             </h1>
             <button
               type="button"
-              className={"nb-title-actions" + (open ? " nb-title-actions-open" : "")}
+              className={"btn btn-ghost btn-icon nb-title-actions" + (open ? " btn-open" : "")}
               onClick={() => setOpen((value) => !value)}
               title="Notebook actions"
               aria-label="Notebook actions"
@@ -107,7 +107,7 @@ export default function NotebookTitle({
           <div className="nb-title-menu" role="menu">
             {item("Rename", () => setRenaming(title))}
             {item("Duplicate", menu.duplicate)}
-            {item("Delete", menu.remove, "cell-menu-item-danger")}
+            {item("Delete", menu.remove, "menu-item-danger")}
           </div>
         )}
         <div className={`save-indicator save-indicator-${saveState}`} role="status" title={saveState === "error" ? subtitle : saveLabel}>

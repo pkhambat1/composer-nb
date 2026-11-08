@@ -40,7 +40,7 @@ export default function CellGap({
     >
       <button
         type="button"
-        className="cell-gap-btn"
+        className="btn btn-secondary btn-sm btn-icon btn-round cell-gap-btn"
         title="Add a cell here"
         aria-label="Add a cell here"
         aria-haspopup="menu"
@@ -64,10 +64,10 @@ export default function CellGap({
       </button>
       {open && (
         <div className="tb-dropdown cell-gap-menu" role="menu">
-          <button type="button" className="tb-dropdown-item" onClick={() => add("music")}>
+          <button type="button" className="menu-item" onClick={() => add("music")}>
             Music cell
           </button>
-          <button type="button" className="tb-dropdown-item" onClick={() => add("text")}>
+          <button type="button" className="menu-item" onClick={() => add("text")}>
             Text cell
           </button>
         </div>
