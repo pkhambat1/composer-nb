@@ -1,10 +1,8 @@
 /* Website shell around the shared notebook editor and music renderers. */
 import React from "react"
 import { APP_CONSTANTS } from "./shared/constants.ts"
-import { EMBED, embedCell, embedTheme, listenForTheme, reportHeight } from "./shared/embed.ts"
-import type { Theme } from "./shared/types.ts"
 import { useNotebookController } from "./hooks/useNotebookController.ts"
-import { NotebookEditor, NotebookWorkspace, NotebookToolbar } from "./notebook/index.ts"
+import { NotebookWorkspace, NotebookToolbar } from "./notebook/index.ts"
 import { useNotebooks } from "./hooks/useNotebooks.ts"
 import NotebookTitle, { type NotebookMenu } from "./components/NotebookTitle.tsx"
 import { useTheme } from "./components/theme-panel.tsx"
@@ -19,27 +17,7 @@ import { supabase } from "./lib/supabase.ts"
 // ============================================================================
 
 export default function App() {
-  return EMBED ? <EmbeddedNotebook /> : <AuthGate>{(session) => <WebsiteNotebook session={session} />}</AuthGate>
-}
-
-// The docs iframe adapter owns messaging and sizing, but uses the same editor as MCP.
-function EmbeddedNotebook() {
-  const [theme, setTheme] = React.useState<Theme>(embedTheme)
-  const [cells] = React.useState(() => [embedCell()])
-  const frame = React.useRef<HTMLDivElement>(null)
-  React.useEffect(() => {
-    const stopTheme = listenForTheme(setTheme)
-    const stopHeight = frame.current ? reportHeight(frame.current) : () => {}
-    return () => {
-      stopTheme()
-      stopHeight()
-    }
-  }, [])
-  return (
-    <div ref={frame}>
-      <NotebookEditor host={{ cells, theme }} single />
-    </div>
-  )
+  return <AuthGate>{(session) => <WebsiteNotebook session={session} />}</AuthGate>
 }
 
 // Website-only persistence, navigation and chrome never enter the MCP adapter.

@@ -8,7 +8,7 @@ import { describe, it, expect } from "vitest"
 import { existsSync, readFileSync } from "node:fs"
 import { join } from "node:path"
 import { initialState, LANES, parseCell, PITCHED } from "../../js/language.ts"
-import { DOCS, examples, pages, read, readMagic } from "./docs-examples.ts"
+import { DOCS, examples, pages, read } from "./docs-examples.ts"
 
 describe("docs examples", () => {
   it("finds the pages", () => {
@@ -80,27 +80,6 @@ describe("docs site", () => {
         if (!existsSync(join(DOCS, src))) broken.push(src)
       }
       expect(broken).toEqual([])
-    })
-  }
-
-  // An example a reader can run is shown as a cell they can run (snippets/cell.jsx). The
-  // playground takes no %%music line, and an Invalid example is there for its message.
-  for (const page of pages) {
-    const playable = examples(read(page)).filter(
-      (block) => !block.invalid && !block.source.startsWith("%%music"),
-    )
-    if (!playable.length) continue
-    it(`${page} shows its examples as cells`, () => {
-      const text = read(page)
-      expect(text).toContain('import { Cell } from "/snippets/cell.jsx"')
-      const bare = playable.filter((block) => {
-        const before = text
-          .split("\n")
-          .slice(0, block.line - 1)
-          .join("\n")
-        return !/<Cell>\n\n$/.test(before + "\n")
-      })
-      expect(bare.map((block) => `line ${block.line}`)).toEqual([])
     })
   }
 })

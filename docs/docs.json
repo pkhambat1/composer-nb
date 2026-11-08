@@ -29,7 +29,6 @@
         "pages": [
           "index",
           "for-musicians",
-          "jupyter",
           "assistants"
         ]
       },
@@ -65,10 +64,6 @@
       {
         "label": "Playground",
         "href": "https://composer-nb.vercel.app"
-      },
-      {
-        "label": "PyPI",
-        "href": "https://pypi.org/project/composer-nb/"
       }
     ],
     "primary": {
@@ -132,19 +127,19 @@
     },
     {
       "source": "/python/installation",
-      "destination": "/jupyter"
+      "destination": "/"
     },
     {
       "source": "/python/music-magic",
-      "destination": "/jupyter"
+      "destination": "/"
     },
     {
       "source": "/python/song",
-      "destination": "/jupyter#song"
+      "destination": "/"
     },
     {
       "source": "/python/music-widget",
-      "destination": "/jupyter#song"
+      "destination": "/"
     },
     {
       "source": "/playground/notebook",

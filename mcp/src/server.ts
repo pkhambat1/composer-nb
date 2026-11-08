@@ -1,5 +1,5 @@
 /* Music tools and optional owner-scoped notebook tools for MCP clients. UI resources
-   reuse the shared notebook editor. Transports live in bin.ts and http.ts. */
+   reuse the shared notebook editor. The transport is http.ts: hosted by api/mcp.ts, and locally by dev.ts. */
 import { createRequire } from "node:module"
 import { registerAppTool } from "@modelcontextprotocol/ext-apps/server"
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
@@ -59,7 +59,8 @@ export function createServer({ site = SITE, notebook }: Options = {}): McpServer
     { name: "composer-nb", version: VERSION },
     { instructions: INSTRUCTIONS },
   )
-  const grooveUrl = (g: Groove) => `${site}/grooves/${slugOf(g.title)}/`
+  // Where a groove can be read in full: its resource
+  const grooveUri = (g: Groove) => `composer-nb://grooves/${slugOf(g.title)}`
   if (notebook) registerNotebookTools(server, notebook)
   const query = (source: string, after?: string) =>
     `src=${encodeURIComponent(source)}` + (after ? `&after=${encodeURIComponent(after)}` : "")
@@ -173,7 +174,7 @@ export function createServer({ site = SITE, notebook }: Options = {}): McpServer
       const out: string[] = []
       for (const g of full) {
         out.push(
-          `## ${g.title}\n${plain(g.byline)}\n\n${plain(g.body)}\n\n${fence(g.source)}\n\nPage: ${grooveUrl(g)}`,
+          `## ${g.title}\n${plain(g.byline)}\n\n${plain(g.body)}\n\n${fence(g.source)}`,
         )
       }
       if (rest.length) {
@@ -182,7 +183,7 @@ export function createServer({ site = SITE, notebook }: Options = {}): McpServer
             rest
               .map(
                 (g) =>
-                  `- ${g.title} (${g.section.toLowerCase()}): ${plain(g.byline)}. ${plain(g.body).split(". ")[0]}. ${grooveUrl(g)}`,
+                  `- ${g.title} (${g.section.toLowerCase()}): ${plain(g.byline)}. ${plain(g.body).split(". ")[0]}. ${grooveUri(g)}`,
               )
               .join("\n"),
         )
@@ -236,7 +237,7 @@ export function createServer({ site = SITE, notebook }: Options = {}): McpServer
           {
             uri: uri.href,
             mimeType: "text/markdown",
-            text: `${grooveText(g)}\n\n${fence(g.source)}\n\nPage: ${grooveUrl(g)}\n`,
+            text: `${grooveText(g)}\n\n${fence(g.source)}\n`,
           },
         ],
       }),

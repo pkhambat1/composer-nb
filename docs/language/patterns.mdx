@@ -3,11 +3,7 @@ title: "Patterns"
 description: "The pattern type: lines that play together and repeat, how long a pattern lasts, groups, bar and every."
 ---
 
-import { Cell } from "/snippets/cell.jsx"
-
 A `pattern` value holds lines that start together and repeat. A `block` holds lines that play once. Braces that are a value always say which, in front of the name or, without one, in front of the braces: `pattern groove = { ... }`, `block myBlock = { ... }`, `pattern { ... }`, `block { ... }`. An untyped `myBlock = { ... }` is an error and defines nothing, and so is a bare `{ ... }` after `play` or on a line of its own. Declaring either plays nothing. [`play`](/language/play) renders it.
-
-<Cell>
 
 ```composer-nb
 set time 5 over 4
@@ -21,8 +17,6 @@ pattern groove = {
 play groove
 ```
 
-</Cell>
-
 ## Duration
 
 Each line repeats at its own length, and the pattern lasts until they end together: the least common multiple of their lengths. Above, the floor tom repeats every 3 steps, the kick every 4 and the snare every 5, so they meet after 60 steps: three bars of `5 over 4`. A line that ends in [`...`](/language/overview#lengths) has no length of its own and doesn't count.
@@ -32,8 +26,6 @@ A length in front sets the duration instead: `pattern groove = 4 bars { ... }`. 
 ## Groups
 
 A `block` plays its instrument lines once, even when a repeating pattern beside or around it runs longer. A longer play leaves silence after the block rather than repeating it. Use a `pattern` when the material should loop.
-
-<Cell>
 
 ```composer-nb
 block accent = { crash: 1 }
@@ -49,11 +41,7 @@ play block {
 } for 2 bars
 ```
 
-</Cell>
-
 `( )` holds what plays in order: names, blocks, other groups, and lines of their own, one after another, separated by spaces or new lines. It is the one way to put things in order. On lines of their own, things play together, and two things on one line without brackets are an error. See [Blocks](/language/overview#blocks). A length in front of a name or a group repeats it for that long. In front of `pattern { ... }` or `block { ... }` it is that value's own length, as in a declaration, which is what lines ending in `...` need.
-
-<Cell>
 
 ```composer-nb
 pattern intro = { crash: 1 }
@@ -66,11 +54,7 @@ pattern chorus = {
 play (intro 4 bars (verse chorus) intro)
 ```
 
-</Cell>
-
 A group can run over several lines, and a line of its own in it plays as a pattern of one line.
-
-<Cell>
 
 ```composer-nb
 set octave 4
@@ -82,11 +66,7 @@ play (
 )
 ```
 
-</Cell>
-
 A pattern can hold another by name, on a line of its own, and its value can be a group.
-
-<Cell>
 
 ```composer-nb
 pattern beat = {
@@ -109,13 +89,9 @@ pattern song = (verse chorus)
 play song
 ```
 
-</Cell>
-
 ## bar
 
 `bar <n> { ... }` adds lines to bar `n` of the pattern or play it is in, every time through. `bar 3 to 4 { ... }` covers a range. It adds to what plays and silences nothing. Where it hits the same kit piece or instrument at the same moment as a line above, it wins.
-
-<Cell>
 
 ```composer-nb
 set time 7 over 8
@@ -139,15 +115,11 @@ play block {
 }
 ```
 
-</Cell>
-
 This is *The Sound of Muzak* by Porcupine Tree. The lines of `groove` meet after two bars, so the pattern is two bars long and the fill closes every pass.
 
 ## every
 
 `every <length>` in front of a line or block sets how long one step lasts inside it.
-
-<Cell>
 
 ```composer-nb
 set time 3 over 4
@@ -171,8 +143,6 @@ play block {
   feet
 }
 ```
-
-</Cell>
 
 This is Gavin Harrison's paradiddle challenge. `every 3 steps` makes each of the feet's steps three sixteenth notes long, so the feet play the paradiddle three times slower than the hands.
 

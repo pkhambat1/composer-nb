@@ -3,17 +3,11 @@ title: "Notes"
 description: "The notes type: what an instrument plays, one note at a time, by name or by degree of the key."
 ---
 
-import { Cell } from "/snippets/cell.jsx"
-
 An [instrument](/pitched/instruments)'s line holds a `notes` value when the word `notes` comes first: `bass: notes i---v---`. It is drawn on steps, and a step is a sixteenth note, so a bar of `4 over 4` is 16 steps.
-
-<Cell>
 
 ```composer-nb
 play piano: notes E4---E4---F4---G4--- | G4---F4---E4---D4---
 ```
-
-</Cell>
 
 ## Writing notes
 
@@ -35,8 +29,6 @@ In a pattern, the last note rings over the repeat until the first note or `_`. A
 
 A degree is a Roman numeral from `i` to `vii` where a note goes, written as a chord's is, counted on the scale of the [`key`](/pitched/key) and its mode: in C major `iii` is E, and in C minor it's Eb. A `b` or `#` in front moves it a semitone off the scale. Degree `i` is the root in the current `octave`; `'` after the numeral is an octave up for each mark, and `'` before it an octave down. A numeral is as long as it reads, so `iii` is one note, and two numerals in a row take a space: `i i`.
 
-<Cell>
-
 ```composer-nb
 set octave 4
 
@@ -49,8 +41,6 @@ set key F#
 play piano: notes scale
 ```
 
-</Cell>
-
 A name holds degrees, not pitches, so it is read under whichever key and mode play it: the second play is C minor, and the last F# major. Letters and degrees can share a line, as a chart holds `I vi|F G`. On a kit piece's line a number is a [beat](/drums/steps#beats), so `kick: 1 3` hits beats 1 and 3 and `bass: notes i iii` plays two degrees: the line's name says which.
 
 ## Counting from a note
@@ -59,21 +49,15 @@ A name holds degrees, not pitches, so it is read under whichever key and mode pl
 
 To count from a note that is itself counted with `of`, put that note in brackets. Here is the circle of fifths, counted up from C3:
 
-<Cell>
-
 ```composer-nb
 play piano: notes C3--- v of C3--- v of (v of C3)--- v of (v of (v of C3))---
 ```
-
-</Cell>
 
 This plays C3, G3, D4 and A4. Without the brackets, `v of v of C3` is an error. A note counted with `of` is still one note, so `-`, `_` and lengths work on it the same way.
 
 ## Lengths
 
 Commas split a line into parts. A [length](/language/overview#lengths) in front of one note holds it for that long, and in front of `rest` is silence. The length `...` is what is left of the block: `...G1` holds G1 to the end, and `...rest` is silence to the end. A line ended in `...` has no length of its own, so the other lines decide how long the block is.
-
-<Cell>
 
 ```composer-nb
 set time 3 over 4
@@ -87,11 +71,7 @@ play waltz for 2 bars
 play piano: notes 2 beats rest, E4---F4---, 1 bars G4
 ```
 
-</Cell>
-
 A length holds one note: `3 beats C2-E2-` is an error, since a figure is drawn on the steps. A long line continues on the next line when that line starts with `|`, and a length can follow the `|` as it follows a comma.
-
-<Cell>
 
 ```composer-nb
 notes flats = A3-Ab3-G3-Gb3-F3-E3-Eb3-D3-
@@ -100,13 +80,9 @@ notes flats = A3-Ab3-G3-Gb3-F3-E3-Eb3-D3-
 play piano: notes flats
 ```
 
-</Cell>
-
 ## Layers
 
 A line plays one note at a time. For notes that sound together, give the instrument a block of layers, one per line. Each layer is its own voice and repeats until they all end together. A layer can be a chart with `chords` in front, to put chords under a tune.
-
-<Cell>
 
 ```composer-nb
 set octave 4
@@ -117,4 +93,3 @@ play piano: {
 }
 ```
 
-</Cell>
