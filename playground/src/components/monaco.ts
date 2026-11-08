@@ -1,6 +1,8 @@
 /* Monaco, the editor VS Code uses, set up once for music cells: the language's brackets,
    comments and indenting, quiet themes after GitHub's, and composer-nb's own highlighter
    painting the tokens. Loaded on demand, as it's most of the page's weight. */
+// The core's types, for every program that compiles this file (the playground and the MCP app)
+/// <reference path="../monaco.d.ts" />
 import * as monaco from "monaco-editor/esm/vs/editor/edcore.main.js"
 import EditorWorker from "monaco-editor/esm/vs/editor/editor.worker.js?worker"
 import { highlightMusic } from "composer-nb/highlight"
