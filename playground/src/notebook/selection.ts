@@ -5,9 +5,11 @@ export function notebookSelection(target: EventTarget | null): NotebookSelection
   if (!(target instanceof Element)) return null
   const cellId = target.closest<HTMLElement>("[data-cell-id]")?.dataset.cellId
   if (!cellId) return null
-  if (target instanceof HTMLTextAreaElement) {
-    const fromLine = target.value.slice(0, target.selectionStart).split("\n").length
-    const toLine = target.value.slice(0, target.selectionEnd).split("\n").length
+  // The code editor keeps the lines its caret or selection is on (CodeEditor.tsx)
+  const source = target.closest<HTMLElement>("[data-source-lines]")
+  if (source?.dataset.fromLine) {
+    const fromLine = Number(source.dataset.fromLine)
+    const toLine = Number(source.dataset.toLine)
     return {
       cellId,
       kind: "source",

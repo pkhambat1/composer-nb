@@ -984,44 +984,19 @@ body {
   border-radius: var(--radius);
   overflow: hidden;
 }
-.code-hl,
-.code-area {
+/* Monaco fills this and sets its height to the source's (CodeEditor.tsx) */
+.code-editor {
+  min-height: 72px;
+}
+/* The source as text while Monaco loads, where Monaco will put it */
+.code-hl {
   font-family: var(--font-mono);
   font-size: 13px;
-  line-height: 1.5;
-  padding: 40px var(--code-pad-x) var(--code-pad-y);
+  line-height: 20px;
+  padding: 40px var(--code-pad-x) var(--code-pad-y) 52px;
   margin: 0;
-  border: none;
   white-space: pre-wrap;
-  overflow-wrap: normal;
-  word-break: normal;
   tab-size: 2;
-}
-.code-hl {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  color: var(--text);
-  overflow: hidden;
-  background: transparent;
-}
-.code-area {
-  position: relative;
-  width: 100%;
-  background: transparent;
-  color: transparent;
-  caret-color: var(--text);
-  outline: none;
-  resize: none;
-  overflow: hidden;
-  display: block;
-}
-.code-area::placeholder {
-  color: var(--text-mute);
-  font-style: italic;
-}
-.code-area::selection {
-  background: var(--border);
   color: var(--text);
 }
 .code-input:focus-within {
@@ -1033,7 +1008,8 @@ body {
   color: var(--traceback);
   font: 11px var(--font-mono);
 }
-.tk-comment {
+.tk-comment,
+.code-editor .tk-comment {
   color: var(--tk-comment);
   font-style: italic;
 }
@@ -1042,17 +1018,28 @@ body {
 .tk-root,
 .tk-root-maj,
 .tk-root-min,
-.tk-root-abs {
+.tk-root-abs,
+.code-editor .tk-directive-key,
+.code-editor .tk-inst,
+.code-editor .tk-root,
+.code-editor .tk-root-maj,
+.code-editor .tk-root-min,
+.code-editor .tk-root-abs {
   color: var(--tk-key);
   font-weight: 600;
 }
-.tk-root-min {
+.tk-root-min,
+.code-editor .tk-root-min {
   font-style: italic;
 }
 .tk-quality,
 .tk-ext,
 .tk-word,
-.tk-mod {
+.tk-mod,
+.code-editor .tk-quality,
+.code-editor .tk-ext,
+.code-editor .tk-word,
+.code-editor .tk-mod {
   color: var(--tk-value);
   font-weight: 500;
 }
@@ -1061,19 +1048,31 @@ body {
 .tk-beat,
 .tk-step,
 .tk-note,
-.tk-bass {
+.tk-bass,
+.code-editor .tk-directive-val,
+.code-editor .tk-rhythm,
+.code-editor .tk-beat,
+.code-editor .tk-step,
+.code-editor .tk-note,
+.code-editor .tk-bass {
   color: var(--tk-value);
 }
 .tk-bar,
 .tk-rest,
 .tk-slash,
-.tk-punct {
+.tk-punct,
+.code-editor .tk-bar,
+.code-editor .tk-rest,
+.code-editor .tk-slash,
+.code-editor .tk-punct {
   color: var(--tk-faint);
 }
-.tk-step-acc {
+.tk-step-acc,
+.code-editor .tk-step-acc {
   font-weight: 600;
 }
-.tk-error {
+.tk-error,
+.code-editor .tk-error {
   color: var(--text);
   background: var(--tk-error-bg);
   border-radius: var(--radius-sm);

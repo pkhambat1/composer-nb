@@ -2,7 +2,7 @@
 import React from "react"
 import { afterRun } from "../hooks/useKeyboard.ts"
 import type { NotebookCell } from "../shared/types.ts"
-import CodeEditor, { type RunState } from "./CodeEditor.tsx"
+import CodeEditor, { type CodeEditorHandle, type RunState } from "./CodeEditor.tsx"
 import MusicOutput, { type PlayerProps } from "./MusicOutput.tsx"
 import MarkdownContent from "./MarkdownCell.tsx"
 
@@ -167,9 +167,12 @@ function Cell({
     dragging?: boolean
   }) {
   const taRef = React.useRef<HTMLTextAreaElement>(null)
+  const codeRef = React.useRef<CodeEditorHandle>(null)
 
   React.useEffect(() => {
-    if (editing && taRef.current && document.activeElement !== taRef.current) {
+    const code = codeRef.current
+    if (editing && code && !code.hasFocus()) code.focusAtEnd(afterRun.keepScroll)
+    else if (editing && taRef.current && document.activeElement !== taRef.current) {
       taRef.current.focus({ preventScroll: afterRun.keepScroll })
       const v = taRef.current.value
       taRef.current.setSelectionRange(v.length, v.length)
@@ -285,7 +288,7 @@ function Cell({
         {cell.type === "music" ? (
           <>
             <CodeEditor
-              ref={taRef}
+              ref={codeRef}
               value={cell.source}
               onChange={(v) => onChange(v)}
               onFocus={() => {
