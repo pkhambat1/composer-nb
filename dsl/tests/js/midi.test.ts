@@ -48,7 +48,7 @@ function events(body: Uint8Array) {
 
 describe("MIDI export", () => {
   it("writes a format 1 file at 96 ticks a quarter, with a tempo track and the drums on channel 10", () => {
-    const bytes = file("set tempo 100\nplay {\n  kick: 1 bars x---\n  hat: 1 bars x-\n}")
+    const bytes = file("set tempo 100\nplay block {\n  kick: 1 bars x---\n  hat: 1 bars x-\n}")
     const [head, tempo, drums] = chunks(bytes)
     expect(head.id).toBe("MThd")
     expect(be16(head.body, 0)).toBe(1) // format
@@ -66,7 +66,7 @@ describe("MIDI export", () => {
   })
 
   it("puts each pitched instrument on its own track with its program, as long as it sounds", () => {
-    const bytes = file("play {\n  guitar: notes C---E---\n  bass: notes C-------\n}")
+    const bytes = file("play block {\n  guitar: notes C---E---\n  bass: notes C-------\n}")
     const [, , g, b] = chunks(bytes)
     const guitar = events(g.body)
     expect(String.fromCharCode(...guitar[0].slice(3))).toBe("guitar")

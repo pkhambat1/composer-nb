@@ -26,6 +26,10 @@ import type { Block, Statement, Text } from "./syntax.ts"
 import { fmt, lengthPrefix, MAX_SECONDS, singularLength, TPQ } from "./time.ts"
 import { SETTINGS, TYPED_BRACES_RE } from "./vocab.ts"
 
+// The braces after play say their type, as any others do
+const UNTYPED_PLAY =
+  "These braces need a type: play pattern { ... } repeats, play block { ... } plays once"
+
 // What one play plays
 // One block of a play's output, as the grid and the sheet draw it
 export type GridBlock = ReturnType<typeof gridBlocks>[number]
@@ -271,7 +275,7 @@ export function parseCell(src: unknown, inherited: State = initialState()) {
         err(
           ln,
           /^play\s*=/.test(text)
-            ? "play is a keyword, not a name, so it takes no =: play { ... }"
+            ? "play is a keyword, not a name, so it takes no =: play groove"
             : "play is a keyword, not an instrument, so it takes no colon: play groove",
         )
         continue
@@ -302,21 +306,19 @@ export function parseCell(src: unknown, inherited: State = initialState()) {
       }
 
       if (s.kind === "play") {
-        // play plays what's after it: its own statements in braces, or one line. play groove
-        // and play { groove } are the same thing. Lines in play { ... } play once; a type
-        // makes the braces a value, and play pattern { ... } repeats every line in it.
+        // play plays what's after it: a name, a group, one line, or braces with their type.
+        // play block { ... } plays its lines once and play pattern { ... } repeats them, and
+        // either way a length after them is the braces' own, so what repeats fills it.
         const duration = playDuration(s.value.parts, ln, err)
         if (!duration) continue
-        const typed =
-          duration.parts[0]?.kind === "text" && duration.parts[1]?.kind === "block"
-            ? tidy(duration.parts[0].text)
-            : ""
-        if (typed === "block") {
-          err(ln, "A play's own lines play once, so it takes no block: play { ... }")
+        if (duration.parts[0]?.kind === "block") {
+          err(ln, UNTYPED_PLAY)
           continue
         }
-        const repeats = typed === "pattern"
-        const parts = repeats ? duration.parts.slice(1) : duration.parts
+        const head = duration.parts[0]?.kind === "text" ? tidy(duration.parts[0].text) : ""
+        const typed = duration.parts[1]?.kind === "block" && /^(pattern|block)$/.test(head)
+        const repeats = typed && head === "pattern"
+        const parts = typed ? duration.parts.slice(1) : duration.parts
         const bars = duration.bars
         let ok = !duration.has || checkBars(bars, ln, err)
         const lead = parts[0]?.kind === "text" ? lengthPrefix(tidy(parts[0].text)) : null
@@ -329,7 +331,7 @@ export function parseCell(src: unknown, inherited: State = initialState()) {
             ln,
             bars
               ? "play needs music before for: play groove for 2 bars"
-              : "play needs something after it: play groove, or play { ... }",
+              : "play needs something after it: play groove, or play block { ... }",
           )
           continue
         }
@@ -354,18 +356,14 @@ export function parseCell(src: unknown, inherited: State = initialState()) {
             .map((p) => (p.kind === "text" ? tidy(p.text) : `${kind} { ... }`))
             .join(" ")
           if (tail && !lengthAfter(tail) && read.body.length) {
-            // play { ... } outro: things in order go in brackets
+            // play block { ... } outro: things in order go in brackets
             err(
               block.span.endLine,
               `What plays in order goes in brackets: play (${kind} { ... } ${tail})`,
             )
             ok = false
           } else if (
-            !checkTail(
-              tail,
-              block.span.endLine,
-              (n) => `play ${repeats ? "pattern " : ""}{ ... } for ${n} bars`,
-            )
+            !checkTail(tail, block.span.endLine, (n) => `play ${kind} { ... } for ${n} bars`)
           ) {
             ok = false
           }
@@ -449,8 +447,8 @@ export function parseCell(src: unknown, inherited: State = initialState()) {
       const alone = lengthPrefix(text)
       if (alone.rest.startsWith("{") || TYPED_BRACES_RE.test(alone.rest)) {
         const size = alone.has ? ` for ${fmt(alone.bars)} bars` : ""
-        const shown = alone.rest.startsWith("pattern") ? "pattern { ... }" : "{ ... }"
-        err(ln, `Nothing plays this. Write play ${shown}${size}`)
+        const kind = alone.rest.startsWith("pattern") ? "pattern" : "block"
+        err(ln, `Nothing plays this. Write play ${kind} { ... }${size}`)
         lineOf(s.parts, ln, "This {")
         continue
       }
@@ -487,7 +485,7 @@ export function parseCell(src: unknown, inherited: State = initialState()) {
         }
       } else if (l.kind === "part") {
         // Nothing floats at the top: what plays is inside a pattern or a play.
-        err(ln, `An instrument's line goes inside braces: in a pattern, or play { ${text} }`)
+        err(ln, `An instrument's line goes inside braces: in a pattern, or play block { ${text} }`)
       } else err(ln, `Nothing plays this line. Write play ${text}`)
     }
   }

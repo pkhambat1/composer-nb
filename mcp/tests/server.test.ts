@@ -21,7 +21,7 @@ pattern groove = {
   }
 }
 
-play {
+play block {
   crash: 1
   groove
 }`
@@ -72,7 +72,7 @@ describe("tools", () => {
 
   it("parse reports errors with their lines and the line's text", async () => {
     const r = await call("parse", {
-      source: "set tempo 90\n\nplay {\n  kick: x--x---\n  piano: notes Am F\n}",
+      source: "set tempo 90\n\nplay block {\n  kick: x--x---\n  piano: notes Am F\n}",
     })
     expect(r.isError).toBe(true)
     const t = textOf(r)
@@ -135,7 +135,7 @@ describe("tools", () => {
   })
 
   it("render refuses a cell with errors, and says what they are", async () => {
-    const r = await call("render", { source: "play { kick: xq }" })
+    const r = await call("render", { source: "play block { kick: xq }" })
     expect(r.isError).toBe(true)
     expect(textOf(r)).toContain("line 1")
   })

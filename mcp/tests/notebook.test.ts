@@ -14,7 +14,7 @@ const fixture: NotebookDocument = {
   cells: [
     { id: "settings", type: "music", source: "set tempo 92" },
     { id: "progression", type: "music", source: "play piano: chords Am F|C G" },
-    { id: "groove", type: "music", source: "play { kick: 1 3 }" },
+    { id: "groove", type: "music", source: "play block { kick: 1 3 }" },
   ],
 }
 
@@ -72,7 +72,7 @@ describe("host-owned notebook", () => {
         name: "update_music_cell",
         arguments: {
           cellId: "groove",
-          source: "play {\n kick: 1 3\n snare: 2 4\n hat: 1 2 3 4\n}",
+          source: "play block {\n kick: 1 3\n snare: 2 4\n hat: 1 2 3 4\n}",
           expectedRevision: before.revision,
         },
       })

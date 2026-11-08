@@ -1,5 +1,6 @@
 // components/Cell.tsx — Single cell (music or text)
 import React from "react"
+import { afterRun } from "../hooks/useKeyboard.ts"
 import type { NotebookCell } from "../shared/types.ts"
 import CodeEditor, { type RunState } from "./CodeEditor.tsx"
 import MusicOutput, { type PlayerProps } from "./MusicOutput.tsx"
@@ -169,10 +170,11 @@ function Cell({
 
   React.useEffect(() => {
     if (editing && taRef.current && document.activeElement !== taRef.current) {
-      taRef.current.focus()
+      taRef.current.focus({ preventScroll: afterRun.keepScroll })
       const v = taRef.current.value
       taRef.current.setSelectionRange(v.length, v.length)
     }
+    if (editing) afterRun.keepScroll = false
   }, [editing])
 
   // Auto-grow text cell textarea

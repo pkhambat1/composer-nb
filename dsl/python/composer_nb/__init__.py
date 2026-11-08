@@ -12,7 +12,7 @@ In Jupyter, load the cell magic and write music in `%%music` cells:
       snare: ----x---
     }
 
-    play {
+    play block {
       guitar: chords Am E7|G D
       beat
     }
