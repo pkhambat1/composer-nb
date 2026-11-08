@@ -47,29 +47,14 @@ monaco.editor.addKeybindingRules([
   },
 ])
 
-// The editor's chrome from GitHub's VS Code themes, on the cell's code background; the
-// token colours are the playground's own (.tk-* in app.css)
-// Brackets take the playground's faint colour (--tk-faint) at every depth
-function theme(
-  base: "vs" | "vs-dark",
-  faint: string,
-  c: Record<string, string>,
-): monaco.editor.IStandaloneThemeData {
-  const brackets = Object.fromEntries(
-    [1, 2, 3, 4, 5, 6].map((n) => [`editorBracketHighlight.foreground${n}`, faint]),
-  )
-  return { base, inherit: true, rules: [], colors: { ...brackets, ...c } }
-}
-monaco.editor.defineTheme(
-  "nb-light",
-  theme("vs", "#a0a0a0", {
-    "editor.background": "#f5f5f5",
-    "editor.foreground": "#1a1a1a",
-    "editorCursor.foreground": "#1a1a1a",
+// The editor's chrome from GitHub's VS Code themes. The background, text and bracket colours
+// come from the page's own variables (app.css), so the editor sits on the cell's code
+// background; the token colours are the playground's .tk-* classes.
+const CHROME = {
+  light: {
     "editorLineNumber.foreground": "#c3c7cd",
     "editorLineNumber.activeForeground": "#7c828c",
     "editor.lineHighlightBackground": "#00000008",
-    "editor.lineHighlightBorder": "#00000000",
     "editor.selectionBackground": "#0969da26",
     "editor.inactiveSelectionBackground": "#0969da12",
     "editor.selectionHighlightBackground": "#4ac26b26",
@@ -77,25 +62,15 @@ monaco.editor.defineTheme(
     "editorIndentGuide.background1": "#1f232812",
     "editorIndentGuide.activeBackground1": "#1f23287a",
     "editorBracketMatch.background": "#4ac26b26",
-    "editorBracketMatch.border": "#00000000",
-    "editorGutter.background": "#f5f5f5",
     "editorWidget.background": "#ffffff",
     "editorWidget.border": "#e0e0e0",
     "input.background": "#ffffff",
     "input.border": "#e0e0e0",
-    focusBorder: "#1a73e8",
-  }),
-)
-monaco.editor.defineTheme(
-  "nb-dark",
-  theme("vs-dark", "#656b75", {
-    "editor.background": "#1b1e23",
-    "editor.foreground": "#e1e4e8",
-    "editorCursor.foreground": "#e1e4e8",
+  },
+  dark: {
     "editorLineNumber.foreground": "#474d58",
     "editorLineNumber.activeForeground": "#8a919c",
     "editor.lineHighlightBackground": "#ffffff08",
-    "editor.lineHighlightBorder": "#00000000",
     "editor.selectionBackground": "#2f81f733",
     "editor.inactiveSelectionBackground": "#2f81f71a",
     "editor.selectionHighlightBackground": "#3fb95026",
@@ -103,18 +78,48 @@ monaco.editor.defineTheme(
     "editorIndentGuide.background1": "#e6edf312",
     "editorIndentGuide.activeBackground1": "#e6edf366",
     "editorBracketMatch.background": "#3fb95033",
-    "editorBracketMatch.border": "#00000000",
-    "editorGutter.background": "#1b1e23",
     "editorWidget.background": "#21252b",
     "editorWidget.border": "#353b46",
     "input.background": "#1b1e23",
     "input.border": "#353b46",
-    focusBorder: "#7eb6ff",
-  }),
-)
+  },
+}
 
-// The page's theme, as App sets it on <html>
-export const themeName = () => (document.documentElement.dataset.theme === "dark" ? "nb-dark" : "nb-light")
+// A colour variable of the page, as Monaco needs it: hex
+function cssColor(name: string, fallback: string): string {
+  const value = getComputedStyle(document.documentElement).getPropertyValue(name).trim()
+  return /^#[0-9a-f]{3,8}$/i.test(value) ? value : fallback
+}
+
+// The page's theme, as App sets it on <html>, made into a Monaco theme from the page's colours
+export function themeName(): string {
+  const dark = document.documentElement.dataset.theme === "dark"
+  const name = dark ? "nb-dark" : "nb-light"
+  const background = cssColor("--code-bg", dark ? "#1b1e23" : "#f5f5f5")
+  const text = cssColor("--text", dark ? "#e1e4e8" : "#1a1a1a")
+  // Brackets take the faint token colour at every depth
+  const faint = cssColor("--tk-faint", dark ? "#656b75" : "#a0a0a0")
+  const brackets = Object.fromEntries(
+    [1, 2, 3, 4, 5, 6].map((n) => [`editorBracketHighlight.foreground${n}`, faint]),
+  )
+  monaco.editor.defineTheme(name, {
+    base: dark ? "vs-dark" : "vs",
+    inherit: true,
+    rules: [],
+    colors: {
+      ...CHROME[dark ? "dark" : "light"],
+      ...brackets,
+      "editor.background": background,
+      "editorGutter.background": background,
+      "editor.foreground": text,
+      "editorCursor.foreground": text,
+      "editor.lineHighlightBorder": "#00000000",
+      "editorBracketMatch.border": "#00000000",
+      focusBorder: cssColor("--accent", dark ? "#7eb6ff" : "#1a73e8"),
+    },
+  })
+  return name
+}
 new MutationObserver(() => monaco.editor.setTheme(themeName())).observe(document.documentElement, {
   attributes: true,
   attributeFilter: ["data-theme"],
