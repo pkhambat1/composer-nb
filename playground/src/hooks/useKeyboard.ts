@@ -14,6 +14,11 @@ import { APP_CONSTANTS } from "../shared/constants.ts"
 import type { CellType, NotebookCell } from "../shared/types.ts"
 import type { Place } from "./useCellManager.ts"
 
+// Moving on after a run: the next cell takes the caret and the page stays where it is, so
+// the cell just run and the output it's about to show stay in view. The cell that takes
+// focus reads this, and a new cell from anywhere else still scrolls to itself.
+export const afterRun = { keepScroll: false }
+
 export function useKeyboard({
   selectedId,
   editingId,
@@ -55,6 +60,7 @@ export function useKeyboard({
         if (selectedId) {
           runCell(selectedId)
           if (single) return
+          afterRun.keepScroll = true
           const idx = findIndex(selectedId)
           if (idx < cells.length - 1) {
             const nextId = cells[idx + 1].id
@@ -80,7 +86,9 @@ export function useKeyboard({
         e.preventDefault()
         if (selectedId) {
           runCell(selectedId)
-          if (!single) insertCell(selectedId, "below", "music")
+          if (single) return
+          afterRun.keepScroll = true
+          insertCell(selectedId, "below", "music")
         }
         return
       }
