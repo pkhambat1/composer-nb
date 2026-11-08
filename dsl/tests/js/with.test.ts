@@ -94,7 +94,7 @@ describe("with", () => {
     expect(Object.keys(p.state.words)).toEqual([])
     // and inside a play, as names in any block do
     const q = parseSource(
-      "play {\n  with key E {\n    notes riff = i---v---\n    bass: notes riff\n  }\n  piano: notes riff\n}",
+      "play block {\n  with key E {\n    notes riff = i---v---\n    bass: notes riff\n  }\n  piano: notes riff\n}",
     )
     expect(q.errors.map((e) => e.msg)).toContain(
       `"riff" isn't defined above. Name it first: notes riff = F---G---`,
@@ -116,7 +116,7 @@ describe("with", () => {
 
   it("is a block in a play: on its own line it sounds with the others, and repeats as a block does", () => {
     const o = clean(
-      "set tempo 96\nchords verse = i iii|vii iv\n\nwith key E, mode minor {\n  play {\n    piano: chords verse\n    with octave 2 { bass: notes i---v--- }\n  }\n}",
+      "set tempo 96\nchords verse = i iii|vii iv\n\nwith key E, mode minor {\n  play block {\n    piano: chords verse\n    with octave 2 { bass: notes i---v--- }\n  }\n}",
     ).outputs[0]
     expect(chords(o)).toEqual(["Em", "G", "D", "Am"])
     // the bass's two notes, under the whole chart, an octave below
@@ -166,7 +166,7 @@ describe("with", () => {
     expect(notes(o)).toEqual(["piano C3", "bass C2"])
     // what's in a bar repeats to fill it
     const bar = clean(
-      "play {\n  bar 2 with octave 5 { piano: notes i--- }\n  kick: x---\n} for 2 bars",
+      "play block {\n  bar 2 with octave 5 { piano: notes i--- }\n  kick: x---\n} for 2 bars",
     ).outputs[0]
     expect(bar.notes.map((e) => [e.note.name, e.secStart])).toEqual([
       ["C5", 2],
@@ -203,17 +203,19 @@ describe("with", () => {
     const rule =
       "The lines of a play or a pattern play together, so they share one tempo. Put the with around the whole play, " +
       "with tempo 60 { play ... }, or on a part that plays in order: ( with tempo 60 { ... } )"
-    expect(firstError("play {\n  kick: x---\n  with tempo 60 { snare: ---- x--- }\n}")).toBe(rule)
+    expect(firstError("play block {\n  kick: x---\n  with tempo 60 { snare: ---- x--- }\n}")).toBe(
+      rule,
+    )
     expect(
       firstError("pattern pp = {\n  kick: x---\n  with tempo 60 { snare: ---- x--- }\n}\nplay pp"),
     ).toBe(rule)
-    expect(firstError("play {\n  with swing on { ride: x- }\n  kick: 1 3\n}")).toMatch(
+    expect(firstError("play block {\n  with swing on { ride: x- }\n  kick: 1 3\n}")).toMatch(
       /so they share one swing/,
     )
     // nor can a group that changes it, played with other lines
     expect(
       firstError(
-        "pattern slow = (with tempo 60 { kick: x--- })\nplay {\n  slow\n  snare: ---- x---\n}",
+        "pattern slow = (with tempo 60 { kick: x--- })\nplay block {\n  slow\n  snare: ---- x---\n}",
       ),
     ).toBe(
       "slow changes the tempo, so it can't sound together with other lines. Play it on its own, or put the with around the whole play: with tempo 60 { play ... }",
@@ -233,7 +235,7 @@ describe("with", () => {
     expect(firstError("with key E")).toBe(
       "with takes the settings its block plays with, then the block: with octave 2 { ... }",
     )
-    expect(firstError("play {\n  with key E bass: notes i---\n}")).toBe(
+    expect(firstError("play block {\n  with key E bass: notes i---\n}")).toBe(
       "with takes the settings its block plays with, then the block: with octave 2 { ... }",
     )
     expect(firstError("with key E, {\n  play piano: notes i---\n}")).toBe(
@@ -262,9 +264,9 @@ describe("with", () => {
 
   it("can't hold an instrument's line at the top, where nothing plays it", () => {
     expect(firstError("with key E {\n  piano: chords i\n}")).toBe(
-      "An instrument's line goes inside braces: in a pattern, or play { piano: chords i }",
+      "An instrument's line goes inside braces: in a pattern, or play block { piano: chords i }",
     )
-    expect(errors("play {\n  with key E {\n    play piano: notes i---\n  }\n}")).toContain(
+    expect(errors("play block {\n  with key E {\n    play piano: notes i---\n  }\n}")).toContain(
       "play goes at the top, not inside braces",
     )
   })

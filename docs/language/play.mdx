@@ -9,7 +9,7 @@ import { Cell } from "/snippets/cell.jsx"
 
 ```text
 play <name, group or line> [for <number> bars]
-play { <statements> } [for <number> bars]
+play block { <statements> } [for <number> bars]
 play pattern { <lines> } [for <number> bars]
 ```
 
@@ -23,7 +23,7 @@ pattern groove = {
 
 play groove
 play piano: chords Am F for 2 bars
-play {
+play block {
   crash: 1
   groove
 } for 4 bars
@@ -35,7 +35,7 @@ This cell renders three outputs.
 
 ## What repeats
 
-A play is a timeline, and its statements start together. `play { ... }` holds those statements, and each plays as this table says.
+A play is a timeline, and its statements start together. The braces after `play` say their type, as any others do, so a bare `play { ... }` is an error. `play block { ... }` plays its statements as this table says.
 
 | In a play | Plays |
 | --- | --- |
@@ -45,12 +45,12 @@ A play is a timeline, and its statements start together. `play { ... }` holds th
 | `every` | Repeated until the play ends. |
 | `bar <n>` | In bar `n`. |
 
-`play pattern { ... }` plays one value, a pattern, so every line in it repeats. The lines of `play { ... }` already play once, so `play block { ... }` is an error.
+`play pattern { ... }` repeats every line in it, as any pattern does.
 
 <Cell>
 
 ```composer-nb
-play {
+play block {
   kick: x---
   snare: ---- x---
 } for 2 bars
@@ -70,6 +70,8 @@ The first output plays each line once, then silence. The second repeats both lin
 Write `play groove for 2 bars` to set the whole output’s duration. The duration follows the music; `play 2 bars groove` is rejected.
 
 Without a duration, a play lasts as long as its longest statement, and what repeats must fit that a whole number of times. With a length, it lasts exactly that long: whatever is repeating stops at the end, and silence fills any time left over. A play can't run past 10 minutes.
+
+After braces, the length is theirs: a pattern in `play block { ... } for 4 bars` repeats to fill all four bars. A name keeps the length it was declared with, so `play accent for 4 bars` plays the block `accent` once, then silence.
 
 ## Output
 

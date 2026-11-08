@@ -572,16 +572,14 @@ function line(code: string, depth = 0, inside = false): Part[] {
       else if (m[8]) out.push(...playable(m[8]))
     }
   } else if (word === "play" && /^(\s|$)/.test(after)) {
-    // play groove, play { ... } for 3 bars, play kick: x--x
+    // play groove, play block { ... } for 3 bars, play kick: x--x
     const space = /^\s*/.exec(after)![0]
     out.push(part("tk-directive-key", word), part(null, space))
     const len = length(after.slice(space.length))
     out.push(...len.parts.map((token) => (token.c ? { ...token, c: "tk-error" } : token)))
-    if (len.rest.startsWith("{")) out.push(...braces(len.rest, st))
-    // play block { ... }: a play's own lines already play once
-    else if (/^block\s*\{/.test(len.rest)) {
-      out.push(part("tk-error", "block"), ...names(len.rest.slice(5), st))
-    } else if (len.rest) out.push(...playable(len.rest, st))
+    // braces say their type here too: play { ... } is a mistake
+    if (len.rest.startsWith("{")) out.push(...braces(len.rest, st, true))
+    else if (len.rest) out.push(...playable(len.rest, st))
   } else if (word === "set" && /^(\s|$)/.test(after)) {
     // set tempo 90, set key E, set guitar.electric muted: set, then a setting. Only at the top
     const space = /^\s*/.exec(after)![0]

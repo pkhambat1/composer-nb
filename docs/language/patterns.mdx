@@ -5,7 +5,7 @@ description: "The pattern type: lines that play together and repeat, how long a 
 
 import { Cell } from "/snippets/cell.jsx"
 
-A `pattern` value holds lines that start together and repeat. A `block` holds lines that play once. Braces that are a value always say which, in front of the name or, without one, in front of the braces: `pattern groove = { ... }`, `block myBlock = { ... }`, `pattern { ... }`, `block { ... }`. An untyped `myBlock = { ... }` is an error and defines nothing, and so is a bare `{ ... }` on a line of its own. Declaring either plays nothing. [`play`](/language/play) renders it.
+A `pattern` value holds lines that start together and repeat. A `block` holds lines that play once. Braces that are a value always say which, in front of the name or, without one, in front of the braces: `pattern groove = { ... }`, `block myBlock = { ... }`, `pattern { ... }`, `block { ... }`. An untyped `myBlock = { ... }` is an error and defines nothing, and so is a bare `{ ... }` after `play` or on a line of its own. Declaring either plays nothing. [`play`](/language/play) renders it.
 
 <Cell>
 
@@ -43,7 +43,7 @@ pattern beat = {
   hat: x-
 }
 
-play {
+play block {
   accent
   beat
 } for 2 bars
@@ -133,7 +133,7 @@ pattern groove = {
   }
 }
 
-play {
+play block {
   crash: 1
   groove
 }
@@ -166,7 +166,7 @@ pattern feet = every 3 steps {
   hat.pedal: -x--x-xx
 }
 
-play {
+play block {
   hands
   feet
 }

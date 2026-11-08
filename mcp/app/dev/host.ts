@@ -52,7 +52,7 @@ const demoEdit = async (text: string) => {
         arguments: {
           cellId: selectedId,
           expectedRevision: notebook.revision,
-          source: "play {\n  kick: 1 3\n  snare: 2 4\n  hat: 1 2 3 4\n}",
+          source: "play block {\n  kick: 1 3\n  snare: 2 4\n  hat: 1 2 3 4\n}",
         },
       },
       CallToolResultSchema,

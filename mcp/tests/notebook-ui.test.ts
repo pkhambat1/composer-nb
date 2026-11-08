@@ -58,7 +58,7 @@ describe("host selection handoff", () => {
       })
       expect(editor().selectedId).toBe("beat")
       await act(async () => {
-        editor().updateCell("beat", { source: "play { kick: 1 }" })
+        editor().updateCell("beat", { source: "play block { kick: 1 }" })
       })
       expect(editor().selectedId).toBe("beat")
       expect(reports).toBe(3)

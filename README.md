@@ -30,7 +30,7 @@ pattern groove = 3 bars {
   ride.bell: x--
 }
 
-play {
+play block {
   crash: 1
   groove
 } for 6 bars
@@ -40,7 +40,7 @@ play {
   <img src="docs/images/lines-line-up.svg" width="820" alt="A step grid in 7 over 8: the kick and snare repeat every 7 steps and the ride bell every 3, lining up again after 21 steps">
 </p>
 
-A play is a timeline: its own lines play once, so the crash hits once while the groove repeats under it. Anything that repeats has to fit what it's in, and if it doesn't, the error says where it lines up.
+A block is a timeline: its lines play once, so the crash hits once while the groove repeats under it. Anything that repeats has to fit what it's in, and if it doesn't, the error says where it lines up.
 
 ## Notes go on the same steps
 
@@ -57,7 +57,7 @@ pattern groove = {
   guitar.electric: notes E---F# E-E--
 }
 
-play {
+play block {
   crash: 1
   groove
 }
@@ -85,7 +85,7 @@ pattern groove = {
   }
 }
 
-play {
+play block {
   crash: 1
   groove
 } for 6 bars

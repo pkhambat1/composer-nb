@@ -17,7 +17,7 @@ pattern groove = 3 bars {
   ride.bell: x--
 }
 
-play {
+play block {
   crash: 1
   groove
 } for 6 bars
@@ -125,7 +125,7 @@ Every line starts by saying what it is:
 | `steps pair = ^-x-`    | A name, with its type in front: `steps`, `notes`, `chords`, `pattern` or `block`   |
 | `kick: x--x---`        | Inside braces, an instrument and what it plays                                     |
 | `bar 2 { ... }`        | Inside braces, what plays in one bar of the pattern or play it's in                |
-| `play { ... }`         | Plays what's after it, a pattern or one line. Nothing else makes sound             |
+| `play block { ... }`   | Plays what's after it, a pattern or one line. Nothing else makes sound             |
 | `play pattern { ... }` | A play whose lines repeat, as a pattern's do                                       |
 
 `//` starts a comment. Blank lines and indentation mean nothing. Settings set at the top, and names, carry on into the cells below.
@@ -142,7 +142,7 @@ A name's type goes in front of it, and `=` gives it its value:
 | `pattern` | Lines in braces that play together, over and over: `pattern groove = { ... }` | On a line of its own, or after `play`                         |
 | `block`   | Lines in braces that play together, once: `block accent = { ... }`            | On a line of its own, or after `play`                         |
 
-Braces without a name say their type too: `pattern { ... }` repeats and `block { ... }` plays once. A bare `{ ... }` on a line of its own or in brackets is an error.
+Braces without a name say their type too: `pattern { ... }` repeats and `block { ... }` plays once. A bare `{ ... }` after `play`, on a line of its own or in brackets is an error.
 
 A name of any type starts with a lowercase letter and takes a capital for each new word: `riff`, `partA`, `countIn`. It's at least two characters and never a numeral, and two names that differ only in their capitals are an error. A name only holds its type, and only goes where that type goes. Chords on a drum's line, or steps where a pattern belongs, is an error that names both types. A name without a type is an error too, and the message shows the line to write.
 
@@ -170,7 +170,7 @@ chords walk = i ii|iii iv|v vi|vii i
 chords prog = i vi|iv v
 
 with key E, mode minor {
-  play {
+  play block {
     piano: chords walk
     with octave 2 { bass: notes i---v--- }
   }
@@ -247,7 +247,7 @@ pattern beat = {
   hat: x-
 }
 
-play {
+play block {
   crash: 1
   beat
 } for 2 bars
@@ -292,7 +292,7 @@ pattern groove = {
   }
 }
 
-play {
+play block {
   crash: 1
   groove
 } for 6 bars
@@ -309,7 +309,7 @@ play {
 Instead of counting out a long run of `-`, put a length in front of `rest`, in `steps`, `beats` or `bars`: `2 beats rest`. Commas separate the parts of a line, and a part is steps as they're drawn or a length with what fills it:
 
 ```
-play {
+play block {
   snare: 2 beats rest, dd, 1.5 beats rest
   crash: 1 bars rest, x
 }
@@ -350,7 +350,7 @@ Putting something in a pattern is the one way to repeat it, and a length is the 
 | You write                      | Meaning                                                |
 | ------------------------------ | ------------------------------------------------------ |
 | `pattern beat = { hat: x- }`   | Everything in a pattern repeats until the pattern ends |
-| `play { crash: 1 ... }`        | A play is a timeline, and its own lines play once      |
+| `play block { crash: 1 ... }`  | A block is a timeline, and its lines play once         |
 | `play pattern { hat: x- ... }` | Its lines repeat, as in any pattern                    |
 | `groove`, on a line of its own | In a play, the pattern repeats until the play ends     |
 | `3 bars pattern { ... }`       | A length, always plural, in front of what it measures  |
@@ -359,7 +359,7 @@ Putting something in a pattern is the one way to repeat it, and a length is the 
 | `8 bars (a b)`                 | Brackets play `a` and `b` in order, for 8 bars         |
 | `bar 2 { ... }`                | A bar, in front of what plays there and nowhere else   |
 
-Without a length, a pattern lasts until its lines line up again (and long enough to have any bar it names), and a play lasts as long as the longest thing in it. A play can be longer than its lines, and the rest is silent: `play { crash: 1 } for 4 bars`.
+Without a length, a pattern lasts until its lines line up again (and long enough to have any bar it names), and a play lasts as long as the longest thing in it. A play can be longer than its lines, and the rest is silent: `play block { crash: 1 } for 4 bars`.
 
 Whatever repeats has to fit what it's in a whole number of times. Lines of different lengths drift against each other, which is how you write a polyrhythm, and the pattern's length has to be one where they line up:
 

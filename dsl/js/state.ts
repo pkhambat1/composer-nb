@@ -13,7 +13,7 @@ export type Word = {
   above?: boolean // it came from a cell above, so this cell can define it again
 }
 
-// A block written in a line: its own lines. { kick: x--- } in play { kick: x--- }. `type` is
+// A block written in a line: its own lines. { kick: x--- } in play block { kick: x--- }. `type` is
 // the type its place gives it, where that's the only reading: every 3 steps { ... }
 export type Braces = { kind: "braces"; ln: number; lines: Line[]; type?: "pattern" }
 // What a line holds, in order: text as it was written, and the blocks written in it
