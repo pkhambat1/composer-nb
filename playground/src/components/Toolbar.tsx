@@ -146,7 +146,7 @@ export default function Toolbar({
                 { primary: true },
               )
             : btn(
-                "Play every cell, top to bottom",
+                "Run every cell, top to bottom",
                 onRunAll,
                 <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
                   {Icon(
@@ -155,7 +155,7 @@ export default function Toolbar({
                       <polygon points="8,2 13,8 8,14" />
                     </>,
                   )}
-                  <span style={{ fontSize: 12, fontWeight: 600 }}>Play all</span>
+                  <span style={{ fontSize: 12, fontWeight: 600 }}>Run all</span>
                 </span>,
                 { primary: true },
               )}

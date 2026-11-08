@@ -271,7 +271,7 @@ export default function MusicOutput({
       <div className="cell-output cell-output-error">
         <div className="traceback">
           <span className="tb-name">
-            {lines.length === 1 ? "1 mistake" : `${lines.length} mistakes`}
+            {lines.length === 1 ? "1 error" : `${lines.length} errors`}
           </span>
           <div className="tb-msg-block">
             {lines.map((l, i) => (
@@ -286,12 +286,7 @@ export default function MusicOutput({
   }
 
   if (output.kind === "info") {
-    return (
-      <div className="cell-output cell-output-info">
-        <div className="out-prompt" />
-        <div className="info-msg">{output.message}</div>
-      </div>
-    )
+    return <div className="cell-run-confirmation" role="status">Cell executed successfully.</div>
   }
 
   const parsed = output.parsed

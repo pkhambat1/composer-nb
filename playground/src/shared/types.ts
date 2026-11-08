@@ -11,7 +11,7 @@ export type { Theme }
 export type CellType = "music" | "text"
 export type SavedCell = { id?: string; type: CellType; source: string }
 
-// What a music cell shows under it once it has run: its mistakes, a note that nothing
+// What a music cell shows under it once it has run: its errors, a note that nothing
 // plays, the parse while the audio renders, then the audio
 export type CellOutput =
   | { kind: "error"; error: string; lines?: number[]; source?: string }
@@ -39,6 +39,7 @@ export type Notebook = {
   title: string
   cells: SavedCell[]
   updated: number
+  revision?: number
   starters?: string
 }
 // Every notebook on this device, and the one that's open

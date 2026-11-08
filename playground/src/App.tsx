@@ -5,18 +5,21 @@ import { EMBED, embedCell, embedTheme, listenForTheme, reportHeight } from "./sh
 import type { Theme } from "./shared/types.ts"
 import { useNotebookController } from "./hooks/useNotebookController.ts"
 import { NotebookEditor, NotebookWorkspace, NotebookToolbar } from "./notebook/index.ts"
-import { openingNotebook, useNotebooks } from "./hooks/useNotebooks.ts"
+import { useNotebooks } from "./hooks/useNotebooks.ts"
 import NotebookTitle, { type NotebookMenu } from "./components/NotebookTitle.tsx"
 import { useTheme } from "./components/theme-panel.tsx"
 import Sidebar from "./components/Sidebar.tsx"
 import StatusBar from "./components/StatusBar.tsx"
+import AuthGate from "./components/AuthGate.tsx"
+import type { Session } from "@supabase/supabase-js"
+import { supabase } from "./lib/supabase.ts"
 
 // ============================================================================
 // App
 // ============================================================================
 
 export default function App() {
-  return EMBED ? <EmbeddedNotebook /> : <WebsiteNotebook />
+  return EMBED ? <EmbeddedNotebook /> : <AuthGate>{(session) => <WebsiteNotebook session={session} />}</AuthGate>
 }
 
 // The docs iframe adapter owns messaging and sizing, but uses the same editor as MCP.
@@ -40,15 +43,14 @@ function EmbeddedNotebook() {
 }
 
 // Website-only persistence, navigation and chrome never enter the MCP adapter.
-function WebsiteNotebook() {
-  const [opening] = React.useState(() => openingNotebook(APP_CONSTANTS.STARTER_CELLS))
-  const controller = useNotebookController(opening.cells)
+function WebsiteNotebook({ session }: { session: Session }) {
+  const controller = useNotebookController(APP_CONSTANTS.STARTER_CELLS)
   const { manager: cm, runtime } = controller
   const { kernelStatus, playback, stopAll } = runtime
   const { cells, setSelectedId, editingId } = cm
 
   const notebooks = useNotebooks({
-    store: opening?.store || { current: null, list: [] },
+    starters: APP_CONSTANTS.STARTER_CELLS,
     cells,
     setCells: cm.setCells,
     setSelectedId,
@@ -105,8 +107,11 @@ function WebsiteNotebook() {
         notebooks={notebooks}
         onOpenNotebook={openNotebook}
         onNewNotebook={newNotebook}
+        onRenameNotebook={notebooks.rename}
         theme={theme}
         onSetTheme={(v) => setSetting("theme", v)}
+        accountEmail={session.user.email || "Signed in"}
+        onSignOut={() => void supabase?.auth.signOut()}
       />
 
       <div className="app-main">
@@ -124,7 +129,7 @@ function WebsiteNotebook() {
             <>
               <NotebookTitle
                 title={notebooks.current?.title || "Notebook"}
-                subtitle="Kept on this device as you write"
+                subtitle={notebooks.status}
                 menu={notebookMenu}
               />
               <NotebookToolbar controller={controller} />
