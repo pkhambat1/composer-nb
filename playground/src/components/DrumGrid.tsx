@@ -1,5 +1,4 @@
 // components/DrumGrid.tsx — Drum hits and notes bar by bar, counted 1 e & a, with a playhead
-import { useSelectedTarget } from "../notebook/SelectionContext.tsx"
 import React from "react"
 import { TPQ, type GridBlock } from "composer-nb/language"
 import { countingOf, gridCounts, gridRows } from "composer-nb/grid"
@@ -9,7 +8,6 @@ import { countingOf, gridCounts, gridRows } from "composer-nb/grid"
 export type Follows = { blocks: GridBlock[]; getTime: () => number; playing: boolean }
 
 function DrumBlock({ block, index }: { block: GridBlock; index: number }) {
-  const isSelected = useSelectedTarget()
   const { per, rows } = gridRows(block)
   // Wide enough for the longest line name, e.g. guitar.electric
   const labels = Math.max(...rows.map((r) => r.label.length), 5) + 1
@@ -44,16 +42,13 @@ function DrumBlock({ block, index }: { block: GridBlock; index: number }) {
                 } else if (e?.held) cls += " dg-held"
                 const label = `${row.label || row.key}, block ${index + 1}, bar ${bar + 1}, step ${col + 1} of ${per}, ${block.res} steps per quarter note, offset ${col * (TPQ / block.res)} ticks within bar (${TPQ} ticks per quarter note), ${e?.hit ? "hit" : e?.held ? "held note" : "rest"}`
                 return (
-                  <button
-                    type="button"
+                  <div
                     key={col}
                     className={cls}
-                    data-notebook-target="brick"
                     aria-label={label}
-                    aria-pressed={isSelected("brick", label)}
                   >
                     {e?.text}
-                  </button>
+                  </div>
                 )
               })}
             </React.Fragment>

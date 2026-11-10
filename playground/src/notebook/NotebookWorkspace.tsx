@@ -11,7 +11,6 @@ export function NotebookWorkspace({
   appearance,
   single = false,
   header,
-  footer,
   onSelection,
   selection = null,
 }: {
@@ -19,17 +18,16 @@ export function NotebookWorkspace({
   appearance: Appearance
   single?: boolean
   header?: ReactNode
-  footer?: ReactNode
   onSelection?: (selection: NotebookSelection | null) => void
   selection?: NotebookSelection | null
 }) {
   const cells = (
     <SelectionContext.Provider value={selection}>
       <div
-        onClickCapture={(event) => onSelection?.(notebookSelection(event.target))}
-        onSelectCapture={(event) => onSelection?.(notebookSelection(event.target))}
-        onMouseUpCapture={(event) => onSelection?.(notebookSelection(event.target))}
-        onKeyUpCapture={(event) => onSelection?.(notebookSelection(event.target))}
+        onClickCapture={(event) => { const next = notebookSelection(event.target); if (next) onSelection?.(next) }}
+        onSelectCapture={(event) => { const next = notebookSelection(event.target); if (next) onSelection?.(next) }}
+        onMouseUpCapture={(event) => { const next = notebookSelection(event.target); if (next) onSelection?.(next) }}
+        onKeyUpCapture={(event) => { const next = notebookSelection(event.target); if (next) onSelection?.(next) }}
       >
         <NotebookCells {...controller} appearance={appearance} single={single} />
       </div>
@@ -52,7 +50,6 @@ export function NotebookWorkspace({
       >
         {cells}
       </main>
-      {footer}
     </div>
   )
 }

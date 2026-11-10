@@ -5,6 +5,7 @@
 import type { Braces, Line, Piece } from "./state.ts"
 import { lengthPrefix } from "./time.ts"
 import { tokenize } from "./values/steps.ts"
+import { splitOutside } from "./intervals.ts"
 
 export const isBraces = (p: Piece | undefined): p is Braces => typeof p === "object" && p !== null
 
@@ -61,7 +62,7 @@ export function commaGroups(parts: Piece[]): Piece[][] {
       groups[groups.length - 1].push(p)
       continue
     }
-    p.split(",").forEach((text, i) => {
+    splitOutside(p, ",").forEach((text, i) => {
       if (i > 0) groups.push([])
       if (text.trim()) groups[groups.length - 1].push(text.trim())
     })

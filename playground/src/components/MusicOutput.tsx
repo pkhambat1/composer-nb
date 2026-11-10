@@ -59,6 +59,7 @@ export default function MusicOutput({
   focusedCellId,
   isPlaying,
   onTogglePlayback,
+  onStopPlayback,
   onPlaybackFinished,
   registerPlayer,
   unregisterPlayer,
@@ -201,8 +202,8 @@ export default function MusicOutput({
       play: () => wsRef.current?.play(),
       pause: () => wsRef.current?.pause(),
       stop: () => {
-        wsRef.current?.pause()
-        wsRef.current?.seekTo(0)
+        wsRef.current?.stop()
+        setTimeTick((n) => n + 1)
       },
       isPlaying: () => wsRef.current?.isPlaying() ?? false,
       getCurrentTime: () => wsRef.current?.getCurrentTime() ?? 0,
@@ -213,6 +214,7 @@ export default function MusicOutput({
   React.useEffect(() => {
     const ws = wsRef.current
     if (!ws || !ready) return
+    let cancelled = false
     if (focusedCellId === cell.id && isPlaying) {
       if (ws.isPlaying()) return
       // A browser refuses to play before the page is touched, and then the cell isn't
@@ -227,12 +229,14 @@ export default function MusicOutput({
       const context = node instanceof GainNode ? node.context : null
       const resumed = context instanceof AudioContext ? context.resume() : Promise.resolve()
       resumed
-        .then(() => ws.play())
+        .then(() => { if (!cancelled) return ws.play() })
         .catch((err: unknown) => {
+          if (cancelled) return
           console.warn("Playback failed:", err instanceof Error ? err.message : String(err))
           onPlaybackFinishedRef.current(cell.id)
         })
     } else if (ws.isPlaying()) ws.pause()
+    return () => { cancelled = true }
   }, [focusedCellId, isPlaying, cell.id, ready])
 
   if (!output) return null
@@ -285,6 +289,24 @@ export default function MusicOutput({
     )
   }
 
+  if (output.kind === "printed") {
+    return (
+      <div className="cell-output">
+        <div className="out-prompt" />
+        <div className="out-content">
+          <MusicViews
+            parsed={output.parsed}
+            accent={accent}
+            drumView={drumView}
+            onSetDrumView={onSetDrumView}
+            sheetCounts={sheetCounts}
+            onSetSheetCounts={onSetSheetCounts}
+          />
+        </div>
+      </div>
+    )
+  }
+
   if (output.kind === "info") {
     return <div className="cell-run-confirmation" role="status">Cell executed successfully.</div>
   }
@@ -294,7 +316,7 @@ export default function MusicOutput({
   const duration = ws && ready ? ws.getDuration() : output.duration || 0
   const currentTime = ws && ready ? ws.getCurrentTime() : 0
   const displayPlaying = cellIsPlaying && ws && ready && ws.isPlaying()
-  const displayPaused = isFocused && !isPlaying && ws && ready && ws.getCurrentTime() > 0
+  const showStop = isFocused && ready && (isPlaying || currentTime > 0)
   void timeTick
 
   return (
@@ -306,9 +328,7 @@ export default function MusicOutput({
           <div className="music-row music-row-controls">
             <button
               type="button"
-              className={
-                "play-btn" + (displayPlaying ? " playing" : "") + (displayPaused ? " paused" : "")
-              }
+              className="btn btn-primary btn-icon btn-round player-btn play-btn"
               onClick={(e) => {
                 e.stopPropagation()
                 const w = wsRef.current
@@ -316,6 +336,8 @@ export default function MusicOutput({
                 onTogglePlayback(cell.id)
               }}
               title={displayPlaying ? "Pause" : "Play"}
+              aria-label={displayPlaying ? "Pause" : "Play"}
+              disabled={!ready}
             >
               {displayPlaying ? (
                 <svg width="14" height="14" viewBox="0 0 14 14">
@@ -328,6 +350,21 @@ export default function MusicOutput({
                 </svg>
               )}
             </button>
+            {showStop && <button
+              type="button"
+              className="btn btn-secondary btn-soft btn-icon btn-round player-btn stop-btn"
+              title="Stop and return to the beginning"
+              aria-label="Stop"
+              disabled={!ready}
+              onClick={(e) => {
+                e.stopPropagation()
+                onStopPlayback(cell.id)
+              }}
+            >
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor" aria-hidden="true">
+                <rect x="3" y="3" width="8" height="8" rx="1" />
+              </svg>
+            </button>}
             <div
               className="waveform-wrap"
               onClick={(e) => e.stopPropagation()}

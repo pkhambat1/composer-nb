@@ -110,7 +110,7 @@ export const withCtx = (ln: number, shown: string): Ctx => ({
 export const paceCtx = (ln: number): Ctx => ({
   ...anonCtx(ln),
   where: "at this pace",
-  sized: "every 3 steps 4 bars { ... }",
+  sized: "every 3/4 beats 4 bars { ... }",
 })
 // What plays in a bar is a pattern that lasts that bar.
 export const placeCtx = (l: { ln: number; from: number; to: number }): Ctx => {
@@ -160,7 +160,7 @@ export function layer(
   const meter = meterOf(st)
   const { barTicks, secPerTick } = meter
   const read = parts
-    .map((p) => readPart(p, p.st ?? st, barTicks, err))
+    .map((p) => readPart(p, p.st ?? st, barTicks, err, ctx.repeats))
     .filter((p): p is Played => p !== null)
   if (read.length < parts.length) return null
   if (!read.length && !once.length && !repeated.length) return null
@@ -220,8 +220,9 @@ export function layer(
   } else if (ctx.repeats) {
     const whole = loops.filter((l) => nearWhole(l.ticks)).map((l) => Math.round(l.ticks))
     totalTicks = whole.reduce(lcm, 1)
-    // ...and long enough to have the bars it names
-    totalTicks *= Math.max(1, Math.ceil(named / totalTicks))
+    // One-shot blocks contribute a minimum duration even when no line repeats.
+    const onceTicks = Math.max(0, ...once.map((clip) => Math.round(clip.durSec / secPerTick)))
+    totalTicks *= Math.max(1, Math.ceil(Math.max(named, onceTicks) / totalTicks))
     if (totalTicks > MAX_BARS * barTicks) {
       err(
         ctx.ln ?? loops[0].ln,

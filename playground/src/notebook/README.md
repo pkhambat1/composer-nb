@@ -7,7 +7,7 @@ list, playback and music views. Import the host-facing API from `index.ts`.
 | ----------------------- | ----------------------------------------------------------------- |
 | `NotebookEditor`        | Host-owned document, transient view preferences, typed snapshots  |
 | `NotebookWorkspace`     | Shared surface with slots for a header and footer                 |
-| `NotebookToolbar`       | Add cells, play all and stop, wired to the shared controller      |
+| `NotebookToolbar`       | Add cells, run all and interrupt rendering through the controller |
 | `NotebookCells`         | Cell presentation, editing, drag ordering and insertion gaps      |
 | `MusicViews`            | Bricks, sheet music, chord diagrams, view toggles and diagnostics |
 | `useNotebookController` | Composes editing, execution, playback and keyboard behavior       |

@@ -11,7 +11,7 @@ export function useSelectedTarget() {
 }
 
 export function NotebookTarget({
-  kind,
+  kind: _kind,
   label,
   className,
   children,
@@ -21,21 +21,10 @@ export function NotebookTarget({
   className: string
   children: React.ReactNode
 }) {
-  const selected = useSelectedTarget()(kind, label)
   return (
     <div
       className={className}
-      data-notebook-target={kind}
-      role="button"
-      tabIndex={0}
       aria-label={label}
-      aria-pressed={selected}
-      onKeyDown={(event) => {
-        if (event.key === "Enter" || event.key === " ") {
-          event.preventDefault()
-          event.currentTarget.click()
-        }
-      }}
     >
       {children}
     </div>

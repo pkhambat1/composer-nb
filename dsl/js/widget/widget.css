@@ -64,7 +64,7 @@
   align-items: center;
   gap: 10px;
 }
-.cnb-play {
+.cnb-play, .cnb-stop {
   position: relative;
   flex-shrink: 0;
   width: 30px;
@@ -76,8 +76,24 @@
   color: var(--cnb-accent);
   cursor: pointer;
 }
-.cnb-play:hover {
+.cnb-play:hover, .cnb-stop:hover {
   border-color: var(--cnb-accent);
+}
+.cnb-stop, .cnb-stop:hover {
+  background: color-mix(in srgb, var(--cnb-text) 8%, var(--cnb-paper));
+  border-color: transparent;
+  color: var(--cnb-mute);
+}
+.cnb-stop::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 9px;
+  height: 9px;
+  border-radius: 1px;
+  background: currentColor;
 }
 /* Play triangle; becomes two pause bars while playing. */
 .cnb-play::before {
@@ -337,4 +353,34 @@
   font-family: var(--cnb-mono);
   font-size: 12px;
   font-weight: 600;
+}
+
+/* Printed values: one line per type, one font and size. Only the values take the text
+   colour; the type and the pitches in parentheses are quieter. */
+.cnb-print {
+  font: 13px/20px var(--cnb-mono);
+}
+.cnb-print-type {
+  color: color-mix(in srgb, var(--cnb-mute) 88%, var(--cnb-paper));
+}
+.cnb-print-note {
+  white-space: nowrap;
+}
+.cnb-print-value {
+  font-weight: 500;
+  /* a hair heavier than 500: the system font has no weight between 500 and 600 */
+  -webkit-text-stroke: 0.2px currentColor;
+  color: var(--cnb-text);
+}
+.cnb-print-steps .cnb-print-value {
+  letter-spacing: 1px;
+}
+.cnb-print-meaning {
+  color: color-mix(in srgb, var(--cnb-mute) 88%, var(--cnb-paper));
+}
+.cnb-print-quiet .cnb-print-value,
+.cnb-print-comma {
+  font-weight: 400;
+  -webkit-text-stroke: 0;
+  color: var(--cnb-wave);
 }

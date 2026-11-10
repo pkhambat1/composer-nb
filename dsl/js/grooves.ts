@@ -17,7 +17,7 @@ export type Groove = {
 // groove, with the key and mode on a with around it. The chart is the same in every mode, as a
 // numeral is the chord its scale has on that degree, so only the mode and what to listen for
 // change. `says` is what to listen for, `against` the mode to change it to and compare.
-const WALK_CHART = "i ii|iii iv|v vi|vii i'|vii vi|v iv|iii ii|i"
+const WALK_CHART = "1 2|3 4|5 6|7 8|7 6|5 4|3 2|1"
 function walk(w: {
   title: string
   mode: string
@@ -34,16 +34,16 @@ function walk(w: {
     title: `${w.title} walk`,
     byline: w.byline,
     body:
-      `One chart, \`chords ${chart}\`, goes up the scale and back down, and a lowercase numeral is ` +
+      `One chart, \`chords ${chart}\`, goes up the scale and back down, and a degree is ` +
       `the chord the scale has on that degree. ${w.says} Change \`mode ${w.mode}\` in the with to ` +
       `\`mode ${against}\` and the same chart turns into ` +
       `${against === "major" ? "D major" : "natural minor"}'s chords.`,
     link: null,
     source: `pattern walk = {
-  piano: chords ${chart}
-  hat: x-
-  snare.cross: 2 4
-  kick: 1 3
+  piano: chords ${chart},
+  hat: x-,
+  snare.cross: 4*- x 3*-,
+  kick: x 7*-
 }
 
 with key D, mode ${w.mode}, tempo ${w.tempo} { play walk }`,
@@ -55,23 +55,23 @@ export const GROOVES: Groove[] = [
     section: "Transcriptions",
     title: "The Sound of Muzak",
     byline: "**Porcupine Tree** · *In Absentia* (2002) · drums by Gavin Harrison",
-    body: "A groove in seven. The kick, snare and hi-hat repeat in every bar, and `bar 2` adds the lift at the end of every second bar: a burst of ghost notes, an open hi-hat, and the foot closing it.",
+    body: "A groove in seven. The kick, snare and hi-hat repeat in every bar, and `on bar 2` adds the lift at the end of every second bar: a burst of ghost notes, an open hi-hat, and the foot closing it.",
     link: "https://www.youtube.com/watch?v=4ulgVOBpNWA",
     source: `pattern groove = {
-  kick: x--x---
-  snare: 2e 4
-  snare.ghost: --x----
-  hat: ^-x-
-  bar 2 {
-    snare.ghost: d3 d3e
-    hat.open: ^3&
-    hat.pedal: 4
-  }
+  kick: x--x---,
+  snare: 5*- x-,
+  snare.ghost: --x----,
+  hat: ^-x-,
+  pattern {
+    snare.ghost: 8*- dd 4*-,
+    hat.open: 10*- ^ 3*-,
+    hat.pedal: 12*- x-
+  } on bar 2
 }
 
 with time 7 over 8, tempo 90 {
   play block {
-    crash: 1
+    crash: x 13*-,
     groove
   }
 }`,
@@ -80,14 +80,14 @@ with time 7 over 8, tempo 90 {
     section: "Transcriptions",
     title: "Circle of Manias",
     byline: "**Porcupine Tree** · *The Incident* (2009) · drums by Gavin Harrison",
-    body: "Nine eighths to the bar. The hi-hat alternates open and closed on every eighth, while the kick plays a figure of eighteen sixteenths and the snare one of nine, so they only line up again every two bars. The ghost notes at the top of the figure end in `...rest`: they play once each time through, and the other lines decide how long the pattern is.",
+    body: "Nine eighths to the bar. The hi-hat alternates open and closed on every eighth, while the kick plays a figure of eighteen sixteenths and the snare one of nine, so they only line up again every two bars. The ghost notes at the top of the figure end in `...-`: they play once each time through, and the other lines decide how long the pattern is.",
     link: "https://www.youtube.com/results?search_query=Porcupine+Tree+Circle+of+Manias",
     source: `pattern manias = {
-  hat.open: x---
-  hat: --x-
-  kick: x--x-x---x--x-xx--
-  snare: -------x-
-  snare.ghost: -xx, ...rest
+  hat.open: x---,
+  hat: --x-,
+  kick: x--x-x---x--x-xx--,
+  snare: -------x-,
+  snare.ghost: -xx ...-
 }
 
 with time 9 over 8, tempo 100 { play manias for 4 bars }`,
@@ -99,9 +99,9 @@ with time 9 over 8, tempo 100 { play manias for 4 bars }`,
     body: "Lines of different lengths in one pattern. The kick and snare repeat every 7 steps, the ride bell every 3 and the guitar riff every 10, so they drift against each other and only all meet again on a bar line after 15 bars. The play opens with a two-step pickup, an accented rim hit, and the groove starts after it: the block and the pattern are in brackets, so they play one after the other. The crash plays once, in the groove's first bar, and `for 3 bars` stops it after three bars, pickup included. `octave 2` in the with puts the riff right at the bottom of the guitar's range.",
     link: "https://www.youtube.com/watch?v=v0Iv4SYJW-k",
     source: `pattern groove = {
-  kick: x--x---
-  snare.rim: ----x--
-  ride.bell: x--
+  kick: x--x---,
+  snare.rim: ----x--,
+  ride.bell: x--,
   guitar.electric: notes D---E D-D--
 }
 
@@ -109,7 +109,7 @@ with time 7 over 8, tempo 110, octave 2, guitar.electric muted {
   play (
     block { snare.rim: ^- }
     pattern {
-      bar 1 crash: 1
+      pattern { crash: x 13*- } on bar 1,
       groove
     }
   ) for 3 bars
@@ -119,24 +119,24 @@ with time 7 over 8, tempo 110, octave 2, guitar.electric muted {
     section: "Transcriptions",
     title: "Gavin Harrison's paradiddle challenge",
     byline: "An independence exercise from **Gavin Harrison**",
-    body: "The hands play paradiddles on the snare, accenting each PA with ghost notes in between. The feet play the same paradiddle three times slower: `every 3 steps` makes each of their steps last three 16ths. The kick is the right foot, and the hi-hat pedal is the left.",
+    body: "The hands play paradiddles on the snare, accenting each PA with ghost notes in between. The feet play the same paradiddle three times slower: `every 3/4 beats` makes each of their steps last three 16ths. The kick is the right foot, and the hi-hat pedal is the left.",
     link: "https://www.youtube.com/watch?v=XEWmzQ_fJmw",
     source: `steps pa = ^---
 steps radiddle = -xxx
 
 pattern hands = {
-  snare: pa
+  snare: pa,
   snare.ghost: radiddle
 }
 
-pattern feet = every 3 steps {
-  kick: ^-^^-^--
+pattern feet = every 3/4 beats {
+  kick: ^-^^-^--,
   hat.pedal: -x--x-xx
 }
 
 with time 3 over 4, tempo 100 {
   play block {
-    hands
+    hands,
     feet
   }
 }`,
@@ -148,9 +148,9 @@ with time 3 over 4, tempo 100 {
     body: "Twelve steps to the bar. The ride bell plays a 12-step pattern and the kick a 6-step one, the snare hits on the a of 1 and the e of 3, and ghost notes fill every other step.",
     link: "https://www.youtube.com/watch?v=YZPtPMCDEs4",
     source: `pattern groove = {
-  ride.bell: x-x-x-xx-x-x
-  snare: ---x--
-  snare.ghost: -x
+  ride.bell: x-x-x-xx-x-x,
+  snare: ---x--,
+  snare.ghost: -x,
   kick: x-x--x
 }
 
@@ -160,11 +160,11 @@ with time 3 over 4, tempo 82.5 { play groove for 2 bars }`,
     section: "Transcriptions",
     title: "3 over 4 over 5",
     byline: "A polyrhythm exercise",
-    body: "Three lines of different lengths in one pattern. The floor tom hits every 3 steps, the kick every 4 and the snare every 5. They drift apart, and only land together again after 60 steps: three bars of 5 over 4, which is where the pattern ends.",
+    body: "Three lines of different lengths in one pattern. The floor tom hits every 3/4 beats, the kick every 4 and the snare every 5. They drift apart, and only land together again after 60 steps: three bars of 5 over 4, which is where the pattern ends.",
     link: null,
     source: `pattern groove = {
-  kick: x---
-  snare: x----
+  kick: x---,
+  snare: x----,
   tom.floor: x--
 }
 
@@ -233,48 +233,48 @@ with time 5 over 4 { play groove }`,
     mode: "wholeTone",
     tempo: 84,
     byline: "D whole tone: six notes, a whole step apart",
-    chart: "i ii|iii iv|v vi|i' vi|v iv|iii ii",
+    chart: "1 2|3 4|5 6|7 6|5 4|3 2",
     says: "In D whole tone those are Daug Eaug F#aug G#aug A#aug Caug: every chord is augmented, and every step is the same size, so there is no root to settle on.",
   }),
   {
     section: "Harmony",
     title: "Fifth of a fifth",
-    byline: "of counts a note from another note: 5 of 5, 5 of (5 of 5)",
-    body: "`v` is the 5th of the key's root, `v of v` the 5th of that, and `v of (v of v)` the 5th of that again: one `of` a fifth up, and brackets chain them. This goes up the circle of fifths from the key's root, C G D A, and it follows the key: put `key F` in a with around the play and every note moves with it. Without the brackets, `v of v of v` is an error.",
+    byline: "Apply fifth(...) twice to a note",
+    body: "`fifth(1)` moves the tonic up a fifth in the active scale; `fifth(1, 2)` does it twice. This line plays C G D A in C major. The function follows the key and mode; repeating it stays within the scale.",
     link: null,
     source: `pattern fifths = {
-  piano: notes i--- v--- v of v--- v of (v of v)---
-  hat: x-
-  kick: 1 3
+  piano: notes 1--- fifth(1)--- fifth(1, 2)--- fifth(1, 3)---,
+  hat: x-,
+  kick: x 7*-
 }
 
 with tempo 76 { play fifths for 2 bars }`,
   },
   {
     section: "Harmony",
-    title: "Dominants of dominants",
-    byline: "of chains chords: V of (V of V) pulls to V of V, then V, then home",
-    body: "`v of v` is the V counted from the key's V: in C, the V is G, so `v of v` is D, the chord that pulls to G. Chain them in brackets and each one pulls to the next: `v of (v of v)` is A, then D, G, and home to C. It follows the key too.",
+    title: "Descending fifths",
+    byline: "Bring scale chords home with fifth(...)",
+    body: "`fifth(1, 3)`, `fifth(1, 2)` and `fifth(1)` step back toward the tonic. In C major these chords are Am, Dm, G and C. Every tone moves through the scale, so the resulting chord qualities follow the key.",
     link: null,
     source: `pattern pulls = {
-  piano: chords v of (v of v)|v of v|v|i
-  hat: x-
-  snare: 2 4
-  kick: 1 3
+  piano: chords octave(fifth(1, 3), -1)|octave(fifth(1, 2), -1)|fifth(1)|1,
+  hat: x-,
+  snare: 4*- x 3*-,
+  kick: x 7*-
 }
 
 with tempo 84 { play pulls for 4 bars }`,
   },
   {
     section: "Harmony",
-    title: "Circle of fourths",
-    byline: "of counts a chord from another chord: iv of iv is Bb in C",
-    body: "`iv` is the chord on the key's 4th: in C, F. `iv of iv` counts that numeral from F instead of from the key, so it is the 4th of F, Bb, and `iv of (iv of iv)` is the 4th of Bb, Eb. This goes round the circle of fourths on chords, C F Bb Eb, and it follows the key and the mode: put `key G` in a with around the play and every chord moves with it.",
+    title: "Scale fourths",
+    byline: "Move every chord tone with fourth(...)",
+    body: "`fourth(1)` moves the tonic chord up a fourth; the count repeats that move. In C major this plays C, F, Bdim, Em. These are scale chords, and changing the key or mode changes their pitches and qualities.",
     link: null,
     source: `pattern fourths = {
-  piano: chords i|iv|iv of iv|iv of (iv of iv)
-  hat: x-
-  kick: 1 3
+  piano: chords 1|fourth(1)|fourth(1, 2)|octave(fourth(1, 3), -1),
+  hat: x-,
+  kick: x 7*-
 }
 
 with tempo 76 { play fourths for 4 bars }`,
@@ -282,13 +282,13 @@ with tempo 76 { play fourths for 4 bars }`,
   {
     section: "Harmony",
     title: "Fifth of a chord",
-    byline: "of counts a chord from another chord: v of v is D in C",
-    body: "`v` is the chord on the key's 5th: in C, G. `v of v` counts that numeral from G instead of from the key, so it is the 5th of G, D, and `v of (v of v)` is the 5th of D, A. This walks up the circle of fifths on chords, C G D A, and it follows the key and the mode. (`v of i` would be the 5th of the key's own root, which is just `v`.)",
+    byline: "Move every chord tone with fifth(...)",
+    body: "`fifth(1)` moves the tonic chord up a fifth. In C major the first four steps are C, G, Dm and Am. `octave(...)` keeps the voicings in one register. The function moves all chord tones through the active scale.",
     link: null,
     source: `pattern fifths = {
-  piano: chords i|v|v of v|v of (v of v)
-  hat: x-
-  kick: 1 3
+  piano: chords 1|fifth(1)|octave(fifth(1, 2), -1)|octave(fifth(1, 3), -1),
+  hat: x-,
+  kick: x 7*-
 }
 
 with tempo 80 { play fifths for 4 bars }`,
@@ -299,7 +299,7 @@ with tempo 80 { play fifths for 4 bars }`,
     byline: "with gives a block its own key, mode and tempo",
     body: "The same chart of chords, one per degree, played in three scopes. A `with` gives its block settings that last until its `}` and then put back what was set before, so the first scope is C major, the second C minor, and the third D dorian at a slower tempo. Nothing leaks out of a `with`, and nothing set at the top is lost.",
     link: null,
-    source: `chords chart = i ii|iii iv|v vi|vii i'|vii vi|v iv|iii ii|i
+    source: `chords chart = 1 2|3 4|5 6|7 8|7 6|5 4|3 2|1
 
 play (
   with key C { piano: chords chart }
@@ -316,12 +316,12 @@ play (
     source: `with tempo 92 {
   play block {
     with octave 2 {
-      notes walk = i---v---iv---v---
+      notes walk = i---v---iv---v---,
       bass: notes walk
-    }
-    with octave 4 { piano: chords i v|vi iv }
-    hat: x-
-    kick: 1 3
+    },
+    with octave 4 { piano: chords i v|vi iv },
+    hat: x-,
+    kick: x 7*- x 7*-
   }
 }`,
   },
@@ -332,14 +332,14 @@ play (
     body: "Dm7 to G7 to Cmaj7: the ii sets up the V, and the V resolves home. Written as numerals, so the key moves it: put `key F` in a with around the play and the whole thing follows. The bass walks a quarter note a step, written as degrees so it follows the key too, `swing on` puts the ride's off-beats late, and `octave 4` keeps the piano's voicings around middle C.",
     link: null,
     source: `pattern turnaround = {
-  piano: chords ii7 v7|imaj7 -
+  piano: chords ii7 v7|imaj7 -,
   with octave 2 {
-    bass: notes ii---iv---v---vii---|i'---iii'---v'---vi'---
-      |ii'---iv'---v---iv---|iii---v---vi---vii---
-  }
-  ride: x-
-  hat.pedal: 2 4
-  kick: 1 3
+    bass: notes ii---iv---v---vii---|octave(i)---octave(iii)---octave(v)---octave(vi)---
+      |octave(ii)---octave(iv)---v---iv---|iii---v---vi---vii---
+  },
+  ride: x-,
+  hat.pedal: 4*- x 3*-,
+  kick: x 7*-
 }
 
 with tempo 132, swing on, octave 4 { play turnaround }`,

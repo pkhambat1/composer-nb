@@ -24,7 +24,7 @@ describe("6/9", () => {
     expect(isRoman("i6/9")).toBe(true)
     const over = buildChord("C6/9/E", C)
     expect([over!.label, over!.bassName]).toEqual(["C6/9/E", "E2"])
-    const p = parseSource("set key C\nplay piano: chords i6/9 vi6/9|v of i6/9 i6/9 of v")
+    const p = parseSource("set key C\nplay piano: chords 1M6/9 6m6/9|fifth(1) fifth(1M6/9)")
     expect(p.errors).toEqual([])
     expect(p.chords.map((e) => e.chord.label)).toEqual(["C6/9", "Am6/9", "G", "G6/9"])
   })

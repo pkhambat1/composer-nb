@@ -54,21 +54,39 @@ export class Parser {
         if (open) return out
         this.#errors.push({ code: "brace.stray", span: t.span })
         this.#at++
+      } else if (t.kind === "separator") {
+        this.#errors.push({
+          code: !open
+            ? "separator.top"
+            : t.text === ";"
+              ? "separator.semicolon"
+              : "separator.empty",
+          span: t.span,
+        })
+        this.#at++
       } else if (t.kind === "newline" || t.kind === "comment" || isBlank(t)) {
         this.#at++
       } else {
-        const s = this.#statement()
-        if (s) out.push(s)
+        const s = this.#statement(open !== null)
+        if (s) {
+          out.push(s)
+          if (this.#tokens[this.#at]?.kind === "separator") {
+            const separator = this.#tokens[this.#at++]
+            if (!open) this.#errors.push({ code: "separator.top", span: separator.span })
+            else if (separator.text === ";")
+              this.#errors.push({ code: "separator.semicolon", span: separator.span })
+          }
+        }
       }
     }
   }
 
   // One statement: its text and blocks up to the line break that ends it.
-  #statement(): Statement | null {
+  #statement(inBraces: boolean): Statement | null {
     const parts: (Text | Block)[] = []
     for (;;) {
       const t = this.#tokens[this.#at]
-      if (!t || t.kind === "newline" || t.kind === "close") break
+      if (!t || t.kind === "newline" || t.kind === "separator" || t.kind === "close") break
       this.#at++
       if (t.kind === "open") {
         const statements = this.#statements(t)
@@ -76,6 +94,8 @@ export class Parser {
         if (close) this.#at++
         parts.push({ kind: "block", statements, span: join(t.span, (close ?? t).span) })
       } else if (t.kind !== "comment") {
+        if (t.kind === "text" && /\bof\b/.test(t.text))
+          this.#errors.push({ code: "syntax.retiredOf", span: t.span })
         const last = parts[parts.length - 1]
         if (last?.kind === "text") {
           last.text += t.text
@@ -84,6 +104,7 @@ export class Parser {
       }
     }
     const value = trimmed(parts)
+    if (inBraces) this.#errors.push(...missingSeparators(value.parts))
     return value.span ? { ...classify(value, value.span), parts: value.parts } : null
   }
 }
@@ -92,6 +113,8 @@ export class Parser {
 function classify(value: Value, span: Span): Node {
   const first = value.parts[0]
   const text = first?.kind === "text" ? first.text : ""
+  if (/^print(?=\s|\(|$)/.test(text))
+    return { kind: "print", span, value: after(value, "print") }
   const word = /^[a-z]+(?=\s|$)/.exec(text)?.[0] as keyof typeof HEADS | undefined
   const head = word && HEADS[word]
   if (head === "set") {
@@ -117,6 +140,9 @@ function classify(value: Value, span: Span): Node {
   const untyped = UNTYPED.exec(text)
   if (untyped)
     return { kind: "decl", span, type: null, name: untyped[1], value: after(value, untyped[0]) }
+  const last = value.parts[value.parts.length - 1]
+  if (last?.kind === "text" && /\bon\s+bar(?:\s|$)/.test(last.text))
+    return { kind: "place", span, value }
   const track = TRACK.exec(text)
   if (track) return { kind: "track", span, part: track[1], value: after(value, track[0]) }
   return { kind: "line", span, value }
@@ -127,7 +153,8 @@ function after(value: Value, head: string): Value {
   const [first, ...rest] = value.parts
   if (first?.kind !== "text") return value
   const text = first.text.slice(head.length)
-  const span = { ...first.span, col: first.span.col + head.length }
+  const end = endAfter(first.span, first.text.slice(0, head.length))
+  const span = { ...first.span, line: end.endLine, col: end.endCol }
   return trimmed([{ kind: "text", text, span }, ...rest])
 }
 
@@ -166,3 +193,38 @@ const join = (a: Span, b: Span): Span => ({
 })
 
 const isBlank = (t: Token) => (t.kind === "text" || t.kind === "join") && !t.text.trim()
+
+// A second instrument header at the same level cannot be part of the first line. Say
+// where its separator is missing, including when both entries were on one source line.
+// Parenthesized sequences have their own grammar, and nested braces their own statements.
+function missingSeparators(parts: (Text | Block)[]): ParseError[] {
+  const errors: ParseError[] = []
+  let depth = 0
+  let entry = false
+  for (const part of parts) {
+    if (part.kind === "block") {
+      if (!depth) entry = true
+      continue
+    }
+    for (let at = 0; at < part.text.length; at++) {
+      const c = part.text[at]
+      if (c === "(") depth++
+      else if (c === ")") depth--
+      if (depth || (at > 0 && !/\s/.test(part.text[at - 1]))) continue
+      const header = TRACK.exec(part.text.slice(at))
+      if (!header) continue
+      if (entry) {
+        const start = endAfter(part.span, part.text.slice(0, at))
+        const line = start.endLine
+        const col = start.endCol
+        errors.push({
+          code: "separator.missing",
+          span: { line, col, ...endAfter({ line, col }, header[0].trimEnd()) },
+        })
+      }
+      entry = true
+      at += header[0].length - 1
+    }
+  }
+  return errors
+}

@@ -8,7 +8,7 @@ import {
   bufferDuration,
   bufferToWav,
 } from "../music-engine.ts"
-import { TPQ, type GridBlock, type Output } from "../language.ts"
+import { TPQ, printLayout, type GridBlock, type Output } from "../language.ts"
 import { gridCounts, gridRows } from "../grid.ts"
 import { sheetAbc } from "../sheet.ts"
 import abcjs, { type NoteTimingEvent, type TuneObject } from "abcjs"
@@ -196,12 +196,10 @@ const views = new Set<() => void>() // each output's switch, so they change toge
 
 // --- Player --------------------------------------------------------------------
 
-// With `autoplay`, it starts playing as soon as it's drawn, as after a cell's Play button.
 function renderPlayer(
   slot: HTMLElement,
   buffer: ToneAudioBuffer,
   onTime: Follow,
-  autoplay: boolean,
 ): () => void {
   const audioUrl = URL.createObjectURL(bufferToWav(buffer))
   const audio = new Audio(audioUrl)
@@ -212,6 +210,11 @@ function renderPlayer(
   play.type = "button"
   play.title = "Play"
   play.setAttribute("aria-label", "Play")
+  const stop = h("button", "cnb-stop")
+  stop.type = "button"
+  stop.title = "Stop and return to the beginning"
+  stop.setAttribute("aria-label", "Stop")
+  stop.hidden = true
   const wave = h("div", "cnb-wave")
   wave.title = "Click to seek"
   const base = h("canvas", "cnb-wave-base")
@@ -220,7 +223,7 @@ function renderPlayer(
   progress.append(fill)
   wave.append(base, progress)
   const time = h("span", "cnb-time", `0:00 / ${formatTime(duration)}`)
-  row.append(play, wave, time)
+  row.append(play, stop, wave, time)
   slot.replaceChildren(row)
 
   const draw = () => {
@@ -241,7 +244,9 @@ function renderPlayer(
   resize.observe(wave)
 
   let frame = 0
+  let started = false
   const tick = () => {
+    stop.hidden = !started || (audio.paused && audio.currentTime === 0)
     const pct = duration ? Math.min(1, audio.currentTime / duration) : 0
     progress.style.width = pct * 100 + "%"
     time.textContent = `${formatTime(audio.currentTime)} / ${formatTime(duration)}`
@@ -255,6 +260,7 @@ function renderPlayer(
   }
 
   audio.addEventListener("play", () => {
+    started = true
     if (nowPlaying && nowPlaying !== audio) nowPlaying.pause()
     nowPlaying = audio
     setPlaying(true)
@@ -265,6 +271,7 @@ function renderPlayer(
     tick()
   })
   audio.addEventListener("ended", () => {
+    started = false
     audio.currentTime = 0
     tick()
   })
@@ -274,13 +281,17 @@ function renderPlayer(
       audio.play().catch((err: unknown) => console.warn("composer-nb: playback failed", err))
     else audio.pause()
   })
+  stop.addEventListener("click", () => {
+    started = false
+    audio.pause()
+    audio.currentTime = 0
+    tick()
+  })
   wave.addEventListener("click", (e) => {
     const rect = wave.getBoundingClientRect()
     audio.currentTime = ((e.clientX - rect.left) / rect.width) * duration
     tick()
   })
-  if (autoplay)
-    audio.play().catch((err: unknown) => console.warn("composer-nb: playback failed", err))
 
   return () => {
     cancelAnimationFrame(frame)
@@ -297,7 +308,6 @@ function renderPlayer(
 function renderOutput(
   output: Output,
   messages: Messages,
-  autoplay: boolean,
 ): { box: HTMLElement; dispose(): void } {
   const box = h("div", "cnb-output")
   const head = h("div", "cnb-output-head")
@@ -367,7 +377,7 @@ function renderOutput(
   queueRender(output, () => disposed)
     .then((buffer) => {
       if (disposed || !buffer) return
-      disposePlayer = renderPlayer(slot, buffer, setTime, autoplay)
+      disposePlayer = renderPlayer(slot, buffer, setTime)
       for (const msg of output.warnings || []) messages.add(msg)
     })
     .catch((err: unknown) => {
@@ -387,17 +397,15 @@ function renderOutput(
 }
 
 // Draws the last of `sources` into `el`, starting from what the earlier ones left.
-// `name` and `after` (the name of the song it continues from) are only shown, and `play`
-// starts the first output once its audio is ready. Returns a function that stops the audio
-// and frees it.
+// `name` and `after` (the name of the song it continues from) are only shown.
+// Returns a function that stops the audio and frees it.
 export function renderCell(
   el: HTMLElement,
   {
     sources,
     name,
     after,
-    play = false,
-  }: { sources: string[]; name?: string; after?: string; play?: boolean },
+  }: { sources: string[]; name?: string; after?: string },
 ): () => void {
   const parsed = parseChain(sources)
 
@@ -438,9 +446,28 @@ export function renderCell(
     if (shown.length && !errors.isConnected) root.append(errors)
   }
 
-  const outputs = parsed.outputs.map((o, i) => renderOutput(o, messages, play && i === 0))
-  for (const o of outputs) root.append(o.box)
-  if (!outputs.length && !parsed.errors.length) {
+  const outputs = parsed.outputs.map((o) => renderOutput(o, messages))
+  const printed = printLayout(parsed.prints).map((row) => {
+    const box = h("div", "cnb-print")
+    const parts = h("span", "cnb-print-parts")
+    row.parts.forEach((part, n) => {
+      if (n) parts.append(" ")
+      const el = h("span", `cnb-print-part cnb-print-${part.kind}`)
+      if (part.title) el.title = part.title
+      el.append(h("span", "cnb-print-value", part.text))
+      if (part.note) el.append(h("span", "cnb-print-meaning", `(${part.note})`))
+      if (part.comma) el.append(h("span", "cnb-print-comma", ","))
+      parts.append(el)
+    })
+    box.append(h("span", "cnb-print-type", row.type), " ", parts)
+    return { line: row.line, box }
+  })
+  const ordered = [
+    ...printed,
+    ...outputs.map((o, i) => ({ line: parsed.outputs[i].line, box: o.box })),
+  ]
+  for (const output of ordered.sort((a, b) => a.line - b.line)) root.append(output.box)
+  if (!outputs.length && !printed.length && !parsed.errors.length) {
     const defined = Object.keys(parsed.state.sections)
     root.append(
       h(

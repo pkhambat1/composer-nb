@@ -33,7 +33,7 @@ const style = `
   a { color: #1a73e8; }
   nav { font-size: 14px; margin-bottom: 20px; }
   nav a + a { margin-left: 14px; }
-  pre { background: #ffffff; border: 1px solid #e0e0e0; border-radius: 4px; padding: 12px 14px; overflow: auto; font: 13px/1.55 "IBM Plex Mono", ui-monospace, Menlo, monospace; }
+  pre { background: #ffffff; border: 1px solid #e0e0e0; border-radius: 4px; padding: 12px 14px; overflow: auto; font: 13px/1.55 ui-monospace, Menlo, monospace; }
   iframe { width: 100%; height: 420px; border: 0; border-radius: 6px; background: #fff; }
   .card { background: #fff; border: 1px solid #e0e0e0; border-radius: 4px; padding: 14px 16px; margin: 12px 0; }
   .card h3 { margin: 0 0 4px; font-size: 18px; }
@@ -52,7 +52,7 @@ const head = (title: string, description: string, path: string) => `<!doctype ht
 <meta property="og:title" content="${escape(title)}">
 <meta property="og:description" content="${escape(description)}">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;600&family=IBM+Plex+Serif:wght@600&family=IBM+Plex+Mono&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;600&family=IBM+Plex+Serif:wght@600&display=swap" rel="stylesheet">
 <style>${style}</style>
 </head>
 <body>

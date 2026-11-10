@@ -109,7 +109,7 @@ def sheet_to_code():
         body += f'<text class="m" x="36" y="{y}" xml:space="preserve"><tspan class="inst">{name}</tspan><tspan class="p">:</tspan></text>'
         for i, c in enumerate(steps):
             body += f'<text class="m step" x="{col(i)}" y="{y}" text-anchor="middle" font-weight="{400 if c == "-" else 700}">{html.escape(c)}</text>'
-    body += f'<text class="s dim" x="28" y="{h - 22}" style="font-size:13px">An accent mark is written ^: the first hi-hat, and the snare on 2 and 4. As beats: snare: ^2 ^4 4&amp; and kick: 1 3 3&amp;.</text>'
+    body += f'<text class="s dim" x="28" y="{h - 22}" style="font-size:13px">An accent mark is written ^: the first hi-hat, and the snare on 2 and 4. Count silence with repeats: snare: 4*- ^ 7*- ^-x-; kick: x 7*- x-x 5*-.</text>'
     return svg(w, h, "A rock beat on a drum staff above the same beat as hat, snare and kick lines, with each character under its note", body)
 
 

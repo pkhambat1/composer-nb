@@ -9,7 +9,7 @@ import { useNotebooks } from "./hooks/useNotebooks.ts"
 import NotebookTitle, { type NotebookMenu } from "./components/NotebookTitle.tsx"
 import { useTheme } from "./components/theme-panel.tsx"
 import Sidebar from "./components/Sidebar.tsx"
-import StatusBar from "./components/StatusBar.tsx"
+import type { Account } from "./components/AccountMenu.tsx"
 import AuthGate from "./components/AuthGate.tsx"
 import type { Session } from "@supabase/supabase-js"
 import { supabase } from "./lib/supabase.ts"
@@ -43,11 +43,23 @@ function EmbeddedNotebook() {
 }
 
 // Website-only persistence, navigation and chrome never enter the MCP adapter.
+// Who's signed in, for the sidebar: Google sign-in carries a name and picture in the
+// user's metadata, email sign-in only the address
+function accountOf(session: Session): Account {
+  const meta = session.user.user_metadata ?? {}
+  const text = (v: unknown) => (typeof v === "string" && v.trim() ? v.trim() : null)
+  return {
+    email: session.user.email || "Signed in",
+    name: text(meta.full_name) ?? text(meta.name),
+    avatarUrl: text(meta.avatar_url) ?? text(meta.picture),
+  }
+}
+
 function WebsiteNotebook({ session }: { session: Session }) {
   const controller = useNotebookController(APP_CONSTANTS.STARTER_CELLS)
   const { manager: cm, runtime } = controller
-  const { kernelStatus, playback, stopAll } = runtime
-  const { cells, setSelectedId, editingId } = cm
+  const { playback, stopAll } = runtime
+  const { cells, setSelectedId } = cm
 
   const notebooks = useNotebooks({
     starters: APP_CONSTANTS.STARTER_CELLS,
@@ -110,7 +122,7 @@ function WebsiteNotebook({ session }: { session: Session }) {
         onRenameNotebook={notebooks.rename}
         theme={theme}
         onSetTheme={(v) => setSetting("theme", v)}
-        accountEmail={session.user.email || "Signed in"}
+        account={accountOf(session)}
         onSignOut={() => void supabase?.auth.signOut()}
       />
 
@@ -135,7 +147,6 @@ function WebsiteNotebook({ session }: { session: Session }) {
               <NotebookToolbar controller={controller} />
             </>
           }
-          footer={<StatusBar editingId={editingId} kernelStatus={kernelStatus} />}
         />
       </div>
     </div>

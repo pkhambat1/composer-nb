@@ -1,6 +1,6 @@
 ---
 title: "Steps"
-description: "The steps type: what a kit piece plays, as steps or as beats."
+description: "The steps type: what a kit piece plays, as step words, repeats and fills."
 ---
 
 import { Cell } from "/snippets/cell.jsx"
@@ -13,9 +13,9 @@ A [kit piece](/drums/kit)'s line holds a `steps` value: one character per step, 
 
 ```composer-nb
 play block {
-  hat: ^-x- x-x- x-x- x-x-
-  snare: ---- ^--- ---- ^-x-
-  kick: x--- ---- x-x- ----
+  hat: ^-x- x-x- x-x- x-x-,
+  snare: ---- ^--- ---- ^-x-,
+  kick: x--- ---- x-x- ----,
 }
 ```
 
@@ -34,19 +34,33 @@ play block {
 
 Spaces are ignored, so steps can be grouped by beat. A `steps` value is as long as its characters: `x--x---` is seven steps.
 
-A value written as the same figure more than once is an error, because a pattern repeats it: in a pattern, `hat: x-x- x-x-` is `hat: x-`. To play a figure once for a length, put the [length](#rests-and-lengths) in front: `hat: 1 bars x-`.
+In a pattern, write a repeating figure once: `hat: x-`, never `hat: 8*x-`. A block plays a finite sequence once, so repeats are useful there.
 
-## Beats
+## Repeats
 
-A line can list beats instead, counted `1 e & a`. A character in front gives the hit: `^4`, `~3a`, `d3`. A list of beats is one bar long, and it can't share a line with steps.
+The same bar can be counted as words and repeats:
 
 <Cell>
 
 ```composer-nb
 play block {
-  hat: 1 bars x-
-  snare: ^2 ^4
-  kick: 1 3 3&
+  hat: 8*x-,
+  snare: 4*- ^ 7*- ^ 3*-,
+  kick: x 7*- x-x 5*-,
+}
+```
+
+</Cell>
+
+
+A kit line is words separated by spaces. `n*w` repeats a word `n` times, where `n` is a whole number of at least 2. `8*-` is eight silent steps; `4*x-` is four copies of `x-`. Parentheses group words: `2*(^-x- x-x-)`. Groups can nest. Use spaces within a kit line; a comma ends its entry in braces.
+
+<Cell>
+
+```composer-nb
+play block {
+  snare: 8*- dd 6*-,
+  hat: 4*x- 8*-,
 }
 ```
 
@@ -54,20 +68,9 @@ play block {
 
 ## Rests and lengths
 
-Commas split a line into parts. A [length](/language/overview#lengths) in front of a part fills that much time: `2 beats rest` is silence, and `2 beats x-` repeats `x-` for two beats.
+`-` is the only silence on a kit line. Count silent steps with a repeat: `8*-`, rather than a beat list, a length or `rest`. A step is a quarter of a beat unless [`every`](/language/patterns#every) changes it. Pitched instruments keep their note lengths, commas and `rest`.
 
-<Cell>
-
-```composer-nb
-play block {
-  snare: 2 beats rest, dd, 1.5 beats rest
-  hat: 2 beats x-, 2 beats rest
-}
-```
-
-</Cell>
-
-The length `...` is what is left of the block the line is in, so a last part `...rest` is silence to the end, and `...x-` repeats `x-` to the end. The line then has no length of its own: the other lines decide how long the block is, and what comes before the `...` plays once each time through.
+A final `...w` repeats the word `w` to the end of the containing block. `...-` is silence to the end, and `...x-` repeats `x-` to the end. Nothing may follow it. The line then has no length of its own: the other lines decide how long the block is, and what comes before the `...` plays once each time through.
 
 <Cell>
 
@@ -76,11 +79,11 @@ set time 9 over 8
 set tempo 100
 
 pattern manias = {
-  hat.open: x---
-  hat: --x-
-  kick: x--x-x---x--x-xx--
-  snare: -------x-
-  snare.ghost: -xx, ...rest
+  hat.open: x---,
+  hat: --x-,
+  kick: x--x-x---x--x-xx--,
+  snare: -------x-,
+  snare.ghost: -xx ...-,
 }
 
 play manias for 4 bars
@@ -92,17 +95,17 @@ This is *Circle of Manias* by Porcupine Tree. The hats are 4 steps long, the kic
 
 ## Hits spread over steps
 
-`3 in 8` is three hits spread as evenly as eight steps allow: `x--x--x-`, the tresillo. It is a part of its own, with a comma between it and anything else on the line, and a `steps` name can hold it.
+`3 in 8` is three hits spread as evenly as eight steps allow: `x--x--x-`, the tresillo. It is one word in the line, separated from neighboring words by spaces, and a `steps` name can hold it.
 
 <Cell>
 
 ```composer-nb
-steps tresillo = 3 in 8
+steps tresillo = x--x--x-
 
 play block {
-  kick: tresillo
-  hat: 2 in 8
-  snare: 2 beats rest, 5 in 8
+  kick: tresillo,
+  hat: x 3*- x 3*-,
+  snare: 8*- x-xx-xx-,
 }
 ```
 
@@ -110,14 +113,14 @@ play block {
 
 ## Layers
 
-A block after a kit piece's colon holds layers, one per line, and evaluates to one `steps` value. Each layer repeats until they all end together. Where two layers hit the same step the lower one wins, and a `-` never overrides a hit. The block is the whole value, so nothing goes beside it: `hat: x--- { ... }` is an error. To put steps in a row with a block, name it: `steps fig = { ... }` and `hat: x--- fig`.
+A block after a kit piece's colon holds layers, separated by commas, with an optional trailing comma, and evaluates to one `steps` value. Each layer repeats until they all end together. Where two layers hit the same step the lower one wins, and a `-` never overrides a hit. The block is the whole value, so nothing goes beside it: `hat: x--- { ... }` is an error. To put steps in a row with a block, name it: `steps fig = { ... }` and `hat: x--- fig`.
 
 <Cell>
 
 ```composer-nb
 play snare.ghost: {
-  --x-
-  ------------ddd-
+  --x-,
+  ------------ddd-,
 }
 ```
 

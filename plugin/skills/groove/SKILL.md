@@ -20,15 +20,15 @@ The groove is a named pattern. A crash on the one or a fill goes in the play, so
 set tempo 96
 
 pattern funk = {
-  hat: x-x- x-x- x-x- x---
-  hat.open: 4&
-  snare: 2 4
-  snare.ghost: ---- ---x -x-- --x-
-  kick: x--- --x- --x- ---- | x--- --x- ---- -x--
+  hat: x-x- x-x- x-x- x---,
+  hat.open: 14*- x-,
+  snare: 4*- x 3*-,
+  snare.ghost: ---- ---x -x-- --x-,
+  kick: x--- --x- --x- ---- | x--- --x- ---- -x--,
 }
 
 play block {
-  crash: 1
-  funk
+  crash: x 15*-,
+  funk,
 } for 4 bars
 ```

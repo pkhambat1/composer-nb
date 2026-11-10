@@ -36,6 +36,10 @@ MODES = [
     "melodicMinor",
     "wholeTone",
 ]
+INTERVALS = [
+    "unison", "second", "third", "fourth", "fifth", "sixth", "seventh", "octave",
+    "ninth", "tenth", "eleventh", "twelfth", "thirteenth", "fourteenth", "fifteenth",
+]
 UNITS = ["steps", "beats", "bars"]  # what a length on a line is measured in
 
 LANES = [
@@ -62,10 +66,6 @@ NUMBER_RE = re.compile(r"^\d+$|\)$")
 # A length's arithmetic, (1+2)*2, as against a group of patterns, (verse chorus)
 SUM_RE = re.compile(r"[\d\s./+*()-]*\d[\d\s./+*()-]*")
 ARITHMETIC_RE = re.compile(r"[\d./+*-]*\d")
-# A degree, or a numeral with what follows it, which of can count from another note or chord:
-# 5 of C3, V7 of V
-DEGREE_RE = re.compile(r"[\^~]?'*[#b]?(?:vii|vi|iv|v|iii|ii|i)'*")
-NUMERAL_RE = re.compile(r"[#b]?(vii|vi|iv|v|iii|ii|i)[A-Za-z0-9#+]*")
 # What makes a { an instrument's block of layers: kick: or piano: in front of it, or
 # steps name =
 STEPS_OPENER_RE = re.compile(r"([a-z]+(?:\.[a-z]+)?)\s*:[^:{}]*$|^\s*steps\s+[A-Za-z_]\w*\s*=[^{}]*$")
@@ -130,25 +130,21 @@ def _open_blocks(text: str) -> Tuple[List[Tuple[str, Optional[str]]], Optional[s
 
 def _pitched(written: List[str], names: Names) -> List[Option]:
     """What can come next on a pitched instrument's line: notes or chords, the word that says
-    which, and then its value. A line of notes takes lengths: 3 beats C2, 2 beats rest."""
-    notes = _options(names["notes"], "variable")
+    which, and then its value. Notes use step words and finite repeats: C2 7*-, 2*riff."""
+    functions = _options([name + "(" for name in INTERVALS], "function")
+    notes = _options(names["notes"], "variable") + functions
     if not written:
         return [("notes ", "keyword"), ("chords ", "keyword")]
     last = written[-1]
     if written[0] == "chords":  # the word in front is what makes a line a chart
-        of = [("of ", "keyword")] if NUMERAL_RE.fullmatch(last) else []
-        return of + _options(names["chords"], "variable")
+        return _options(names["chords"], "variable") + functions
     if written[0] != "notes":
         return []
     if len(written) == 1:
         return notes
-    of = [("of ", "keyword")] if DEGREE_RE.fullmatch(last) else []
-    if NUMBER_RE.search(last) or ARITHMETIC_RE.fullmatch(last):
-        # a length, 3 beats C2, or a degree of a note, iii of C2
-        return _options([u + " " for u in UNITS], "keyword") + of
-    if last in UNITS:
-        return [("rest", "keyword")] + notes
-    return of + notes
+    if last.endswith("*"):
+        return [("-", "value"), ("_", "value")] + notes
+    return notes
 
 
 def _group_closed(text: str) -> bool:
@@ -196,6 +192,11 @@ def _statement(
 ) -> List[Option]:
     """What can come next on a line that isn't an instrument's. `closed` is what the block
     the last } closed held."""
+    if re.search(r"\bon\s+bar\s+\d+(?:\s+to\s+\d+)?\s*$", head):
+        return []
+    pitched = re.match(r"\s*(notes|chords)\s+[A-Za-z][A-Za-z0-9]*\s*=\s*(.*)$", head)
+    if pitched:
+        return _pitched([pitched.group(1), *pitched.group(2).split()], names)
     # At the top of a cell or of a with there, statements; in any other block, lines
     blocks, _ = _open_blocks(body + head)
     inside = not all(h == "statements" for h, _ in blocks)
@@ -218,11 +219,19 @@ def _statement(
         types = _options([t + " " for t in TYPES], "keyword")
         if inside:
             # in braces, settings go on a with: with octave 2 { ... }
-            return parts + patterns + [("bar ", "keyword"), ("every ", "keyword"), ("with ", "keyword")] + types
+            return parts + patterns + [("every ", "keyword"), ("with ", "keyword")] + types
         # set only at the top of the cell: in a with, settings go on a with
         settings = [] if blocks else [("set ", "keyword")]
-        return settings + types + [("play ", "keyword"), ("with ", "keyword")]
+        return settings + types + [("play ", "keyword"), ("print(", "function"), ("with ", "keyword")]
     first = words[0]
+    if first == "print":
+        kinds = [kind for kind in ("notes", "chords", "steps") if kind in words[1:]]
+        options = _options([name for kind in (kinds or ["notes", "chords", "steps"]) for name in names[kind]], "variable")
+        if kinds != ["steps"]:
+            options += _options([name + "(" for name in INTERVALS], "function")
+        if not kinds:
+            options += _options([kind + " " for kind in ("notes", "chords", "steps")], "keyword")
+        return options
     if tail.endswith("("):
         # a group starts: what plays in order
         return patterns + parts + TYPED_BRACES + [("with ", "keyword")]
@@ -232,27 +241,22 @@ def _statement(
         if len(words) == 1:
             return patterns + parts + TYPED_BRACES
         if len(words) == 2 and words[1] in names["pattern"] + names["block"]:
-            return [("for ", "keyword")]
+            return [("for ", "keyword"), ("on bar ", "keyword")]
         return []
     if first in ("pattern", "block") and words[2:4] == ["=", "every"]:
-        words = words[3:]  # pattern feet = every 3 steps ...: a pattern at its own pace
+        words = words[3:]  # pattern feet = every 3/4 beats ...: a pattern at its own pace
         first = "every"
     if first == "every":
-        # every 3 steps ...: how long a step lasts, then what plays at that pace
+        # every 3/4 beats ...: how long a step lasts, then what plays at that pace
         if len(words) < 2:
             return []  # still writing the number
         if len(words) == 2:
-            return _options([u + " " for u in UNITS], "keyword")
+            return [("beats ", "keyword")]
         return _sequence(words[3:], patterns, parts, grouped)
-    if first == "bar":
-        # bar 2 ..., bar 3 to 4 ...: a place, then what plays there
-        if len(words) < 2:
-            return []  # still writing the bar's number
-        if len(words) == 2:
-            return patterns + [("to ", "keyword")] + parts
-        if words[2] == "to":
-            return [] if len(words) < 4 else _sequence(words[4:], patterns, parts, grouped)
-        return _sequence(words[2:], patterns, parts, grouped)
+    if len(words) >= 2 and words[-2:] == ["on", "bar"]:
+        return []  # the user supplies the bar number
+    if words[-1] == "on":
+        return [("bar ", "keyword")]
     if first in TYPES:
         if len(words) < 3 or words[2] != "=":
             return []  # still writing the name
@@ -290,6 +294,38 @@ def _setting(words: List[str]) -> List[Option]:
     return []
 
 
+def _entry_context(text: str) -> Tuple[str, str]:
+    """Separate the current brace entry from its context. Parentheses and with headers
+    retain their argument/setting commas, just as in the JavaScript lexer."""
+    code = re.sub(r"//[^\n]*", lambda m: " " * len(m.group()), text)
+    levels = [{"start": 0, "parens": 0, "head": ""}]
+    for i, c in enumerate(code):
+        level = levels[-1]
+        if c == "{":
+            level["head"] = ""
+            levels.append({"start": i + 1, "parens": 0, "head": ""})
+        elif c == "}":
+            if len(levels) > 1:
+                levels.pop()
+        elif c == ";" or (c == "," and len(levels) > 1 and not level["parens"]
+                          and not re.search(r"\bwith(?:\s|$)", level["head"])):
+            level.update(start=i + 1, head="")
+        elif c == "\n" and len(levels) == 1 and not level["parens"]:
+            level.update(start=i + 1, head="")
+        elif c == "\n" and level["parens"] and not re.search(r"\b(?:notes|chords|with)\b", level["head"]):
+            # A pattern group can start another part on a new line. Keep its
+            # opening parenthesis in the context for _groups().
+            level["start"] = i + 1
+        else:
+            if c == "(":
+                level["parens"] += 1
+            elif c == ")":
+                level["parens"] = max(0, level["parens"] - 1)
+            level["head"] += c
+    start = levels[-1]["start"]
+    return code[:start], code[start:]
+
+
 def complete(text: str, cursor: int, songs: Optional[Dict[str, Song]] = None):
     """Completions at `cursor` in a `%%music` cell (`text` includes the magic line).
 
@@ -314,6 +350,7 @@ def complete(text: str, cursor: int, songs: Optional[Dict[str, Song]] = None):
     names = _names("\n".join([*inherited, body]))
     # A name isn't defined until its braces close.
     open_blocks, closed = _open_blocks(body + head)
+    body, head = _entry_context(body + head)
     unfinished = {name for _, name in open_blocks if name}
     names = {t: [n for n in found if n not in unfinished] for t, found in names.items()}
 
@@ -333,16 +370,6 @@ def complete(text: str, cursor: int, songs: Optional[Dict[str, Song]] = None):
         # A drum's line takes steps: only names of steps.
         holds = "steps"
         options = _options(names[holds], "variable")
-        written = part.group(2).replace(",", " , ").split()
-        last = written[-1] if written else ""
-        if holds == "steps" and NUMBER_RE.search(last):
-            # 2 beats rest: a length, in front of what fills it. Or the line lists beats
-            options = _options([u + " " for u in UNITS], "keyword")
-        elif holds == "steps" and last in UNITS:
-            options = [("rest", "keyword")] + options
-        elif holds == "steps" and not any(w in UNITS for w in written):
-            if any(w[0].isdigit() for w in written):
-                options = []  # a line of beats holds only beats
     elif open_blocks and open_blocks[-1][0] == "steps":
         options = _options(names["steps"], "variable")  # a layer in a drum's block of steps
     elif open_blocks and open_blocks[-1][0] == "layers":

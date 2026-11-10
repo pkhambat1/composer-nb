@@ -33,7 +33,7 @@ if (at >= 0) {
         .catch(() => res.writeHead(500).end("Build the MCP App first"))
       return
     }
-    if (req.method === "GET" && req.url === "/app.js") {
+    if (req.method === "GET" && req.url?.split("?", 1)[0] === "/app.js") {
       void readFile(new URL("../app/dist/app.js", import.meta.url))
         .then((source) => {
           res.setHeader("Access-Control-Allow-Origin", "*")

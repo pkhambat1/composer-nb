@@ -2,7 +2,7 @@
 import React from "react"
 import { afterRun } from "../hooks/useKeyboard.ts"
 import type { NotebookCell } from "../shared/types.ts"
-import CodeEditor, { type RunState } from "./CodeEditor.tsx"
+import CodeEditor, { type CodeEditorHandle, type RunState } from "./CodeEditor.tsx"
 import MusicOutput, { type PlayerProps } from "./MusicOutput.tsx"
 import MarkdownContent from "./MarkdownCell.tsx"
 
@@ -37,24 +37,28 @@ function CellMenu({ onDelete, onMoveUp, onMoveDown, onDuplicate, first, last }: 
   return (
     <div className="cell-menu-wrap" ref={menuRef}>
       <button
-        className="cell-menu-btn"
+        className={"btn btn-ghost btn-icon cell-menu-btn" + (open ? " btn-open" : "")}
         onClick={(e) => {
           e.stopPropagation()
           setOpen((v) => !v)
         }}
         onMouseDown={(e) => e.preventDefault()}
         title="Cell options"
+        aria-label="Cell options"
+        aria-haspopup="menu"
+        aria-expanded={open}
       >
-        <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor">
-          <circle cx="7" cy="3" r="1.3" />
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor" aria-hidden="true">
+          <circle cx="3" cy="7" r="1.3" />
           <circle cx="7" cy="7" r="1.3" />
-          <circle cx="7" cy="11" r="1.3" />
+          <circle cx="11" cy="7" r="1.3" />
         </svg>
       </button>
       {open && (
-        <div className="cell-menu-dropdown">
+        <div className="cell-menu-dropdown" role="menu">
           <button
-            className="cell-menu-item"
+            className="menu-item"
+            role="menuitem"
             disabled={first}
             onClick={(e) => {
               e.stopPropagation()
@@ -65,7 +69,8 @@ function CellMenu({ onDelete, onMoveUp, onMoveDown, onDuplicate, first, last }: 
             Move up
           </button>
           <button
-            className="cell-menu-item"
+            className="menu-item"
+            role="menuitem"
             disabled={last}
             onClick={(e) => {
               e.stopPropagation()
@@ -76,7 +81,8 @@ function CellMenu({ onDelete, onMoveUp, onMoveDown, onDuplicate, first, last }: 
             Move down
           </button>
           <button
-            className="cell-menu-item"
+            className="menu-item"
+            role="menuitem"
             onClick={(e) => {
               e.stopPropagation()
               setOpen(false)
@@ -86,7 +92,8 @@ function CellMenu({ onDelete, onMoveUp, onMoveDown, onDuplicate, first, last }: 
             Duplicate
           </button>
           <button
-            className="cell-menu-item cell-menu-item-danger"
+            className="menu-item menu-item-danger"
+            role="menuitem"
             onClick={(e) => {
               e.stopPropagation()
               setOpen(false)
@@ -141,6 +148,7 @@ function Cell({
   focusedCellId,
   isPlaying,
   onTogglePlayback,
+  onStopPlayback,
   onPlaybackFinished,
   registerPlayer,
   unregisterPlayer,
@@ -167,9 +175,12 @@ function Cell({
     dragging?: boolean
   }) {
   const taRef = React.useRef<HTMLTextAreaElement>(null)
+  const codeRef = React.useRef<CodeEditorHandle>(null)
 
   React.useEffect(() => {
-    if (editing && taRef.current && document.activeElement !== taRef.current) {
+    const code = codeRef.current
+    if (editing && code && !code.hasFocus()) code.focusAtEnd(afterRun.keepScroll)
+    else if (editing && taRef.current && document.activeElement !== taRef.current) {
       taRef.current.focus({ preventScroll: afterRun.keepScroll })
       const v = taRef.current.value
       taRef.current.setSelectionRange(v.length, v.length)
@@ -258,7 +269,7 @@ function Cell({
         {cell.type === "music" ? (
           <>
             <CodeEditor
-              ref={taRef}
+              ref={codeRef}
               value={cell.source}
               onChange={(v) => onChange(v)}
               onFocus={() => {
@@ -277,6 +288,7 @@ function Cell({
               focusedCellId={focusedCellId}
               isPlaying={isPlaying}
               onTogglePlayback={onTogglePlayback}
+              onStopPlayback={onStopPlayback}
               onPlaybackFinished={onPlaybackFinished}
               registerPlayer={registerPlayer}
               unregisterPlayer={unregisterPlayer}
@@ -306,7 +318,7 @@ function Cell({
                   placeholder="Markdown — # heading, **bold**, *italic*, `code`, - lists, [link](url)"
                 />
                 <button
-                  className="cell-run-btn"
+                  className="btn btn-primary cell-run-btn"
                   onClick={(e) => {
                     e.stopPropagation()
                     onRun()
@@ -326,7 +338,7 @@ function Cell({
                 <MarkdownContent source={cell.source} />
               </div>
               <button
-                className="md-preview-toggle md-preview-toggle-on"
+                className="btn btn-secondary btn-sm btn-on md-preview-toggle"
                 onMouseDown={(e) => e.preventDefault()}
                 onClick={(e) => {
                   e.stopPropagation()
@@ -353,7 +365,7 @@ function Cell({
                 placeholder="Markdown — # heading, **bold**, *italic*, `code`, - lists, [link](url)"
               />
               <button
-                className="cell-run-btn"
+                className="btn btn-primary cell-run-btn"
                 onClick={(e) => {
                   e.stopPropagation()
                   onRun()
@@ -366,7 +378,7 @@ function Cell({
                 <span>Run</span>
               </button>
               <button
-                className="md-preview-toggle"
+                className="btn btn-secondary btn-sm md-preview-toggle"
                 onMouseDown={(e) => e.preventDefault()}
                 onClick={(e) => {
                   e.stopPropagation()

@@ -12,14 +12,14 @@ A small language for drums, notes and chords, played right inside Jupyter notebo
 set time 7 over 8
 
 pattern groove = 3 bars {
-  kick: x--x---
-  snare: ----x--
-  ride.bell: x--
+  kick: x--x---,
+  snare: ----x--,
+  ride.bell: x--,
 }
 
 play block {
-  crash: 1
-  groove
+  crash: x,
+  groove,
 } for 6 bars
 ```
 
@@ -75,7 +75,7 @@ verse  # shows the player
 Songs are ordinary Python values, so you can generate them with loops and functions:
 
 ```python
-groove = "pattern groove = {\n  hat: x-\n  kick: 1 3\n  snare: 2 4\n}\n"
+groove = "pattern groove = {\n  hat: x-,\n  kick: x 7*-,\n  snare: 4*- x 3*-,\n}\n"
 rungs = "\n".join(f"with tempo {t} {{ play groove for 2 bars }}" for t in (70, 80, 90))
 Song(groove + rungs, name="ladder")
 ```
@@ -124,11 +124,11 @@ Every line starts by saying what it is:
 | `with key E { ... }`   | Settings for its block only: at the top, around statements; inside braces, a block |
 | `steps pair = ^-x-`    | A name, with its type in front: `steps`, `notes`, `chords`, `pattern` or `block`   |
 | `kick: x--x---`        | Inside braces, an instrument and what it plays                                     |
-| `bar 2 { ... }`        | Inside braces, what plays in one bar of the pattern or play it's in                |
+| `lift on bar 2`        | Inside braces, what plays in one bar of the pattern or play it's in                |
 | `play block { ... }`   | Plays what's after it, a pattern or one line. Nothing else makes sound             |
 | `play pattern { ... }` | A play whose lines repeat, as a pattern's do                                       |
 
-`//` starts a comment. Blank lines and indentation mean nothing. Settings set at the top, and names, carry on into the cells below.
+`//` starts a comment. Inside braces, entries require commas, with an optional trailing comma before `}`. Semicolons are errors. Newlines inside braces are layout; outside braces, statements use separate lines. Blank lines and indentation mean nothing. Settings set at the top, and names, carry on into the cells below.
 
 ### Types
 
@@ -161,7 +161,7 @@ A setting is `set`, then the setting and its value: `set key A`. It applies from
 | `octave`    | `3`        | Octave for chords, degrees and notes written without one, 1 to 6                                                                                             |
 | `kit`       | `rock`     | Drum sound: `rock` or `synth`                                                                                                                                |
 
-Every number is arithmetic (`set tempo 60*2`, `(1+2) bars groove`), so `*` and `/` only ever multiply and divide. That's why a time is `7 over 8` rather than `7/8`.
+Settings and lengths can use arithmetic (`set tempo 60*2`, `(1+2) bars groove`). `*` repeats step words with an integer count of at least two. That's why a time is `7 over 8` rather than `7/8`.
 
 `with` gives settings to a block only, with commas between them, and puts back what was set at its `}`: `with key E, mode minor { ... }`. At the top of a cell its block holds statements, such as `play`. In a play or a pattern its block plays together with the other lines, and in brackets it's one part in order, so the bass can sit an octave below the chart, or one chart can play in two keys:
 
@@ -171,14 +171,14 @@ chords prog = i vi|iv v
 
 with key E, mode minor {
   play block {
-    piano: chords walk
-    with octave 2 { bass: notes i---v--- }
-  }
+    piano: chords walk,
+    with octave 2 { bass: notes i---v--- },
+  },
 }
 
 play (
-  with key E { piano: chords prog }
-  with key G { piano: chords prog }
+  with key E { piano: chords prog, }
+  with key G { piano: chords prog, }
 )
 ```
 
@@ -195,9 +195,9 @@ set time 7 over 8
 set octave 2
 
 pattern groove = {
-  kick: x--x---
-  snare: ----x--
-  guitar.electric: notes E---F# E-E--
+  kick: x--x---,
+  snare: ----x--,
+  guitar.electric: notes E---F# E-E--,
 }
 
 play groove
@@ -205,25 +205,25 @@ play groove
 
 A note is a capital letter, `A` to `G`, with `#` or `b` after it and an octave when it needs one: `F`, `F#`, `Bb`, `E2`. Without a number it's in the `octave` setting, so `set octave 2` above puts the riff on the guitar's low E string. One note is one step, however many characters it takes, and two notes never touch: a space goes between them (`F# E`). `-` means nothing new happens, so the note rings on, and `_` stops it. `^` in front accents a note and `~` softens it.
 
-A degree goes where a note goes: a Roman numeral from `i` to `vii`, counted on the scale of the `key` and its `mode`, with `b` or `#` in front to move it off the scale. In C major `iii` is E and in C minor it's Eb, and a name that holds degrees plays in whichever key and mode are set. `i` is the root in the `octave` setting; `'` after the numeral is an octave up and `'` before it an octave down:
+A degree goes where a note goes: a signed nonzero integer, counted through the scale of the `key` and its `mode`. `b` or `#` in front moves it off the scale. `1` is the root in the `octave` setting. Degrees continue through higher octaves: `8` and `15` are the next two tonics in seven-note modes; `7` and `13` are the next two in six-note whole tone. All digits belong to the degree: `13` is one note and `1 3` is two. Negative degrees count down from the tonic, skipping zero: in C major `-1` is the B below C, `-2` is A, `-7` is the lower C and `-14` is two octaves down. In whole tone `-6` is the lower tonic. Put the sign before an accidental (`-b1`) and spaces before negative notes (`-1--- -2---`); dashes within `1---2---` still sustain. `octave(phrase, -1)` lowers a whole phrase; apostrophes are no longer accepted. Lowercase Roman numerals remain accepted.
 
 ```
+set time 4 over 4
 set key A
 set mode minor
-
-notes scale = i---ii---iii---iv---|v---vi---vii---i'---
-
-play piano: notes scale
+notes scale = 1---2---3---4---|5---6---7---8---
+notes answer = fifth(scale)
+play piano: notes answer
 ```
 
-`of` counts a degree from another note instead of from the key, on that note's major scale: `v of C3` is `G3` and `biii of C3` is `Eb3`. A note counted that way goes in brackets to count from it, so the circle of fifths from C3 is `C3--- 5 of C3--- 5 of (5 of C3)--- 5 of (5 of (5 of C3))---`.
+`second`, `third`, `fourth`, `fifth`, `sixth`, `seventh`, `octave`, and `ninth` through `fifteenth` move every note through the active scale or mode. `unison` leaves it in place. They take a note, chord, inline phrase or named phrase, preserving rhythm. `fifth(B3)` is F4 in C major. `fifth(phrase, 2)` repeats the move twice, and `fifth(phrase, -1)` moves down a fifth; zero is the identity. The count is an integer from -64 to 64. Named results resolve in the key and mode where they play. `of` remains available for counting on another root's major scale.
 
-A length in front of one note holds it, as a length in front of `rest` is silence: `bass: notes 3 beats C2, 3 beats G1`. `...G1` holds G1 to the end of the block. A length holds one note, so a figure is drawn and a long note takes a length. A line plays one note at a time. For more, its line takes a block of lines, which play together:
+Notes use step repeats: `bass: notes C2 11*- G1 11*-` holds each note for three beats on the default grid. `8*C2` starts eight notes, while `C2 7*-` holds one for eight steps. `8*_` is eight silent steps; `2*(C2--- G1---)` repeats a group. A final `...G1` holds G1 to the end of the block, `...-` sustains the preceding note, and `..._` fills with silence. A line plays one note at a time. For more, its line takes a block of layers, which play together:
 
 ```
 play piano: {
-  notes C5-D5-E5-G5-E5-D5-C5---
-  notes 1 bars C3
+  notes C5-D5-E5-G5-E5-D5-C5---,
+  notes C3 15*-,
 }
 ```
 
@@ -233,23 +233,25 @@ Chords are written by the bar, with `chords` in front:
 play guitar: chords C - - G|Am - F G|%|F - _ -
 ```
 
-`|` is a bar line, and the chords in a bar split it evenly. `-` holds the chord before for another slot, `_` is silence and `%` repeats the bar before. Chords can be names (`Cmaj7`, `F#m`, `Bb7`, `C6/9`, `C/E`) or Roman numerals that follow `key` (`i vi iv v7`). `of` counts a numeral from another one's root, so in C, `v7 of v` is `D7`, and a chain takes brackets: `v7 of (v of v)` is `A7`.
+`|` separates bars, whose chords split the time evenly. `-` holds, `_` is silence and `%` repeats the preceding bar. Write symbols (`Cmaj7`, `F#m`, `C6/9`, `C/E`) or numeric degrees (`1 6 4 5dom7`). All digits form the root degree: `17` is degree seventeen. Start extensions with a quality: `1maj7`, `2m7`, `5dom7`. Plain degrees take the mode's triads, and suffixes override or modify them: `5m`, `2add11`.
+
+Suffixes compose: `1sus2add11#5/4` replaces the third with a second, adds an eleventh, raises the fifth, and puts degree 4 of the key in the bass. In C it plays C D G# F over F. A slash bass can be a letter or a degree; `1M6/9/3` is degree 1 with a 6/9 quality over degree 3. `fifth(chords)` moves every chord tone and its bass through the scale, so qualities may change: `fifth(3)` is Bdim in C major.
 
 ### Drums
 
-`kick`, `snare`, `hat`, `ride` and `crash` are drums, one to a line, and so are the three toms: `tom.high`, `tom.low` and `tom.floor`. Some drums have other sounds with lines of their own: `ride.bell`, `hat.open`, `hat.pedal`, `snare.rim` (a rimshot), `snare.cross` (a cross-stick) and `snare.ghost` (the snare's ghost notes, so they can sit under its main line). A drum plays either steps or beats:
+`kick`, `snare`, `hat`, `ride` and `crash` are drums, one to a line, and so are the three toms: `tom.high`, `tom.low` and `tom.floor`. Some drums have other sounds with lines of their own: `ride.bell`, `hat.open`, `hat.pedal`, `snare.rim` (a rimshot), `snare.cross` (a cross-stick) and `snare.ghost` (the snare's ghost notes, so they can sit under its main line). A drum plays step words:
 
 ```
 pattern beat = {
-  kick: x---x---x-x-----
-  snare: ---- ^---
-  snare.ghost: --------------x-
-  hat: x-
+  kick: x---x---x-x-----,
+  snare: ---- ^---,
+  snare.ghost: --------------x-,
+  hat: x-,
 }
 
 play block {
-  crash: 1
-  beat
+  crash: x,
+  beat,
 } for 2 bars
 ```
 
@@ -258,9 +260,9 @@ Each drum has one line in a block. To layer it, its line takes a block of steps,
 ```
 pattern ghosts = {
   snare.ghost: {
-    --x-
-    ------------ddd-
-  }
+    --x-,
+    ------------ddd-,
+  },
 }
 ```
 
@@ -268,33 +270,33 @@ A block of steps is steps, so it can be named too: `steps ghosts = { ... }`. Whe
 
 An open hi-hat rings until the next hi-hat hit closes it (a stick on `hat`, or the foot on `hat.pedal`), and replaces a closed hit at the same moment, so `hat: ^-x-` can keep going under `hat.open: ------^-`.
 
-Steps are a picture of time, one character each, a 16th note unless they're inside `every`: `x` hit, `^` accent, `~` ghost (on the snare, use `snare.ghost`), `d` double, `-` nothing. Spaces mean nothing, so group them by beat, and `|` marks the end of a bar (it's checked): `kick: x--- ---- x--- ---- | x--- --x- x--- ----`. A line that starts with `|` continues the line above. A figure written twice is an error, because a pattern repeats its lines: `hat: x-x- x-x-` is `hat: x-`, and `hat: 1 bars x-` plays it once for a bar.
+Steps are a picture of time, one character each, a 16th note unless they're inside `every`: `x` hit, `^` accent, `~` ghost (on the snare, use `snare.ghost`), `d` double, `-` nothing. Spaces mean nothing, so group them by beat, and `|` marks the end of a bar (it's checked): `kick: x--- ---- x--- ---- | x--- --x- x--- ----`. A line that starts with `|` continues the line above. In a pattern, write the repeating figure once: `hat: x-x- x-x-` is `hat: x-`. In a finite block, `hat: 8*x-` plays eight copies of `x-`.
 
-Beats are the beats a drum hits on in each bar, counted `1 e & a 2 e & a`. A beat on its own is a plain hit, and a step in front says another way to hit it: `snare: 2e ^4` accents the 4, `~3a` is a ghost note and `d3` a double. Beats and steps don't mix on a line.
+Count silence with `*` to place hits: `snare: 5*- x 6*- ^-` hits the second sixteenth of beat 2 and accents beat 4.
 
 ### One bar only
 
-In a pattern every line repeats, so it plays in every bar. To play something in one bar only, put the bar in front of it:
+In a pattern every line repeats, so it plays in every bar. To play something in one bar only, write its value followed by `on bar n`:
 
 ```
 set time 7 over 8
 set tempo 90
 
 pattern groove = {
-  kick: x--x---
-  snare: 2e 4
-  snare.ghost: --x----
-  hat: ^-x-
-  bar 2 {
-    snare.ghost: 2 beats rest, dd, 1 beats rest
-    hat.open: 2 beats rest, --^-, 2 steps rest
-    hat.pedal: 4
-  }
+  kick: x--x---,
+  snare: 5*- x-,
+  snare.ghost: --x----,
+  hat: ^-x-,
+  block {
+    snare.ghost: 8*- dd 4*-,
+    hat.open: 10*- ^ 3*-,
+    hat.pedal: 12*- x-,
+  } on bar 2,
 }
 
 play block {
-  crash: 1
-  groove
+  crash: x,
+  groove,
 } for 6 bars
 ```
 
@@ -302,29 +304,22 @@ play block {
   <img src="https://raw.githubusercontent.com/pkhambat1/composer-nb/main/docs/images/one-bar-only.svg" width="820" alt="A groove whose lines repeat in both bars, with a bar 2 block that adds a ghost-note burst, an open hi-hat and a pedal close in bar 2 only">
 </p>
 
-`bar 2 { ... }` is what happens in bar 2 of the pattern, each time through it. What's inside repeats to fill the bar, and its lines are lower, so they win where they hit a drum at the same moment as a line above. One line needs no braces (`bar 2 hat.pedal: 4`), a named pattern can go there (`bar 4 fill`), and `bar 3 to 4 { ... }` takes a run of bars.
+`lift on bar 2` adds the named value in bar 2 on each pass. A typed inline value works too: `block { hat.pedal: 12*- x- } on bar 2`. A block plays once, while a pattern repeats to fill the range. `on bar 3 to 4` takes a range. These entries add, never silence another line.
 
-### Rests with a length
+### Repeats and silence
 
-Instead of counting out a long run of `-`, put a length in front of `rest`, in `steps`, `beats` or `bars`: `2 beats rest`. Commas separate the parts of a line, and a part is steps as they're drawn or a length with what fills it:
+Kit lines use space-separated step words. `8*-` is eight silent steps, `4*x-` is four copies of `x-`, and `2*(^-x- x-x-)` repeats a group. Counts are whole numbers of at least two. A final `...w` repeats its word to the containing block's end; `...-` fills with silence. A pattern line writes its repeating figure once (`hat: x-`, never `hat: 8*x-`). A finite block can use an explicit repeat.
 
-```
-play block {
-  snare: 2 beats rest, dd, 1.5 beats rest
-  crash: 1 bars rest, x
-}
-```
-
-A length can also repeat steps, up to the next comma: `2 beats x-` is `x-x-x-x-`. Lengths are always plural, whatever the number (`1 bars`), so `bars` only ever says how long and `bar` only ever says which one.
+Kit and note lines do not take duration clauses or `rest`. Commas separate brace entries, layers and function arguments. Note words use spaces, as in `piano: notes 1 7*- 3 7*-,`. Note repeats follow the same finite sequence rule as kit repeats.
 
 ### Slower and faster steps
 
-`every` goes in front of a pattern, a block or one line, and says how long a step lasts in it. `every 3 steps` makes each step last three 16ths, `every 2 steps` is eighth notes, and `every 1/3 beats` is triplets:
+`every` goes in front of a pattern, a block or one line, and says how long a step lasts in it. Only beats are allowed; setting the step already in effect is an error. `every 3/4 beats` makes each step last three 16ths, `every 1/2 beats` is eighth notes, and `every 1/3 beats` is triplets:
 
 ```
-pattern feet = every 3 steps {
-  kick: ^-^^-^--
-  hat.pedal: -x--x-xx
+pattern feet = every 3/4 beats {
+  kick: ^-^^-^--,
+  hat.pedal: -x--x-xx,
 }
 ```
 
@@ -333,33 +328,38 @@ pattern feet = every 3 steps {
 A pattern is lines in braces that play together, over and over: everything in it repeats until the pattern ends. Give it a name, and play it by name. Braces hold what plays together and brackets what plays in order:
 
 ```
-pattern hit = { crash: 1 }
+set time 4 over 4
+pattern hit = { crash: x }
 pattern groove = {
-  kick: x---
-  snare: ---- x--- ---- x-x-
+  kick: x---,
+  snare: ---- x--- ---- x-x-,
 }
 play (hit 2 bars groove hit)
 ```
 
 Inside braces, a pattern's name on a line of its own plays next to the lines beside it. In brackets, names, blocks and other groups play one after another, separated by spaces or new lines: `play (hit pattern { snare: ---- x--- ---- dddd } hit)`. Two things on one line outside brackets are an error.
 
+### Printing values
+
+`print(1, 2, 3)` displays the degrees with their resolved pitches under the current key, mode and octave. `print(fifth(1 3 5 7))` displays `5 7 9 11`; in C major the attached pitches are G3, B3, D4 and F4. Printing omits rests, sustain marks and bar lines, keeps repeated values in order, and shows `[]` for silence alone. It creates no audio or player. Named values keep their type; `print(chords 1 2 3)` explicitly inspects a chord chart with names, tones and basses.
+
 ### Repeating and lengths
 
-Putting something in a pattern is the one way to repeat it, and a length is the one way to say how long.
+Patterns loop their lines until they end. Finite kit and note sequences can repeat words with `*`. A length in bars sets how long a pattern, block or group plays.
 
 | You write                      | Meaning                                                |
 | ------------------------------ | ------------------------------------------------------ |
 | `pattern beat = { hat: x- }`   | Everything in a pattern repeats until the pattern ends |
-| `play block { crash: 1 ... }`  | A block is a timeline, and its lines play once         |
-| `play pattern { hat: x- ... }` | Its lines repeat, as in any pattern                    |
+| `play block { crash: x }`  | A block is a timeline, and its lines play once         |
+| `play pattern { hat: x- }` | Its lines repeat, as in any pattern                    |
 | `groove`, on a line of its own | In a play, the pattern repeats until the play ends     |
 | `3 bars pattern { ... }`       | A length, always plural, in front of what it measures  |
-| `2 beats rest`                 | On a drum's line, silence for that long                |
+| `8*-`                         | Eight drum steps of silence; use `8*_` on notes         |
 | `6 bars groove`                | `groove` repeats for 6 bars                            |
 | `8 bars (a b)`                 | Brackets play `a` and `b` in order, for 8 bars         |
-| `bar 2 { ... }`                | A bar, in front of what plays there and nowhere else   |
+| `lift on bar 2`                | A bar, in front of what plays there and nowhere else   |
 
-Without a length, a pattern lasts until its lines line up again (and long enough to have any bar it names), and a play lasts as long as the longest thing in it. A play can be longer than its lines, and the rest is silent: `play block { crash: 1 } for 4 bars`.
+Without a length, a pattern lasts until its lines line up again (and long enough to have any bar it names), and a play lasts as long as the longest thing in it. A play can be longer than its lines, and the rest is silent: `play block { crash: x } for 4 bars`.
 
 Whatever repeats has to fit what it's in a whole number of times. Lines of different lengths drift against each other, which is how you write a polyrhythm, and the pattern's length has to be one where they line up:
 
@@ -369,9 +369,9 @@ Whatever repeats has to fit what it's in a whole number of times. Lines of diffe
 
 ```
 pattern poly = 15 bars {
-  kick: x---
-  tom.floor: x--
-  snare: x----
+  kick: x---,
+  tom.floor: x--,
+  snare: x----,
 }
 ```
 

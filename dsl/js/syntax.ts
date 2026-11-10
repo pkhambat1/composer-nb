@@ -13,10 +13,11 @@ export type Span = { line: number; col: number; endLine: number; endCol: number 
 //   text     anything that isn't one of the others, brackets ( ) included
 //   open     {
 //   close    }
+//   separator , between entries in braces (and obsolete ;, reported as an error)
 //   newline  a line break that ends a statement
-//   join     a line break that doesn't: inside ( ), or before a line that starts with |
+//   join     layout inside braces or ( ), or before a line that starts with |
 //   comment  // to the end of the line
-export type TokenKind = "text" | "open" | "close" | "newline" | "join" | "comment"
+export type TokenKind = "separator" | "text" | "open" | "close" | "newline" | "join" | "comment"
 export type Token = { kind: TokenKind; text: string; span: Span }
 
 // What a statement holds after its head: text, and blocks in braces, in the order they
@@ -29,6 +30,7 @@ export type Value = { parts: (Text | Block)[]; span: Span | null }
 //   set      set tempo 90
 //   decl     steps pair = ^-x-, pattern groove = { ... }, or a name and = with no type
 //   play     play groove, play block { ... }
+//   print    print(fifth(1 3 5 7)), evaluated text without playback
 //   with     with key E, mode minor { ... }
 //   place    bar 2 { ... }, bar 3 to 4 fill
 //   pace     every 3 steps { ... }
@@ -37,6 +39,7 @@ export type Value = { parts: (Text | Block)[]; span: Span | null }
 export type SetNode = { kind: "set"; span: Span; setting: string; value: Value }
 export type DeclNode = { kind: "decl"; span: Span; type: string | null; name: string; value: Value }
 export type PlayNode = { kind: "play"; span: Span; value: Value }
+export type PrintNode = { kind: "print"; span: Span; value: Value }
 export type WithNode = { kind: "with"; span: Span; settings: Value; value: Value }
 export type PlaceNode = { kind: "place"; span: Span; value: Value }
 export type PaceNode = { kind: "pace"; span: Span; value: Value }
@@ -46,6 +49,7 @@ export type Node =
   | SetNode
   | DeclNode
   | PlayNode
+  | PrintNode
   | WithNode
   | PlaceNode
   | PaceNode
@@ -55,7 +59,17 @@ export type Node =
 export type Statement = Node & { parts: (Text | Block)[] }
 
 // A mistake in how the cell is put together, found while parsing
-export type ParseError = { code: "brace.unclosed" | "brace.stray"; span: Span }
+export type ParseError = {
+  code:
+    | "syntax.retiredOf"
+    | "brace.unclosed"
+    | "brace.stray"
+    | "separator.semicolon"
+    | "separator.empty"
+    | "separator.top"
+    | "separator.missing"
+  span: Span
+}
 
 export type Cell = { statements: Statement[]; errors: ParseError[] }
 

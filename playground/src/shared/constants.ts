@@ -20,7 +20,7 @@ export const APP_CONSTANTS: {
     theme: "light",
     accent: "#1a73e8",
     drumView: "bricks", // or sheet: the drums as sheet music
-    sheetCounts: false, // count the hands' notes under the staff
+    sheetCounts: true, // counts are always shown on sheet music
   },
 
   // The notebook the playground opens with: a welcome text cell, then every groove in the
@@ -33,7 +33,7 @@ export const APP_CONSTANTS: {
 
 Write what plays, hear it, and see it as bricks or as sheet music. A notebook is cells, like a page: text cells like this one, and music cells with a groove, a riff or a chord chart. Press **Run** on a cell (or Shift+Enter) to render it, then Play to hear it. The language is small and the whole of it is under **Docs**.
 
-What you write is kept on this device as you go: your notebooks are listed on the left, and a notebook's name opens its menu. Below are transcriptions, then harmony cells: counting with of and with, a ii–V–I, and the chords of each mode, from lydian to locrian. Change anything and play it again.`,
+What you write is kept on this device as you go: your notebooks are listed on the left, and a notebook's name opens its menu. Below are transcriptions, then harmony cells: interval functions and with scopes, a ii–V–I, and the chords of each mode, from lydian to locrian. Change anything and play it again.`,
     },
     ...grooveCells("Transcriptions"),
     ...grooveCells("Harmony"),

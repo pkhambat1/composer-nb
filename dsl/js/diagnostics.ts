@@ -2,7 +2,7 @@
    with what it needs to say passed in, so the wording of a whole area can be read and
    changed in one place, and tsc checks that a code exists and gets what it needs.
    Messages still come out as { line, msg }; the codes are for the code that reports them.
-   Moving here so far: settings, defining a name twice, time fitting, and of in a chart. The rest of the
+   Moving here so far: settings, defining a name twice, and time fitting. The rest of the
    engine's messages are still written where they're reported. */
 import { KITS, MODES, PITCHED, SETTINGS, SETTING_EXAMPLE, SOUNDS } from "./vocab.ts"
 
@@ -94,11 +94,6 @@ export const MESSAGES = {
   "fit.hint": ({ many, when }: { many: boolean; when: string }) =>
     many ? `The things repeating here line up ${when}` : `It lines up ${when}`,
 
-  // of in a chart: V7 of V
-  "of.leftNumeral": () =>
-    "In a chart, of takes a numeral in front of it, counted from the chord after it: V7 of V",
-  "of.openBracket": () => "The ( after of closes on its line: V7 of (V of V)",
-  "of.chainBrackets": () => "A chain of of's takes brackets: V7 of (V of V)",
   "chord.unknown": ({ chord }: { chord: string }) => `"${chord}" isn't a chord I know`,
 } as const
 

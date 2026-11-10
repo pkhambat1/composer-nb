@@ -21,10 +21,10 @@ A funk groove up a ladder from 70 to 90, four bars a rung.
 set tempo 70
 
 pattern funk = {
-  hat: x-
-  snare: 2 4
-  snare.ghost: ---- ---x -x-- --x-
-  kick: x--- --x- --x- ----
+  hat: x-,
+  snare: 4*- x 3*-,
+  snare.ghost: ---- ---x -x-- --x-,
+  kick: x--- --x- --x- ----,
 }
 
 play funk for 4 bars
@@ -42,17 +42,17 @@ A groove, then the same with the kick left out for the user to play, each with a
 set tempo 90
 
 pattern hands = {
-  hat: x-
-  snare: 2 4
+  hat: x-,
+  snare: 4*- x 3*-,
 }
 
 pattern groove = {
-  hands
-  kick: 1 3 3&
+  hands,
+  kick: x 7*- x-x 5*-,
 }
 
 pattern click = {
-  hat: 1 2 3 4
+  hat: x 3*-,
 }
 
 play (1 bars click 4 bars groove)

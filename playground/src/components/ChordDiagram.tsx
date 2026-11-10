@@ -12,6 +12,7 @@ export type DiagramChord = {
   notesMidi: number[]
   noteNames: string[]
   bassMidi?: number
+  overBass?: boolean
   position?: Position | null
 }
 
@@ -349,7 +350,7 @@ export const GuitarDiagram = React.memo(function GuitarDiagram({ chord }: { chor
 
 function PianoDiagram({ chord, range }: { chord: DiagramChord; range: PianoRange }) {
   const notes = [...new Set(chord.notesMidi || [])]
-  if (chord.bassMidi != null) notes.push(chord.bassMidi)
+  if (chord.overBass && chord.bassMidi != null) notes.push(chord.bassMidi)
   if (!notes.length) return null
   const startC = range.start
   const octs = range.octaves

@@ -1,13 +1,14 @@
-/* Steps: what a drum's line plays. One character per step (x hit, ^ accent, ~ ghost,
-   d double, - nothing), or one bar's beats (2 4, ^4), or parts with lengths in front
-   (2 beats rest, ...x-), or hits spread over steps (3 in 8), or a block of layers that
-   repeat until they line up. */
+/* Steps: what a drum's line plays. Words hold one character per step (x hit, ^ accent,
+   ~ ghost, d double, - nothing). Spaces join words, n* repeats a word or parenthesized
+   sequence, and a final ...word fills the containing block. Layers in braces play
+   together until they line up. */
 import { buildChord } from "../chords.ts"
 import { misplaced } from "../check.ts"
 import { blockBeside } from "../eval.ts"
 import { TRACK_RE } from "../lines.ts"
 import { keyOf, withInLayers } from "../settings.ts"
 import { NAME_LIKE } from "../resolve.ts"
+import { isIntervalCall, callSegments } from "../intervals.ts"
 import { bracesIn, headOf, onlyBraces, textOf } from "../parts.ts"
 import type { Braces, Line, Piece, State } from "../state.ts"
 import {
@@ -15,20 +16,13 @@ import {
   count,
   lastCount,
   lcm,
-  lengthAt,
-  lengthText,
   MAX_BARS,
   meterOf,
-  nearWhole,
-  singularLength,
   timeLabel,
   TPQ,
   type Report,
 } from "../time.ts"
-import { UNITS } from "../vocab.ts"
 import { grouped, noteSteps, period, spaceNotes } from "./notes.ts"
-
-const UNITS_ANY: readonly string[] = UNITS
 
 // How a drum is hit
 export type Mods = { accent?: boolean; ghost?: boolean; double?: boolean }
@@ -80,59 +74,36 @@ export const STEPS: Record<string, Mods> = {
 }
 
 export function tokenize(value: string): string[] {
-  const words = value.replace(/,/g, " ").replace(/\|/g, " | ").trim().split(/\s+/).filter(Boolean)
-  return joinOf(words)
-}
-
-// How many ( are left open in `text`
-const openIn = (text: string) =>
-  [...text].reduce((depth, c) => depth + (c === "(" ? 1 : c === ")" ? -1 : 0), 0)
-
-// X of Y is one token, written as it reads, so a notes line takes it as one note and a chart
-// as one chord: v of C3, V7 of V, and a chain in brackets, v of (v of C3), which runs to
-// its ). An of with nothing after it (v of) is joined too, to be told what goes there. One
-// after a colon or a bar line, or before an =, isn't joined, to be told that of is taken.
-function joinOf(words: string[]): string[] {
-  const out: string[] = []
-  for (let i = 0; i < words.length; i++) {
-    const prev = out[out.length - 1]
-    const next = words[i + 1]
-    if (
-      words[i] !== "of" ||
-      !prev ||
-      prev === "|" ||
-      /[:=]$/.test(prev) ||
-      /^[:=]/.test(next ?? "")
-    ) {
-      out.push(words[i])
+  const words: string[] = []
+  let word = ""
+  let afterCall = false
+  const flush = () => {
+    if (word) words.push(word)
+    word = ""
+  }
+  for (const segment of callSegments(value)) {
+    if (segment.call) {
+      flush()
+      word = segment.text
+      afterCall = true
       continue
     }
-    let joined = `${prev} of`
-    if (next !== undefined) {
-      let j = i + 1
-      joined += ` ${words[j]}`
-      for (let depth = openIn(words[j]); depth > 0 && j + 1 < words.length; ) {
-        j++
-        joined += ` ${words[j]}`
-        depth += openIn(words[j])
-      }
-      i = j
+    for (const c of segment.text) {
+      if (afterCall && /[-_]/.test(c)) flush()
+      afterCall = false
+      if (/[\s,|]/.test(c)) {
+        flush()
+        if (c === "|") words.push(c)
+      } else word += c
     }
-    out[out.length - 1] = joined
   }
-  return out
+  flush()
+  return words
 }
 
-// Whether a token is X of Y
-export const isOf = (token: string) => / of( |$)/.test(token)
-// `text` without its X of Y, so the brackets of a chain (v of (v of C3)) aren't read as a
-// group of patterns
-export const withoutOf = (text: string) =>
-  tokenize(text)
-    .filter((t) => !isOf(t))
-    .join(" ")
-// How many ( a token leaves open: a chain whose ( doesn't close on its line
-export const openParens = openIn
+// Remove interval calls before looking for sequence groups.
+export const withoutCalls = (text: string) =>
+  tokenize(text).filter((token) => !isIntervalCall(token)).join(" ")
 
 // Split tokens on bar lines; empty bars (e.g. from a leading |) are dropped.
 export function splitBars(tokens: string[]): string[][] {
@@ -349,224 +320,174 @@ function bjorklund(hits: number, steps: number): string {
   return main.join("") + rem.join("")
 }
 
-// A line's parts: what's between its commas. A bar line ends a part too when a length or
-// ... starts the next one, so a line continued at a bar can go on with a length:
-// D3---E3--- |1 bars rest is D3---E3--- | and 1 bars rest. The | stays, and is checked.
-export function partsOf(value: string): string[] {
-  return value
-    .replace(
-      /\|(?=\s*(?:\.\.\.|[\d(][^,|]*?\s(?:steps|beats|bars)(?![A-Za-z0-9])))/g,
-      (bar: string, at: number) => (value.slice(0, at).trim() ? "|," : bar),
-    )
-    .split(",")
-    .map((p) => p.trim())
-}
-
-// What a length measures, when it isn't rest: steps, written out as one run of letters.
-export function figureRun(text: string, st: State, err: Report, ln: number): string | null {
-  let run = ""
-  for (const tok of tokenize(text)) {
-    const w = st.words[tok]
-    if (tok === "|") continue
-    if (w?.type === "steps") run += w.tokens.filter((t) => t !== "|").join("")
-    else if (isStepRun(tok)) run += tok
-    else {
-      err(
-        ln,
-        `"${tok}" can't be measured by a length. A length measures rest or steps, up to the next comma: 2 beats rest, 2 beats x-`,
-      )
-      return null
-    }
-  }
-  return run
-}
-
-// A drum's line, as tokens of steps. Its parts are separated by commas. A part is steps as
-// they're drawn (x--x, with spaces for the eye) or a length in front of what fills it:
-// 2 beats rest is silence that long, and 2 beats x- repeats x- for that long. A length's
-// part comes back as the steps it stands for. A line of beats (2e 4) passes through.
-// The length ... is what's left of the block the line is in, so a last part ...rest is
-// silence to the end (`toEnd`), and ...x- is x- repeated to the end (`toEnd`, with the
-// steps as `fill`). Returns { tokens, toEnd, fill }, or null after saying what's wrong.
-// A block on the line is the whole of it, and is read by stepBlock, so this is text.
+// A drum's line, as finite step words followed optionally by ...word. Bounded
+// repetitions are expanded with a limit before allocating; a bar marker remains in the
+// token stream so its position is checked after all repeats have expanded.
 export function stepParts(
   value: string,
   st: State,
   err: Report,
   ln: number,
   part: DrumPart | null = null,
+  repeats = true,
 ): { tokens: string[]; toEnd: boolean; fill: string | null } | null {
-  const fail = (msg: string) => {
-    err(ln, msg)
-    return null
-  }
-  const parts = partsOf(value)
-  const beats = (p: string) => p !== "" && tokenize(p).every((t) => BEAT_RE.test(t))
-  if (parts.length > 1 && parts.every(beats)) {
-    return fail(`A list of beats takes spaces, not commas: ${parts.join(" ")}`)
-  }
-  const { barTicks } = meterOf(st)
-  const out: string[] = []
+  let at = 0
+  let failed = false
   let toEnd = false
   let fill: string | null = null
-  let measured = false // whether a part was a length or hits spread over steps
-  let drawn: string | null = null // the part before, when it was drawn steps
-  for (const [i, text] of parts.entries()) {
-    if (!text)
-      return fail("A comma goes between two parts of a line, so something goes on each side")
-    // 3 in 8: hits spread as evenly as they go over the steps, a part of its own
-    const euclid = EUCLID_RE.exec(text)
+  const limit = Math.floor((MAX_BARS * meterOf(st).barTicks) / st.stepTicks)
+  const fail = (msg: string): null => {
+    if (!failed) err(ln, msg)
+    failed = true
+    return null
+  }
+  const ws = () => {
+    while (/\s/.test(value[at] ?? "") && at < value.length) at++
+  }
+  const knownRun = (word: string): string | null => {
+    if (isStepRun(word)) return word
+    const named = st.words[word]
+    return named?.type === "steps" ? named.tokens.filter((t) => t !== "|").join("") : null
+  }
+  const wordRun = (word: string): string | null => {
+    const known = knownRun(word)
+    if (known != null) return known
+    const named = st.words[word]
+    if (named) return fail(misplaced(word, named.type, { line: "drum", part: part?.name })!)
+    if (st.sections[word]) {
+      return fail(misplaced(word, st.sections[word].type, { line: "drum", part: part?.name })!)
+    }
+    if (NAME_LIKE.test(word))
+      return fail(`"${word}" isn't defined above. Name it first: steps ${word} = ^-x-`)
+    if (part && noteSteps(word)?.some((s) => s && !s.cut))
+      return fail(
+        `"${word}" is notes, and ${part.name} is a drum. Notes go on a pitched instrument's line: guitar: notes ${spaceNotes(word)}`,
+      )
+    if (part && buildChord(word, keyOf(st)!))
+      return fail(
+        `"${word}" is a chord, and ${part.name} is a drum. Chords go on a pitched instrument's line: piano: chords ${word}`,
+      )
+    return fail(`"${word}" isn't a step word. ${STEP_HELP}`)
+  }
+  const size = (tokens: string[], strict = false) =>
+    tokens.reduce(
+      (n, t) => n + (t === "|" ? 0 : ((strict ? wordRun(t) : knownRun(t))?.length ?? 0)),
+      0,
+    )
+  const word = (): string | null => {
+    const found = /^[^\s()|*]+/.exec(value.slice(at))?.[0]
+    if (!found) return fail("A repeat needs a step word or a group: 3*x- or 2*(x- --^)")
+    at += found.length
+    if (found === "rest")
+      return fail("A step of silence is -. Repeat silence with 8*- or fill with ...-")
+    if (/^(?:steps?|beats?|bars?)$/.test(found))
+      return fail(
+        "Kit lines use step words, not lengths: repeat with 4*x- or fill the block with ...x-",
+      )
+    if (/^[\^~dx]?\d/.test(found))
+      return fail("Kit lines use step words, not beat lists: draw the hits with x and -")
+    // Plain words keep their spelling for the owning declaration or drum to diagnose.
+    // Repeats and fills resolve them here because their lengths must be known now.
+    return found
+  }
+  const atom = (depth: number): string[] | null => {
+    const counted = /^([^\s()|*]+)\s*\*/.exec(value.slice(at))
+    if (counted) {
+      const n = Number(counted[1])
+      if (!/^\d+$/.test(counted[1]) || !Number.isSafeInteger(n) || n < 2)
+        return fail("A repeat count is an integer of at least 2: 2*x- or 3*(x- --^)")
+      at += counted[0].length
+      ws()
+      let tokens: string[] | null
+      if (value[at] === "(") {
+        if (depth >= 64) return fail("Step repeats are nested too deeply")
+        at++
+        tokens = sequence(depth + 1)
+        if (!tokens) return null
+        if (value[at] !== ")") return fail("A step repeat's ( is missing its )")
+        at++
+        if (!tokens.length) return fail("A step repeat's parentheses need at least one word")
+      } else {
+        const one = word()
+        tokens = one == null ? null : [one]
+      }
+      if (!tokens) return null
+      const length = size(tokens, true)
+      if (failed) return null
+      if (!length || n > limit / length || n * tokens.length > limit * 2)
+        return fail(`A step sequence can be at most ${MAX_BARS} bars long`)
+      return Array.from({ length: n }, () => tokens!).flat()
+    }
+    // Euclidean words can sit beside ordinary words without punctuation.
+    const euclid = /^(\d+)\s+in\s+(\d+)(?=\s|[)|]|$)/.exec(value.slice(at))
     if (euclid) {
       const [hits, steps] = [Number(euclid[1]), Number(euclid[2])]
-      if (hits < 1 || hits > steps)
-        return fail(
-          `${text} puts ${hits} hits in ${steps} steps, so it needs at least as many steps as hits`,
-        )
-      if (steps > 64) return fail(`${text} is more than 64 steps. Spread the hits over fewer`)
-      out.push(bjorklund(hits, steps))
-      drawn = null
-      measured = true
-      continue
+      if (hits < 1 || hits > steps) return fail(`${euclid[0]} needs at least as many steps as hits`)
+      if (steps > 64) return fail(`${euclid[0]} is more than 64 steps. Spread the hits over fewer`)
+      at += euclid[0].length
+      return [bjorklund(hits, steps)]
     }
-    const inAt = tokenize(text).indexOf("in")
-    if (inAt > 0) {
-      const tokens = tokenize(text)
-      const [a, b] = [tokens[inAt - 1], tokens[inAt + 1]]
-      if (/^\d+$/.test(a) && /^\d+$/.test(b)) {
-        const before = tokens.slice(0, inAt - 1).join(" ")
-        const after = tokens.slice(inAt + 2).join(" ")
-        return fail(
-          `${a} in ${b} is a part of its own, so put a comma ${before ? "before" : "after"} it: ${[before, `${a} in ${b}`, after].filter(Boolean).join(", ")}`,
-        )
-      }
-      return fail("in goes between two numbers: 3 in 8 spreads 3 hits over 8 steps")
-    }
-    const rest = /^\.\.\.\s*(.*)$/.exec(text)
-    if (rest) {
-      // ...rest or ...x-: to the end of the block
-      if (i < parts.length - 1) {
-        return fail("... is the rest of the block, so nothing goes after it")
-      }
-      const thing = rest[1].trim()
-      if (!thing)
-        return fail(
-          "... needs what fills the rest of the block: ...rest, or steps to repeat: ...x-",
-        )
-      if (thing === "rest") {
-        if (parts.length === 1) {
-          return fail("...rest on its own plays nothing. Put the hits in front of it: -xx, ...rest")
-        }
-        toEnd = true
+    if (value[at] === "(") return fail("Parentheses in steps need a repeat count: 2*(x- --^)")
+    const one = word()
+    return one == null ? null : [one]
+  }
+  const sequence = (depth: number): string[] | null => {
+    const tokens: string[] = []
+    let length = 0
+    for (;;) {
+      ws()
+      if (at >= value.length || value[at] === ")") return tokens
+      if (value[at] === "|") {
+        tokens.push("|")
+        at++
         continue
       }
-      const fig = figureRun(thing, st, err, ln)
-      if (fig == null) return null
-      if (!fig || /^-+$/.test(fig)) return fail("Silence to the end of the block is ...rest")
-      toEnd = true
-      fill = fig
-      continue
-    }
-    if (text.includes("...")) {
-      return fail(
-        `... starts its own part, so a comma goes before it: ${text.replace(/\s*\.\.\./, ", ...")}`,
-      )
-    }
-    const len = lengthAt(text)
-    if (!len) {
-      const tokens = tokenize(text)
-      if (tokens.includes("every")) {
-        return fail(
-          `every goes in front of the line, not inside it: every 3 steps ${part?.drum ? part.name : "kick"}: x-xx`,
-        )
+      if (value.startsWith("...", at)) {
+        if (depth)
+          return fail("... fills the containing block, so it cannot go inside a bounded repeat")
+        at += 3
+        ws()
+        const one = word()
+        if (one == null) return null
+        fill = wordRun(one)
+        if (fill == null) return null
+        toEnd = true
+        ws()
+        if (at < value.length)
+          return fail("... is the rest of the block, so nothing goes after its word")
+        return tokens
       }
-      const unit = tokens.findIndex((t) => UNITS_ANY.includes(t))
-      if (unit > 0) {
-        const [before, length] = [tokens.slice(0, unit - 1), tokens.slice(unit - 1)]
-        return fail(
-          before.length
-            ? `A length starts its own part, so put a comma before it: ${before.join(" ")}, ${length.join(" ")}`
-            : `${length.slice(0, 2).join(" ")} needs a number in front: 2 ${tokens[unit]} rest`,
-        )
-      }
-      if (unit === 0) return fail(`${tokens[0]} needs a number in front: 2 ${tokens[0]} rest`)
-      if (tokens.includes("rest")) {
-        return fail(
-          "rest takes a length in front: 2 beats rest, or ...rest for the rest of the block. One step of rest is -",
-        )
-      }
-      if (parts.length > 1 && tokens.some((t) => BEAT_RE.test(t))) {
-        return fail(
-          "Beats don't go on a line with lengths or commas. Draw those hits in steps: 2 beats rest, x---",
-        )
-      }
-      if (drawn != null) {
-        return fail(`A comma ends a length. Between steps a space is enough: ${drawn} ${text}`)
-      }
-      out.push(...tokens)
-      drawn = text
-      continue
+      const more = atom(depth)
+      if (!more) return null
+      length += size(more)
+      if (failed) return null
+      if (length > limit || tokens.length + more.length > limit * 2)
+        return fail(`A step sequence can be at most ${MAX_BARS} bars long`)
+      tokens.push(...more)
+      if (at < value.length && !/[\s)|]/.test(value[at]))
+        return fail("Put a space between step words and repeats: x- 2*(-- ^-)")
     }
-    drawn = null
-    const unitTicks = (
-      { steps: st.stepTicks, beats: TPQ, bars: barTicks } as Record<string, number>
-    )[len.unit]
-    const steps = (len.n * unitTicks) / st.stepTicks
-    if (!(len.n > 0) || len.n * unitTicks > MAX_BARS * barTicks) {
-      return fail(`A length is more than nothing, and up to ${MAX_BARS} bars: 2 beats rest`)
-    }
-    if (!nearWhole(steps)) {
-      return fail(`${len.shown} isn't a whole number of steps, so steps can't fill it`)
-    }
-    const n = Math.round(steps)
-    if (!len.thing) {
-      return fail(
-        `${len.shown} of what? Write ${len.shown} rest, or the steps to repeat: ${len.shown} x-`,
-      )
-    }
-    measured = true
-    if (len.thing === "rest") {
-      out.push("-".repeat(n))
-      continue
-    }
-    // A length runs to the next comma, so more after rest, or another length, needs one
-    const things = tokenize(len.thing)
-    const next = things.findIndex((t, k) => k > 0 && UNITS_ANY.includes(t))
-    if (things[0] === "rest" || next > 0) {
-      const cut = things[0] === "rest" ? 1 : next - 1
-      return fail(
-        `A comma ends a length, so put one here: ${len.shown} ${things.slice(0, cut).join(" ")}, ${things.slice(cut).join(" ")}`,
-      )
-    }
-    const fig = figureRun(len.thing, st, err, ln)
-    if (fig == null) return null
-    if (!fig || /^-+$/.test(fig)) return fail(`Silence for a length is rest: ${len.shown} rest`)
-    if (n % fig.length) {
-      return fail(
-        `${len.thing} is ${count(fig.length, "step")} long, which doesn't fit ${len.shown} a whole number of times`,
-      )
-    }
-    out.push(fig.repeat(n / fig.length))
-    measured = true
   }
-  // Steps drawn as the same figure more than once: a pattern repeats it, and a length plays
-  // it for as long as it's written once.
-  if (!measured && !toEnd && !listsBeats(out)) {
-    let run = ""
-    let plain = true
-    for (const t of out) {
-      const w = st.words[t]
-      if (t === "|") continue
-      if (w?.type === "steps" && !w.beats) run += w.tokens.filter((x) => x !== "|").join("")
-      else if (isStepRun(t)) run += t
-      else plain = false // a block, beats, or a mistake that's said where it's read
-    }
-    const p = plain && !/^-*$/.test(run) ? period(run) : 0
+  if (value.includes(","))
+    return fail("Kit lines separate step words with spaces, not commas: x- --^ ...-")
+  if (/\b(?:steps?|beats?|bars?)\b/.test(value))
+    return fail(
+      "Kit lines use step words, not lengths: repeat with 4*x- or fill the block with ...x-",
+    )
+  const out = sequence(0)
+  if (!out) return null
+  if (at < value.length) return fail("This ) doesn't close a step repeat")
+  if (!out.length && !toEnd) return fail("A kit line needs step words: x- --^")
+  if (repeats && !toEnd) {
+    const runs = out.filter((t) => t !== "|").map(knownRun)
+    const run = runs.join("")
+    const p = !runs.includes(null) && !/^-*$/.test(run) ? period(run) : 0
     if (p) {
       const short = grouped(run.slice(0, p))
       const head = part ? `${part.name}: ` : ""
       return fail(
         `${head}${value} repeats ${short}. Write ${head}${short}: a pattern repeats it. ` +
-          `To play it once for that long, put the length in front: ${head}${lengthText(run.length * st.stepTicks, st)} ${short}`,
+          "Use a block to play an explicit finite sequence once",
       )
     }
   }
@@ -693,9 +614,10 @@ export function stepBlock(
   st: State,
   err: Report,
   part: DrumPart | null = null,
+  repeats = false,
 ): string | null {
   const layers: (Layer | null)[] = []
-  for (const line of block.lines) layers.push(stepLayer(line, st, err, part))
+  for (const line of block.lines) layers.push(stepLayer(line, st, err, part, repeats))
   if (layers.includes(null)) return null
   const all = layers as Layer[]
   const fixed = all.filter((l) => !l.toEnd)
@@ -737,8 +659,14 @@ export function stepBlock(
 
 // One layer in a block of steps: steps, names of steps or blocks of steps, in a row.
 // Returns { run, toEnd, fill, ln }, or null.
-function stepLayer(line: Line, st: State, err: Report, part: DrumPart | null): Layer | null {
-  const layer = stepLayerRun(line, st, err, part)
+function stepLayer(
+  line: Line,
+  st: State,
+  err: Report,
+  part: DrumPart | null,
+  repeats: boolean,
+): Layer | null {
+  const layer = stepLayerRun(line, st, err, part, repeats)
   return layer && { ...layer, ln: line.ln }
 }
 
@@ -747,6 +675,7 @@ function stepLayerRun(
   st: State,
   err: Report,
   part: DrumPart | null,
+  repeats: boolean,
 ): Omit<Layer, "ln"> | null {
   const fail = (msg: string) => {
     err(line.ln, msg)
@@ -755,7 +684,7 @@ function stepLayerRun(
   const text = textOf(line.parts)
   if (TRACK_RE.test(headOf(line.parts))) {
     return fail(
-      `A block of steps holds steps, one layer a line, like --x-. ${text} is an instrument's line, which goes in a pattern`,
+      `A block of steps holds step layers separated by commas, like --x-, ----^-. ${text} is an instrument's line, which goes in a pattern`,
     )
   }
   if (/^with(\s|\{|$)/.test(text)) {
@@ -765,16 +694,15 @@ function stepLayerRun(
         : "A with holds lines that play, so it goes around a drum's line, not among its steps",
     )
   }
-  if (singularLength(text, line.ln, err)) return null
   if (bracesIn(line.parts).length) {
     // A layer that's a block is that block's steps
     const only = onlyBraces(line.parts)
     if (!only) return fail(blockBeside("in its layer", (fig: string) => `x--- ${fig}`))
-    const run = stepBlock(only, st, err, part)
+    const run = stepBlock(only, st, err, part, repeats)
     return run == null ? null : { run, toEnd: false, fill: null }
   }
   const here = part ? { ...part, ln: line.ln } : null
-  const parts = stepParts(text, st, err, line.ln, here)
+  const parts = stepParts(text, st, err, line.ln, here, repeats)
   if (!parts) return null
   const { tokens, toEnd, fill } = parts
   // Each step of this layer has to be one this drum can play
@@ -784,18 +712,6 @@ function stepLayerRun(
     return [...run].every((c) => stepMods(c, here, err, where) !== undefined)
   }
   if (fill && !check(fill, " (after ...)")) return null
-  if (listsBeats(tokens)) {
-    // A layer of beats: 2 4
-    const where: DrumPart = {
-      name: "steps",
-      art: "hit",
-      ...part,
-      ln: line.ln,
-      layer: true,
-    }
-    const run = beatsAsSteps(where, tokens, st, err)
-    return run == null ? null : { run, toEnd: false }
-  }
   let run = ""
   for (const tok of tokens) {
     const w = st.words[tok]
