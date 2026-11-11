@@ -10,19 +10,19 @@ const MUZAK = `set time 7 over 8
 set tempo 90
 
 pattern groove = {
-  kick: x--x---
-  snare: 2e 4
-  snare.ghost: --x----
-  hat: ^-x-
-  bar 2 {
-    snare.ghost: d3 d3e
-    hat.open: ^3&
-    hat.pedal: 4
-  }
+  kick: x--x---,
+  snare: 5*- x-,
+  snare.ghost: --x----,
+  hat: ^-x-,
+  pattern  {
+    snare.ghost: 8*- dd 4*-,
+    hat.open: 10*- ^ 3*-,
+    hat.pedal: 12*- x-
+  } on bar 2
 }
 
 play block {
-  crash: 1
+  crash: x 13*-,
   groove
 }`
 
@@ -31,7 +31,7 @@ set key A
 set mode minor
 
 play piano: {
-  chords i vi|iii vii
+  chords i vi|iii vii,
   notes E5-------C5-------|E5---D5---C5---B4---
 }`
 
@@ -72,7 +72,7 @@ describe("tools", () => {
 
   it("parse reports errors with their lines and the line's text", async () => {
     const r = await call("parse", {
-      source: "set tempo 90\n\nplay block {\n  kick: x--x---\n  piano: notes Am F\n}",
+      source: "set tempo 90\n\nplay block {\n  kick: x--x---,\n  piano: notes Am F\n}",
     })
     expect(r.isError).toBe(true)
     const t = textOf(r)
@@ -143,7 +143,8 @@ describe("tools", () => {
   it("library finds grooves by words, with their code", async () => {
     const t = textOf(await call("library", { query: "paradiddle" }))
     expect(t).toContain("## Gavin Harrison's paradiddle challenge")
-    expect(t).toContain("every 3 steps")
+    expect(t).toContain("every 3/4 beats")
+    expect(t).not.toContain("https://example.test/grooves/")
     expect(t).not.toContain("?open")
   })
 

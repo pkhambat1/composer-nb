@@ -10,14 +10,36 @@ export const TYPES = ["steps", "notes", "chords", "pattern", "block"] as const
 export const TYPED_BRACES_RE = /^(pattern|block)\s*\{/
 export type Type = (typeof TYPES)[number]
 
+// Ordinal intervals count through the active scale. Compound intervals start over
+// after the octave, including in scales with fewer than seven notes.
+export const INTERVALS = {
+  unison: 1,
+  second: 2,
+  third: 3,
+  fourth: 4,
+  fifth: 5,
+  sixth: 6,
+  seventh: 7,
+  octave: 8,
+  ninth: 9,
+  tenth: 10,
+  eleventh: 11,
+  twelfth: 12,
+  thirteenth: 13,
+  fourteenth: 14,
+  fifteenth: 15,
+} as const
+
 // Words with a meaning of their own, which can't be names
 export const KEYWORDS: readonly string[] = [
   ...TYPES,
+  ...Object.keys(INTERVALS),
   "play",
+  "print",
   "for",
+  "on",
   "set",
   "with",
-  "of",
   "bars",
   "beats",
   "bar",

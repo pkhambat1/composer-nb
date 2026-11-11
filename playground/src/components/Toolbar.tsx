@@ -32,14 +32,17 @@ function AddCellDropdown({
       <button
         className={"btn btn-secondary" + (open ? " btn-open" : "")}
         title="Add a cell at the end"
+        aria-label="Add a cell"
         aria-haspopup="menu"
         aria-expanded={open}
         onClick={() => setOpen((v) => !v)}
       >
-        <span style={{ fontWeight: 700, fontSize: 16, lineHeight: "14px" }}>+</span>
-        <svg width="8" height="8" viewBox="0 0 8 8" fill="currentColor" style={{ marginLeft: 2 }}>
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+          <path d="M8 3v10M3 8h10" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+        </svg>
+        <svg width="12" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
           <path
-            d="M1 2.5l3 3 3-3"
+            d="M4 6l4 4 4-4"
             fill="none"
             stroke="currentColor"
             strokeWidth="1.4"

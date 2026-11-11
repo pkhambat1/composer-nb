@@ -55,8 +55,29 @@ export default function NotebookTitle({
       {label}
     </button>
   )
-  const saveState = subtitle === "Saved to Supabase" ? "saved" : subtitle === "Saving…" ? "saving" : subtitle === "Unsaved changes" ? "unsaved" : subtitle.startsWith("Loading") ? "loading" : "error"
-  const saveLabel = saveState === "saved" ? "Saved" : saveState === "error" ? "Save failed" : subtitle
+  const saveState = !subtitle
+    ? null
+    : subtitle === "Saved to Supabase" ||
+        subtitle === "Saved" ||
+        subtitle === "Updated by the assistant"
+      ? "saved"
+      : subtitle === "Saving…"
+        ? "saving"
+        : subtitle === "Unsaved changes" || subtitle.startsWith("Unsaved:")
+          ? "unsaved"
+          : subtitle.startsWith("Loading")
+            ? "loading"
+            : "error"
+  const saveLabel =
+    saveState === "saved"
+      ? subtitle === "Updated by the assistant"
+        ? "Updated"
+        : "Saved"
+      : saveState === "error"
+        ? "Save failed"
+        : subtitle.startsWith("Unsaved:")
+          ? "Unsaved changes"
+          : subtitle
 
   return (
     <div className="nb-title-bar">
@@ -110,12 +131,12 @@ export default function NotebookTitle({
             {item("Delete", menu.remove, "menu-item-danger")}
           </div>
         )}
-        <div className={`save-indicator save-indicator-${saveState}`} role="status" title={saveState === "error" ? subtitle : saveLabel}>
+        {saveState && <div className={`save-indicator save-indicator-${saveState}`} role="status" title={saveState === "error" || saveState === "unsaved" ? subtitle : saveLabel}>
           <span className="save-indicator-icon" aria-hidden="true">
-            {saveState === "saved" ? "✓" : saveState === "error" ? "!" : ""}
+            {saveState === "error" ? "!" : ""}
           </span>
           <span>{saveLabel}</span>
-        </div>
+        </div>}
       </div>
     </div>
   )

@@ -31,7 +31,7 @@ describe("over http", () => {
     expect(tools.length).toBe(4)
     const r = await client.callTool({
       name: "render",
-      arguments: { source: "pattern groove = { kick: 1 3 }\nplay groove", format: "midi" },
+      arguments: { source: "pattern groove = { kick: x 7*- }\nplay groove", format: "midi" },
     })
     expect((r.content as { text: string }[])[0].text).toContain(`${new URL(url).origin}/api/midi?`)
     await client.close()

@@ -1,8 +1,9 @@
-// components/Sidebar.tsx — The left side: a notebook opened from a link, the notebooks on this
-// device, the reference panels, and the one-click theme toggle
+// components/Sidebar.tsx — The left side: the notebooks, the reference, and at the foot the
+// signed-in account with its menu (dark mode, keyboard shortcuts, sign out)
 import React from "react"
 import { APP_CONSTANTS } from "../shared/constants.ts"
 import type { Notebook, Theme } from "../shared/types.ts"
+import AccountMenu, { type Account } from "./AccountMenu.tsx"
 
 export default function Sidebar({
   notebooks,
@@ -11,7 +12,7 @@ export default function Sidebar({
   onRenameNotebook,
   theme,
   onSetTheme,
-  accountEmail,
+  account,
   onSignOut,
 }: {
   notebooks: { list: Notebook[]; current: Notebook | null }
@@ -20,7 +21,7 @@ export default function Sidebar({
   onRenameNotebook: (id: string, title: string) => void
   theme: Theme
   onSetTheme: (theme: Theme) => void
-  accountEmail: string
+  account: Account
   onSignOut: () => void
 }) {
   const [renaming, setRenaming] = React.useState<{ id: string; title: string } | null>(null)
@@ -39,26 +40,6 @@ export default function Sidebar({
             Composer<span className="lhs-brand-ext">.nb</span>
           </span>
         </button>
-        <div className="lhs-theme-wrap">
-          <button
-            type="button"
-            className="btn btn-ghost btn-icon"
-            onClick={() => onSetTheme(theme === "light" ? "dark" : "light")}
-            title={`Switch to ${theme === "light" ? "dark" : "light"} theme`}
-            aria-label={`Switch to ${theme === "light" ? "dark" : "light"} theme`}
-          >
-            {theme === "light" ? (
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                <path d="M13.5 8.5a5.5 5.5 0 1 1-6-6 4 4 0 0 0 6 6z" />
-              </svg>
-            ) : (
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" aria-hidden="true">
-                <circle cx="8" cy="8" r="3" />
-                <path d="M8 1v2M8 13v2M1 8h2M13 8h2M3.05 3.05l1.41 1.41M11.54 11.54l1.41 1.41M3.05 12.95l1.41-1.41M11.54 4.46l1.41-1.41" />
-              </svg>
-            )}
-          </button>
-        </div>
       </div>
 
       <nav className="lhs-nav">
@@ -133,18 +114,7 @@ export default function Sidebar({
           <span className="lhs-tab-label">Docs ↗</span>
         </a>
       </nav>
-      <div className="lhs-account">
-        <span className="lhs-account-email" title={accountEmail}>{accountEmail}</span>
-        <button
-          type="button"
-          className="btn btn-secondary lhs-signout"
-          onClick={() => {
-            if (window.confirm("Sign out of Composer.nb?")) onSignOut()
-          }}
-        >
-          Sign out
-        </button>
-      </div>
+      <AccountMenu account={account} theme={theme} onSetTheme={onSetTheme} onSignOut={onSignOut} />
     </aside>
   )
 }

@@ -17,7 +17,6 @@
   --code-bg: #f5f5f5;
   --pill-bg: #f0f0f0;
   --pill-fg: #444;
-  --tb-bg: #fafafa;
   --hover-bg: #ececec;
   --press-bg: #e0e0e0;
   --kernel-idle: #5cb85c;
@@ -26,16 +25,24 @@
   --header-bg: #ffffff;
   --header-text: #424242;
 
-  /* Syntax is grayscale; hierarchy comes from weight, italics and value. */
-  --tk-comment: #8a8a8a;
-  --tk-key: #242424;
-  --tk-value: #555555;
-  --tk-faint: #a0a0a0;
-  --tk-error-bg: rgba(26, 26, 26, 0.1);
+  /* Score palette: language → violet, voices → blue, time → teal, pitch → copper.
+     Keep these roles stable across themes; names and punctuation stay neutral. */
+  --tk-comment: #626d7d;
+  --tk-key: #8935de;
+  --tk-value: #8b5c09;
+  --tk-instrument: #1462c9;
+  --tk-name: #586475;
+  --tk-rhythm: #0e7265;
+  --tk-pitch: #b43e0b;
+  --tk-pitch-detail: #bd3225;
+  --tk-faint: #666f7d;
+  --tk-rest: #686f7a;
+  --tk-error: #c81640;
+  --tk-error-bg: rgba(180, 35, 61, 0.08);
   --note-color: #e5794d;
 
   --font-sans: "IBM Plex Sans", -apple-system, system-ui, sans-serif;
-  --font-mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+  --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
   --font-serif: "IBM Plex Serif", Georgia, serif;
 
   --radius: 6px; /* buttons, inputs, menus, cells and the boxes that hold them */
@@ -46,16 +53,15 @@
   --motion-enter: 300ms; /* something arriving: an output, a hint */
   --ease: ease;
   --press-scale: 0.97;
+  --shadow-menu: 0 4px 16px rgba(0, 0, 0, 0.12);
   /* How much of a filled button's colour stays on hover: the rest is the page, so it greys */
   --hover-mix: 80%;
-  --shadow-menu: 0 4px 16px rgba(0, 0, 0, 0.12);
   --cell-pad-x: 12px;
   --cell-pad-y: 4px;
   --code-pad-x: 12px;
   --code-pad-y: 12px;
   --shell-title-row: 62px;
   --shell-toolbar-row: 60px;
-  --shell-status-row: 28px;
 }
 
 [data-theme="dark"] {
@@ -75,7 +81,6 @@
   --code-bg: #1b1e23;
   --pill-bg: #2c313a;
   --pill-fg: #c5cad3;
-  --tb-bg: #1c1f25;
   --hover-bg: #2c313a;
   --press-bg: #353b46;
   --kernel-idle: #56c270;
@@ -86,11 +91,18 @@
   --editing-bar: var(--accent);
   --busy-bar: #e8a44a;
 
-  --tk-comment: #7c828c;
-  --tk-key: #f0f1f3;
-  --tk-value: #b7bdc7;
-  --tk-faint: #656b75;
-  --tk-error-bg: rgba(225, 228, 232, 0.12);
+  --tk-comment: #8a95a3;
+  --tk-key: #c69cef;
+  --tk-value: #ee9c0f;
+  --tk-instrument: #7eb1f2;
+  --tk-name: #a5afbb;
+  --tk-rhythm: #18c3ac;
+  --tk-pitch: #f6956b;
+  --tk-pitch-detail: #e99991;
+  --tk-faint: #848d9b;
+  --tk-rest: #808893;
+  --tk-error: #f391a8;
+  --tk-error-bg: rgba(255, 145, 162, 0.1);
   --note-color: #f1aa87;
 }
 
@@ -102,7 +114,7 @@
    (btn-primary, btn-secondary, btn-ghost) and, where needed, a size (btn-sm) and shape
    (btn-icon, btn-round). A component's own class only places and sizes its button.
    Every button greys on hover and gives a little when pressed. btn-open keeps the hover
-   look while its menu is open or its thing is chosen; btn-on marks a toggle that's on. */
+   look while its menu is open; btn-on marks a toggle that's on. */
 .btn {
   --btn-h: 28px;
   --btn-fill: var(--text);
@@ -163,6 +175,13 @@
   background: var(--paper);
   border-color: var(--border);
 }
+.btn-secondary.btn-soft {
+  background: var(--hover-bg);
+  border-color: transparent;
+}
+.btn-secondary.btn-soft:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--text) 12%, var(--paper));
+}
 .btn-ghost {
   color: var(--text-mute);
 }
@@ -182,8 +201,7 @@
   color: var(--traceback);
 }
 
-/* A row in a menu: the same hover as a button, a fill when pressed; menu-item-on is the
-   row that's chosen */
+/* A row in a menu: the same hover as a button, a fill when pressed */
 .menu-item {
   appearance: none;
   display: flex;
@@ -215,11 +233,6 @@
 .menu-item:disabled {
   opacity: 0.4;
   cursor: default;
-}
-.menu-item-on,
-.menu-item-on:hover:not(:disabled) {
-  background: var(--accent-soft);
-  color: var(--accent);
 }
 .menu-item-danger {
   color: var(--traceback);
@@ -261,7 +274,7 @@ body {
   border-right: 1px solid var(--border);
   display: flex;
   flex-direction: column;
-  padding: 0 0 calc(var(--shell-status-row) + 12px);
+  padding: 0 0 12px;
   position: sticky;
   top: 0;
   height: 100vh;
@@ -304,10 +317,6 @@ body {
   font-weight: 400;
   margin-left: 0;
 }
-.lhs-theme-wrap {
-  position: relative;
-  margin-left: auto;
-}
 .lhs-nav {
   display: flex;
   flex-direction: column;
@@ -323,9 +332,214 @@ body {
   padding: 0 20px;
   border-bottom: 1px solid var(--border);
 }
-.lhs-account { margin: 12px 12px 0; padding: 12px 4px 0; border-top: 1px solid var(--border-soft); display: grid; gap: 8px; }
-.lhs-account-email { overflow: hidden; text-overflow: ellipsis; color: var(--text-mute); font-size: 12px; white-space: nowrap; }
-.lhs-signout { width: 100%; }
+/* The signed-in account at the foot of the sidebar: one row that opens its menu upward */
+.lhs-account {
+  position: relative;
+  margin: 8px 8px 0;
+  padding-top: 8px;
+  border-top: 1px solid var(--border-soft);
+}
+.account-row {
+  appearance: none;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 6px 8px;
+  border: 0;
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color var(--motion-fast) var(--ease);
+}
+.account-row:hover,
+.account-row-open {
+  background: var(--hover-bg);
+}
+.account-row:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+.account-avatar {
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  object-fit: cover;
+}
+.account-avatar-initial {
+  display: grid;
+  place-items: center;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font: 600 13px/1 var(--font-sans);
+}
+.account-text {
+  display: grid;
+  min-width: 0;
+  flex: 1;
+}
+.account-name,
+.account-email {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.account-name {
+  font-size: 13px;
+  font-weight: 500;
+}
+.account-email {
+  font-size: 11px;
+  color: var(--text-mute);
+}
+.account-chevron {
+  flex-shrink: 0;
+  color: var(--text-mute);
+}
+.account-menu {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: calc(100% + 4px);
+  z-index: 30;
+  padding: 4px;
+  background: var(--paper);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-menu);
+}
+.account-menu-head {
+  display: grid;
+  padding: 6px 10px 8px;
+  margin-bottom: 4px;
+  border-bottom: 1px solid var(--border-soft);
+  min-width: 0;
+}
+.account-menu-name {
+  font-size: 13px;
+  font-weight: 600;
+}
+.account-menu-email {
+  font-size: 12px;
+  color: var(--text-mute);
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.account-menu-icon {
+  flex-shrink: 0;
+  color: var(--text-mute);
+}
+.account-menu-rule {
+  height: 1px;
+  margin: 4px 0;
+  background: var(--border-soft);
+}
+/* An on/off switch at the end of a menu row */
+.switch {
+  position: relative;
+  width: 26px;
+  height: 16px;
+  margin-left: auto;
+  flex-shrink: 0;
+  border-radius: 999px;
+  background: var(--border);
+  transition: background-color var(--motion-fast) var(--ease);
+}
+.switch::after {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--paper);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+  transition: transform var(--motion-fast) var(--ease);
+}
+.switch-on {
+  background: var(--accent);
+}
+.switch-on::after {
+  transform: translateX(10px);
+}
+
+/* The keyboard shortcuts, in a dialog over the page */
+.shortcuts-dialog {
+  width: min(440px, calc(100vw - 32px));
+  max-height: calc(100vh - 64px);
+  padding: 16px 20px 20px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--paper);
+  color: var(--text);
+  box-shadow: var(--shadow-menu);
+  font: 13px/1.4 var(--font-sans);
+}
+.shortcuts-dialog:focus {
+  outline: none;
+}
+.shortcuts-dialog::backdrop {
+  background: rgba(0, 0, 0, 0.3);
+}
+.shortcuts-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+.shortcuts-head h2 {
+  margin: 0;
+  font: 600 15px var(--font-sans);
+}
+.shortcuts-group h3 {
+  margin: 14px 0 6px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--text-mute);
+}
+.shortcuts-group dl {
+  margin: 0;
+}
+.shortcut {
+  display: grid;
+  grid-template-columns: 150px minmax(0, 1fr);
+  gap: 12px;
+  align-items: center;
+  padding: 4px 0;
+}
+.shortcut dd {
+  margin: 0;
+  color: var(--text-dim);
+}
+.shortcut-keys {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  flex-wrap: wrap;
+}
+.shortcut-or {
+  margin: 0 3px;
+  font-size: 11px;
+  color: var(--text-mute);
+}
+.shortcuts-dialog kbd {
+  min-width: 20px;
+  padding: 1px 6px;
+  border: 1px solid var(--border);
+  border-bottom-width: 2px;
+  border-radius: var(--radius-sm);
+  background: var(--bg);
+  color: var(--text);
+  font: 500 11px/16px var(--font-sans);
+  text-align: center;
+}
 
 .auth-screen { min-height: 100vh; display: grid; place-items: center; padding: 24px; background: var(--bg); color: var(--text); }
 .auth-card { width: min(100%, 400px); padding: 32px; border: 1px solid var(--border); border-radius: 12px; background: var(--paper); box-shadow: 0 18px 55px rgba(0,0,0,.1); display: grid; gap: 12px; }
@@ -513,6 +727,14 @@ body {
   align-items: center;
   z-index: 19;
 }
+.toolbar .btn {
+  --btn-h: 30px;
+  box-sizing: border-box;
+}
+.toolbar .btn svg {
+  display: block;
+  flex-shrink: 0;
+}
 .toolbar-left,
 .toolbar-right {
   display: flex;
@@ -581,7 +803,7 @@ body {
   gap: 5px;
   min-height: 24px;
   padding: 0 9px;
-  border: 1px solid var(--border);
+  border: 1px solid transparent;
   border-radius: 999px;
   background: var(--paper);
   color: var(--text-dim);
@@ -589,13 +811,13 @@ body {
   white-space: nowrap;
 }
 .save-indicator-icon { display: grid; place-items: center; width: 13px; height: 13px; border-radius: 50%; }
-.save-indicator-saved { color: #237a43; border-color: color-mix(in srgb, #237a43 35%, var(--border)); background: color-mix(in srgb, #237a43 8%, var(--paper)); }
-.save-indicator-saved .save-indicator-icon { color: white; background: #237a43; }
-.save-indicator-unsaved { color: #8a5a00; border-color: color-mix(in srgb, #b77900 45%, var(--border)); background: color-mix(in srgb, #b77900 10%, var(--paper)); }
-.save-indicator-unsaved .save-indicator-icon { width: 8px; height: 8px; margin: 0 2.5px; background: #b77900; }
-.save-indicator-saving, .save-indicator-loading { color: var(--accent); }
+.save-indicator-saved { color: #237a43; background: color-mix(in srgb, #237a43 8%, var(--paper)); }
+.save-indicator-unsaved { color: #8a5a00; background: color-mix(in srgb, #b77900 8%, var(--paper)); }
+.save-indicator-saved .save-indicator-icon,
+.save-indicator-unsaved .save-indicator-icon { width: 8px; height: 8px; margin: 0 2.5px; background: currentColor; }
+.save-indicator-saving, .save-indicator-loading { color: var(--accent); background: color-mix(in srgb, var(--accent) 8%, var(--paper)); }
 .save-indicator-saving .save-indicator-icon, .save-indicator-loading .save-indicator-icon { border: 2px solid var(--border); border-top-color: var(--accent); animation: save-spin .8s linear infinite; }
-.save-indicator-error { color: var(--traceback); border-color: var(--traceback); background: color-mix(in srgb, var(--traceback) 8%, var(--paper)); }
+.save-indicator-error { color: var(--traceback); background: color-mix(in srgb, var(--traceback) 8%, var(--paper)); }
 .save-indicator-error .save-indicator-icon { color: white; background: var(--traceback); }
 @keyframes save-spin { to { transform: rotate(360deg); } }
 .nb-title-btn {
@@ -757,10 +979,37 @@ body {
   border-radius: var(--radius-sm);
   background: var(--accent);
 }
+/* The dragged cell stays in its place, faded, at the height it had when the drag began. Once
+   the pointer leaves it, its place closes up (cells-collapsed): the cells around it meet, and
+   the line shows where it will land, its own place included. */
 .cell-dragging {
   opacity: 0.4;
 }
-/* The grip a cell is dragged by, at the top of its margin, shown as the menu's ⋮ is */
+.cells-dragging .cell-dragging {
+  height: var(--drag-height);
+  overflow: hidden;
+  transition:
+    height var(--motion-fast) var(--ease),
+    margin var(--motion-fast) var(--ease),
+    opacity var(--motion-fast) var(--ease);
+}
+.cells-collapsed .cell-dragging {
+  height: 0;
+  margin-block: 0;
+  border-width: 0;
+  opacity: 0;
+}
+/* The space the cell gave up moves to the end of the list, so the list keeps its height:
+   the page doesn't jump, and the area below the last cell still takes the drop */
+.cells-collapsed {
+  padding-bottom: calc(var(--drag-height) + 2 * var(--cell-pad-y));
+}
+@media (prefers-reduced-motion: reduce) {
+  .cells-dragging .cell-dragging {
+    transition: none;
+  }
+}
+/* The grip a cell is dragged by, shown on hover alongside the menu. */
 .cell-drag {
   position: absolute;
   top: 9px;
@@ -797,7 +1046,7 @@ body {
   transform: translateX(-50%);
 }
 .cell-selected {
-  border-color: var(--border-soft);
+  border-color: transparent;
 }
 .cell-editing {
 }
@@ -864,25 +1113,27 @@ body {
 
 .cell-menu-wrap {
   position: absolute;
-  top: 6px;
-  right: 8px;
+  top: calc(var(--cell-pad-y) + 7px);
+  right: calc(var(--cell-pad-x) + 7px);
   z-index: 5;
 }
-/* The cell's ⋮, shown on hover or when the cell is selected */
+/* The cell's menu, shown on hover, focus, or selection. */
 .cell-menu-btn {
   opacity: 0;
 }
 .cell:hover .cell-menu-btn,
-.cell-selected .cell-menu-btn {
+.cell-selected .cell-menu-btn,
+.cell-menu-wrap:focus-within .cell-menu-btn,
+.cell-menu-btn.btn-open {
   opacity: 1;
 }
 .cell-text.cell-editing .cell-menu-wrap {
-  right: 86px;
+  right: calc(var(--cell-pad-x) + 86px);
 }
 
 .cell-menu-dropdown {
   position: absolute;
-  top: 26px;
+  top: calc(100% + 4px);
   right: 0;
   background: var(--paper);
   border: 1px solid var(--border);
@@ -892,7 +1143,6 @@ body {
   min-width: 140px;
   z-index: 10;
 }
-
 .text-split {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -935,8 +1185,15 @@ body {
   tab-size: 2;
   color: var(--text);
 }
+.code-context-selection {
+  color: inherit;
+  background: color-mix(in srgb, var(--accent) 28%, transparent);
+}
+.code-input:focus-within .code-context-selection {
+  background: transparent;
+}
 .code-input:focus-within {
-  border-color: var(--text-mute);
+  border-color: var(--border-soft);
 }
 .code-diagnostics {
   padding: 6px 12px;
@@ -949,59 +1206,69 @@ body {
   color: var(--tk-comment);
   font-style: italic;
 }
+/* Tokens must not add spacing: this layer shares the textarea's exact geometry. */
 .tk-directive-key,
+.code-editor .tk-directive-key {
+  color: var(--tk-key);
+  font-weight: 500;
+}
 .tk-inst,
+.code-editor .tk-inst {
+  color: var(--tk-instrument);
+  font-weight: 500;
+}
+.tk-word,
+.code-editor .tk-word {
+  color: var(--tk-name);
+  font-weight: 500;
+}
+.tk-directive-val,
+.code-editor .tk-directive-val {
+  color: var(--tk-value);
+}
 .tk-root,
 .tk-root-maj,
 .tk-root-min,
 .tk-root-abs,
-.code-editor .tk-directive-key,
-.code-editor .tk-inst,
+.tk-note,
+.tk-bass,
 .code-editor .tk-root,
 .code-editor .tk-root-maj,
 .code-editor .tk-root-min,
-.code-editor .tk-root-abs {
-  color: var(--tk-key);
-  font-weight: 600;
-}
-.tk-root-min,
-.code-editor .tk-root-min {
-  font-style: italic;
+.code-editor .tk-root-abs,
+.code-editor .tk-note,
+.code-editor .tk-bass {
+  color: var(--tk-pitch);
 }
 .tk-quality,
 .tk-ext,
-.tk-word,
-.tk-mod,
 .code-editor .tk-quality,
-.code-editor .tk-ext,
-.code-editor .tk-word,
-.code-editor .tk-mod {
-  color: var(--tk-value);
-  font-weight: 500;
+.code-editor .tk-ext {
+  color: var(--tk-pitch-detail);
 }
-.tk-directive-val,
 .tk-rhythm,
 .tk-beat,
 .tk-step,
-.tk-note,
-.tk-bass,
-.code-editor .tk-directive-val,
 .code-editor .tk-rhythm,
 .code-editor .tk-beat,
-.code-editor .tk-step,
-.code-editor .tk-note,
-.code-editor .tk-bass {
+.code-editor .tk-step {
+  color: var(--tk-rhythm);
+}
+.tk-mod,
+.code-editor .tk-mod {
   color: var(--tk-value);
 }
 .tk-bar,
-.tk-rest,
 .tk-slash,
 .tk-punct,
 .code-editor .tk-bar,
-.code-editor .tk-rest,
 .code-editor .tk-slash,
 .code-editor .tk-punct {
   color: var(--tk-faint);
+}
+.tk-rest,
+.code-editor .tk-rest {
+  color: var(--tk-rest);
 }
 .tk-step-acc,
 .code-editor .tk-step-acc {
@@ -1009,10 +1276,11 @@ body {
 }
 .tk-error,
 .code-editor .tk-error {
-  color: var(--text);
+  color: var(--tk-error);
   background: var(--tk-error-bg);
   border-radius: var(--radius-sm);
-  box-shadow: 0 1px 0 var(--text-dim);
+  text-decoration: underline wavy var(--tk-error);
+  text-underline-offset: 3px;
 }
 .hl-error-line {
   background: var(--tk-error-bg);
@@ -1112,19 +1380,13 @@ body {
   font-style: italic;
 }
 
-/* Play under an output: round; paused, it shows as an outline */
-.play-btn {
+/* Playback controls share their dimensions; Stop uses the secondary treatment. */
+.player-btn {
   --btn-h: 30px;
   flex-shrink: 0;
 }
-.play-btn.playing.paused {
-  background: var(--paper);
-  color: var(--text);
-}
-.play-btn.playing.paused:hover {
-  background: var(--hover-bg);
-}
-.play-btn svg {
+.player-btn svg {
+  display: block;
   fill: currentColor;
 }
 
@@ -1219,6 +1481,12 @@ body {
 .view-btn:hover {
   color: var(--text);
   background: var(--hover-bg);
+}
+.view-btn:focus {
+  outline: none;
+}
+.view-btn:focus-visible {
+  box-shadow: inset 0 -2px 0 var(--text);
 }
 .view-btn-on {
   background: var(--accent-soft);
@@ -1434,46 +1702,6 @@ body {
   font-style: italic;
 }
 
-.status-bar {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  background: var(--tb-bg);
-  border-top: 1px solid var(--border);
-  height: var(--shell-status-row);
-  padding: 0 14px;
-  font-family: var(--font-mono);
-  font-size: 11px;
-  color: var(--text-dim);
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  z-index: 20;
-}
-.sb-sep {
-  color: var(--text-mute);
-}
-.sb-spacer {
-  flex: 1;
-}
-.sb-dim {
-  color: var(--text-mute);
-}
-.sb-shortcuts {
-  max-width: 0;
-  overflow: hidden;
-  opacity: 0;
-  white-space: nowrap;
-  transition:
-    max-width var(--motion-enter) var(--ease),
-    opacity var(--motion-slow) var(--ease);
-}
-.status-bar:hover .sb-shortcuts {
-  max-width: 500px;
-  opacity: 1;
-}
-
 /* Phones and narrow windows: the sidebar becomes a top bar, cells take the width, and the
    player's controls wrap under the waveform. */
 @media (max-width: 760px) {
@@ -1537,6 +1765,26 @@ body {
   .lhs-tab-label {
     max-width: 160px;
   }
+  .lhs-account {
+    margin: 0 0 0 auto;
+    padding: 0 0 0 8px;
+    border-top: 0;
+    flex-shrink: 0;
+  }
+  .account-row {
+    padding: 4px;
+  }
+  .account-text,
+  .account-chevron {
+    display: none;
+  }
+  .account-menu {
+    left: auto;
+    right: 0;
+    bottom: auto;
+    top: calc(100% + 4px);
+    width: 240px;
+  }
   .nb-title-menu {
     left: 0;
   }
@@ -1593,9 +1841,6 @@ body {
   .dg-count,
   .dg-head {
     font-size: 9px;
-  }
-  .sb-shortcuts {
-    display: none;
   }
 }
 
@@ -1713,7 +1958,7 @@ body {
   inset: 0;
   z-index: -1;
   border-radius: inherit;
-  background-image: url("../assets/brand/blue-1.png");
+  background-image: url("../assets/brand/blue-1-texture.png");
   background-size: 138px auto;
   background-position: 28% 40%;
   opacity: 1;
@@ -1721,8 +1966,14 @@ body {
   filter: saturate(1.75) contrast(1.22);
   pointer-events: none;
 }
-.dg-hit:nth-of-type(3n + 1)::before { background-image: url("../assets/brand/blue-3.png"); background-position: 72% 30%; }
-.dg-hit:nth-of-type(3n + 2)::before { background-image: url("../assets/brand/blue-1.png"); background-position: 18% 76%; }
+.dg-hit:nth-of-type(3n + 1)::before {
+  background-image: url("../assets/brand/blue-3-texture.png");
+  background-position: 72% 30%;
+}
+.dg-hit:nth-of-type(3n + 2)::before {
+  background-image: url("../assets/brand/blue-1-texture.png");
+  background-position: 18% 76%;
+}
 .dg-acc {
   background-color: var(--accent);
 }
@@ -1733,9 +1984,18 @@ body {
 .dg-note.dg-hit {
   background: color-mix(in srgb, var(--note-color) 62%, var(--paper));
 }
-.dg-note.dg-hit::before { background-image: url("../assets/brand/warm-1.png"); background-position: 34% 62%; }
-.dg-note.dg-hit:nth-of-type(3n + 1)::before { background-image: url("../assets/brand/warm-3.png"); background-position: 74% 38%; }
-.dg-note.dg-hit:nth-of-type(3n + 2)::before { background-image: url("../assets/brand/warm-1.png"); background-position: 18% 74%; }
+.dg-note.dg-hit::before {
+  background-image: url("../assets/brand/warm-1-texture.png");
+  background-position: 34% 62%;
+}
+.dg-note.dg-hit:nth-of-type(3n + 1)::before {
+  background-image: url("../assets/brand/warm-3-texture.png");
+  background-position: 74% 38%;
+}
+.dg-note.dg-hit:nth-of-type(3n + 2)::before {
+  background-image: url("../assets/brand/warm-1-texture.png");
+  background-position: 18% 74%;
+}
 .dg-note.dg-acc {
   background-color: var(--note-color);
 }
@@ -1839,7 +2099,47 @@ button.dg-cell:focus-visible {
   color: var(--text-mute);
   font: 12px var(--font-sans);
 }
+.notebook-chat-context {
+  padding: 6px 20px;
+  color: var(--text-mute);
+  font: 12px var(--font-sans);
+  overflow-wrap: anywhere;
+}
 [data-notebook-target][aria-pressed="true"] {
   outline: 2px solid var(--accent);
   outline-offset: 3px;
+}
+
+/* Printed values: one line per type, in the editor's font at one size. Only the values
+   take the text colour; the type and the pitches in parentheses are quieter. */
+.printed-values {
+  display: flex;
+  flex-direction: column;
+  /* As in a Jupyter notebook, output is the input's text carried on: the editor's font,
+     size and line height, starting at the column where the code starts (past the
+     editor's border and line-number gutter). */
+  padding: 0 0 0 34px;
+  font: 13px/20px var(--font-mono);
+}
+.print-type,
+.print-meaning {
+  color: color-mix(in srgb, var(--text-dim) 74%, var(--paper));
+}
+.print-note {
+  white-space: nowrap;
+}
+.print-value {
+  font-weight: 500;
+  /* a hair heavier than 500: the system font has no weight between 500 and 600 */
+  -webkit-text-stroke: 0.2px currentColor;
+  color: var(--text);
+}
+.print-steps .print-value {
+  letter-spacing: 1px;
+}
+.print-quiet .print-value,
+.print-comma {
+  font-weight: 400;
+  -webkit-text-stroke: 0;
+  color: var(--text-mute);
 }

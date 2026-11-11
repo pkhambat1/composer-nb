@@ -66,20 +66,8 @@ const shape = (src: string) =>
 
 describe("the parser", () => {
   it("knows a statement by how it starts", () => {
-    const src = [
-      "set tempo 90",
-      "steps pair = ^-x-",
-      "fig = x-",
-      "pattern groove = 4 bars {",
-      "  kick: x---",
-      "  bar 2 { crash: 1 }",
-      "  every 3 steps { hat: x }",
-      "}",
-      "with key E, mode minor {",
-      "  play groove",
-      "}",
-      "play (groove { snare: --x- })",
-    ].join("\n")
+    const src =
+      "set tempo 90\nsteps pair = ^-x-\nfig = x-\npattern groove = 4 bars {\n  kick: x---,\n  pattern  { crash: x 15*- } on bar 2,\n  every 3/4 beats { hat: x }\n}\nwith key E, mode minor {\n  play groove\n}\nplay (groove { snare: --x- })"
     expect(shape(src)).toEqual([
       "set tempo 90",
       "decl steps pair = ^-x-",
@@ -104,7 +92,7 @@ describe("the parser", () => {
   })
 
   it("reads a group in brackets to its ), whatever lines it takes, and a block's lines in it", () => {
-    const src = "play (\n  intro\n  {\n    kick: x---\n    snare: --x-\n  }\n  verse\n)"
+    const src = "play (\n  intro\n  {\n    kick: x---,\n    snare: --x-\n  }\n  verse\n)"
     const [play] = Parser.parse(src).statements
     expect(play.kind).toBe("play")
     const block = play.value.parts.find((p) => p.kind === "block")

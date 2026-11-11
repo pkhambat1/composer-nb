@@ -41,39 +41,65 @@ export default function NotebookCells({
   // the cell at that index (the cells' length: the end)
   const [dragId, setDragId] = React.useState<string | null>(null)
   const [dropAt, setDropAt] = React.useState<number | null>(null)
+  // The dragged cell keeps its place, faded, until the pointer leaves it; then its place
+  // closes up (collapsed), from its height when the drag began to none
+  const [dragHeight, setDragHeight] = React.useState(0)
+  const [collapsed, setCollapsed] = React.useState(false)
+  // The dragged cell's id as soon as the drag starts: the first dragover can come before the
+  // render that sets dragId, and one it ignores refuses the drop
+  const dragging = React.useRef<string | null>(null)
   const startDrag = React.useCallback((id: string, e: React.DragEvent<HTMLElement>) => {
     e.dataTransfer.effectAllowed = "move"
     e.dataTransfer.setData("text/plain", "") // Firefox starts a drag only with something in it
     const cell = e.currentTarget.closest(".cell")
-    if (cell) e.dataTransfer.setDragImage(cell, 20, 20)
+    if (cell) {
+      e.dataTransfer.setDragImage(cell, 20, 20)
+      setDragHeight(cell.getBoundingClientRect().height)
+    }
+    dragging.current = id
     setDragId(id)
   }, [])
   const endDrag = React.useCallback(() => {
+    dragging.current = null
     setDragId(null)
     setDropAt(null)
+    setCollapsed(false)
   }, [])
   // A drag anywhere over the notebook lands before the first cell whose middle is below the
-  // pointer. Nothing but a cell's grip starts one, so other drags (a file, some text) are left be.
-  const dragOver = (e: React.DragEvent<HTMLDivElement>) => {
-    if (!dragId) return
-    e.preventDefault()
-    e.dataTransfer.dropEffect = "move"
+  // pointer (the cells' length: below them all)
+  const placeAt = (e: React.DragEvent<HTMLDivElement>) => {
     const shown = [...e.currentTarget.querySelectorAll(":scope > .cell")]
     const at = shown.findIndex((el) => {
       const box = el.getBoundingClientRect()
       return e.clientY < box.top + box.height / 2
     })
-    setDropAt(at < 0 ? shown.length : at)
+    return at < 0 ? shown.length : at
   }
-  const drop = (e: React.DragEvent<HTMLDivElement>) => {
-    if (!dragId) return
+  // Nothing but a cell's grip starts a drag, so other drags (a file, some text) are left be.
+  const dragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    const id = dragging.current
+    if (!id) return
     e.preventDefault()
-    if (dropAt != null) moveCellTo(dragId, dropAt)
+    e.dataTransfer.dropEffect = "move"
+    if (!collapsed) {
+      const own = e.currentTarget.querySelector(`:scope > .cell[data-cell-id="${CSS.escape(id)}"]`)
+      const box = own?.getBoundingClientRect()
+      if (box && (e.clientY < box.top || e.clientY > box.bottom)) setCollapsed(true)
+    }
+    setDropAt(placeAt(e))
+  }
+  // The drop works out where it lands from where it is, not from the last dragover's render
+  const drop = (e: React.DragEvent<HTMLDivElement>) => {
+    const id = dragging.current
+    if (!id) return
+    e.preventDefault()
+    moveCellTo(id, placeAt(e))
     endDrag()
   }
-  // Where the dragged cell would land, unless that's where it is already
+  // Where the dragged cell would land. Either side of where it is already is its own place,
+  // shown by the gap above it (the one below it is shut against it once its place closes up).
   const from = dragId ? cells.findIndex((c) => c.id === dragId) : -1
-  const landing = dropAt != null && dropAt !== from && dropAt !== from + 1 ? dropAt : null
+  const landing = dropAt === from + 1 ? from : dropAt
 
   // In a notebook, a + shows between two cells on hover (and above the first and below the
   // last), to add a cell right there. The gap at `place` (the index of the cell after it)
@@ -89,7 +115,8 @@ export default function NotebookCells({
 
   return (
     <div
-      className={"cells" + (dragId ? " cells-dragging" : "")}
+      className={"cells" + (dragId ? " cells-dragging" : "") + (collapsed ? " cells-collapsed" : "")}
+      style={dragId ? ({ "--drag-height": `${dragHeight}px` } as React.CSSProperties) : undefined}
       onDragOver={single ? undefined : dragOver}
       onDrop={single ? undefined : drop}
     >
@@ -125,6 +152,7 @@ export default function NotebookCells({
               last={i === cells.length - 1}
               onSetPreview={(v) => updateCell(c.id, { previewMode: v })}
               onTogglePlayback={togglePlayback}
+              onStopPlayback={playback.stopCell}
               onDragStart={single ? undefined : (e) => startDrag(c.id, e)}
               onDragEnd={endDrag}
               dragging={c.id === dragId}

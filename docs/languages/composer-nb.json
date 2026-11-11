@@ -3,20 +3,51 @@
   "name": "composer-nb",
   "scopeName": "source.composer-nb",
   "patterns": [
-    { "include": "#comment" },
-    { "include": "#instrument" },
-    { "include": "#declaration" },
-    { "include": "#typedBraces" },
-    { "include": "#setting" },
-    { "include": "#keyword" },
-    { "include": "#value" },
-    { "include": "#notes" },
-    { "include": "#beat" },
-    { "include": "#number" },
-    { "include": "#numeral" },
-    { "include": "#chord" },
-    { "include": "#steps" },
-    { "include": "#punctuation" }
+    {
+      "include": "#comment"
+    },
+    {
+      "include": "#instrument"
+    },
+    {
+      "include": "#declaration"
+    },
+    {
+      "include": "#typedBraces"
+    },
+    {
+      "include": "#setting"
+    },
+    {
+      "include": "#invalidSeparator"
+    },
+    {
+      "include": "#keyword"
+    },
+    {
+      "include": "#value"
+    },
+    {
+      "include": "#notes"
+    },
+    {
+      "include": "#repeatCount"
+    },
+    {
+      "include": "#numeral"
+    },
+    {
+      "include": "#number"
+    },
+    {
+      "include": "#chord"
+    },
+    {
+      "include": "#steps"
+    },
+    {
+      "include": "#punctuation"
+    }
   ],
   "repository": {
     "comment": {
@@ -30,8 +61,12 @@
     "declaration": {
       "match": "\\b(steps|sticking|notes|chords|pattern|block)\\s+([A-Za-z][A-Za-z0-9]*)(?=\\s*=)",
       "captures": {
-        "1": { "name": "storage.type.composer-nb" },
-        "2": { "name": "variable.other.composer-nb" }
+        "1": {
+          "name": "storage.type.composer-nb"
+        },
+        "2": {
+          "name": "variable.other.composer-nb"
+        }
       }
     },
     "typedBraces": {
@@ -41,13 +76,17 @@
     "setting": {
       "match": "^\\s*(set)\\s+(time|tempo|swing|key|mode|transpose|octave|kit|guitar\\.electric)\\b",
       "captures": {
-        "1": { "name": "keyword.control.composer-nb" },
-        "2": { "name": "keyword.other.setting.composer-nb" }
+        "1": {
+          "name": "keyword.control.composer-nb"
+        },
+        "2": {
+          "name": "keyword.other.setting.composer-nb"
+        }
       }
     },
     "keyword": {
       "name": "keyword.control.composer-nb",
-      "match": "\\b(play|for|set|with|of|bar|bars|beats|steps|chords|to|every|rest|over|in)\\b"
+      "match": "\\b(play|print|for|on|set|with|bar|bars|beats|steps|chords|to|every|rest|over|in|unison|second|third|fourth|fifth|sixth|seventh|octave|ninth|tenth|eleventh|twelfth|thirteenth|fourteenth|fifteenth)\\b"
     },
     "value": {
       "name": "constant.language.composer-nb",
@@ -57,17 +96,13 @@
       "name": "constant.character.step.composer-nb",
       "match": "(?<![A-Za-z0-9#^~_-])(?=[-_^~A-G#b0-8]*[A-G])(?=[-_^~A-G#b0-8]*[-_])[-_^~A-G#b0-8]+(?![A-Za-z0-9#])"
     },
-    "beat": {
-      "name": "constant.numeric.beat.composer-nb",
-      "match": "(?<![A-Za-z0-9.])\\d+[e&a](?![A-Za-z0-9])"
-    },
     "number": {
       "name": "constant.numeric.composer-nb",
       "match": "(?<![A-Za-z])\\d+(\\.\\d+)?(?![A-Za-z])"
     },
     "numeral": {
       "name": "string.unquoted.chord.composer-nb",
-      "match": "(?<![A-Za-z0-9#])[#b]?(VII|VI|IV|V|III|II|I|vii|vi|iv|v|iii|ii|i)(6/9|maj|min|sus|add|dim|aug|M|m|b|#|\\+|\\d)*(/[A-G][#b]?)?(?![A-Za-z0-9])"
+      "match": "(?<![A-Za-z0-9#])(?:(?:(?<!\\S)|(?<=[(,|^~*]))-[#b]?[1-9]\\d*|[#b]?(?:VII|VI|IV|V|III|II|I|vii|vi|iv|v|iii|ii|i|[1-9]\\d*))(?:6/9|maj|min|sus|add|dim|dom|aug|alt|M|m|b|#|\\+|\\d)*(?:/(?:[A-G][#b]?|-?[#b]?[1-9]\\d*))?(?![A-Za-z0-9])"
     },
     "chord": {
       "name": "string.unquoted.chord.composer-nb",
@@ -79,7 +114,15 @@
     },
     "punctuation": {
       "name": "punctuation.composer-nb",
-      "match": "[{}()|,:=%_]"
+      "match": "[{}()|,:=*%_]"
+    },
+    "invalidSeparator": {
+      "name": "invalid.illegal.composer-nb",
+      "match": "[;']|\\brest\\b"
+    },
+    "repeatCount": {
+      "name": "constant.numeric.repeat.composer-nb",
+      "match": "(?<![A-Za-z0-9.])\\d+(?=\\s*\\*)"
     }
   }
 }

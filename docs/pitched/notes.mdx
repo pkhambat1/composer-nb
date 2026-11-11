@@ -15,7 +15,7 @@ A note is a capital `A` to `G`, then an optional `#` or `b`, then an optional oc
 
 | Step | Plays |
 | --- | --- |
-| A note, a [degree](#degrees) or a [degree of a note](#counting-from-a-note) | Starts the note. It sounds until the next note or `_`. |
+| A note, a [degree](#degrees) or an [interval function](#interval-functions) | Starts the note. It sounds until the next note or `_`. |
 | `^` or `~` before a note | The note accented, or soft. |
 | `-` | Nothing new. A sounding note carries on. |
 | `_` | Stops the note: one step of silence. |
@@ -23,59 +23,74 @@ A note is a capital `A` to `G`, then an optional `#` or `b`, then an optional oc
 
 A note is one step however many characters it has, so `F---` and `F#---` are both quarter notes. Two notes never touch: a `-`, `_`, space or `|` goes between them. A space takes no step, so `E---F# E-E--` is ten steps.
 
-In a pattern, the last note rings over the repeat until the first note or `_`. A value written as the same figure more than once is an error, because the pattern repeats it: `C2-C2-` is `C2-`.
+In a pattern, the last note rings over the repeat until the first note or `_`. Write each pattern line's repeating figure once: `C2-C2-` is an error there because `C2-` already repeats. A block, a direct `play` line, or a named `notes` phrase can contain finite repeats.
 
 ## Degrees
 
-A degree is a Roman numeral from `i` to `vii` where a note goes, written as a chord's is, counted on the scale of the [`key`](/pitched/key) and its mode: in C major `iii` is E, and in C minor it's Eb. A `b` or `#` in front moves it a semitone off the scale. Degree `i` is the root in the current `octave`; `'` after the numeral is an octave up for each mark, and `'` before it an octave down. A numeral is as long as it reads, so `iii` is one note, and two numerals in a row take a space: `i i`.
+A positive integer is a degree of the [`key`](/pitched/key) and its mode: in C major `3` is E, and in C minor it is Eb. `b` or `#` before a degree moves it a semitone off the scale. Degree `1` is the root in the current `octave`. Count past the end of the scale to continue into the next octave: in seven-note modes `8` is the next tonic and `15` is two octaves up. In six-note `wholeTone`, those tonics are `7` and `13`; `8` is its second degree in the next octave.
+
+Negative degrees count downward from the tonic, skipping zero. In C major, `-1` is B below C, `-2` is A, `-7` is the lower C, and `-14` is C two octaves down. Each mode uses its own scale: in six-note `wholeTone`, `-6` reaches the lower tonic. Put the sign before an accidental: `-b1` lowers the note at degree `-1` by a semitone.
+
+A leading minus belongs to the degree. Dashes inside a note word still sustain, so separate negative notes with spaces: `-1--- -2---`. The existing `1---2---` keeps its timing, and a standalone `-` remains a sustain.
+
+All consecutive digits form one degree: `13` is the thirteenth degree, while `1 3` is two notes. Lowercase Roman numerals remain accepted within the first octave. `octave(phrase, -2)` lowers a whole phrase two octaves. Apostrophe notation is no longer accepted. Notes must fit the playable MIDI range, 0 to 127.
 
 ```composer-nb
 set octave 4
 
-notes scale = i---ii---iii---iv---|v---vi---vii---i'---
+notes scale = 1---2---3---4---|5---6---7---8---
 
 play piano: notes scale
-with mode minor { play piano: notes scale }
+with mode minor { play piano: notes scale, }
 
 set key F#
 play piano: notes scale
 ```
 
-A name holds degrees, not pitches, so it is read under whichever key and mode play it: the second play is C minor, and the last F# major. Letters and degrees can share a line, as a chart holds `I vi|F G`. On a kit piece's line a number is a [beat](/drums/steps#beats), so `kick: 1 3` hits beats 1 and 3 and `bass: notes i iii` plays two degrees: the line's name says which.
+A name holds degrees, so it is read under whichever key and mode play it. Letters and degrees can share a line. Numbers on a drum line are not notes; kit pieces use their step characters.
 
-## Counting from a note
+## Interval functions
 
-`of` counts a degree from another note instead of from the key: `v of C3` is the 5th of C3, which is `G3`. The degree counts on the major scale of that note, in any key or mode, so `biii of C3` is `Eb3`. On the left of `of` goes a degree, with `'` marks for octaves as usual: `v' of C3` is `G4`. On the right goes a note, or a degree of the key: under `set key D`, `v of ii` is the 5th of E, the key's 2nd. Counting from the key's own `i` is the identity, so `v of i` is just `v`. `^` or `~` goes in front of the whole note: `^v of C3`.
+`fifth(value)` moves each note four positions up the active scale. `second`, `third`, `fourth`, `sixth`, `seventh`, `octave`, and `ninth` through `fifteenth` work the same way; `unison` leaves it in place. An octave always spans the whole scale, including six-note `wholeTone`.
 
-To count from a note that is itself counted with `of`, put that note in brackets. Here is the circle of fifths, counted up from C3:
+The argument can be a single note, an inline phrase, or a named phrase. Holds, rests, accents and bar lines keep their timing. An optional integer count repeats the move: `fifth(1, 2)` replaces `fifth(fifth(1))`, and `fifth(1, -1)` moves down a fifth. Counts range from -64 to 64. Step repeats work inside a function: `fifth(1 7*- 3 7*-, 2)` moves two held notes up two fifths.
 
 ```composer-nb
-play piano: notes C3--- v of C3--- v of (v of C3)--- v of (v of (v of C3))---
+notes phrase = ^1--- 3--- 5--- 7---
+notes answer = fifth(phrase)
+
+play piano: notes phrase answer
+with mode minor { play piano: notes answer, }
+play piano: notes fifth(1) 7*- fifth(1, 2) 7*-
 ```
 
-This plays C3, G3, D4 and A4. Without the brackets, `v of v of C3` is an error. A note counted with `of` is still one note, so `-`, `_` and lengths work on it the same way.
+Functions use the active key and mode, not a fixed semitone distance: `fifth(B3)` is F4 in C major. A chromatic offset is carried relative to the scale: `fifth(Bb3)` is Fb4 in C major, because both notes are one semitone below their scale degree. For letters missing from a six-note scale, movement counts from the preceding spelled scale degree and carries the pitch offset. [`chords`](/pitched/chords#interval-functions) uses the same rule for every chord tone and the bass.
 
-## Lengths
+## Repeats and holds
 
-Commas split a line into parts. A [length](/language/overview#lengths) in front of one note holds it for that long, and in front of `rest` is silence. The length `...` is what is left of the block: `...G1` holds G1 to the end, and `...rest` is silence to the end. A line ended in `...` has no length of its own, so the other lines decide how long the block is.
+`n*word` repeats a note word, and `n*(words)` repeats a group. Counts are whole numbers of at least two, and groups can nest: `2*(1 7*- 3 7*-)`. A word can also be a named `notes` phrase or an interval function. Spaces separate words; commas separate brace entries or function arguments.
+
+Repeats copy attacks as well as holds: `8*1` plays eight notes, while `1 7*-` starts one note and sustains it for seven more steps. At the default sixteenth-note grid that is two beats. `8*_` is eight silent steps. [`every`](/language/patterns#every) changes the duration of every step, including those inside a repeat. Note values no longer take `beats`, `steps`, `bars`, `rest`, or comma-separated duration lists.
+
+A final `...G1` starts G1 and holds it to the end of the block, `...-` sustains the preceding note, and `..._` fills with silence. Another line or an explicit block length must supply the end. A fill cannot go inside a bounded repeat or an interval function.
 
 ```composer-nb
 set time 3 over 4
 
 pattern waltz = {
-  bass: notes 3 beats C2, 3 beats G1
-  piano: chords _ C C|_ G G
+  bass: notes C2 11*- G1 11*-,
+  piano: chords _ C C|_ G G,
 }
 
 play waltz for 2 bars
-play piano: notes 2 beats rest, E4---F4---, 1 bars G4
+play piano: notes 8*_ E4---F4--- G4 11*-
 ```
 
-A length holds one note: `3 beats C2-E2-` is an error, since a figure is drawn on the steps. A long line continues on the next line when that line starts with `|`, and a length can follow the `|` as it follows a comma.
+A long line continues on the next line when that line starts with `|`. Bar lines check the expanded steps against the current time signature.
 
 ```composer-nb
 notes flats = A3-Ab3-G3-Gb3-F3-E3-Eb3-D3-
-  |Db3-C3-B2-Bb2-A2---, 1 beats rest
+  |Db3-C3-B2-Bb2-A2--- 4*_
 
 play piano: notes flats
 ```
@@ -88,8 +103,7 @@ A line plays one note at a time. For notes that sound together, give the instrum
 set octave 4
 
 play piano: {
-  chords vi iv|i v
-  notes vi-------iv-------|vi---v---iv---iii---
+  chords vi iv|i v,
+  notes vi-------iv-------|vi---v---iv---iii---,
 }
 ```
-

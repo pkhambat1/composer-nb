@@ -3,6 +3,7 @@
    inline handshake plus the renderer asset; without one it carries the full built
    renderer. See mcp/README.md. */
 import { readFile } from "node:fs/promises"
+import { createHash } from "node:crypto"
 import { RESOURCE_MIME_TYPE, registerAppResource } from "@modelcontextprotocol/ext-apps/server"
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 
@@ -19,7 +20,7 @@ export const SOUND_HOSTS = [
 // The playground's fonts, IBM Plex, from Google Fonts: the stylesheet, then the files.
 export const FONT_HOSTS = ["https://fonts.googleapis.com", "https://fonts.gstatic.com"]
 const FONTS =
-  "https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Serif:wght@400;600&display=swap"
+  "https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Serif:wght@400;600&display=swap"
 const ASSET_ORIGIN = process.env.COMPOSER_NB_APP_ORIGIN
   ? new URL(process.env.COMPOSER_NB_APP_ORIGIN).origin
   : null
@@ -40,14 +41,30 @@ function script(): Promise<string> {
   return scriptLoading
 }
 
+let appVersionLoading: Promise<string> | null = null
+function appVersion(): Promise<string> {
+  if (!appVersionLoading) {
+    appVersionLoading = script()
+      .then((source) => createHash("sha256").update(source).digest("hex").slice(0, 12))
+      .catch((err: unknown) => {
+        appVersionLoading = null
+        throw err
+      })
+  }
+  return appVersionLoading
+}
+
 // The page the host renders.
 export async function cellHtml(): Promise<string> {
+  const assetUrl = ASSET_ORIGIN
+    ? `${ASSET_ORIGIN}/app.js?v=${await appVersion()}`
+    : null
   // Inline JS must not close its own tag; "<\/" is the same string to JavaScript.
   const scriptTag = ASSET_ORIGIN
     ? `<script type="module">${(await readFile(new URL("../app/dist/bootstrap.js", import.meta.url), "utf8")).replace(/<\/script/gi, "<\\/script")}</script>`
     : `<script type="module">${(await script()).replace(/<\/script/gi, "<\\/script")}</script>`
   return `<!doctype html>
-<html lang="en"${ASSET_ORIGIN ? ` data-composer-app="${ASSET_ORIGIN}/app.js"` : ""}>
+<html lang="en"${assetUrl ? ` data-composer-app="${assetUrl}"` : ""}>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">

@@ -9,16 +9,20 @@ export type NotebookSnapshot = {
 }
 export type NotebookSelection = {
   cellId: string
-  kind: "cell" | "source" | "brick" | "sheet" | "chord"
+  kind: "cell" | "source" | "text" | "brick" | "sheet" | "chord"
   label: string
   fromLine?: number
   toLine?: number
+  start?: number
+  end?: number
+  selectedText?: string
 }
 
 export type PlayerProps = {
   focusedCellId: string | null
   isPlaying: boolean
   onTogglePlayback: (id: string) => void
+  onStopPlayback: (id: string) => void
   onPlaybackFinished: (id: string) => void
   registerPlayer: (id: string, player: Player) => void
   unregisterPlayer: (id: string) => void

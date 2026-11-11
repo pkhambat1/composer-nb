@@ -26,6 +26,7 @@ export function NotebookApp({
   const inFlight = React.useRef<Promise<void> | null>(null)
   const debounce = React.useRef<ReturnType<typeof setTimeout> | null>(null)
   const alive = React.useRef(true)
+  const contextQueue = React.useRef<Promise<void>>(Promise.resolve())
   const request = React.useCallback(
     async (name: string, args: Record<string, unknown>) => {
       const response = await app.callServerTool({ name, arguments: args })
@@ -84,16 +85,18 @@ export function NotebookApp({
         }, 600)
       }
       if (app.getHostCapabilities()?.updateModelContext) {
-        void app
-          .updateModelContext({
-            content: [
-              {
-                type: "text",
-                text: `Composer notebook selection and current editor source (use get_notebook before saving):\n${JSON.stringify(next)}`,
-              },
-            ],
+        const selectedIndex = next.cells.findIndex((cell) => cell.id === next.selectedId)
+        const target = next.selection?.selectedText
+          ? `Selected text in cell ${selectedIndex + 1}: ${next.selection.selectedText}`
+          : selectedIndex >= 0 ? `Cell ${selectedIndex + 1} selected` : "No cell selected"
+        contextQueue.current = contextQueue.current.then(async () => {
+          await app.updateModelContext({
+            content: [{
+              type: "text",
+              text: `${target}. Full notebook source follows; use get_notebook before saving:\n${JSON.stringify(next)}`,
+            }],
           })
-          .catch(() => {})
+        }).catch(() => {})
       }
     },
     [app, flush],
@@ -141,12 +144,11 @@ export function NotebookApp({
         key={epoch}
         host={{ cells: document.cells, theme }}
         title={document.title}
+        subtitle={message}
         initialSelectedId={snapshot?.selectedId}
+        showChatContext
         onSnapshot={onSnapshot}
       />
-      <div className="notebook-sync-status" role="status">
-        {message}
-      </div>
     </>
   )
 }

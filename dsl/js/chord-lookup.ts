@@ -1,6 +1,6 @@
 /* Guitar chord positions from @tombatossals/chords-db (bundled, lazy-loaded chunk). */
 import { Chord, Interval, Note } from "tonal"
-import { chordParts, tonalName } from "./chords.ts"
+import { chordParts, tonalName, readChordSymbol } from "./chords.ts"
 
 // A shape in the database: a fret per string from the low E (-1 muted, 0 open), counted from
 // `baseFret`, with its fingers, barres and the notes it sounds
@@ -346,6 +346,9 @@ function resolveKeySuffix(label: string): { key: string; suffix: string } | null
     return { key: ch.tonic, suffix }
   }
 
+  // A composed chord has no dictionary shape. Use its actual tones rather than
+  // falling through to a plain slash triad and losing its added/altered notes.
+  if (readChordSymbol(head)) return null
   const m = /^([A-G][#b]?)(.*)$/.exec(head)
   if (!m) return null
   const key = m[1]

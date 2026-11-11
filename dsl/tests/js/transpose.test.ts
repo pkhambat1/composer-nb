@@ -22,7 +22,7 @@ describe("transpose", () => {
 
   it("moves every pitched instrument: chords, notes and degrees, up or down", () => {
     const p = parseSource(
-      "set transpose 2\nplay block {\n  guitar: {\n    chords C\n    notes E---\n  }\n  piano: chords C\n}",
+      "set transpose 2\nplay block {\n  guitar: {\n    chords C,\n    notes E---\n  },\n  piano: chords C\n}",
     )
     expect(p.errors).toEqual([])
     expect(p.chords.map((e) => [e.instrument, e.transpose, pitchClasses(e.chord)])).toEqual([
@@ -40,14 +40,15 @@ describe("transpose", () => {
   })
 
   it("leaves drums alone", () => {
-    const cell = "play block {\n  kick: x-x-\n  tom.floor: --x-\n  piano: notes C4---\n}"
-    const drums = (src: string) => JSON.stringify(parseSource(src).drumEvents)
+    const cell = "play block {\n  kick: x-x-,\n  tom.floor: --x-,\n  piano: notes C4---\n}"
+    const drums = (src: string) =>
+      JSON.stringify(parseSource(src).drumEvents.map(({ line: _line, ...event }) => event))
     expect(drums("set transpose 5\n" + cell)).toBe(drums(cell))
   })
 
   it("goes on a with in a block, so a block can transpose one instrument", () => {
     const p = parseSource(
-      "play block {\n  with transpose 4 { guitar: chords C }\n  bass: notes C2---\n}",
+      "play block {\n  with transpose 4 { guitar: chords C },\n  bass: notes C2---\n}",
     )
     expect(pitchClasses(p.chords[0].chord)).toEqual([4, 8, 11])
     expect(p.notes[0].note.name).toBe("C2")

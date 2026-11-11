@@ -16,6 +16,7 @@ export type SavedCell = { id?: string; type: CellType; source: string }
 export type CellOutput =
   | { kind: "error"; error: string; lines?: number[]; source?: string }
   | { kind: "info"; message: string }
+  | { kind: "printed"; parsed: Parsed }
   | { kind: "rendering"; parsed: Parsed; duration: number }
   | { kind: "rendered"; parsed: Parsed; buffer: ToneAudioBuffer; duration: number }
 

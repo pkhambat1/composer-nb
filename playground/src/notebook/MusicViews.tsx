@@ -6,6 +6,7 @@ import type { GridBlock, Parsed } from "composer-nb/language"
 import type { DrumView } from "../shared/types.ts"
 import type { PlayerProps } from "./types.ts"
 import DrumGrid from "../components/DrumGrid.tsx"
+import PrintedValues from "./PrintedValues.tsx"
 const VIEWS: DrumView[] = ["bricks", "sheet"]
 const noTime = () => 0
 // Loaded when first shown: the chord shapes for the diagrams, abcjs for the sheet music
@@ -19,8 +20,8 @@ export default function MusicViews({
   accent,
   drumView,
   onSetDrumView,
-  sheetCounts,
-  onSetSheetCounts,
+  sheetCounts: _sheetCounts,
+  onSetSheetCounts: _onSetSheetCounts,
   getTime = noTime,
   playing = false,
 }: Pick<
@@ -39,19 +40,6 @@ export default function MusicViews({
     chords.filter((e) => e.instrument.split(".")[0] !== "guitar").map((e) => e.chord),
   )
   const sheet = !hasSteps || drumView === "sheet"
-  // Print: only this cell's sheet goes to the printer (see @media print)
-  const sheetRef = React.useRef<HTMLDivElement>(null)
-  const printSheet = () => {
-    const el = sheetRef.current
-    if (!el) return
-    el.classList.add("printing")
-    const done = () => {
-      el.classList.remove("printing")
-      window.removeEventListener("afterprint", done)
-    }
-    window.addEventListener("afterprint", done)
-    window.print()
-  }
   const meta = parsed.blocks
     .filter((b) => !drawn(b))
     .map(
@@ -62,6 +50,7 @@ export default function MusicViews({
   if (parsed.fromAbove.length) meta.push(`from cells above: ${parsed.fromAbove.join(", ")}`)
   return (
     <>
+      <PrintedValues prints={parsed.prints} />
       {meta.length > 0 && <div className="music-meta">{meta.join("  ·  ")}</div>}
       {parsed.warnings?.map((w) => (
         <div key={w} className="music-meta music-warning">
@@ -90,40 +79,13 @@ export default function MusicViews({
                 ))}
               </span>
             )}
-            {sheet && parsed.blocks.some((b) => b.drumEvents.length > 0) && (
-              <button
-                type="button"
-                className={"view-btn view-btn-lone" + (sheetCounts ? " view-btn-on" : "")}
-                onClick={(e) => {
-                  e.stopPropagation()
-                  onSetSheetCounts(!sheetCounts)
-                }}
-                title="Count the hands' notes under the staff"
-                aria-pressed={sheetCounts}
-              >
-                counts
-              </button>
-            )}
-            {sheet && (
-              <button
-                type="button"
-                className="view-btn view-btn-lone"
-                onClick={(e) => {
-                  e.stopPropagation()
-                  printSheet()
-                }}
-                title="Print the sheet, or save it as a PDF"
-              >
-                print
-              </button>
-            )}
           </div>
           {sheet ? (
             <React.Suspense fallback={<div className="dg-head">Drawing the staff…</div>}>
-              <div className="sheet-print" ref={sheetRef}>
+              <div className="sheet-print">
                 <DrumSheet
                   blocks={parsed.blocks}
-                  counts={sheetCounts}
+                  counts
                   getTime={getTime}
                   playing={playing}
                 />

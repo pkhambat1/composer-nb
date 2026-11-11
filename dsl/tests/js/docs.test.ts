@@ -5,7 +5,7 @@
    in the sidebar, every link landing on a heading that exists. */
 import site from "../../../docs/docs.json" with { type: "json" }
 import { describe, it, expect } from "vitest"
-import { existsSync, readFileSync } from "node:fs"
+import { existsSync } from "node:fs"
 import { join } from "node:path"
 import { initialState, LANES, parseCell, PITCHED } from "../../js/language.ts"
 import { DOCS, examples, pages, read } from "./docs-examples.ts"
@@ -16,8 +16,13 @@ describe("docs examples", () => {
   })
 
   for (const page of pages) {
-    const blocks = examples(read(page))
-    if (!blocks.length) continue
+    for (const block of examples(read(page))) {
+      it(`${page}:${block.line} ${block.invalid ? "rejects invalid syntax" : "parses"}`, () => {
+        const { errors } = parseCell(block.source, initialState())
+        if (block.invalid) expect(errors.length).toBeGreaterThan(0)
+        else expect(errors).toEqual([])
+      })
+    }
   }
 })
 

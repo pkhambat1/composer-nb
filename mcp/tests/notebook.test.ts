@@ -14,7 +14,7 @@ const fixture: NotebookDocument = {
   cells: [
     { id: "settings", type: "music", source: "set tempo 92" },
     { id: "progression", type: "music", source: "play piano: chords Am F|C G" },
-    { id: "groove", type: "music", source: "play block { kick: 1 3 }" },
+    { id: "groove", type: "music", source: "play block { kick: x 7*- x 7*- }" },
   ],
 }
 
@@ -72,7 +72,8 @@ describe("host-owned notebook", () => {
         name: "update_music_cell",
         arguments: {
           cellId: "groove",
-          source: "play block {\n kick: 1 3\n snare: 2 4\n hat: 1 2 3 4\n}",
+          source:
+            "play block {\n kick: x 7*- x 7*-,\n snare: 4*- x 7*- x 3*-,\n hat: x 3*- x 3*- x 3*- x 3*-\n}",
           expectedRevision: before.revision,
         },
       })
@@ -83,7 +84,7 @@ describe("host-owned notebook", () => {
       )
       expect(after.revision).toBe(before.revision + 1)
       expect(after.cells.slice(0, 2)).toEqual(before.cells.slice(0, 2))
-      expect(after.cells[2].source).toContain("hat: 1 2 3 4")
+      expect(after.cells[2].source).toContain("hat: x 3*- x 3*- x 3*- x 3*-")
     } finally {
       await first.close()
       await second.close()

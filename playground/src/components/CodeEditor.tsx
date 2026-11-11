@@ -2,6 +2,7 @@
 // the tokens. Monaco loads on demand; until it's in, the source shows highlighted as text.
 import React from "react"
 import { highlightMusic } from "composer-nb/highlight"
+import { CellIdContext, SelectionContext } from "../notebook/SelectionContext.tsx"
 
 // Where a cell is in being run, as its button shows it
 export type RunState = "idle" | "waiting" | "running"
@@ -22,7 +23,7 @@ type Props = {
   onRun?: () => void
   onInterrupt?: () => void
   runState: RunState
-  // The lines the last run found errors on
+  // The lines the last run found mistakes on
   errorLines: Set<number> | null
 }
 
@@ -36,6 +37,7 @@ const CodeEditor = React.forwardRef<CodeEditorHandle, Props>(function CodeEditor
   const hostRef = React.useRef<HTMLDivElement>(null)
   const editorRef = React.useRef<import("monaco-editor").editor.IStandaloneCodeEditor | null>(null)
   const errorsRef = React.useRef<import("monaco-editor").editor.IEditorDecorationsCollection | null>(null)
+  const contextRef = React.useRef<import("monaco-editor").editor.IEditorDecorationsCollection | null>(null)
   const [ready, setReady] = React.useState(false)
   // A focus asked for before Monaco was in
   const pendingFocus = React.useRef<boolean | null>(null)
@@ -81,13 +83,21 @@ const CodeEditor = React.forwardRef<CodeEditorHandle, Props>(function CodeEditor
       const model = editor.getModel()!
       const tokens = editor.createDecorationsCollection(tokenDecorations(model))
       errorsRef.current = editor.createDecorationsCollection()
+      contextRef.current = editor.createDecorationsCollection()
 
-      // The lines the caret or selection is on, for the notebook's selection (selection.ts)
+      // Where the caret or selection is, for the notebook's selection (selection.ts): its
+      // lines, a selection ending at the start of a line not counting that line, and its text
       const markLines = () => {
         const s = editor.getSelection()
         if (!s) return
+        const empty = s.isEmpty()
         host.dataset.fromLine = String(s.startLineNumber)
-        host.dataset.toLine = String(s.endLineNumber)
+        host.dataset.toLine = String(
+          !empty && s.endColumn === 1 && s.endLineNumber > s.startLineNumber ? s.endLineNumber - 1 : s.endLineNumber,
+        )
+        host.dataset.start = String(model.getOffsetAt(s.getStartPosition()))
+        host.dataset.end = String(model.getOffsetAt(s.getEndPosition()))
+        host.dataset.selectedText = empty ? "" : model.getValueInRange(s)
       }
       // Grow with the source, as the cell does
       const fit = () => {
@@ -127,6 +137,7 @@ const CodeEditor = React.forwardRef<CodeEditorHandle, Props>(function CodeEditor
         model.dispose()
         editorRef.current = null
         errorsRef.current = null
+        contextRef.current = null
       }
     })
     return () => {
@@ -145,6 +156,31 @@ const CodeEditor = React.forwardRef<CodeEditorHandle, Props>(function CodeEditor
     if (!ready) return
     loadMonaco().then(({ errorDecorations }) => errorsRef.current?.set(errorDecorations(errorLines ?? [])))
   }, [errorLines, ready])
+
+  // The part of the source the assistant has as context, shaded while the editor isn't focused
+  const selection = React.useContext(SelectionContext)
+  const cellId = React.useContext(CellIdContext)
+  const context =
+    selection?.cellId === cellId && selection.kind === "source" && selection.start !== undefined && selection.end !== undefined
+      ? [selection.start, selection.end]
+      : null
+  const contextKey = context?.join("-") ?? ""
+  React.useEffect(() => {
+    const model = editorRef.current?.getModel()
+    if (!ready || !model || !contextRef.current) return
+    if (!context) return contextRef.current.clear()
+    loadMonaco().then(({ monaco }) => {
+      const from = model.getPositionAt(context[0])
+      const to = model.getPositionAt(context[1])
+      contextRef.current?.set([
+        {
+          range: new monaco.Range(from.lineNumber, from.column, to.lineNumber, to.column),
+          options: { inlineClassName: "code-context-selection" },
+        },
+      ])
+    })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [contextKey, ready, value])
 
   const diagnosticLines = [...(errorLines ?? [])].sort((a, b) => a - b)
   const lines = React.useMemo(() => (ready ? [] : highlightMusic(value)), [value, ready])
@@ -179,8 +215,7 @@ const CodeEditor = React.forwardRef<CodeEditorHandle, Props>(function CodeEditor
       </div>
       {diagnosticLines.length > 0 && (
         <div className="code-diagnostics" role="status">
-          {diagnosticLines.length === 1 ? "Error on line" : "Errors on lines"}{" "}
-          {diagnosticLines.join(", ")}
+          Check {diagnosticLines.length === 1 ? "line" : "lines"} {diagnosticLines.join(", ")}
         </div>
       )}
       {runState === "waiting" && onInterrupt && (

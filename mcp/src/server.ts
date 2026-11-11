@@ -150,7 +150,7 @@ export function createServer({ site = SITE, notebook }: Options = {}): McpServer
     {
       title: "Grooves to start from",
       description:
-        "Searches the grooves library: transcriptions (Porcupine Tree in 7 and 9, Gavin Harrison's paradiddle challenge, a 3 over 4 over 5 polyrhythm, Polyrhythmics), harmony cells (counting with of and with, a ii–V–I with a walking bass, and the chords of each mode, from lydian to locrian). Each comes as a cell to start from, with its page, where it plays. Search by words (dorian, blues, 7/8, guitar) or leave the query empty for the list.",
+        "Searches the grooves library: transcriptions (Porcupine Tree in 7 and 9, Gavin Harrison's paradiddle challenge, a 3 over 4 over 5 polyrhythm, Polyrhythmics), harmony cells (interval functions and with scopes, a ii–V–I with a walking bass, and the chords of each mode, from lydian to locrian). Each comes as a cell to start from, with its page, where it plays. Search by words (dorian, blues, 7/8, guitar) or leave the query empty for the list.",
       inputSchema: {
         query: z
           .string()

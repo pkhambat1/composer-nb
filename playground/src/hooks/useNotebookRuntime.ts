@@ -18,14 +18,9 @@ export function useNotebookRuntime(
   const abortRef = React.useRef<symbol | null>(null)
   const playback = usePlayback()
 
-  // Play all: every music cell renders, then they play one after another.
-  const playAllRef = React.useRef<{ ids: string[]; rendered: Set<string>; pending: number } | null>(
-    null,
-  )
-
-  // Renders a cell, and plays it when asked (the cell's own button and Shift+Enter).
+  // Running prepares the output. Playback starts only from the player's Play button.
   const runCell = React.useCallback(
-    async (id: string, play = false) => {
+    async (id: string) => {
       const c = cells.find((x) => x.id === id)
       if (!c) return
       if (c.type === "text") {
@@ -33,8 +28,7 @@ export function useNotebookRuntime(
         return
       }
       hostRef.current?.onRun?.(cells.map(({ type, source }) => ({ type, source })))
-      // Running a cell starts it over: a cell that is playing plays its new audio from the
-      // start, as the first run of it would
+      playback.stopCell(id)
       setKernelStatus("busy")
       setActiveCellId(id)
       updateCell(id, { status: "running", output: null })
@@ -72,7 +66,9 @@ export function useNotebookRuntime(
           updateCell(id, {
             status: "idle",
             runCount: runCounter + 1,
-            output: { kind: "info", message: "Executed" },
+            output: parsed.prints.length
+              ? { kind: "printed", parsed }
+              : { kind: "info", message: "Executed" },
           })
           return
         }
@@ -93,8 +89,6 @@ export function useNotebookRuntime(
           status: "idle",
           output: { kind: "rendered", buffer, parsed, duration: dur },
         })
-        playAllRef.current?.rendered.add(id)
-        if (play) playback.playCell(id)
       } catch (e) {
         if (abortRef.current !== runId) return
         playback.stopCell(id)
@@ -108,20 +102,13 @@ export function useNotebookRuntime(
           setActiveCellId(null)
           setKernelStatus("idle")
         }
-        // The last of a play-all's renders starts the playing
-        const pa = playAllRef.current
-        if (pa && pa.ids.includes(id) && --pa.pending === 0) {
-          const first = pa.ids.find((i) => pa.rendered.has(i))
-          if (first) playback.playCell(first)
-          else playAllRef.current = null
-        }
       }
     },
     [cells, runCounter, updateCell, playback, setEditingId],
   )
 
   // --- Run queue: array queue with sequential processing ------------------
-  const queueRef = React.useRef<{ id: string; play: boolean }[]>([])
+  const queueRef = React.useRef<string[]>([])
   const processingRef = React.useRef(false)
   const skipRef = React.useRef<(() => void) | null>(null) // resolve fn to immediately unblock queue
   const runCellRef = React.useRef(runCell)
@@ -133,12 +120,11 @@ export function useNotebookRuntime(
     if (processingRef.current) return
     processingRef.current = true
     while (queueRef.current.length > 0) {
-      const queued = queueRef.current.shift()
-      if (!queued) continue
-      const { id, play } = queued
+      const id = queueRef.current.shift()
+      if (!id) continue
       await new Promise<void>((resolve) => {
         skipRef.current = resolve
-        runCellRef.current(id, play).then(resolve, resolve)
+        runCellRef.current(id).then(resolve, resolve)
       })
       skipRef.current = null
     }
@@ -147,19 +133,19 @@ export function useNotebookRuntime(
   }, [])
 
   const queuedRunCell = React.useCallback(
-    (id: string, play = false) => {
+    (id: string) => {
+      playback.stopCell(id)
       updateCell(id, { status: "waiting", output: null, runCount: null })
       setKernelStatus("busy")
-      queueRef.current.push({ id, play })
+      queueRef.current.push(id)
       processQueue()
     },
-    [updateCell, processQueue],
+    [updateCell, processQueue, playback],
   )
 
   // The cell's own Run button and Shift+Enter: render it, and leave playing to its player
   const runCellNow = React.useCallback(
     (id: string) => {
-      playAllRef.current = null
       queuedRunCell(id)
     },
     [queuedRunCell],
@@ -171,7 +157,7 @@ export function useNotebookRuntime(
       if (!c) return
       if (c.status === "waiting") {
         // Just remove from queue, don't touch anything else
-        queueRef.current = queueRef.current.filter((q) => q.id !== id)
+        queueRef.current = queueRef.current.filter((queuedId) => queuedId !== id)
         updateCell(id, { status: "idle" })
         if (queueRef.current.length === 0 && !activeCellId) {
           setKernelStatus("idle")
@@ -188,11 +174,10 @@ export function useNotebookRuntime(
   )
 
   const stopAll = React.useCallback(() => {
-    playAllRef.current = null
     // Clear entire queue
     const waiting = [...queueRef.current]
     queueRef.current = []
-    waiting.forEach(({ id }) => updateCell(id, { status: "idle" }))
+    waiting.forEach((id) => updateCell(id, { status: "idle" }))
     // Reset any running/rendering cells
     cells.forEach((c) => {
       if (c.status === "running" || c.status === "rendering") {
@@ -209,31 +194,8 @@ export function useNotebookRuntime(
   const queuedRunAll = React.useCallback(() => {
     playback.stopAll()
     const ids = cells.filter((c) => c.type === "music").map((c) => c.id)
-    playAllRef.current = { ids, rendered: new Set<string>(), pending: ids.length }
     for (const id of ids) queuedRunCell(id)
   }, [cells, playback, queuedRunCell])
-
-  // When a cell finishes in a play-all, the next rendered one plays
-  const onPlaybackFinished = React.useCallback(
-    (id: string) => {
-      playback.onPlaybackFinished(id)
-      const pa = playAllRef.current
-      if (!pa) return
-      const list = pa.ids.filter((i) => pa.rendered.has(i))
-      const k = list.indexOf(id)
-      if (k >= 0 && k + 1 < list.length) playback.playCell(list[k + 1])
-      else playAllRef.current = null
-    },
-    [playback],
-  )
-  // Pressing play on a cell by hand ends a play-all
-  const togglePlayback = React.useCallback(
-    (id: string) => {
-      playAllRef.current = null
-      return playback.togglePlayback(id)
-    },
-    [playback],
-  )
 
   // A host page's cells render as they open, and wait for Play.
   const renderAll = React.useCallback(() => {
@@ -254,8 +216,8 @@ export function useNotebookRuntime(
     runCellNow,
     interruptCell,
     queuedRunAll,
-    onPlaybackFinished,
-    togglePlayback,
+    onPlaybackFinished: playback.onPlaybackFinished,
+    togglePlayback: playback.togglePlayback,
     stopAll,
     renderAll,
   }

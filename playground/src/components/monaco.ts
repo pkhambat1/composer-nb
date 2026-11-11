@@ -127,7 +127,7 @@ new MutationObserver(() => monaco.editor.setTheme(themeName())).observe(document
   attributeFilter: ["data-theme"],
 })
 
-// Monaco measures the font when it starts; measure again once IBM Plex Mono has loaded
+// Monaco measures the font when it starts; measure again once the page's fonts have loaded
 document.fonts?.ready.then(() => monaco.editor.remeasureFonts())
 
 // The highlighter's tokens as decorations, each carrying its .tk-* class
@@ -158,7 +158,7 @@ export function errorDecorations(lines: Iterable<number>): monaco.editor.IModelD
 
 export const OPTIONS: monaco.editor.IStandaloneEditorConstructionOptions = {
   language: LANGUAGE,
-  fontFamily: '"IBM Plex Mono", ui-monospace, Menlo, monospace',
+  fontFamily: 'ui-monospace, "SF Mono", Menlo, Consolas, monospace',
   fontSize: 13,
   lineHeight: 20,
   tabSize: 2,

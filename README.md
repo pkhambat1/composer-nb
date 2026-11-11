@@ -25,14 +25,14 @@ Everything in a pattern repeats until the pattern ends. Give lines different len
 set time 7 over 8
 
 pattern groove = 3 bars {
-  kick: x--x---
-  snare: ----x--
-  ride.bell: x--
+  kick: x--x---,
+  snare: ----x--,
+  ride.bell: x--,
 }
 
 play block {
-  crash: 1
-  groove
+  crash: x 13*-,
+  groove,
 } for 6 bars
 ```
 
@@ -51,15 +51,15 @@ set time 7 over 8
 set octave 2
 
 pattern groove = {
-  kick: x--x---
-  snare: ----x--
-  ride.bell: x--
-  guitar.electric: notes E---F# E-E--
+  kick: x--x---,
+  snare: ----x--,
+  ride.bell: x--,
+  guitar.electric: notes E---F# E-E--,
 }
 
 play block {
-  crash: 1
-  groove
+  crash: x 13*-,
+  groove,
 }
 ```
 
@@ -74,20 +74,20 @@ set time 7 over 8
 set tempo 90
 
 pattern groove = {
-  kick: x--x---
-  snare: 2e 4
-  snare.ghost: --x----
-  hat: ^-x-
-  bar 2 {
-    snare.ghost: 2 beats rest, dd, 1 beats rest
-    hat.open: 2 beats rest, --^-, 2 steps rest
-    hat.pedal: 4
-  }
+  kick: x--x---,
+  snare: 5*- x-,
+  snare.ghost: --x----,
+  hat: ^-x-,
+  pattern {
+    snare.ghost: 8*- dd 4*-,
+    hat.open: 10*- ^ 3*-,
+    hat.pedal: 12*- x-,
+  } on bar 2,
 }
 
 play block {
-  crash: 1
-  groove
+  crash: x 13*-,
+  groove,
 } for 6 bars
 ```
 

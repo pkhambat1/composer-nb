@@ -6,7 +6,7 @@
    so the diff is the list of real cells it changes. If the change is meant, update the files
    with `npx vitest run -u` and read the diff. */
 import { describe, it, expect } from "vitest"
-import { parseCell, type Parsed } from "../../js/language.ts"
+import { parseCell, printedMeaning, type Parsed } from "../../js/language.ts"
 import { realCells } from "./real-cells.ts"
 
 // Times to four places, so float noise doesn't count as a change.
@@ -56,6 +56,17 @@ function cellText(title: string, parsed: Parsed) {
   out.push(`names: ${names.join(", ") || "none"}`)
   out.push(`from above: ${parsed.fromAbove.join(", ") || "none"}`)
   out.push(`length: ${num(parsed.totalSec)} s`)
+  for (const print of parsed.prints) {
+    out.push(`print line ${print.line}: ${print.text}`)
+    out.push(
+      `  key=${print.key} mode=${print.mode} octave=${print.octave} transpose=${print.transpose}`,
+    )
+    for (const v of print.values) {
+      out.push(`  ${v.type}: ${v.text}`)
+      for (const item of v.items)
+        if (item.pitch || item.chord) out.push(`    ${item.text} → ${printedMeaning(item)}`)
+    }
+  }
   for (const b of parsed.blocks) {
     const fields = BLOCK.filter((k) => b[k] != null).map((k) => `${k}=${value(b[k])}`)
     out.push(`block ${fields.join(" ")}`)

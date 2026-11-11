@@ -50,6 +50,8 @@ export function useKeyboard({
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
+      // A dialog over the page (the keyboard shortcuts) has the keys to itself
+      if (document.querySelector("dialog[open]")) return
       const target = e.target as HTMLElement
       const inEditable =
         target.tagName === "TEXTAREA" || target.tagName === "INPUT" || target.isContentEditable

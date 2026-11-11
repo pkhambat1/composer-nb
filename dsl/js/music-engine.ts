@@ -279,7 +279,7 @@ function trimSilence(buffer: Tone.ToneAudioBuffer, musicSec: number): Tone.ToneA
   return buffer.slice(0, end / buffer.sampleRate)
 }
 
-function playChord(synth: Synth, ev: ChordSound): void {
+export function playChord(synth: Synth, ev: ChordSound): void {
   const inst = ev.instrument
   const stagger = isGuitar(inst) ? 0.012 : inst === "organ" ? 0 : 0.008
   const bassVel = isGuitar(inst) ? 0.6 : 0.7
@@ -287,22 +287,13 @@ function playChord(synth: Synth, ev: ChordSound): void {
   const dur = ev.secDur! * 0.96
   const at = ev.secStart + (ev.secSwing || 0)
   const usingPos = ev.chord.fromGuitarPosition
-  if (!usingPos) {
-    synth.triggerAttackRelease(midiToName(ev.chord.bassMidi), dur, at, bassVel)
-    if (isGuitar(inst) && ev.chord.notesMidi[0]) {
-      synth.triggerAttackRelease(
-        midiToName(ev.chord.notesMidi[0] - 12),
-        dur,
-        at + 0.006,
-        bassVel * 0.85,
-      )
-    }
-  }
+  // Only a chord written over a bass (C/E) gets a bass note; a plain chord is its tones.
+  const bass = !usingPos && ev.chord.overBass
+  if (bass) synth.triggerAttackRelease(midiToName(ev.chord.bassMidi), dur, at, bassVel)
   ev.chord.noteNames.forEach((n, idx) => {
-    // When using a real guitar position the lowest note IS the bass, so
-    // start the strum at the very beginning and give it a small velocity
-    // bump; otherwise stagger the chord notes after the separate bass hit.
-    const offset = usingPos ? idx * stagger : (idx + 1) * stagger
+    // When using a real guitar position the lowest note IS the bass, so it gets a small
+    // velocity bump. The chord's notes are strummed after a separate bass note, if any.
+    const offset = (bass ? idx + 1 : idx) * stagger
     const vel = usingPos && idx === 0 ? bassVel : chordVel
     synth.triggerAttackRelease(n, dur, at + offset, vel)
   })

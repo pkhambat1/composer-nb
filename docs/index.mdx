@@ -12,17 +12,17 @@ set octave 2
 set guitar.electric muted
 
 pattern groove = {
-  kick: x--x---
-  snare.rim: ----x--
-  ride.bell: x--
-  guitar.electric: notes D---E D-D--
+  kick: x--x---,
+  snare.rim: ----x--,
+  ride.bell: x--,
+  guitar.electric: notes D---E D-D--,
 }
 
 play (
-  block { snare.rim: ^- }
+  block { snare.rim: ^-, }
   pattern {
-    bar 1 crash: 1
-    groove
+    pattern { crash: x 13*-, } on bar 1,
+    groove,
   }
 ) for 3 bars
 ```

@@ -20,6 +20,7 @@ import { playDuration } from "./play-duration.ts"
 import { Scope } from "./resolve.ts"
 import { applySetting, readWithHeader, setInBlock, WITH_HELP, withState } from "./settings.ts"
 import { Parser } from "./parser.ts"
+import { bareValue, isBareValue, printValue, type PrintOutput } from "./print.ts"
 import { cloneState, describe, initialState, type Line, type Piece, type State } from "./state.ts"
 import { bracesIn, isBraces, plain } from "./parts.ts"
 import type { Block, Statement, Text } from "./syntax.ts"
@@ -131,13 +132,27 @@ export function parseCell(src: unknown, inherited: State = initialState()) {
   const state = Scope.forCell(inherited, cloneState)
   const setHere = new Map() // setting name → the line in this cell that set it
   const outputs: Output[] = []
+  const prints: PrintOutput[] = []
   let transposeLine: number | null = null
 
   const raws = String(src || "").split("\n")
   const tree = Parser.parse(raws.join("\n"))
   // A } that closes nothing is said where it is; a { that isn't closed, by what opened it
   for (const e of tree.errors)
-    if (e.code === "brace.stray") err(e.span.line, "This } doesn't close anything")
+    if (e.code === "syntax.retiredOf")
+      err(e.span.line, '"of" expressions are no longer supported. Use interval functions such as fifth(5) or third(1); they follow the active scale')
+    else if (e.code === "brace.stray") err(e.span.line, "This } doesn't close anything")
+    else if (e.code === "separator.semicolon")
+      err(
+        e.span.line,
+        "Use commas between entries in braces instead of semicolons; a trailing comma is allowed",
+      )
+    else if (e.code === "separator.empty")
+      err(e.span.line, "A comma needs an entry before it; only the final comma may go before }")
+    else if (e.code === "separator.top")
+      err(e.span.line, "Outside braces, put each statement on its own line")
+    else if (e.code === "separator.missing")
+      err(e.span.line, "Put a comma between entries in braces")
   const at = (b: Block) => `${b.span.line}:${b.span.col}`
   const unclosed = new Set(
     tree.errors
@@ -145,7 +160,11 @@ export function parseCell(src: unknown, inherited: State = initialState()) {
       .map((e) => at({ span: e.span } as Block)),
   )
   // A line as written, without its comment: what messages quote
-  const lineAt = (ln: number) => raws[ln - 1].replace(/\/\/.*$/, "").trim()
+  const lineAt = (span: Statement["span"]) =>
+    raws[span.line - 1]
+      .slice(span.col, span.line === span.endLine ? span.endCol : undefined)
+      .replace(/\/\/.*$/, "")
+      .trim()
 
   // A with that transposes, in a block or around one: the line it's on, for the check that
   // something pitched plays
@@ -179,13 +198,14 @@ export function parseCell(src: unknown, inherited: State = initialState()) {
     parts: (Text | Block)[],
     ln: number,
     what: string,
+    layout = false,
   ): { line: Line; dropped: boolean } => {
     let out: Piece[] = []
     let dropped = false
     let last = 0 // the line the part before ended on
     // A part goes on a line of its own when it starts on a later line than the one before
     const add = (more: Piece, from: { line: number; endLine: number }) => {
-      const gap = out.length && from.line > last ? "\n" : out.length ? " " : ""
+      const gap = out.length && from.line > last && !layout ? "\n" : out.length ? " " : ""
       const before = out[out.length - 1]
       if (typeof more === "string" && typeof before === "string") out[out.length - 1] += gap + more
       else if (typeof more === "string") out.push(gap + more)
@@ -197,7 +217,7 @@ export function parseCell(src: unknown, inherited: State = initialState()) {
     }
     for (const p of parts) {
       if (p.kind === "text") {
-        add(tidy(p.text), p.span)
+        add(layout ? tidy(p.text).replace(/\n/g, " ") : tidy(p.text), p.span)
         continue
       }
       if (unclosed.has(at(p))) err(p.span.line, `${what} needs a } to close it`)
@@ -210,7 +230,7 @@ export function parseCell(src: unknown, inherited: State = initialState()) {
         out = []
         continue
       }
-      add({ kind: "braces", ln, lines: inner.body }, p.span)
+      add({ kind: "braces", ln: p.span.line, lines: inner.body }, p.span)
     }
     // A line has no space at its ends. Line breaks inside it stay: in a group in brackets, a
     // line of its own ends at one.
@@ -227,8 +247,8 @@ export function parseCell(src: unknown, inherited: State = initialState()) {
     let dropped = false
     for (const s of statements) {
       const ln = s.span.line
-      if (s.kind === "play") {
-        err(ln, "play goes at the top, not inside braces")
+      if (s.kind === "play" || s.kind === "print") {
+        err(ln, `${s.kind} goes at the top, not inside braces`)
         dropped = true
         continue
       }
@@ -240,7 +260,7 @@ export function parseCell(src: unknown, inherited: State = initialState()) {
         dropped = true
         continue
       }
-      const read = lineOf(s.parts, ln, "This {")
+      const read = lineOf(s.parts, ln, "This {", true)
       dropped ||= read.dropped
       if (read.line.parts.length) body.push(read.line)
     }
@@ -261,7 +281,7 @@ export function parseCell(src: unknown, inherited: State = initialState()) {
     for (const s of statements) {
       const ln = s.span.line
       // The statement's first line, as messages quote it
-      const text = lineAt(ln)
+      const text = lineAt(s.span)
       const braces = s.parts.filter((p): p is Block => p.kind === "block")
 
       if (singularLength(text, ln, err)) continue
@@ -305,6 +325,16 @@ export function parseCell(src: unknown, inherited: State = initialState()) {
         continue
       }
 
+      if (s.kind === "print") {
+        if (braces.length) err(ln, "print takes musical values, without braces")
+        else {
+          const value = s.value.parts.map((p) => (p.kind === "text" ? p.text : "")).join(" ")
+          const printed = printValue(value, state, ln, err)
+          if (printed) prints.push(printed)
+        }
+        continue
+      }
+
       if (s.kind === "play") {
         // play plays what's after it: a name, a group, one line, or braces with their type.
         // play block { ... } plays its lines once and play pattern { ... } repeats them, and
@@ -316,7 +346,10 @@ export function parseCell(src: unknown, inherited: State = initialState()) {
           continue
         }
         const head = duration.parts[0]?.kind === "text" ? tidy(duration.parts[0].text) : ""
-        const typed = duration.parts[1]?.kind === "block" && /^(pattern|block)$/.test(head)
+        const tailPart = duration.parts[duration.parts.length - 1]
+        const placed = tailPart?.kind === "text" && PLACE_RE.test(tailPart.text)
+        const typed =
+          duration.parts[1]?.kind === "block" && /^(pattern|block)$/.test(head) && !placed
         const repeats = typed && head === "pattern"
         const parts = typed ? duration.parts.slice(1) : duration.parts
         const bars = duration.bars
@@ -370,7 +403,7 @@ export function parseCell(src: unknown, inherited: State = initialState()) {
           arg = read.body
         } else if (braces.length || s.span.endLine > ln) {
           // play ({ ... } outro): blocks in a group, or a group that runs over several lines
-          const read = lineOf(parts, ln, "This {")
+          const read = lineOf(parts, ln, "This {", inWith)
           if (s.span.endLine > ln) {
             const size = bars ? ` for ${fmt(bars)} bars` : ""
             const shown = read.line.parts.map((p) => (isBraces(p) ? "{ … }" : p)).join(" ")
@@ -379,14 +412,17 @@ export function parseCell(src: unknown, inherited: State = initialState()) {
           arg = read.line.parts.length ? [read.line] : []
           if (!arg.length) ok = false
         } else {
-          arg = [lineOf(parts, ln, "This {").line]
+          arg = [lineOf(parts, ln, "This {", inWith).line]
         }
         noteTranspose(arg)
         const ctx = repeats ? patternPlayCtx(ln) : outputCtx(ln)
         const out = ok ? blockClip(arg, state, err, ctx, [], bars) : null
         if (out && out.durSec > MAX_SECONDS) {
           err(ln, "This plays for over 10 minutes. Use a shorter length")
-        } else if (out) {
+        } else if (
+          out &&
+          !errors.some((error) => error.line >= s.span.line && error.line <= s.span.endLine)
+        ) {
           outputs.push({
             line: ln,
             label,
@@ -420,7 +456,7 @@ export function parseCell(src: unknown, inherited: State = initialState()) {
         continue
       }
       if (decl) {
-        const read = lineOf(decl.parts, ln, decl.name)
+        const read = lineOf(decl.parts, ln, decl.name, inWith)
         const value = read.line.parts
         if (!value.length) continue // its braces were a mistake, already said
         noteTranspose([read.line])
@@ -457,14 +493,14 @@ export function parseCell(src: unknown, inherited: State = initialState()) {
         err(ln, `${bare[1]} needs a type and = to name its braces: pattern ${bare[1]} = {`)
         continue
       }
-      // every 3 steps { ... } on its own: nothing plays it
+      // every 3/4 beats { ... } on its own: nothing plays it
       if (EVERY_RE.test(text)) {
         const shown = text.replace(/\{.*$/, "{ ... }")
         err(ln, `Nothing plays this. Put play in front, or give it a name: pattern slow = ${shown}`)
         lineOf(s.parts, ln, "This {")
         continue
       }
-      // bar 2 { ... } on its own: it says where in a pattern or play, so it goes inside one
+      // fill on bar 2 on its own: placement goes inside a pattern or play
       if (PLACE_RE.test(text)) {
         err(
           ln,
@@ -472,6 +508,18 @@ export function parseCell(src: unknown, inherited: State = initialState()) {
         )
         lineOf(s.parts, ln, "This {")
         continue
+      }
+
+      // A value on a line of its own is evaluated, and shown when it ends the cell, as
+      // the last expression of a notebook cell is. print(...) shows one anywhere.
+      if (s.kind === "line" && !braces.length) {
+        const value = s.parts.map((p) => (p.kind === "text" ? p.text : "")).join(" ")
+        if (isBareValue(value, state)) {
+          const printed = bareValue(value, state, ln, err)
+          if (printed && !inWith && s === tree.statements[tree.statements.length - 1])
+            prints.push(printed)
+          continue
+        }
       }
 
       const line = braces.length ? plain(ln, text) : lineOf(s.parts, ln, "This {").line
@@ -489,7 +537,8 @@ export function parseCell(src: unknown, inherited: State = initialState()) {
       } else err(ln, `Nothing plays this line. Write play ${text}`)
     }
   }
-  run(tree.statements, state, false)
+  if (!tree.errors.some((error) => error.code === "syntax.retiredOf"))
+    run(tree.statements, state, false)
 
   // transpose only moves what has pitch, so one in a cell where only drums play is a
   // mistake. One inherited from a cell above is fine.
@@ -540,6 +589,7 @@ export function parseCell(src: unknown, inherited: State = initialState()) {
   return {
     kind: "music",
     outputs,
+    prints: errors.length ? [] : prints,
     blocks,
     events,
     chords: events.filter(isChord),

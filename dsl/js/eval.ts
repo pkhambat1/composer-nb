@@ -83,7 +83,7 @@ const secondLine = (name: string, where: string) =>
 // Lines in braces are one block: they play together, and what's defined inside stays
 // inside. `bars` is the length written in front of the block, if any. In a pattern every
 // line repeats; in a play a line of patterns repeats only when it's one pattern on its own.
-// What's put in a bar (bar 2 { ... }) plays there once each time through the block.
+// What's placed on a bar (fill on bar 2) starts there each time through the block.
 export function blockClip(
   lines: Line[],
   state: State,
@@ -94,6 +94,7 @@ export function blockClip(
 ): Clip | null {
   const st = cloneState(state)
   const read = readLines(lines, st, err)
+  if (read.length !== lines.length) return null
   // The block's time, tempo and swing, which all of its lines share
   const head = st
   const parts: PartLine[] = []
@@ -202,7 +203,7 @@ export function checkSection(
     if (parts.slice(0, i).some((p) => p.name === l.name)) {
       err(l.ln, secondLine(l.name, `in ${where}`))
     }
-    readPart(l, l.st!, meterOf(l.st!).barTicks, err)
+    readPart(l, l.st!, meterOf(l.st!).barTicks, err, sec.type !== "block")
   })
   const names = (items: Item[], ln: number, at: State) => {
     for (const it of items) {

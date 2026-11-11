@@ -5,6 +5,8 @@ import { countingOf, gridCounts, gridRows, type GridCell } from "composer-nb/gri
 import {
   initialState,
   parseCell,
+  printLayout,
+  printRowText,
   timeLabel,
   type GridBlock,
   type Output,
@@ -154,7 +156,13 @@ export function describe(parsed: Parsed, earlier: Parsed | null, source = ""): s
   if (names.length) out.push("Names: " + names.map((n) => `${n.type} ${n.name}`).join(", "))
   if (parsed.fromAbove.length) out.push("From the earlier cells: " + parsed.fromAbove.join(", "))
   if (parsed.errors.length) return out.join("\n")
+  const printed = printLayout(parsed.prints)
+  for (const p of parsed.prints) {
+    out.push("", `Print (line ${p.line}):`)
+    for (const row of printed) if (row.line === p.line) out.push(`  ${printRowText(row)}`)
+  }
   if (!parsed.outputs.length) {
+    if (parsed.prints.length) return out.join("\n")
     out.push(
       "Nothing plays: there is no play line. The settings and names carry on to the cells after this one. To hear something, add a play, such as play groove.",
     )

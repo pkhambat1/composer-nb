@@ -156,7 +156,8 @@ function nameRule(type: string, name: string, st: State): string | null {
   if (!/^[a-z]/.test(name))
     return `Names start with a lowercase letter: ${type} ${name[0].toLowerCase()}${name.slice(1)}`
   if (name.length < 2) return "Names need at least two characters, because single letters are steps"
-  if (among(ROMAN, name)) return `${name} is a chord, so pick another name`
+  if (among(ROMAN, name) || /^b[1-9]\d*(?:\d|sus|add|maj|min|dim|dom|aug|m|M|b|#)*$/.test(name))
+    return `${name} is a chord, so pick another name`
   // A name is defined once in a cell: not again, and not inside a block when it's defined
   // outside it. A name from a cell above can be defined again here.
   const word = st.words[name] as Word | undefined

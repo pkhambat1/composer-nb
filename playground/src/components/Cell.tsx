@@ -37,24 +37,28 @@ function CellMenu({ onDelete, onMoveUp, onMoveDown, onDuplicate, first, last }: 
   return (
     <div className="cell-menu-wrap" ref={menuRef}>
       <button
-        className="btn btn-secondary btn-sm btn-icon cell-menu-btn"
+        className={"btn btn-ghost btn-icon cell-menu-btn" + (open ? " btn-open" : "")}
         onClick={(e) => {
           e.stopPropagation()
           setOpen((v) => !v)
         }}
         onMouseDown={(e) => e.preventDefault()}
         title="Cell options"
+        aria-label="Cell options"
+        aria-haspopup="menu"
+        aria-expanded={open}
       >
-        <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor">
-          <circle cx="7" cy="3" r="1.3" />
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor" aria-hidden="true">
+          <circle cx="3" cy="7" r="1.3" />
           <circle cx="7" cy="7" r="1.3" />
-          <circle cx="7" cy="11" r="1.3" />
+          <circle cx="11" cy="7" r="1.3" />
         </svg>
       </button>
       {open && (
-        <div className="cell-menu-dropdown">
+        <div className="cell-menu-dropdown" role="menu">
           <button
             className="menu-item"
+            role="menuitem"
             disabled={first}
             onClick={(e) => {
               e.stopPropagation()
@@ -66,6 +70,7 @@ function CellMenu({ onDelete, onMoveUp, onMoveDown, onDuplicate, first, last }: 
           </button>
           <button
             className="menu-item"
+            role="menuitem"
             disabled={last}
             onClick={(e) => {
               e.stopPropagation()
@@ -77,6 +82,7 @@ function CellMenu({ onDelete, onMoveUp, onMoveDown, onDuplicate, first, last }: 
           </button>
           <button
             className="menu-item"
+            role="menuitem"
             onClick={(e) => {
               e.stopPropagation()
               setOpen(false)
@@ -87,6 +93,7 @@ function CellMenu({ onDelete, onMoveUp, onMoveDown, onDuplicate, first, last }: 
           </button>
           <button
             className="menu-item menu-item-danger"
+            role="menuitem"
             onClick={(e) => {
               e.stopPropagation()
               setOpen(false)
@@ -141,6 +148,7 @@ function Cell({
   focusedCellId,
   isPlaying,
   onTogglePlayback,
+  onStopPlayback,
   onPlaybackFinished,
   registerPlayer,
   unregisterPlayer,
@@ -280,6 +288,7 @@ function Cell({
               focusedCellId={focusedCellId}
               isPlaying={isPlaying}
               onTogglePlayback={onTogglePlayback}
+              onStopPlayback={onStopPlayback}
               onPlaybackFinished={onPlaybackFinished}
               registerPlayer={registerPlayer}
               unregisterPlayer={unregisterPlayer}

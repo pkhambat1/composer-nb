@@ -1,17 +1,19 @@
 ---
 title: "Patterns"
-description: "The pattern type: lines that play together and repeat, how long a pattern lasts, groups, bar and every."
+description: "The pattern type: lines that play together and repeat, how long a pattern lasts, groups, on bar and every."
 ---
 
 A `pattern` value holds lines that start together and repeat. A `block` holds lines that play once. Braces that are a value always say which, in front of the name or, without one, in front of the braces: `pattern groove = { ... }`, `block myBlock = { ... }`, `pattern { ... }`, `block { ... }`. An untyped `myBlock = { ... }` is an error and defines nothing, and so is a bare `{ ... }` after `play` or on a line of its own. Declaring either plays nothing. [`play`](/language/play) renders it.
+
+Separate entries with commas, whether they share a line or span several lines. A trailing comma before `}` is allowed, including in nested blocks. Semicolons are errors.
 
 ```composer-nb
 set time 5 over 4
 
 pattern groove = {
-  kick: x---
-  snare: x----
-  tom.floor: x--
+  kick: x---,
+  snare: x----,
+  tom.floor: x--,
 }
 
 play groove
@@ -28,27 +30,27 @@ A length in front sets the duration instead: `pattern groove = 4 bars { ... }`. 
 A `block` plays its instrument lines once, even when a repeating pattern beside or around it runs longer. A longer play leaves silence after the block rather than repeating it. Use a `pattern` when the material should loop.
 
 ```composer-nb
-block accent = { crash: 1 }
+block accent = { crash: x 15*-, }
 pattern beat = {
-  kick: 1 3
-  snare: 2 4
-  hat: x-
+  kick: x 7*-,
+  snare: 4*- x 3*-,
+  hat: x-,
 }
 
 play block {
-  accent
-  beat
+  accent,
+  beat,
 } for 2 bars
 ```
 
 `( )` holds what plays in order: names, blocks, other groups, and lines of their own, one after another, separated by spaces or new lines. It is the one way to put things in order. On lines of their own, things play together, and two things on one line without brackets are an error. See [Blocks](/language/overview#blocks). A length in front of a name or a group repeats it for that long. In front of `pattern { ... }` or `block { ... }` it is that value's own length, as in a declaration, which is what lines ending in `...` need.
 
 ```composer-nb
-pattern intro = { crash: 1 }
-pattern verse = { kick: x--- ---- x-x- ---- }
+pattern intro = { crash: x 15*-, }
+pattern verse = { kick: x--- ---- x-x- ----, }
 pattern chorus = {
-  kick: x-
-  snare: ---- x--- ---- x-x-
+  kick: x-,
+  snare: ---- x--- ---- x-x-,
 }
 
 play (intro 4 bars (verse chorus) intro)
@@ -61,8 +63,8 @@ set octave 4
 
 play (
   piano: notes i---ii---iii---iv---
-  piano: notes v---vi---vii---i'---
-  block { piano: notes 1 bars i' }
+  piano: notes v---vi---vii---octave(i)---
+  block { piano: notes octave(i) 15*-, }
 )
 ```
 
@@ -70,18 +72,18 @@ A pattern can hold another by name, on a line of its own, and its value can be a
 
 ```composer-nb
 pattern beat = {
-  kick: x---
-  hat: x-
+  kick: x---,
+  hat: x-,
 }
 
 pattern verse = {
-  piano: chords Am F|C G
-  beat
+  piano: chords Am F|C G,
+  beat,
 }
 
 pattern chorus = {
-  piano: chords F G|C -
-  beat
+  piano: chords F G|C -,
+  beat,
 }
 
 pattern song = (verse chorus)
@@ -91,27 +93,29 @@ play song
 
 ## bar
 
-`bar <n> { ... }` adds lines to bar `n` of the pattern or play it is in, every time through. `bar 3 to 4 { ... }` covers a range. It adds to what plays and silences nothing. Where it hits the same kit piece or instrument at the same moment as a line above, it wins.
+`value on bar n` adds the value in bar `n` of each pass. It adds, never removes: a `-` is only silence in its own line. `value on bar 3 to 4` covers a range. Where two lines hit the same instrument at the same moment, the lower one wins.
+
+A name stands for its typed value: `lift on bar 2` is equivalent to `block { ... } on bar 2` when `lift` is that block. A `block` plays once within the range; a `pattern` repeats to fill it. Bare `{ ... } on bar 2` is an error because an inline value needs its type.
 
 ```composer-nb
 set time 7 over 8
 set tempo 90
 
 pattern groove = {
-  kick: x--x---
-  snare: 2e 4
-  snare.ghost: --x----
-  hat: ^-x-
-  bar 2 {
-    snare.ghost: d3 d3e
-    hat.open: ^3&
-    hat.pedal: 4
-  }
+  kick: x--x---,
+  snare: 5*- x-,
+  snare.ghost: --x----,
+  hat: ^-x-,
+  pattern {
+    snare.ghost: 8*- dd 4*-,
+    hat.open: 10*- ^ 3*-,
+    hat.pedal: 12*- x-,
+  } on bar 2,
 }
 
 play block {
-  crash: 1
-  groove
+  crash: x 13*-,
+  groove,
 }
 ```
 
@@ -119,7 +123,7 @@ This is *The Sound of Muzak* by Porcupine Tree. The lines of `groove` meet after
 
 ## every
 
-`every <length>` in front of a line or block sets how long one step lasts inside it.
+`every <number> beats` in front of a line or block sets how long one step lasts inside it. Only beats are accepted. A step defaults to `1/4` beat; setting the step already in effect is an error. Nested `every` can change it back.
 
 ```composer-nb
 set time 3 over 4
@@ -129,28 +133,28 @@ steps pa = ^---
 steps radiddle = -xxx
 
 pattern hands = {
-  snare: pa
-  snare.ghost: radiddle
+  snare: pa,
+  snare.ghost: radiddle,
 }
 
-pattern feet = every 3 steps {
-  kick: ^-^^-^--
-  hat.pedal: -x--x-xx
+pattern feet = every 3/4 beats {
+  kick: ^-^^-^--,
+  hat.pedal: -x--x-xx,
 }
 
 play block {
-  hands
-  feet
+  hands,
+  feet,
 }
 ```
 
-This is Gavin Harrison's paradiddle challenge. `every 3 steps` makes each of the feet's steps three sixteenth notes long, so the feet play the paradiddle three times slower than the hands.
+This is Gavin Harrison's paradiddle challenge. `every 3/4 beats` makes each of the feet's steps three sixteenth notes long, so the feet play the paradiddle three times slower than the hands.
 
 | On the score | Write |
 | --- | --- |
-| Eighth notes | `every 2 steps` |
+| Eighth notes | `every 1/2 beats` |
 | Eighth-note triplets | `every 1/3 beats` |
 | Sixteenth-note triplets | `every 1/6 beats` |
-| Thirty-second notes | `every 1/2 steps` |
+| Thirty-second notes | `every 1/8 beats` |
 
-`every` changes the steps of kit pieces and instruments alike. Beats and chords keep their timing, and lines outside it keep their own step.
+`every` changes the steps of kit pieces and instruments alike, including steps expanded by `*`. Chords still divide their bars evenly, and lines outside the block keep their own step.
