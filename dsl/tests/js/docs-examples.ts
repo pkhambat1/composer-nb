@@ -28,17 +28,3 @@ export function examples(text: string) {
   }
   return found
 }
-
-// %%music verse after intro: a Jupyter cell's name and the cell it continues from. Named
-// cells hand their state to later blocks on the same page.
-export function readMagic(source: string) {
-  const m = /^%%music[ \t]*(.*)\n?/.exec(source)
-  if (!m) return { body: source }
-  const words = m[1].split(/\s+/).filter(Boolean)
-  const at = words.indexOf("after")
-  return {
-    body: source.slice(m[0].length),
-    name: at === 0 ? undefined : words[0],
-    after: at < 0 ? undefined : words[at + 1],
-  }
-}

@@ -7,9 +7,6 @@
       "include": "#comment"
     },
     {
-      "include": "#magic"
-    },
-    {
       "include": "#instrument"
     },
     {
@@ -56,10 +53,6 @@
     "comment": {
       "name": "comment.line.double-slash.composer-nb",
       "match": "//.*$"
-    },
-    "magic": {
-      "name": "meta.preprocessor.composer-nb",
-      "match": "^%%music\\b.*$"
     },
     "instrument": {
       "name": "entity.name.function.composer-nb",

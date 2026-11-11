@@ -1,6 +1,7 @@
 /* Shared notebook UI resources for MCP Apps hosts. Tools also return useful text
-   to clients without a UI. Hosted HTTP uses an inline handshake plus the renderer
-   asset; stdio embeds the full built renderer. See mcp/README.md. */
+   to clients without a UI. With an asset origin (COMPOSER_NB_APP_ORIGIN) the UI is an
+   inline handshake plus the renderer asset; without one it carries the full built
+   renderer. See mcp/README.md. */
 import { readFile } from "node:fs/promises"
 import { createHash } from "node:crypto"
 import { RESOURCE_MIME_TYPE, registerAppResource } from "@modelcontextprotocol/ext-apps/server"

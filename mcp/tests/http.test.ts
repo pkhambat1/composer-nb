@@ -29,10 +29,11 @@ describe("over http", () => {
     await client.connect(new StreamableHTTPClientTransport(new URL(url)))
     const { tools } = await client.listTools()
     expect(tools.length).toBe(4)
-    const r = await client.callTool({ name: "library", arguments: { query: "paradiddle" } })
-    expect((r.content as { text: string }[])[0].text).toContain(
-      `${new URL(url).origin}/grooves/gavin-harrison-s-paradiddle-challenge/`,
-    )
+    const r = await client.callTool({
+      name: "render",
+      arguments: { source: "pattern groove = { kick: x 7*- }\nplay groove", format: "midi" },
+    })
+    expect((r.content as { text: string }[])[0].text).toContain(`${new URL(url).origin}/api/midi?`)
     await client.close()
   })
 })

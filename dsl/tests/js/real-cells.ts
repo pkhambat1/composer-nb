@@ -6,7 +6,7 @@ import { readdirSync, readFileSync } from "node:fs"
 import { fileURLToPath } from "node:url"
 import { initialState, parseCell, type State } from "../../js/language.ts"
 import { GROOVES } from "../../js/grooves.ts"
-import { examples, pages, read, readMagic } from "./docs-examples.ts"
+import { examples, pages, read } from "./docs-examples.ts"
 
 const SKILLS = fileURLToPath(new URL("../../../plugin/skills", import.meta.url))
 
@@ -15,15 +15,9 @@ type RealCell = { title: string; source: string; inherited: State }
 export function realCells(group: string): RealCell[] {
   if (group === "docs") {
     const cells: RealCell[] = []
-    for (const page of pages) {
-      const named: Record<string, State> = {}
-      for (const block of examples(read(page))) {
-        const { body, name, after } = readMagic(block.source)
-        const inherited = after ? named[after] : initialState()
-        if (name) named[name] = parseCell(body, inherited).state
-        cells.push({ title: `${page}:${block.line}`, source: body, inherited })
-      }
-    }
+    for (const page of pages)
+      for (const block of examples(read(page)))
+        cells.push({ title: `${page}:${block.line}`, source: block.source, inherited: initialState() })
     return cells
   }
   if (group === "grooves") {

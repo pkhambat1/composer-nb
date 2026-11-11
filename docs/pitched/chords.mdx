@@ -3,17 +3,11 @@ title: "Chords"
 description: "The chords type: a chart of bars on an instrument's line."
 ---
 
-import { Cell } from "/snippets/cell.jsx"
-
 An [instrument](/pitched/instruments)'s line says which type it holds: `chords` in front of a chart, or [`notes`](/pitched/notes) in front of notes. A line without one of them is an error.
-
-<Cell>
 
 ```composer-nb
 play guitar: chords C - - G|Am - F G|%|F - _ -
 ```
-
-</Cell>
 
 ## Charts
 
@@ -53,8 +47,6 @@ Negative numbers count down through the same scale, skipping zero. In C major, `
 
 `b` or `#` before the root moves it one semitone off the scale and defaults to a major chord: `b7` is Bb in C major. An explicit quality overrides the scale: `5m`, `5M`, `7dim`, `4maj7`. Additions and alterations without an explicit quality modify the scale's triad: `2add11` is Dm with G added in C major. Use `octave(1)` to move up and `octave(1, -1)` to move down. Apostrophe notation is no longer accepted.
 
-<Cell>
-
 ```composer-nb
 chords chart = 1 2|3 4|5 6|7 8
 
@@ -62,8 +54,6 @@ with key D, mode dorian { play piano: chords chart, }
 with key D, mode minor { play piano: chords chart, }
 with key D, mode lydian { play piano: chords chart, }
 ```
-
-</Cell>
 
 ### Composing a chord suffix
 
@@ -80,21 +70,15 @@ A slash ends the chord and specifies its bass. A number after `/` is a degree of
 
 In `1M6/9/3`, `1` is the root, `M6/9` is the major 6/9 quality, and `/3` is the bass. `6/9` alone means degree 6 over degree 9; the slash is a bass separator unless the suffix has already begun.
 
-<Cell>
-
 ```composer-nb
 play piano: chords 1sus2add11#5/4 2add11|5dom7/b7 1M6/9/3
 ```
-
-</Cell>
 
 ## Interval functions
 
 `fifth(value)` moves **every tone**, including the bass, four positions up the active scale. A value can be one chord, an inline chart, or a named chart. Rhythm, holds, rests and bar lines stay in place. Chord quality follows the resulting tones: in C major, `fifth(3)` moves E G B to B D F and becomes Bdim.
 
 Use `second`, `third`, `fourth`, `fifth`, `sixth`, `seventh`, `octave`, or compound intervals `ninth` through `fifteenth`. `unison` is the identity. The optional second argument is a signed integer count: `fifth(1, 2)` applies the fifth twice, and `fifth(1, -1)` moves down a fifth. Counts range from -64 to 64; zero leaves the pitches alone. Calls can nest: `third(fifth(1))`.
-
-<Cell>
 
 ```composer-nb
 chords phrase = 1 3|4 5
@@ -103,8 +87,6 @@ chords answer = fifth(phrase)
 play piano: chords phrase answer
 with mode minor { play piano: chords answer, }
 ```
-
-</Cell>
 
 These are scale intervals: in C major, the fifth above B is F. Repeated fifths therefore stay in the active scale; they do not produce a chromatic circle of twelve perfect fifths. Chromatic offsets are carried from each original scale degree to its destination. Named results retain these rules and resolve under the key and mode where they play. [Notes](/pitched/notes#interval-functions) use the same functions.
 

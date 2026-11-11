@@ -5,7 +5,7 @@ import { SelectionContext } from "./SelectionContext.tsx"
 import { notebookSelection } from "./selection.ts"
 import type { NotebookSelection } from "./types.ts"
 
-/** The notebook surface, independent of persistence and the embedding host. */
+/** The notebook surface, independent of persistence and the host around it. */
 export function NotebookWorkspace({
   controller,
   appearance,
@@ -33,7 +33,7 @@ export function NotebookWorkspace({
       </div>
     </SelectionContext.Provider>
   )
-  if (single) return <div className="embed-root">{cells}</div>
+  if (single) return <div className="single-root">{cells}</div>
   return (
     <div className="notebook-root">
       {header && <div className="nb-sticky-header">{header}</div>}

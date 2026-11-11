@@ -3,8 +3,6 @@ title: "Settings"
 description: "set and with, and the settings every line shares: time, tempo and swing."
 ---
 
-import { Cell } from "/snippets/cell.jsx"
-
 A setting is `set`, then the setting and its value: `set tempo 90`. It applies from its line to the end of the cell, and carries into later cells. `set` goes only at the top of a cell, outside every block. Inside a block, settings go on a [`with`](#with), which gives them to its own block and nothing else.
 
 | Setting | Value | Default | Sets |
@@ -23,8 +21,6 @@ The unit is the note value counted: 1, 2, 4, 8 or 16. The count can be a sum, as
 
 `set swing on` swings the eighths, as a part marked *Swing* is played: the off-beat eighth falls two thirds of the way through the beat, where a triplet's third note would, and sixteenths move with the eighth they belong to. It is off unless it's set, and `set swing off` turns it off again. Only the sound moves: the grid stays as written, and the sheet says *Swing* above the first staff.
 
-<Cell>
-
 ```composer-nb
 set swing on
 set tempo 100
@@ -35,8 +31,6 @@ play block {
   kick: x 7*- x 7*-,
 }
 ```
-
-</Cell>
 
 ## with
 
@@ -51,8 +45,6 @@ A `with`'s block holds what could stand where the `with` is:
 | In a [group](/language/patterns#groups) | The same. | As one part in order. |
 
 An instrument's block of layers and a named value hold values, not lines, so a `with` goes around the line instead: `with octave 5 { piano: { ... } }`.
-
-<Cell>
 
 ```composer-nb
 set tempo 96
@@ -72,13 +64,9 @@ play (
 )
 ```
 
-</Cell>
-
 The chart walks through every chord of E minor, and the bass plays an octave below it, its figure repeating under each chord. A pattern is evaluated where it is played, so `prog` plays in E and then in G.
 
 `time`, `tempo` and `swing` go on a `with` around a whole play, or on a part that plays in order. Lines that sound together share one moment, and so one tempo: a `with tempo` beside other lines in a play or a pattern is an error, and so is a pattern that changes the tempo played with other lines. A `with` that holds everything a pattern plays can set its tempo, and the pattern then plays at it wherever it plays in order: `pattern tag = with time 6 over 4 { ... }`.
-
-<Cell>
 
 ```composer-nb
 pattern beat = {
@@ -93,4 +81,3 @@ play (
 )
 ```
 
-</Cell>

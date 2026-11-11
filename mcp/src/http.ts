@@ -1,8 +1,8 @@
 /* The server over HTTP, one request at a time: a server and a transport of its own for each
    request and no session, which is what a serverless function can do and all these tools
    need. `req.body` is the parsed JSON when the host has read it already (Vercel does);
-   otherwise the transport reads the request. Used by api/mcp.ts on Vercel and by
-   `composer-nb-mcp --http`. */
+   otherwise the transport reads the request. Used by api/mcp.ts on Vercel and by dev.ts on
+   this machine. */
 import type { IncomingMessage, ServerResponse } from "node:http"
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js"
 import { createServer, type Options } from "./server.ts"

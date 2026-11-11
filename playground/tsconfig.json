@@ -5,7 +5,7 @@
   "compilerOptions": {
     "target": "es2022",
     "lib": ["es2023", "dom", "dom.iterable"],
-    // Vite's own imports (a stylesheet ?inline), and Node for scripts/
+    // Vite's own imports (a stylesheet ?inline)
     "types": ["vite/client", "node"],
     "module": "esnext",
     "moduleResolution": "bundler",
@@ -19,5 +19,5 @@
     "skipLibCheck": true,
     "noEmit": true
   },
-  "include": ["src", "scripts"]
+  "include": ["src"]
 }

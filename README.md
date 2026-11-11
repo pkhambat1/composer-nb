@@ -1,8 +1,8 @@
 # composer-nb
 
-**Sketch music like you write code.** Drums, riffs and chords in a small language you can read at a glance. Play a cell and hear it, with a grid of what plays or the whole thing as sheet music, and chord shapes for guitar. It runs in your browser, and right inside Jupyter.
+**Sketch music like you write code.** Drums, riffs and chords in a small language you can read at a glance. Play a cell and hear it, with a grid of what plays or the whole thing as sheet music, and chord shapes for guitar. It runs in your browser, and in Claude.
 
-**[Open the playground →](https://composer-nb.vercel.app)** · **[Docs](https://pkhambat.mintlify.site)** · `pip install composer-nb`
+**[Open the playground →](https://composer-nb.vercel.app)** · **[Docs](https://pkhambat.mintlify.site)**
 
 <p align="center">
   <img src="docs/images/playground.png" width="820" alt="The composer-nb playground playing a cell: guitar chords and a bass line over a drum pattern, with a waveform player, the three staves of sheet music and the chord diagrams">
@@ -31,7 +31,7 @@ pattern groove = 3 bars {
 }
 
 play block {
-  crash: 1,
+  crash: x 13*-,
   groove,
 } for 6 bars
 ```
@@ -105,25 +105,13 @@ saved notebook file. See [MCP development setup](mcp/README.md) and the
 [verification checklist](mcp/VERIFICATION.md); this development integration has not
 yet been deployed through the published connector above.
 
-## In Jupyter
-
-```bash
-pip install composer-nb
-```
-
-```python
-%load_ext composer_nb
-```
-
-Then start a cell with `%%music`. Each `play` gives a player, a waveform, a grid of the drums and notes, and the chords it heard, and Tab completes as you type. Named cells carry their settings and names into later ones. See the [docs](https://pkhambat.mintlify.site) for the full language and Python reference.
-
 ## What's here
 
 | Folder        | What it is                                                                                                                                                                                                                                                                                             |
 | ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `dsl/`        | The language. `dsl/js/` has the parser, chord builder and audio renderer. `dsl/python/` is the [`composer-nb`](dsl/README.md) Python package, which plays the language in Jupyter notebooks. `dsl/js/music.ts` is the `composer-nb` npm package, which plays it in Observable notebooks and web pages. |
+| `dsl/`        | The language: the parser, chord builder and audio renderer in `dsl/js/`, which the playground and the MCP server both run. Not published. |
 | `playground/` | A notebook-style web app for writing the language and hearing it. It uses `dsl/` as a package, so both always run the same parser.                                                                                                                                                                     |
-| `mcp/`        | The [`composer-nb-mcp`](mcp/README.md) package: the language as an MCP server, for assistants. `api/` serves it on Vercel at `/mcp`, with the sheet and MIDI of a cell at `/api/sheet` and `/api/midi`.                                                                                                |
+| `mcp/`        | The [MCP server](mcp/README.md): the language for assistants, and the notebook app they open. `api/` serves it on Vercel at `/mcp`, with the sheet and MIDI of a cell at `/api/sheet` and `/api/midi`.                                                                                                |
 | `plugin/`     | The [Claude plugin](plugin/README.md): that server as its connector, and skills. `.claude-plugin/marketplace.json` lists it, so this repository is its marketplace.                                                                                                                                    |
 | `docs/`       | The [docs site](https://pkhambat.mintlify.site): `.mdx` pages and `docs.json`, built by [Mintlify](https://mintlify.com). Also the images in these READMEs.                                                                                                                                            |
 
@@ -135,40 +123,12 @@ npm run dev     # playground at http://localhost:5173
 npm test        # language tests
 npm run lint
 npm run typecheck   # tsc over the library, the playground, the MCP server and the Vercel functions
-npm run build   # builds the library, the notebook widget, the npm bundle, the MCP server and the playground
-npm run mcp     # the MCP server over stdio; npm run mcp -- --http 3333 serves it at localhost:3333/mcp
+npm run build   # builds the library, the MCP server and the playground
+npm run mcp     # the MCP server at localhost:3333/mcp, for trying the MCP app before it's deployed
 npm run docs    # docs site preview at http://localhost:3000
 ```
 
-The library (`dsl/js/`), the playground (`playground/src/`), the MCP server (`mcp/src/`) and the Vercel functions (`api/`) are TypeScript; `vocab.ts` holds every word the language knows. Inside this repository everything runs the source: the playground and the tests resolve `composer-nb/*` to `dsl/js/` and `composer-nb-mcp/*` to `mcp/src/` through the `composer-nb-source` export condition, Node (22.18 or later) runs it with `--conditions=composer-nb-source`, and `npm run typecheck` checks it the same way. What ships runs the build instead, which `tsc` compiles: the npm package ships `dsl/lib/` (`npm run build:lib -w dsl`), and the Vercel functions run `mcp/lib/` (`npm run build:lib -w mcp`, after the library's). `dsl/tests/js/corpus/` holds what every real cell (docs examples, grooves, skill examples) plays: a change to the engine that changes it fails `npm test`, and `npx vitest run -u` in `dsl/` rewrites it for a change that's meant.
-
-The Python package needs the widget built first:
-
-```bash
-npm run build -w dsl
-pip install -e "dsl[test]"
-pytest dsl/tests/python
-```
-
-## Releasing the Python package
-
-Releases go to [PyPI](https://pypi.org/project/composer-nb/) from GitHub Actions ([`publish.yml`](.github/workflows/publish.yml)), so no API tokens are stored anywhere.
-
-One-time setup, on [pypi.org](https://pypi.org/manage/account/publishing/): add a pending trusted publisher with project `composer-nb`, owner `pkhambat1`, repository `composer-nb`, workflow `publish.yml` and environment `pypi`.
-
-For each release:
-
-1. Bump `version` in `dsl/pyproject.toml` and merge it to `main`.
-2. Create a GitHub release with a tag that matches, like `v0.1.0`.
-
-The workflow builds the widget and the package, checks that the tag matches the version, and uploads it to PyPI.
-
-## Releasing the JavaScript package
-
-The player is also an npm package, [`composer-nb`](https://www.npmjs.com/package/composer-nb), for Observable notebooks and web pages. It's published by hand, after `npm login`:
-
-1. Bump `version` in `dsl/package.json`.
-2. Run `npm publish -w dsl`. It builds the bundle first, and asks you to sign in with your passkey in the browser.
+The library (`dsl/js/`), the playground (`playground/src/`), the MCP server (`mcp/src/`) and the Vercel functions (`api/`) are TypeScript; `vocab.ts` holds every word the language knows. Inside this repository everything runs the source: the playground and the tests resolve `composer-nb/*` to `dsl/js/` and `composer-nb-mcp/*` to `mcp/src/` through the `composer-nb-source` export condition, Node (22.18 or later) runs it with `--conditions=composer-nb-source`, and `npm run typecheck` checks it the same way. What's deployed runs the build instead, which `tsc` compiles: the Vercel functions run `dsl/lib/` and `mcp/lib/` (`npm run build:lib -w dsl`, then `-w mcp`). `dsl/tests/js/corpus/` holds what every real cell (docs examples, grooves, skill examples) plays: a change to the engine that changes it fails `npm test`, and `npx vitest run -u` in `dsl/` rewrites it for a change that's meant.
 
 ## Releasing the docs
 

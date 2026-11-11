@@ -3,11 +3,7 @@ title: "Introduction"
 description: "composer-nb is a typed, declarative language for composing music."
 ---
 
-import { Cell } from "/snippets/cell.jsx"
-
 A cell describes what plays: settings, named parts and `play` statements. The interpreter evaluates the cell and renders each `play` to audio, with a grid of every hit and note, or the same as sheet music.
-
-<Cell>
 
 ```composer-nb
 set time 7 over 8
@@ -31,23 +27,20 @@ play (
 ) for 3 bars
 ```
 
-</Cell>
-
 This is *What Happens Now?* by Porcupine Tree. The `play` holds a block and a pattern in brackets, so they play [in order](/language/overview#blocks): an accented rim as a pickup, once, and after it the groove with a crash in its first bar. Each line of `groove` repeats at its own length: 7 steps for the kick and rim, 3 for the ride bell, 10 for the guitar. They only meet again after 15 bars, and `for 3 bars` stops it after three.
 
 ## Why instructions
 
 - **You state the rules, the interpreter writes the bars.** Two lines of different lengths make a polyrhythm that would take pages to write out, and you hear where they meet without working it out.
 - **Every edit is a new take.** Change a step, a length or the time signature, evaluate, and listen.
-- **Parts are values.** A groove is named once and reused under every section, a song is its sections in brackets, in order, and a cell is source you can diff, version and generate from Python.
+- **Parts are values.** A groove is named once and reused under every section, a song is its sections in brackets, in order, and a cell is source you can diff, version and generate.
 
 ## Run it
 
-- **Playground.** Open [composer-nb.vercel.app](https://composer-nb.vercel.app), select a cell and press Shift+Enter. Nothing to install.
-- **Jupyter.** `pip install composer-nb`. See [Jupyter](/jupyter).
+- **Playground.** Open [composer-nb.vercel.app](https://composer-nb.vercel.app), sign in, select a cell and press Shift+Enter. Nothing to install.
 - **An assistant.** Connect Claude or Cursor to the MCP server and ask for a groove in words. See [Assistants](/assistants).
 
-Every example on this site is a live cell: edit it and press Run.
+To hear an example on this site, paste it into a cell in the playground and run it.
 
 ## The reference
 

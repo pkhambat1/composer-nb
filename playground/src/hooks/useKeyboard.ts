@@ -30,7 +30,7 @@ export function useKeyboard({
   undoDelete,
   setSelectedId,
   setEditingId,
-  single = false, // one cell that can't be added to or deleted: the embedded cell
+  single = false, // one cell that can't be added to or deleted: the MCP app's cell
 }: {
   selectedId: string | null
   editingId: string | null

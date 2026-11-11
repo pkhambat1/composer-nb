@@ -21,9 +21,6 @@
   "author": "Pezanne Khambatta",
   "license": "MIT",
   "type": "module",
-  "bin": {
-    "composer-nb-mcp": "./lib/bin.js"
-  },
   "main": "./lib/server.js",
   "types": "./lib/server.d.ts",
   "exports": {
@@ -62,8 +59,7 @@
     "dev:app": "vite --config app/vite.config.ts --port 5184",
     "prepack": "npm run build",
     "pretest": "npm run build:app",
-    "test": "vitest run",
-    "start": "node lib/bin.js"
+    "test": "vitest run"
   },
   "dependencies": {
     "@modelcontextprotocol/ext-apps": "^1.7.5",

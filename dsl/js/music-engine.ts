@@ -5,7 +5,7 @@ import * as ChordLookup from "./chord-lookup.ts"
 import * as Drums from "./drums.ts"
 import { midiToName, spellLike, type Voiced } from "./chords.ts"
 import type { ChordSound, NoteSound, SoundEvent } from "./clips.ts"
-import { initialState, parseCell, type Output } from "./language.ts"
+import { parseCell, type Output } from "./language.ts"
 import type { State } from "./state.ts"
 
 export { midiToName, parseKey, buildChord } from "./chords.ts"
@@ -15,15 +15,6 @@ export { initialState } from "./language.ts"
 // above it; the result's `state` is what this cell hands on to the cells below.
 export function parseSource(src: string, inherited?: State) {
   return parseCell(src, inherited)
-}
-
-// Parses the last of `sources`, starting from the settings and words the earlier ones
-// ended with. Only the last one plays; the Jupyter widget uses this for
-// `%%music verse after intro`, where the link is by name rather than by position.
-export function parseChain(sources: string[]) {
-  let state = initialState()
-  for (const src of sources.slice(0, -1)) state = parseCell(src, state).state
-  return parseCell(sources[sources.length - 1] ?? "", state)
 }
 
 // --- Synths --------------------------------------------------------------

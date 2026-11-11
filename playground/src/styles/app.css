@@ -2066,20 +2066,20 @@ body {
   color: var(--busy-bar);
 }
 
-/* Embed mode: one cell in a frame, with nothing around it (see shared/embed.ts) */
-.embed-root .cells {
+/* One cell with nothing around it: the MCP app's cell view (NotebookWorkspace's single) */
+.single-root .cells {
   max-width: none;
 }
-.embed-root .cell {
+.single-root .cell {
   grid-template-columns: 1fr;
   margin: 0;
   border-color: var(--border-soft);
 }
-.embed-root .cell-prompt,
-.embed-root .cell-menu-wrap {
+.single-root .cell-prompt,
+.single-root .cell-menu-wrap {
   display: none;
 }
-.embed-root .cell-body {
+.single-root .cell-body {
   padding-left: var(--cell-pad-x);
 }
 

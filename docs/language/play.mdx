@@ -3,8 +3,6 @@ title: "play"
 description: "The statement that renders a value to audio."
 ---
 
-import { Cell } from "/snippets/cell.jsx"
-
 `play` evaluates what follows it and renders one output. It is the only statement that makes sound, and it goes at the top level of a cell.
 
 ```text
@@ -12,8 +10,6 @@ play <name, group or line> [for <number> bars]
 play block { <statements> } [for <number> bars]
 play pattern { <lines> } [for <number> bars]
 ```
-
-<Cell>
 
 ```composer-nb
 pattern groove = {
@@ -28,8 +24,6 @@ play block {
   groove,
 } for 4 bars
 ```
-
-</Cell>
 
 This cell renders three outputs.
 
@@ -47,8 +41,6 @@ A play is a timeline, and its statements start together. The braces after `play`
 
 `play pattern { ... }` repeats every line in it, as any pattern does.
 
-<Cell>
-
 ```composer-nb
 play block {
   kick: x---,
@@ -60,8 +52,6 @@ play pattern {
   snare: ---- x---,
 } for 2 bars
 ```
-
-</Cell>
 
 The first output plays each line once, then silence. The second repeats both lines for two bars.
 
@@ -84,8 +74,6 @@ After braces, the length is theirs: a pattern in `play block { ... } for 4 bars`
 
 `print(...)` evaluates musical values and displays them as text with resolved musical details. It omits rests, sustain marks and bar lines; repeated notes, chords and drum hits remain in order. Silence alone evaluates to `[]`. It creates no player, audio, MIDI events, or elapsed musical time. It can run alongside `play` statements, and inside a top-level `with` block.
 
-<Cell>
-
 ```composer-nb
 print(1, 2, 3)
 print(fifth(1 3 5 7))
@@ -97,8 +85,6 @@ with key D, mode minor {
   print(1, 2, 3),
 }
 ```
-
-</Cell>
 
 Each type prints as one line: the type, then each value with what it resolves to in parentheses.
 
@@ -112,17 +98,13 @@ A note is followed by its pitch. A chord written as a degree is followed by its 
 
 A value on a line of its own is evaluated too, and the cell shows it when it is the cell's last statement, as a notebook shows a cell's last expression. Anywhere else it is checked and shows nothing; `print(...)` shows a value from any line.
 
-<Cell>
-
 ```composer-nb
 chords harmony = 1 3|4 5
 fifth(harmony)
 ```
 
-</Cell>
-
 Such a value says its type, as it does after an instrument's colon, or is a name or an interval function of names: `chords 1/3 C/E`, `notes fifth(1 3 5 7)`, `steps 2*(x- ^-)`, `harmony`, `fifth(harmony)`. A literal without its type, such as `1 2 3`, is an error, because it could be notes or chords.
 
 Each comma at `print`'s own level starts another argument. A comma inside `fifth(1, 2)` still belongs to the interval function. Named values keep their declared type. Bare degrees and letters are inspected as notes; use a `chords` prefix to inspect them as chords: `print(chords 1 2 3)`. A chord's details include its name and tones. `print(steps 2*(x- ^-))` inspects finite drum steps.
 
-Holds, rests, bar lines and `*` repeats stay visible. When `transpose` is set, the parentheses hold the sounding pitches: with `set transpose 2`, `1` prints as `1(D3)` and the chord `1` as `1(D(D3 F#3 A3))`. A final `...` needs a containing musical block and cannot be printed as a finite value. `print` is an output statement; it cannot be nested inside a musical function, pattern or play block.
+When `transpose` is set, the parentheses hold the sounding pitches: with `set transpose 2`, `1` prints as `1(D3)` and the chord `1` as `1(D(D3 F#3 A3))`. A final `...` needs a containing musical block and cannot be printed as a finite value. `print` is an output statement; it cannot be nested inside a musical function, pattern or play block.
