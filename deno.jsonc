@@ -1,0 +1,9 @@
+{
+  // How Deno Deploy builds and runs the site: npm installs and builds it as CI does, and
+  // server/main.ts serves the playground, the MCP server and the downloads
+  "deploy": {
+    "install": "npm ci",
+    "build": "npm run build:site",
+    "runtime": { "type": "dynamic", "entrypoint": "server/main.ts" },
+  },
+}

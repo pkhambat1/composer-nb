@@ -1,0 +1,6 @@
+{
+  // The site's server, run by Node or Deno. Like api/, this checks it against the server's
+  // source; at run time it imports the build (mcp/lib).
+  "extends": "../mcp/tsconfig.json",
+  "include": ["."]
+}

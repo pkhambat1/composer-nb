@@ -95,14 +95,15 @@ const config: Linter.Config[] = [
     },
   },
   {
-    // The TypeScript: the engine, which runs in a browser, and the MCP server and the Vercel
-    // functions, which run in Node. tsc checks their types (npm run typecheck); this checks
-    // the rest, as for the JavaScript beside them.
+    // The TypeScript: the engine, which runs in a browser, and the MCP server, the Vercel
+    // functions and the site's server, which run in Node. tsc checks their types (npm run
+    // typecheck); this checks the rest, as for the JavaScript beside them.
     files: [
       "dsl/js/**/*.ts",
       "mcp/src/**/*.ts",
       "mcp/scripts/**/*.ts",
       "api/**/*.ts",
+      "server/**/*.ts",
       "playground/scripts/**/*.ts",
     ],
     languageOptions: {

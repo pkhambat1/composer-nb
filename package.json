@@ -11,10 +11,12 @@
   "scripts": {
     "dev": "npm run dev -w playground",
     "build": "npm run build --workspaces",
+    "build:site": "npm run build:lib -w dsl && npm run build:lib -w mcp && npm run build:app -w mcp && npm run build -w playground",
+    "start": "node server/main.ts",
     "test": "npm test --workspaces --if-present",
     "lint": "eslint . --max-warnings 0",
     "lint:fix": "eslint . --fix",
-    "typecheck": "npm run typecheck --workspaces --if-present && tsc -p api && tsc -p tsconfig.tools.json",
+    "typecheck": "npm run typecheck --workspaces --if-present && tsc -p api && tsc -p server && tsc -p tsconfig.tools.json",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "docs": "cd docs && npx mint dev",
