@@ -86,7 +86,7 @@
     },
     "keyword": {
       "name": "keyword.control.composer-nb",
-      "match": "\\b(play|print|for|on|set|with|bar|bars|beats|steps|chords|to|every|rest|over|in|unison|second|third|fourth|fifth|sixth|seventh|octave|ninth|tenth|eleventh|twelfth|thirteenth|fourteenth|fifteenth)\\b"
+      "match": "\\b(play|print|for|on|set|with|bar|bars|beats|steps|chords|to|every|rest|over|in|unison|second|third|fourth|fifth|sixth|seventh|octave|eighth|ninth|tenth|eleventh|twelfth|thirteenth|fourteenth|fifteenth)\\b"
     },
     "value": {
       "name": "constant.language.composer-nb",

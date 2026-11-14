@@ -3,3 +3,4 @@
 # are excluded here.
 superpowers/
 screenshots/
+*.md

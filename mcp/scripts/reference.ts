@@ -7,8 +7,9 @@ import { fileURLToPath } from "node:url"
 const DOCS = fileURLToPath(new URL("../../docs/", import.meta.url))
 const SITE = "https://pkhambat.mintlify.site"
 const OUT = fileURLToPath(new URL("../src/reference.ts", import.meta.url))
-// The sidebar's groups that make up the reference: the shared core, then the two parts.
-const GROUPS = ["Language", "Drums", "Pitched instruments"]
+// The sidebar is the reference's table of contents. Guides and the landing page are
+// navigation aids, not API topics; all other pages are exposed in the same order.
+const GUIDE_GROUPS = new Set(["Get started", "Guides"])
 
 // The reference pages, in the sidebar's order, as { id, title, description, text }: the page
 // as markdown, without the site's components.
@@ -19,7 +20,14 @@ export function referencePages(): Page[] {
   const nav: { group: string; pages: string[] }[] = JSON.parse(
     readFileSync(DOCS + "docs.json", "utf8"),
   ).navigation.groups
-  const pages = GROUPS.flatMap((name) => nav.find((g) => g.group === name)!.pages)
+  const pages = nav
+    .filter((group) => !GUIDE_GROUPS.has(group.group))
+    .flatMap((group) => group.pages)
+    .filter((page) => page !== "index")
+  const ids = pages.map((page) => page.split("/").pop()!)
+  if (new Set(ids).size !== ids.length) {
+    throw new Error("Reference pages must have unique topic IDs (the last part of each path)")
+  }
   return pages.map((page) => {
     const mdx = readFileSync(`${DOCS}${page}.mdx`, "utf8")
     const fm = /^---\n([\s\S]*?)\n---\n/.exec(mdx)

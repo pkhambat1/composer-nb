@@ -1,39 +1,87 @@
 ---
-title: "Instruments"
-description: "The pitched instruments, a line each, and their settings: key, mode, octave, transpose and an instrument's sound."
+title: "Pitched instruments"
+description: "The instruments: the names that take `notes` and `chords`."
 ---
 
-Each pitched instrument has a line of its own. It says what it holds: [`notes`](/pitched/notes) in front of notes, or `chords` in front of a [`chords`](/pitched/chords) chart.
+## Instrument lines
+
+```text Syntax
+line    ::= instrument ":" pitched
+          | instrument ":" "{" pitched ("," pitched)* [","] "}"
+pitched ::= "notes" note_seq | "chords" chart
+```
+
+| Operand | Type | May be |
+| --- | --- | --- |
+| `instrument` | `instrument` | One of the 6 names in [Instruments](/pitched/instruments#instruments). |
+| `note_seq` | `notes` | Note words, a `notes` name, repeats, interval calls, a fill; see [notes](/pitched/notes). |
+| `chart` | `chords` | Chord symbols and degrees in bars, a `chords` name, interval calls; see [chords](/pitched/chords). |
+
+An instrument line gives `notes` or `chords` to one instrument. `instrument` is a fixed name, not a value: it cannot be declared, assigned or passed to a function. Because an instrument takes either type, the line always says which: the keyword `notes` or `chords` follows the colon, before a literal and before a name, and a name must be of that type.
+
+The line is a [part](/language/patterns#parts): it stands in a body or directly after `play`.
+
+```composer-nb Example
+notes walk = 1-3-5-3-
+play pattern {
+  bass: notes walk,
+  piano: chords C | Am,
+}
+```
+
+## Instruments
 
 | Name | Instrument |
 | --- | --- |
-| `piano` | Grand piano, sampled |
-| `piano.electric` | Electric piano, sampled |
-| `organ` | Drawbar organ, sampled |
-| `bass` | Fingered electric bass, sampled |
-| `guitar` | Steel-string guitar, sampled |
-| `guitar.electric` | Electric guitar, sampled. Clean or [muted](#sound). |
+| `piano` | Grand piano. |
+| `piano.electric` | Electric piano. |
+| `organ` | Drawbar organ. |
+| `bass` | Fingered electric bass. |
+| `guitar` | Steel-string acoustic guitar. |
+| `guitar.electric` | Electric guitar, `clean` or `muted`; see [guitar.electric](/language/settings#guitarelectric). |
 
-## Settings
+These are all the names. Every instrument takes both `notes` and `chords`.
 
-These are set with `set` at the top of a cell, or on a [`with`](/language/settings#with) for one block. None of them changes the drums.
+## Layers
 
-| Setting | Value | Default | Sets |
-| --- | --- | --- | --- |
-| `key` | A note: `A` to `G`, then an optional `#` or `b` | `C` | The root that degrees and numerals count from. See [Key and mode](/pitched/key). |
-| `mode` | `major`, `minor`, `dorian`, `phrygian`, `lydian`, `mixolydian`, `locrian`, `harmonicMinor`, `melodicMinor` or `wholeTone` | `major` | How the key is written. See [Key and mode](/pitched/key). |
-| `octave` | 1 to 6 | `3` | The octave of a note without a number, of degree 1, and of a chord's root. |
-| `transpose` | -12 to 12 | `0` | Semitones that every pitched instrument sounds from what's written. |
-| `guitar.electric` | `clean` or `muted` | `clean` | The electric guitar's sound. |
+```text Syntax
+line ::= instrument ":" "{" pitched ("," pitched)* [","] "}"
+```
 
-## octave
+Layers give one instrument several voices at once. Each layer is `notes` or `chords` with its keyword, and the two may be mixed. The voices start together, each repeats until all of them realign, and a note in one voice does not cut off a note in another.
 
-`octave` counts from C: `C4` is middle C, and the note below it is `B3`. Degree `1` and a numeral's root are the key's root in that octave, and the other degrees and numerals count up from there, so under `set key A`, `1` is A3 and `5` is E4. On a `with`, it gives one instrument its own octave: `with octave 2 { bass: notes 1---5--- }`.
+The braces are everything the instrument plays: nothing else may stand on the line. A `with` goes around the line, not among the layers. At least one layer must be finite.
 
-## transpose
+A body may hold one line for each instrument, so layers are how an instrument plays more than one thing in a body.
 
-`transpose` moves the sound of every pitched instrument by that many semitones, up or down: its notes, its degrees and its chords. What's written stays: a chart keeps its chord names and a guitar its diagrams, so a guitar's shapes under `set transpose 4` are a capo at the 4th fret. On a `with`, it transposes one instrument and not another. A transpose where only drums play is an error.
+```composer-nb Example
+play pattern {
+  piano: { chords C | F, notes 5-3-1--- },
+}
+```
 
-## Sound
+```composer-nb Invalid
+play pattern { piano: notes 1---, piano: chords C }
+```
 
-`set` with an instrument's name and a sound sets that instrument's sound: `set guitar.electric muted` is palm-muted. Only `guitar.electric` has more than one sound.
+```text Error
+piano already has a line in this pattern. To layer it, put its lines in a block: piano: { ... }
+```
+
+## Settings that apply
+
+These settings change what an instrument line sounds like. Each is defined in [Settings](/language/settings); to apply one to a single line, wrap the line in [with](/language/scope#with).
+
+| Setting | Changes |
+| --- | --- |
+| [key](/language/settings#key), [mode](/language/settings#mode) | What degrees mean. |
+| [octave](/language/settings#octave) | The register of pitches written without an octave. |
+| [transpose](/language/settings#transpose) | The sounding pitch, in semitones. |
+| [guitar.electric](/language/settings#guitarelectric) | The electric guitar's sound. |
+
+```composer-nb Example
+play pattern {
+  piano: chords 1 | 4,
+  with octave 2 { bass: notes 1---5--- },
+}
+```

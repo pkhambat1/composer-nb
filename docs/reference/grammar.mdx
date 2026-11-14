@@ -1,0 +1,132 @@
+---
+title: "Grammar"
+description: "All the syntax of the language in one place. The notation is explained in [Notation](@composer-nb language reference>Notation)."
+---
+
+## Cells and statements
+
+```text Syntax
+cell        ::= (statement NEWLINE)*
+statement   ::= set_stmt | with_stmt | declaration | play_stmt | print_stmt | value_expr
+
+set_stmt    ::= "set" setting
+with_stmt   ::= "with" settings "{" statement ("," statement)* [","] "}"
+play_stmt   ::= "play" part ["for" length]
+print_stmt  ::= "print" "(" value_expr ("," value_expr)* ")"
+value_expr  ::= "steps" step_seq | "notes" note_seq | "chords" chart | name | call
+
+declaration ::= "steps" name "=" steps_expr
+              | "notes" name "=" note_seq
+              | "chords" name "=" chart
+              | "pattern" name "=" ([length] body | part)
+              | "block" name "=" ([length] body | part)
+name        ::= [a-z][A-Za-z0-9]+
+```
+
+## Settings
+
+```text Syntax
+settings    ::= setting ("," setting)*
+setting     ::= "time" number "over" number
+              | "tempo" number
+              | "swing" ("on" | "off")
+              | "key" pitch_class
+              | "mode" mode
+              | "octave" number
+              | "transpose" number
+              | "kit" ("rock" | "synth")
+              | "guitar.electric" ("clean" | "muted")
+pitch_class ::= letter ["#" | "b"]
+mode        ::= "major" | "minor" | "dorian" | "phrygian" | "lydian" | "mixolydian"
+              | "locrian" | "harmonicMinor" | "melodicMinor" | "wholeTone"
+```
+
+## Parts
+
+```text Syntax
+part        ::= line
+              | name
+              | [length] ("pattern" | "block") body
+              | length name
+              | [length] group
+              | every
+              | placed
+              | with_scope
+line        ::= kit_piece ":" steps_expr
+              | instrument ":" pitched
+              | instrument ":" "{" pitched ("," pitched)* [","] "}"
+pitched     ::= "notes" note_seq | "chords" chart
+body        ::= "{" entry ("," entry)* [","] "}"
+entry       ::= part | declaration
+group       ::= "(" part+ ")"
+every       ::= "every" number "beats" (line | name | group | [length] body)
+placed      ::= part "on" "bar" number ["to" number]
+with_scope  ::= "with" settings body
+length      ::= number "bars"
+
+kit_piece   ::= "kick" | "snare" | "snare.ghost" | "snare.rim" | "snare.cross"
+              | "hat" | "hat.open" | "hat.pedal" | "ride" | "ride.bell" | "crash"
+              | "tom.high" | "tom.low" | "tom.floor"
+instrument  ::= "piano" | "piano.electric" | "organ" | "bass" | "guitar" | "guitar.electric"
+```
+
+## steps
+
+```text Syntax
+steps_expr  ::= step_seq | step_layers
+step_seq    ::= step_item+ [step_fill]
+step_item   ::= step_word | name | step_repeat | euclid | "|"
+step_word   ::= ("x" | "^" | "~" | "d" | "-")+
+step_repeat ::= integer "*" (step_word | name | "(" step_item+ ")")
+euclid      ::= integer "in" integer
+step_fill   ::= "..." (step_word | name)
+step_layers ::= "{" steps_expr ("," steps_expr)* [","] "}"
+```
+
+## notes
+
+```text Syntax
+note_seq    ::= note_item+ [note_fill]
+note_item   ::= note_word | name | note_call | note_repeat | "|"
+note_word   ::= attack ("-" | "_")* | ("-" | "_")+
+attack      ::= ["^" | "~"] pitch
+pitch       ::= letter ["#" | "b"] [octave] | degree | numeral
+note_repeat ::= integer "*" (note_word | name | note_call | "(" note_item+ ")")
+note_call   ::= ["^" | "~"] interval "(" note_seq ["," integer] ")"
+note_fill   ::= "..." (pitch | "-" | "_")
+```
+
+## chords
+
+```text Syntax
+chart       ::= ["|"] bar ("|" bar)* ["|"]
+bar         ::= slot+ | "%"
+slot        ::= chord | name | chord_call | "-" | "_"
+chord       ::= root [suffix] ["/" bass]
+root        ::= letter ("#" | "b")* | degree | numeral
+bass        ::= letter ["#" | "b"] | degree
+suffix      ::= quality modifier*
+modifier    ::= "sus2" | "sus4" | "sus" | "add" ["#" | "b"] digit+ | ("#" | "b") digit+
+chord_call  ::= interval "(" chart ["," integer] ")"
+```
+
+## Pitches, functions and numbers
+
+```text Syntax
+letter      ::= "A" | "B" | "C" | "D" | "E" | "F" | "G"
+octave      ::= "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8"
+degree      ::= ["-"] ["b" | "#"] digit+
+numeral     ::= ["b" | "#"] ("i" | "ii" | "iii" | "iv" | "v" | "vi" | "vii")
+call        ::= note_call | chord_call
+interval    ::= "unison" | "second" | "third" | "fourth" | "fifth" | "sixth" | "seventh"
+              | "octave" | "eighth" | "ninth" | "tenth" | "eleventh" | "twelfth"
+              | "thirteenth" | "fourteenth" | "fifteenth"
+
+number      ::= term (("+" | "-") term)*
+term        ::= factor (("*" | "/") factor)*
+factor      ::= ["-"] (literal | "(" number ")")
+literal     ::= digit+ ["." digit+]
+integer     ::= ["+" | "-"] digit+
+```
+
+`quality` is any suffix in the [Chord symbol catalog](/pitched/chord-symbols).

@@ -11,7 +11,7 @@ export const TYPED_BRACES_RE = /^(pattern|block)\s*\{/
 export type Type = (typeof TYPES)[number]
 
 // Ordinal intervals count through the active scale. Compound intervals start over
-// after the octave, including in scales with fewer than seven notes.
+// after the octave, including in scales with fewer than seven notes. eighth is octave.
 export const INTERVALS = {
   unison: 1,
   second: 2,
@@ -21,6 +21,7 @@ export const INTERVALS = {
   sixth: 6,
   seventh: 7,
   octave: 8,
+  eighth: 8,
   ninth: 9,
   tenth: 10,
   eleventh: 11,

@@ -7,7 +7,21 @@ import site from "../../../docs/docs.json" with { type: "json" }
 import { describe, it, expect } from "vitest"
 import { existsSync } from "node:fs"
 import { join } from "node:path"
-import { initialState, LANES, parseCell, PITCHED } from "../../js/language.ts"
+import { ChordType } from "tonal"
+import {
+  initialState,
+  INTERVALS,
+  KEYWORDS,
+  KITS,
+  LANES,
+  MODES,
+  parseCell,
+  PITCHED,
+  SETTINGS,
+  SOUNDS,
+  TYPES,
+} from "../../js/language.ts"
+import { buildChord } from "../../js/chords.ts"
 import { DOCS, examples, pages, read } from "./docs-examples.ts"
 
 describe("docs examples", () => {
@@ -29,6 +43,9 @@ describe("docs examples", () => {
 // A kit piece or instrument that exists in the language and not in its table is one nobody can
 // find.
 describe("docs names", () => {
+  const inlineNames = (page: string) =>
+    new Set([...read(page).matchAll(/`([^`\n]+)`/g)].map((m) => m[1]))
+
   it("drums/kit.mdx has every kit piece", () => {
     const text = read("drums/kit.mdx")
     expect(LANES.filter((name) => !text.includes("| `" + name + "`"))).toEqual([])
@@ -36,6 +53,75 @@ describe("docs names", () => {
   it("pitched/instruments.mdx has every instrument", () => {
     const text = read("pitched/instruments.mdx")
     expect(PITCHED.filter((name) => !text.includes("| `" + name + "`"))).toEqual([])
+  })
+
+  it("indexes every public keyword, type, setting, function and instrument", () => {
+    const text = read("reference/symbols.mdx")
+    const names = [
+      ...KEYWORDS,
+      ...TYPES,
+      ...SETTINGS,
+      ...Object.keys(SOUNDS),
+      ...Object.keys(INTERVALS),
+      ...LANES,
+      ...PITCHED,
+    ]
+    // An entry is the name in code, or a link whose label contains the name (`on bar`).
+    expect(
+      names.filter(
+        (name) =>
+          !text.includes("`" + name + "`") &&
+          !new RegExp("\\[[^\\]]*\\b" + name + "\\b[^\\]]*\\]").test(text),
+      ),
+    ).toEqual([])
+  })
+
+  it("documents all value types and accepted setting values", () => {
+    expect(TYPES.filter((name) => !inlineNames("language/values.mdx").has(name))).toEqual([])
+    expect(MODES.filter((name) => !inlineNames("pitched/key.mdx").has(name))).toEqual([])
+    expect(KITS.filter((name) => !inlineNames("drums/kit.mdx").has(name))).toEqual([])
+    const sounds = Object.values(SOUNDS).flat()
+    expect(sounds.filter((name) => !inlineNames("pitched/instruments.mdx").has(name))).toEqual([])
+  })
+
+  it("gives every setting and interval function a searchable heading", () => {
+    const namedHeadings = (page: string) =>
+      new Set([...read(page).matchAll(/^#{2,4} `?([A-Za-z.]+)`?\s*$/gm)].map((m) => m[1]))
+    const settings = namedHeadings("language/settings.mdx")
+    // The function index table lists each function in code in its first column.
+    const functions = new Set(
+      [...read("functions/intervals.mdx").matchAll(/^\| `([a-z]+)` \|/gm)].map((m) => m[1]),
+    )
+    expect([...SETTINGS, ...Object.keys(SOUNDS)].filter((name) => !settings.has(name))).toEqual([])
+    expect(Object.keys(INTERVALS).filter((name) => !functions.has(name))).toEqual([])
+  })
+
+  it("lists every accepted dictionary chord suffix, including minor 6/9", () => {
+    const documented = inlineNames("pitched/chord-symbols.mdx")
+    const aliases = new Set(ChordType.all().flatMap((chord) => chord.aliases))
+    const accepted = [...aliases].filter(
+      (suffix) =>
+        suffix &&
+        buildChord("C" + suffix) &&
+        parseCell(`chords value = C${suffix}`, initialState()).errors.length === 0,
+    )
+    expect([...accepted, "m6/9"].filter((suffix) => !documented.has(suffix))).toEqual([])
+  })
+
+  it("the documented fourth-degree and lower-octave operation produces the promised chord", () => {
+    const example = examples(read("functions/intervals.mdx")).find(
+      (block) => !block.invalid && block.source.includes("octave(fourth("),
+    )
+    expect(example, "The transformation needs one runnable, minimal example").toBeDefined()
+    const parsed = parseCell(example!.source, initialState())
+    expect(parsed.errors).toEqual([])
+    const items = parsed.prints.flatMap((print) => print.values.flatMap((value) => value.items))
+    expect(items).toContainEqual(
+      expect.objectContaining({
+        chord: "F",
+        tones: ["F2", "A2", "C3"],
+      }),
+    )
   })
 })
 

@@ -46,11 +46,7 @@ describe("the docs grammar knows every word", () => {
 
 describe("every prose list of the modes has them all", () => {
   // These are written by hand, so a mode missing from one is caught here
-  const files = [
-    "docs/pitched/key.mdx",
-    "docs/pitched/instruments.mdx",
-    "mcp/src/instructions.ts",
-  ]
+  const files = ["docs/pitched/key.mdx", "docs/language/settings.mdx", "mcp/src/instructions.ts"]
   for (const file of files) {
     it(file, () => {
       const text = readFileSync(new URL(`../../../${file}`, import.meta.url), "utf8")

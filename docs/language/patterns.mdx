@@ -1,160 +1,316 @@
 ---
-title: "Patterns"
-description: "The pattern type: lines that play together and repeat, how long a pattern lasts, groups, on bar and every."
+title: "Parts and composition"
+description: "Lines, patterns, blocks and groups: how material is given to kit pieces and instruments and combined in time."
 ---
 
-A `pattern` value holds lines that start together and repeat. A `block` holds lines that play once. Braces that are a value always say which, in front of the name or, without one, in front of the braces: `pattern groove = { ... }`, `block myBlock = { ... }`, `pattern { ... }`, `block { ... }`. An untyped `myBlock = { ... }` is an error and defines nothing, and so is a bare `{ ... }` after `play` or on a line of its own. Declaring either plays nothing. [`play`](/language/play) renders it.
-
-Separate entries with commas, whether they share a line or span several lines. A trailing comma before `}` is allowed, including in nested blocks. Semicolons are errors.
-
-```composer-nb
-set time 5 over 4
-
-pattern groove = {
-  kick: x---,
-  snare: x----,
-  tom.floor: x--,
-}
-
-play groove
+```text Syntax
+part    ::= line
+          | name
+          | [length] ("pattern" | "block") body
+          | length name
+          | [length] group
+          | every
+          | placed
+          | with_scope
+line    ::= kit_piece ":" steps_expr
+          | instrument ":" pitched
+          | instrument ":" "{" pitched ("," pitched)* [","] "}"
+pitched ::= "notes" note_seq | "chords" chart
+body    ::= "{" entry ("," entry)* [","] "}"
+entry   ::= part | declaration
+group   ::= "(" part+ ")"
+every   ::= "every" number "beats" (line | name | group | [length] body)
+placed  ::= part "on" "bar" number ["to" number]
 ```
 
-## Duration
+A part is anything that can be played. `steps`, `notes` and `chords` are not parts: they become one when a line gives them to a kit piece or an instrument. Parts are combined in two ways: side by side in a body, where they sound together, and in a row in a group, where they follow one another.
 
-Each line repeats at its own length, and the pattern lasts until they end together: the least common multiple of their lengths. Above, the floor tom repeats every 3 steps, the kick every 4 and the snare every 5, so they meet after 60 steps: three bars of `5 over 4`. A line that ends in [`...`](/language/overview#lengths) has no length of its own and doesn't count.
+## Parts
 
-A length in front sets the duration instead: `pattern groove = 4 bars { ... }`. Everything inside must then fit it a whole number of times, and the error names the shortest length that would. A pattern whose lines don't meet within 64 bars needs a length.
+| Form | Example | What it is |
+| --- | --- | --- |
+| [Line](/language/patterns#lines) | `kick: x---` | One kit piece or instrument, and what it plays. |
+| Name | `groove` | A declared `pattern` or `block`. |
+| [pattern](/language/patterns#pattern) | `pattern { kick: x---, hat: x- }` | Entries that sound together. Its lines repeat. |
+| [block](/language/patterns#block) | `block { crash: x }` | Entries that sound together. Its lines play once. |
+| [Group](/language/patterns#groups) | `(verse chorus)` | Parts played one after another. |
+| [Length prefix](/language/patterns#length-of-a-part) | `4 bars groove` | A pattern name or group repeated for that long, or an inline pattern or block of that length. |
+| [every](/language/patterns#every) | `every 1/2 beats hat: x-` | A part whose steps have another length. |
+| [Placed part](/language/patterns#on-bar) | `fill on bar 4` | A part that starts at a bar. |
+
+Any part may also be given local settings by wrapping it in `with`. That is a scope, not a kind of composition, and it is defined in [with](/language/scope#with).
+
+A part goes after `play`, in a body, in a group, or after `=` in a `pattern` or `block` declaration.
+
+## Lines
+
+```text Syntax
+line ::= kit_piece ":" steps_expr
+       | instrument ":" "notes" note_seq
+       | instrument ":" "chords" chart
+       | instrument ":" "{" pitched ("," pitched)* [","] "}"
+```
+
+A line says what plays and what it plays. The colon joins the two; it is not a type annotation.
+
+| Operand | Type | May be |
+| --- | --- | --- |
+| `kit_piece` | `kit_piece` | `kick`, `snare`, `snare.ghost`, `snare.rim`, `snare.cross`, `hat`, `hat.open`, `hat.pedal`, `ride`, `ride.bell`, `crash`, `tom.high`, `tom.low`, `tom.floor`. See [Kit pieces](/drums/kit#kit-pieces). |
+| `steps_expr` | `steps` | Step words (`x--- --x-`), a `steps` name, repeats (`4*x-`), a Euclidean rhythm (`3 in 8`), a fill (`...-`), or layers (`{ x---, --^- }`). See [steps](/drums/steps). |
+| `instrument` | `instrument` | `piano`, `piano.electric`, `organ`, `bass`, `guitar`, `guitar.electric`. See [Instruments](/pitched/instruments#instruments). |
+| `note_seq` | `notes` | Note words (`C4--- 1-3-`), a `notes` name, repeats, interval calls, a fill. See [notes](/pitched/notes). |
+| `chart` | `chords` | Chord symbols and degrees in bars (`C G \\| Am F`), a `chords` name, interval calls. See [chords](/pitched/chords). |
+| `pitched` | `notes` or `chords` | `"notes" note_seq` or `"chords" chart`: one voice of an instrument's [layers](/pitched/instruments#layers). |
+
+A kit piece takes `steps` and nothing else, so its line has no type keyword. An instrument takes `notes` or `chords`, so its line always says which, before a name as well.
+
+A line stands in a body, or directly after `play`. In a group, a line must be on a line of its own.
+
+```composer-nb Example
+steps pulse = x--x--x-
+notes walk = 1-3-5-3-
+play pattern {
+  kick: pulse,
+  hat: x-,
+  bass: notes walk,
+  piano: chords C G,
+}
+```
+
+```composer-nb Invalid
+play pattern { piano: 1---3--- }
+```
+
+```text Error
+piano takes notes or chords, and says which: piano: notes 1---3---
+```
+
+```composer-nb Invalid
+steps pulse = x--x--x-
+play pattern { piano: notes pulse }
+```
+
+```text Error
+pulse is steps, so it goes on a drum's line, not on piano's
+```
+
+## Bodies
+
+```text Syntax
+body  ::= "{" entry ("," entry)* [","] "}"
+entry ::= part | declaration
+```
+
+| Operand | Type | May be |
+| --- | --- | --- |
+| `entry` | `part` | Any [part](/language/patterns#parts): a line, a name, an inline pattern or block, a group, an `every`, a placed part. |
+| `entry` | declaration | A [declaration](/language/values#declarations) of any type. The name is local to the body. |
+
+A body is the braces of a pattern, a block, an `every` or a `with`. Its parts start together. Entries are separated by commas, on one line or many, and the last may be followed by a comma.
+
+- A body must contain at least one part. Declarations alone play nothing.
+- A kit piece or instrument may have one line directly in a body. Several figures for one kit piece are [steps layers](/drums/steps#layers); several voices for one instrument are [layers](/pitched/instruments#layers). A name or nested body may add more events for the same kit piece or instrument.
+- `play`, `print` and `set` are statements, not entries.
+
+Braces written on their own always carry their type: `pattern { ... }` or `block { ... }`. After `=` in a declaration the type is already given, and after `every` or `with` the body is a pattern; in those three places the braces take no keyword.
+
+```composer-nb Invalid
+play pattern { kick: x---, kick: --x- }
+```
+
+```text Error
+kick already has a line in this pattern. To layer it, put its lines in a block: kick: { ... }
+```
+
+```composer-nb Invalid
+play pattern { steps pulse = x--x--x- }
+```
+
+```text Error
+Nothing to play in this pattern
+```
+
+## pattern
+
+```text Syntax
+"pattern" name "=" ([length] body | part)
+[length] "pattern" body
+```
+
+A `pattern` is a body whose lines repeat. Every entry starts at the beginning of the pattern:
+
+| Entry | In a pattern |
+| --- | --- |
+| Line | Repeats, each at its own length. |
+| Pattern (name or inline), group, `every`, `with` | Repeats to the end of the pattern. |
+| Block (name or inline) | Plays once. |
+| Placed part | Plays in its bars; see [on bar](/language/patterns#on-bar). |
+
+Lines need not be the same length. Without a `length`, the pattern lasts until its repeating entries realign, and at least as long as its blocks and placed parts. With a `length`, every repeating entry must fit it a whole number of times.
+
+```composer-nb Example
+pattern groove = {
+  kick: x--- --x-,
+  snare: ---- x---,
+  hat: x-,
+}
+play groove for 2 bars
+```
+
+Because a pattern's lines repeat, a line that writes one figure out several times is an error; see [In a pattern, write the figure once](/drums/steps#in-a-pattern-write-the-figure-once).
+
+## block
+
+```text Syntax
+"block" name "=" ([length] body | part)
+[length] "block" body
+```
+
+A `block` is a body whose lines play once. Every entry starts at the beginning of the block:
+
+| Entry | In a block |
+| --- | --- |
+| Line | Plays once. |
+| Pattern (name or inline), group, `every`, `with` | Repeats to the end of the block. |
+| Block (name or inline) | Plays once. |
+| Placed part | Plays in its bars. |
+
+Without a `length`, the block lasts as long as its longest entry, and its repeating entries must fit that a whole number of times. A block is one occurrence wherever it is used: inside a pattern it sounds once and is silent after, and it takes no length prefix.
+
+```composer-nb Example
+block ending = { crash: x, kick: x, piano: chords C }
+play ending
+```
+
+The only difference between the two types is their lines: `pattern { kick: x--- }` plays that bar over and over, and `block { kick: x--- }` plays it once.
 
 ## Groups
 
-A `block` plays its instrument lines once, even when a repeating pattern beside or around it runs longer. A longer play leaves silence after the block rather than repeating it. Use a `pattern` when the material should loop.
-
-```composer-nb
-block accent = { crash: x 15*-, }
-pattern beat = {
-  kick: x 7*-,
-  snare: 4*- x 3*-,
-  hat: x-,
-}
-
-play block {
-  accent,
-  beat,
-} for 2 bars
+```text Syntax
+group ::= "(" part+ ")"
 ```
 
-`( )` holds what plays in order: names, blocks, other groups, and lines of their own, one after another, separated by spaces or new lines. It is the one way to put things in order. On lines of their own, things play together, and two things on one line without brackets are an error. See [Blocks](/language/overview#blocks). A length in front of a name or a group repeats it for that long. In front of `pattern { ... }` or `block { ... }` it is that value's own length, as in a declaration, which is what lines ending in `...` need.
+| Operand | Type | May be |
+| --- | --- | --- |
+| `part` | `part` | A name, an inline pattern or block, a nested group, a `with`, a part with a length prefix, a placed part. A line, if it is on a line of its own. |
 
-```composer-nb
-pattern intro = { crash: x 15*-, }
-pattern verse = { kick: x--- ---- x-x- ----, }
-pattern chorus = {
-  kick: x-,
-  snare: ---- x--- ---- x-x-,
-}
+A group plays its parts one after another. It lasts as long as its parts together. Parts are separated by spaces or newlines, not commas.
 
-play (intro 4 bars (verse chorus) intro)
+Inside a pattern or block, or under a length prefix, a group repeats as a whole; a block in it still sounds only once. Parts that are meant to follow one another must be in a group: two names side by side without parentheses are an error.
+
+A group is the place to change `time`, `tempo` or `swing` part way through, because its parts do not sound together; see [with](/language/scope#with).
+
+```composer-nb Example
+pattern verse = { kick: x--- --x-, hat: x- }
+block fill = { snare: xxxx xxxx xxxx xxxx }
+play (3 bars verse fill)
 ```
 
-A group can run over several lines, and a line of its own in it plays as a pattern of one line.
-
-```composer-nb
-set octave 4
-
-play (
-  piano: notes i---ii---iii---iv---
-  piano: notes v---vi---vii---octave(i)---
-  block { piano: notes octave(i) 15*-, }
-)
+```composer-nb Invalid
+pattern verse = { kick: x--- --x-, hat: x- }
+play verse verse
 ```
 
-A pattern can hold another by name, on a line of its own, and its value can be a group.
-
-```composer-nb
-pattern beat = {
-  kick: x---,
-  hat: x-,
-}
-
-pattern verse = {
-  piano: chords Am F|C G,
-  beat,
-}
-
-pattern chorus = {
-  piano: chords F G|C -,
-  beat,
-}
-
-pattern song = (verse chorus)
-
-play song
+```text Error
+What plays in order goes in brackets: (verse verse)
 ```
 
-## bar
+## Length of a part
 
-`value on bar n` adds the value in bar `n` of each pass. It adds, never removes: a `-` is only silence in its own line. `value on bar 3 to 4` covers a range. Where two lines hit the same instrument at the same moment, the lower one wins.
+| Part | Lasts |
+| --- | --- |
+| Line | The length of its `steps`, `notes` or `chords`. |
+| Pattern without a length | Until its repeating entries realign. This may be part of a bar: lines of 4 and 6 steps realign after 12. |
+| Block without a length | As long as its longest entry. |
+| Group | The sum of its parts. |
+| `length "pattern" body`, `length "block" body` | `length`. |
+| `length name`, `length group` | `length`. The pattern or group repeats and must fit a whole number of times. Not allowed before a block name. |
+| Placed part | From the start of the surrounding part to the end of its last bar. |
 
-A name stands for its typed value: `lift on bar 2` is equivalent to `block { ... } on bar 2` when `lift` is that block. A `block` plays once within the range; a `pattern` repeats to fill it. Bare `{ ... } on bar 2` is an error because an inline value needs its type.
+A line that ends in a `...` fill has no length and does not count: some other entry, or an explicit length, must set the end. Lines that would not realign within 64 bars need an explicit length.
 
-```composer-nb
-set time 7 over 8
-set tempo 90
-
-pattern groove = {
-  kick: x--x---,
-  snare: 5*- x-,
-  snare.ghost: --x----,
-  hat: ^-x-,
-  pattern {
-    snare.ghost: 8*- dd 4*-,
-    hat.open: 10*- ^ 3*-,
-    hat.pedal: 12*- x-,
-  } on bar 2,
-}
-
-play block {
-  crash: x 13*-,
-  groove,
-}
-```
-
-This is *The Sound of Muzak* by Porcupine Tree. The lines of `groove` meet after two bars, so the pattern is two bars long and the fill closes every pass.
+A length is a property of the part where it is written. To set how long an output lasts, use `for` on [play](/language/play#duration).
 
 ## every
 
-`every <number> beats` in front of a line or block sets how long one step lasts inside it. Only beats are accepted. A step defaults to `1/4` beat; setting the step already in effect is an error. Nested `every` can change it back.
+```text Syntax
+every ::= "every" number "beats" (line | name | group | [length] body)
+```
 
-```composer-nb
-set time 3 over 4
-set tempo 100
+| Operand | Type | May be |
+| --- | --- | --- |
+| `number` | `number` | The length of one step in beats (quarter notes). At least 1/12, and a whole number of ticks at 96 per beat. |
+| Operand | `part` | A line, a `pattern` or `block` name, a group, or a body. The body takes no keyword and is a pattern. |
 
-steps pa = ^---
-steps radiddle = -xxx
+Sets how long one step lasts inside its part. The default is 1/4 beat, a sixteenth note. The value is absolute, not relative to an enclosing `every`, and an `every` that sets the length already in effect is an error.
 
-pattern hands = {
-  snare: pa,
-  snare.ghost: radiddle,
-}
+| `every` | One step is |
+| --- | --- |
+| `every 1/2 beats` | An eighth note. |
+| `every 1/3 beats` | An eighth-note triplet. |
+| `every 1/6 beats` | A sixteenth-note triplet. |
+| `every 1/8 beats` | A thirty-second note. |
+| `every 3/4 beats` | A dotted eighth note. |
+| `every 1 beats` | A quarter note. |
 
-pattern feet = every 3/4 beats {
-  kick: ^-^^-^--,
-  hat.pedal: -x--x-xx,
-}
+`every` changes `steps` and `notes`. It does not change `chords`, whose slots divide bars. Lines outside the `every` keep their own step length.
 
-play block {
-  hands,
-  feet,
+```composer-nb Example
+play pattern {
+  kick: x--- --x-,
+  every 1/3 beats hat: x-x,
+  every 1 beats bass: notes 1 5,
 }
 ```
 
-This is Gavin Harrison's paradiddle challenge. `every 3/4 beats` makes each of the feet's steps three sixteenth notes long, so the feet play the paradiddle three times slower than the hands.
+```composer-nb Invalid
+play every 1/2 steps kick: x-
+```
 
-| On the score | Write |
+```text Error
+every sets a step's length in beats: every 1/2 beats { kick: x }
+```
+
+## on bar
+
+```text Syntax
+placed ::= part "on" "bar" first ["to" last]
+```
+
+| Operand | Type | May be |
+| --- | --- | --- |
+| `part` | `part` | A line, a name, an inline pattern or block, a group, an `every`, a `with`. |
+| `first`, `last` | `number` | Whole numbers from 1 to 64, `last` not less than `first`. Arithmetic is allowed. |
+
+Starts a part at the beginning of bar `first` of the surrounding part, counting from 1, and gives it the bars up to and including `last`, or `first` alone. A pattern repeats through its bars. A block plays once in them.
+
+`on bar` comes after the part it places. A placed part adds to what is already sounding; it does not silence other lines. In a pattern, it plays in those bars on every pass.
+
+```composer-nb Example
+block fill = { snare: xxxx xxxx xxxx xxxx }
+play pattern {
+  kick: x--- --x-,
+  hat: x-,
+  fill on bar 4,
+  crash: x on bar 1,
+}
+```
+
+```composer-nb Invalid
+play pattern { hat: x-, kick: x--- on bar 3 to 2 }
+```
+
+```text Error
+bar 3 to 2 runs backwards. The first bar comes first
+```
+
+## Parts that overlap
+
+Parts in a body sound together, so two of them may play the same kit piece or instrument at the same moment.
+
+| Overlap | Result |
 | --- | --- |
-| Eighth notes | `every 1/2 beats` |
-| Eighth-note triplets | `every 1/3 beats` |
-| Sixteenth-note triplets | `every 1/6 beats` |
-| Thirty-second notes | `every 1/8 beats` |
-
-`every` changes the steps of kit pieces and instruments alike, including steps expanded by `*`. Chords still divide their bars evenly, and lines outside the block keep their own step.
+| Two hits on one kit piece at the same time | The one written later is kept. Silence never removes a hit. |
+| Two notes in one voice of an instrument at the same time | The one written later is kept. |
+| Voices in an instrument's layers | Independent: all of them sound. |
+| `hat.open` and `hat` at the same time | The open hit is kept. |

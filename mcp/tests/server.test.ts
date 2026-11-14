@@ -5,6 +5,7 @@ import { describe, it, expect, beforeAll } from "vitest"
 import { Client } from "@modelcontextprotocol/sdk/client/index.js"
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js"
 import { createServer } from "../src/server.ts"
+import { REFERENCE } from "../src/reference.ts"
 
 const MUZAK = `set time 7 over 8
 set tempo 90
@@ -157,11 +158,15 @@ describe("tools", () => {
 
   it("reference hands over a page, or all of them", async () => {
     const one = textOf(await call("reference", { topic: "settings" }))
-    expect(one).toContain("# Settings")
-    expect(one).toContain("| `tempo` |")
+    expect(one).toBe(REFERENCE.find((page) => page.id === "settings")!.text)
+    expect(one).toContain("## tempo")
     const all = textOf(await call("reference", {}))
-    expect(all).toContain("# Overview")
-    expect(all).toContain("# play")
+    expect(all).toBe(REFERENCE.map((page) => page.text).join("\n\n---\n\n"))
+    for (const topic of ["symbols", "intervals", "print", "chord-symbols"]) {
+      expect(textOf(await call("reference", { topic }))).toBe(
+        REFERENCE.find((page) => page.id === topic)!.text,
+      )
+    }
   })
 })
 
@@ -205,7 +210,9 @@ describe("resources", () => {
   it("list the reference pages and the grooves", async () => {
     const { resources } = await client.listResources()
     const uris = resources.map((r) => r.uri)
-    expect(uris).toContain("composer-nb://reference/overview")
+    expect(uris).toEqual(
+      expect.arrayContaining(REFERENCE.map((page) => `composer-nb://reference/${page.id}`)),
+    )
     expect(uris).toContain("composer-nb://grooves/the-sound-of-muzak")
   })
 
