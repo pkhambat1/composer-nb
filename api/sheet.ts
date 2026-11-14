@@ -5,7 +5,8 @@ import { parse } from "composer-nb-mcp/cell"
 import { pngOf, sheetOf } from "composer-nb-mcp/render"
 import type { Request, Response } from "./_vercel.ts"
 
-export const config = { maxDuration: 30 }
+// A drawing takes well under a second, so anything still running at 10 has gone wrong
+export const config = { maxDuration: 10 }
 
 // A parameter's value: the first, when it's given more than once
 const one = (value: string | string[] | undefined) => (Array.isArray(value) ? value[0] : value)
@@ -32,7 +33,8 @@ export default async function handler(req: Request, res: Response) {
     res.end(JSON.stringify({ error: output ? "nothing to draw in this play" : "no such play" }))
     return
   }
-  res.setHeader("Cache-Control", "public, max-age=31536000, immutable")
+  // s-maxage lets Vercel's CDN keep it too, so each image is drawn once, not on every view
+  res.setHeader("Cache-Control", "public, max-age=31536000, s-maxage=31536000, immutable")
   res.setHeader("Access-Control-Allow-Origin", "*")
   if (format === "svg") {
     res.setHeader("Content-Type", "image/svg+xml")

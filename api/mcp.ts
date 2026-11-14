@@ -5,7 +5,8 @@ import { SITE } from "composer-nb/links"
 import { handleMcp, siteOf } from "composer-nb-mcp/http"
 import type { Request, Response } from "./_vercel.ts"
 
-export const config = { maxDuration: 30 }
+// A tool call takes well under a second, so anything still running at 10 has gone wrong
+export const config = { maxDuration: 10 }
 
 export default async function handler(req: Request, res: Response) {
   res.setHeader("Access-Control-Allow-Origin", "*")

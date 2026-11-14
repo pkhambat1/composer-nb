@@ -4,6 +4,9 @@ import { parse } from "composer-nb-mcp/cell"
 import { midiOf } from "composer-nb-mcp/render"
 import type { Request, Response } from "./_vercel.ts"
 
+// Writing a file takes well under a second, so anything still running at 10 has gone wrong
+export const config = { maxDuration: 10 }
+
 // A parameter's value: the first, when it's given more than once
 const one = (value: string | string[] | undefined) => (Array.isArray(value) ? value[0] : value)
 
@@ -26,7 +29,8 @@ export default async function handler(req: Request, res: Response) {
     return
   }
   const file = String(name).replace(/[^\w.-]+/g, "-") || "composer-nb"
-  res.setHeader("Cache-Control", "public, max-age=31536000, immutable")
+  // s-maxage lets Vercel's CDN keep it too, so each file is written once, not on every download
+  res.setHeader("Cache-Control", "public, max-age=31536000, s-maxage=31536000, immutable")
   res.setHeader("Access-Control-Allow-Origin", "*")
   res.setHeader("Content-Type", "audio/midi")
   res.setHeader("Content-Disposition", `attachment; filename="${file}.mid"`)
