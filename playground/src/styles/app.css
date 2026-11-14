@@ -553,7 +553,7 @@ body {
 .auth-tabs button:hover { color: var(--text); }
 .auth-tabs .auth-tab-active { background: var(--paper); color: var(--text); box-shadow: 0 1px 4px rgba(0,0,0,.1); }
 .auth-google, .auth-submit { --btn-h: 40px; font-size: 13px; }
-.auth-google span { margin-right: 8px; color: #4285f4; }
+.auth-google-mark { margin-right: 8px; flex: none; }
 .auth-divider { display: flex; align-items: center; gap: 10px; color: var(--text-mute); font-size: 11px; }
 .auth-divider::before, .auth-divider::after { content: ""; height: 1px; background: var(--border-soft); flex: 1; }
 .auth-message, .auth-config-note { color: var(--text-mute); font-size: 12px; }
