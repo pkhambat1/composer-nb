@@ -1,0 +1,125 @@
+---
+title: "Types"
+description: "The five value types, the other categories that appear in signatures, declarations and names."
+---
+
+Every value has exactly one type, and the type is always written: before a declared name, or after an instrument's colon. There is no conversion between types.
+
+## Value types
+
+| Type | A value is | Written as | Accepted by |
+| --- | --- | --- | --- |
+| [steps](/drums/steps) | What one kit piece plays: hits on the step grid. | `step_seq` or `step_layers` | A kit-piece line, a `steps` declaration, `print`. |
+| [notes](/pitched/notes) | One voice of single notes on the step grid. | `note_seq` | An instrument line after `notes`, a `notes` declaration, an interval function, `print`. |
+| [chords](/pitched/chords) | A chart of chords in bars. | `chart` | An instrument line after `chords`, a `chords` declaration, an interval function, `print`. |
+| [pattern](/language/patterns#pattern) | Parts that sound together, whose lines repeat. | `{ }` body or a single part | `play`, a body entry, a group, `every`, `on bar`. |
+| [block](/language/patterns#block) | Parts that sound together, whose lines play once. | `{ }` body or a single part | `play`, a body entry, a group, `on bar`. |
+
+`steps`, `notes` and `chords` are material: they say what is played but not by what. `pattern` and `block` are parts: they say what plays it and can be given to `play`. A kit piece cannot play `notes` or `chords`, and an instrument cannot play `steps`.
+
+## Other categories used in signatures
+
+Signatures in this reference also name the following categories. They describe what may be written in a position. They are not value types: none can be declared, named or passed to a function.
+
+| Category | What may be written | Defined in |
+| --- | --- | --- |
+| `kit_piece` | One of the 14 kit-piece names, such as `kick`. | [Kit pieces](/drums/kit#kit-pieces) |
+| `instrument` | One of the 6 instrument names, such as `piano`. | [Instruments](/pitched/instruments#instruments) |
+| `name` | A declared name, such as `riff`. | [Names](/language/values#names) |
+| `number` | An arithmetic expression, such as `90` or `60*2`. | [Numbers](/language/expressions#numbers) |
+| `integer` | An integer literal, such as `2` or `-1`. No arithmetic. | [Numbers](/language/expressions#numbers) |
+| `length` | `number "bars"`. | [Lengths](/language/expressions#lengths) |
+| `setting` | A setting name and its value, such as `tempo 90`. | [Settings](/language/settings) |
+| `part` | Anything that can be played: a line, a pattern, a block, a group. | [Parts](/language/patterns#parts) |
+
+## Declarations
+
+```text Syntax
+declaration ::= "steps" name "=" (step_seq | step_layers)
+              | "notes" name "=" note_seq
+              | "chords" name "=" chart
+              | "pattern" name "=" ([length] body | part)
+              | "block" name "=" ([length] body | part)
+```
+
+| Operand | Type | May be |
+| --- | --- | --- |
+| `name` | `name` | A new name; see [Names](/language/values#names). |
+| `step_seq`, `step_layers` | `steps` | Step words, `steps` names, repeats and Euclidean rhythms, or layers of them; see [steps](/drums/steps). |
+| `note_seq` | `notes` | Note words, `notes` names, repeats and interval calls; see [notes](/pitched/notes). |
+| `chart` | `chords` | Chord symbols, degrees, `chords` names and interval calls in bars; see [chords](/pitched/chords). |
+| `body` | `pattern` or `block` | `{ entry, ... }`; see [Bodies](/language/patterns#bodies). |
+| `part` | `pattern` or `block` | One line, name, group, `with`, `every` or placed part; see [Parts](/language/patterns#parts). |
+
+A declaration binds its name from that line onward and produces no sound. The type and `=` are required, and the type is written once: the braces of a `pattern` or `block` declaration take no keyword.
+
+```composer-nb Example
+steps pulse = x--x--x-
+notes riff = 1-3-5---
+chords changes = C G | Am F
+pattern groove = { kick: pulse, hat: x- }
+block ending = 1 bars { crash: x, kick: x }
+pattern verse = bass: notes riff
+```
+
+Rules for every declaration:
+
+- The value must be finite. A `steps` or `notes` value that ends in a `...` fill has no length of its own, so it cannot be named; write the fill on the instrument's line.
+- A `steps` name may hold layers. `notes` and `chords` names hold one line; layers of them go on an instrument's line.
+- A `with` cannot be the value of a `steps`, `notes` or `chords` declaration. It can be the value of a `pattern` or `block` declaration.
+- A `pattern` or `block` cannot contain itself, directly or through other names.
+- `steps`, `notes` and `chords` keep their notation. Scale degrees stay symbolic, so one name plays in whatever key, mode and octave are in effect where it is used.
+
+```composer-nb Invalid
+pattern beat = pattern { kick: x--- }
+```
+
+```text Error
+beat is a pattern, so its braces take no type: pattern beat = { ... }
+```
+
+```composer-nb Invalid
+notes lead = 1--- ...-
+```
+
+```text Error
+A name's notes have a length of their own. ... is the rest of a block, so it goes on the instrument's line: piano: notes lead ..._
+```
+
+## Names
+
+```text Syntax
+name ::= [a-z][A-Za-z0-9]+
+```
+
+A name starts with a lowercase letter and continues with letters and digits: at least two characters, written in camelCase (`riff`, `partA`, `countIn`). Underscores, hyphens, dots and spaces are not allowed.
+
+Names are case-sensitive, and two names that differ only in capitals cannot both be visible.
+
+A name cannot be any of these:
+
+- A keyword: `steps`, `notes`, `chords`, `pattern`, `block`, `set`, `with`, `play`, `print`, `for`, `every`, `on`, `bar`, `to`, `bars`, `beats`, `in`, `over`, `rest`.
+- A setting name, an interval function, a kit piece or an instrument.
+- A Roman numeral `i` to `vii`, or a spelling that reads as a chord degree, such as `b3`.
+- `x` followed by digits, or `d` followed by digits and an optional `e` or `a`.
+
+Setting values such as `major`, `rock` and `off` are not reserved.
+
+A name is declared once in a cell: a declaration cannot reuse a name that is visible where it stands, whatever its type. A later cell may declare an inherited name again. Visibility is defined in [Scope](/language/scope#names-in-scope).
+
+```composer-nb Invalid
+notes a = 1
+```
+
+```text Error
+Names need at least two characters, because single letters are steps
+```
+
+```composer-nb Invalid
+notes partA = 1
+notes parta = 3
+```
+
+```text Error
+parta differs from partA only in its capitals, so pick another name or write partA
+```

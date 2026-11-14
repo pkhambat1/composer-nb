@@ -1,109 +1,183 @@
 ---
-title: "Notes"
-description: "The notes type: what an instrument plays, one note at a time, by name or by degree of the key."
+title: "notes"
+description: "The `notes` type: one voice of single notes for a pitched instrument, written one note per step."
 ---
 
-An [instrument](/pitched/instruments)'s line holds a `notes` value when the word `notes` comes first: `bass: notes i---v---`. It is drawn on steps, and a step is a sixteenth note, so a bar of `4 over 4` is 16 steps.
-
-```composer-nb
-play piano: notes E4---E4---F4---G4--- | G4---F4---E4---D4---
+```text Syntax
+note_seq  ::= note_item+ [note_fill]
+note_item ::= note_word | name | call | repeat | "|"
+note_word ::= attack ("-" | "_")* | ("-" | "_")+
+attack    ::= ["^" | "~"] pitch
+pitch     ::= letter ["#" | "b"] [octave] | degree | numeral
+repeat    ::= integer "*" (note_word | name | call | "(" note_item+ ")")
+call      ::= ["^" | "~"] interval "(" note_seq ["," integer] ")"
+note_fill ::= "..." (pitch | "-" | "_")
 ```
 
-## Writing notes
+A `notes` value is a melody or bass line: one note at a time on the step grid. It names no instrument: the [instrument line](/pitched/instruments#instrument-lines) it is written on decides what plays it. Several voices at once are [layers](/pitched/instruments#layers) on that line.
 
-A note is a capital `A` to `G`, then an optional `#` or `b`, then an optional octave from 0 to 8. A note without a number is in the current [`octave`](/pitched/instruments#octave). Pitches are as they sound, so a guitar's low E is `E2`.
+## Where a notes value is written
 
-| Step | Plays |
+| Position | Signature | Notes |
+| --- | --- | --- |
+| On an instrument line | `instrument ":" "notes" note_seq` | The `notes` keyword is required, before a name as well. |
+| In a declaration | `"notes" name "=" note_seq` | Must be finite: no `note_fill`. |
+| As a function argument | `interval "(" note_seq ")"` | Must be finite. |
+| In `print`, or as a last expression | `"notes" note_seq`, or a `notes` name | Must be finite. |
+
+## What a notes value is made of
+
+| Form | Example | Meaning |
+| --- | --- | --- |
+| Note word | `C4`, `1---`, `b3-_` | A note, then any holds and rests. |
+| Hold and rest | `-`, `_` | `-` holds the note for one more step. `_` stops it; the step is silent. |
+| Name | `riff` | The notes of a declared `notes` name, in place. |
+| Interval call | `octave(riff)`, `fifth(1 3)` | The argument, moved through the scale; see [Interval functions](/functions/intervals). |
+| Repeat | `4*1`, `2*(1-3-)`, `2*riff` | The word, name, call or group, that many times in a row. |
+| Bar line | `\\|` | Checks that a bar ends here. Takes no time. |
+| Fill | `...-`, `..._`, `...5` | Last on the line: holds, rests or sounds a note to the end of the surrounding part. |
+
+Items are separated by spaces, which take no time. Two notes may not touch: `F# E`, not `F#E`. A note may be followed directly by its holds and rests, and the next note may follow those: `1---3---`.
+
+## Pitches
+
+| Form | Syntax | Meaning |
+| --- | --- | --- |
+| Letter | `letter ["#" \\| "b"] [octave]` | An absolute pitch: `A` to `G`, an optional sharp or flat after the letter, an optional octave from 0 to 8. Without an octave, the [octave](/language/settings#octave) in effect. `C4` is middle C. |
+| Degree | `["-"] ["b" \\| "#"] digit+` | A degree of the scale in effect: `1` is the tonic, `8` the tonic above, `-1` the scale tone below. The accidental comes before the number. See [Degrees](/pitched/key#degrees). |
+| Numeral | `["b" \\| "#"] ("i" … "vii")` | A lowercase Roman numeral: the same as degrees 1 to 7. |
+
+All the digits of a degree belong to it: `13` is degree thirteen, and `1 3` is two notes. A minus sign is a negative degree only at the start of a note word; anywhere else it is a hold. So `-1---` starts on the tone below the tonic, and in `1---2---` every dash is a hold.
+
+Every pitch must be within MIDI 0 to 127 after interval functions and [transpose](/language/settings#transpose).
+
+```composer-nb Example
+print(notes C E4 F#2 Bb, notes 1 3 b3 8 -1, notes i iii v)
+```
+
+```text Output
+notes C(C3) E4 F#2 Bb(Bb3), 1(C3) 3(E3) b3(Eb3) 8(C4) -1(B2), 1(C3) 3(E3) 5(G3)
+```
+
+## Steps, holds and rests
+
+Each note, hold and rest lasts one step, however many characters the note takes to write. A step is a sixteenth note unless [every](/language/patterns#every) changes it.
+
+| Token | Effect on its step |
 | --- | --- |
-| A note, a [degree](#degrees) or an [interval function](#interval-functions) | Starts the note. It sounds until the next note or `_`. |
-| `^` or `~` before a note | The note accented, or soft. |
-| `-` | Nothing new. A sounding note carries on. |
-| `_` | Stops the note: one step of silence. |
-| `\|` | Optional bar line, checked against the `time`. |
+| A pitch | Starts a note. |
+| `^` before a pitch or call | Starts it accented. |
+| `~` before a pitch or call | Starts it soft. |
+| `-` | The note sounding keeps sounding. Silent if nothing is sounding. |
+| `_` | The note sounding stops. The step is silent. |
 
-A note is one step however many characters it has, so `F---` and `F#---` are both quarter notes. Two notes never touch: a `-`, `_`, space or `|` goes between them. A space takes no step, so `E---F# E-E--` is ten steps.
+A note sounds until the next note, the next `_`, or the end of the part. In a repeating pattern, a note still held at the end of the line rings into the repeat until the line's first note or rest.
 
-In a pattern, the last note rings over the repeat until the first note or `_`. Write each pattern line's repeating figure once: `C2-C2-` is an error there because `C2-` already repeats. A block, a direct `play` line, or a named `notes` phrase can contain finite repeats.
-
-## Degrees
-
-A positive integer is a degree of the [`key`](/pitched/key) and its mode: in C major `3` is E, and in C minor it is Eb. `b` or `#` before a degree moves it a semitone off the scale. Degree `1` is the root in the current `octave`. Count past the end of the scale to continue into the next octave: in seven-note modes `8` is the next tonic and `15` is two octaves up. In six-note `wholeTone`, those tonics are `7` and `13`; `8` is its second degree in the next octave.
-
-Negative degrees count downward from the tonic, skipping zero. In C major, `-1` is B below C, `-2` is A, `-7` is the lower C, and `-14` is C two octaves down. Each mode uses its own scale: in six-note `wholeTone`, `-6` reaches the lower tonic. Put the sign before an accidental: `-b1` lowers the note at degree `-1` by a semitone.
-
-A leading minus belongs to the degree. Dashes inside a note word still sustain, so separate negative notes with spaces: `-1--- -2---`. The existing `1---2---` keeps its timing, and a standalone `-` remains a sustain.
-
-All consecutive digits form one degree: `13` is the thirteenth degree, while `1 3` is two notes. Lowercase Roman numerals remain accepted within the first octave. `octave(phrase, -2)` lowers a whole phrase two octaves. Apostrophe notation is no longer accepted. Notes must fit the playable MIDI range, 0 to 127.
-
-```composer-nb
-set octave 4
-
-notes scale = 1---2---3---4---|5---6---7---8---
-
-play piano: notes scale
-with mode minor { play piano: notes scale, }
-
-set key F#
-play piano: notes scale
+```composer-nb Example
+play piano: notes C4--- E4-_- ^G4- ~G4- C5---
 ```
 
-A name holds degrees, so it is read under whichever key and mode play it. Letters and degrees can share a line. Numbers on a drum line are not notes; kit pieces use their step characters.
+## Length
 
-## Interval functions
+| Form | Length in steps |
+| --- | --- |
+| Note word | One per note, hold and rest. |
+| Name | The length of the named value. |
+| Interval call | The length of its argument. |
+| `n*item` | `n` times the length of `item`. |
+| `\\|` | 0. |
+| Fill | None of its own; see [Fills](/pitched/notes#fills). |
 
-`fifth(value)` moves each note four positions up the active scale. `second`, `third`, `fourth`, `sixth`, `seventh`, `octave`, and `ninth` through `fifteenth` work the same way; `unison` leaves it in place. An octave always spans the whole scale, including six-note `wholeTone`.
+A finite `notes` value may be at most 64 bars long.
 
-The argument can be a single note, an inline phrase, or a named phrase. Holds, rests, accents and bar lines keep their timing. An optional integer count repeats the move: `fifth(1, 2)` replaces `fifth(fifth(1))`, and `fifth(1, -1)` moves down a fifth. Counts range from -64 to 64. Step repeats work inside a function: `fifth(1 7*- 3 7*-, 2)` moves two held notes up two fifths.
+## Repeats
 
-```composer-nb
-notes phrase = ^1--- 3--- 5--- 7---
-notes answer = fifth(phrase)
-
-play piano: notes phrase answer
-with mode minor { play piano: notes answer, }
-play piano: notes fifth(1) 7*- fifth(1, 2) 7*-
+```text Syntax
+repeat ::= integer "*" (note_word | name | call | "(" note_item+ ")")
 ```
 
-Functions use the active key and mode, not a fixed semitone distance: `fifth(B3)` is F4 in C major. A chromatic offset is carried relative to the scale: `fifth(Bb3)` is Fb4 in C major, because both notes are one semitone below their scale degree. For letters missing from a six-note scale, movement counts from the preceding spelled scale degree and carries the pitch offset. [`chords`](/pitched/chords#interval-functions) uses the same rule for every chord tone and the bass.
+| Operand | Type | May be |
+| --- | --- | --- |
+| `integer` | `integer` | A literal of at least 2. |
+| Right-hand side | `notes` | A note word, a `notes` name, an interval call, or a parenthesized group of items. Groups nest. |
 
-## Repeats and holds
+Plays its right-hand side `integer` times in a row. A repeat copies what it is given: `8*1` is eight separate notes, `1 7*-` is one note held for eight steps, and `8*_` is eight silent steps. Parentheses in notes always need a count.
 
-`n*word` repeats a note word, and `n*(words)` repeats a group. Counts are whole numbers of at least two, and groups can nest: `2*(1 7*- 3 7*-)`. A word can also be a named `notes` phrase or an interval function. Spaces separate words; commas separate brace entries or function arguments.
+As with steps, a line in a pattern that is one figure written out several times is an error; see [In a pattern, write the figure once](/drums/steps#in-a-pattern-write-the-figure-once).
 
-Repeats copy attacks as well as holds: `8*1` plays eight notes, while `1 7*-` starts one note and sustains it for seven more steps. At the default sixteenth-note grid that is two beats. `8*_` is eight silent steps. [`every`](/language/patterns#every) changes the duration of every step, including those inside a repeat. Note values no longer take `beats`, `steps`, `bars`, `rest`, or comma-separated duration lists.
-
-A final `...G1` starts G1 and holds it to the end of the block, `...-` sustains the preceding note, and `..._` fills with silence. Another line or an explicit block length must supply the end. A fill cannot go inside a bounded repeat or an interval function.
-
-```composer-nb
-set time 3 over 4
-
-pattern waltz = {
-  bass: notes C2 11*- G1 11*-,
-  piano: chords _ C C|_ G G,
-}
-
-play waltz for 2 bars
-play piano: notes 8*_ E4---F4--- G4 11*-
+```composer-nb Example
+print(notes 2*(1 3) 5 3*-)
 ```
 
-A long line continues on the next line when that line starts with `|`. Bar lines check the expanded steps against the current time signature.
-
-```composer-nb
-notes flats = A3-Ab3-G3-Gb3-F3-E3-Eb3-D3-
-  |Db3-C3-B2-Bb2-A2--- 4*_
-
-play piano: notes flats
+```text Output
+notes 1(C3) 3(E3) 1(C3) 3(E3) 5(G3)
 ```
 
-## Layers
+## Fills
 
-A line plays one note at a time. For notes that sound together, give the instrument a block of layers, one per line. Each layer is its own voice and repeats until they all end together. A layer can be a chart with `chords` in front, to put chords under a tune.
+```text Syntax
+note_fill ::= "..." (pitch | "-" | "_")
+```
 
-```composer-nb
-set octave 4
+| Fill | Effect |
+| --- | --- |
+| `...-` | The note sounding is held to the end of the surrounding part. |
+| `..._` | The note sounding stops; silence to the end. |
+| `...pitch` | That note starts and is held to the end. |
 
-play piano: {
-  chords vi iv|i v,
-  notes vi-------iv-------|vi---v---iv---iii---,
-}
+A fill is the last item on a line and has no length of its own: another finite line, or an explicit length, must say when the part ends. A value with a fill cannot be named, printed or passed to a function.
+
+```composer-nb Example
+play block { piano: notes 1-3-5 ...-, kick: x--- x--- x--- x--- }
+```
+
+## Interval calls
+
+```text Syntax
+call ::= ["^" | "~"] interval "(" note_seq ["," integer] ")"
+```
+
+An interval call inside `notes` has type `notes` and stands wherever a note word may. Its argument is any finite `note_seq`. An accent or ghost mark before the call applies to every note in it. The functions are defined in [Interval functions](/functions/intervals).
+
+```composer-nb Example
+notes riff = 1-3-
+print(notes riff fifth(riff) octave(riff, -1))
+```
+
+```text Output
+notes 1(C3) 3(E3) 5(G3) 7(B3) -7(C2) -5(E2)
+```
+
+## Errors
+
+```composer-nb Invalid
+play piano: notes F#E
+```
+
+```text Error
+"F#E": notes don't touch, so put a space between them: F# E
+```
+
+```composer-nb Invalid
+play piano: notes 1 rest 3
+```
+
+```text Error
+A silent note step is _. Repeat silence with 8*_ or fill with ..._
+```
+
+```composer-nb Invalid
+play piano: notes (1 3)
+```
+
+```text Error
+Parentheses in notes need a repeat count: 2*(1--- 3---)
+```
+
+```composer-nb Invalid
+play piano: notes C9
+```
+
+```text Error
+"C9": octaves run from 0 to 8
 ```

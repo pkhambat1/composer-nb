@@ -1,83 +1,165 @@
 ---
 title: "Settings"
-description: "set and with, and the settings every line shares: time, tempo and swing."
+description: "Every setting: the value it takes, its default, its range and what it changes."
 ---
 
-A setting is `set`, then the setting and its value: `set tempo 90`. It applies from its line to the end of the cell, and carries into later cells. `set` goes only at the top of a cell, outside every block. Inside a block, settings go on a [`with`](#with), which gives them to its own block and nothing else.
+A setting is a name followed by a value. Settings are given to [set](/language/scope#set), which changes the rest of the cell, or to [with](/language/scope#with), which changes one pair of braces. Both statements, and the rules for where settings are in effect, are defined in [Scope](/language/scope). This page defines the settings themselves.
 
-| Setting | Value | Default | Sets |
+## Settings index
+
+```text Syntax
+setting ::= "time" number "over" number
+          | "tempo" number
+          | "swing" ("on" | "off")
+          | "key" pitch_class
+          | "mode" mode
+          | "octave" number
+          | "transpose" number
+          | "kit" ("rock" | "synth")
+          | "guitar.electric" ("clean" | "muted")
+```
+
+| Setting | Value | Default | Effect |
 | --- | --- | --- | --- |
-| `time` | `<count> over <unit>` | `4 over 4` | The time signature. |
-| `tempo` | 20 to 400 | `120` | Quarter notes per minute. |
-| `swing` | `on` or `off` | `off` | Whether the eighths swing. |
+| [time](/language/settings#time) | `number "over" number` | `4 over 4` | Time signature: the length and grouping of a bar. |
+| [tempo](/language/settings#tempo) | `number`, 20 to 400 | `120` | Quarter notes per minute. |
+| [swing](/language/settings#swing) | `on` or `off` | `off` | Swung eighth notes. |
+| [key](/language/settings#key) | `pitch_class` | `C` | The tonic that scale degrees count from. |
+| [mode](/language/settings#mode) | one of 10 mode names | `major` | The scale that degrees and interval functions move through. |
+| [octave](/language/settings#octave) | whole `number`, 1 to 6 | `3` | The register of pitches written without an octave. |
+| [transpose](/language/settings#transpose) | whole `number`, -12 to 12 | `0` | Semitones added to every sounding pitch. |
+| [kit](/language/settings#kit) | `rock` or `synth` | `rock` | The drum kit's sounds. |
+| [guitar.electric](/language/settings#guitarelectric) | `clean` or `muted` | `clean` | The electric guitar's sound. |
 
-These three apply to every line. The drums and the pitched instruments each have settings of their own, set the same way: [`kit`](/drums/kit#kit) for the drums, and [`key` and `mode`](/pitched/key), [`octave`](/pitched/instruments#octave), [`transpose`](/pitched/instruments#transpose) and [an instrument's sound](/pitched/instruments#sound) for the pitched instruments.
+Every `number` is an arithmetic expression; see [Numbers](/language/expressions#numbers). Value words such as `on`, `minor` and `rock` are written exactly as shown.
+
+`time`, `tempo` and `swing` set the clock, so parts that sound together must share them. The other six settings may differ between parts that sound together; see [with](/language/scope#with).
 
 ## time
 
-The unit is the note value counted: 1, 2, 4, 8 or 16. The count can be a sum, as in `set time 3+4 over 8`, which groups the grid without changing the bar. `over` is required because `/` is division: `7/8` is the number 0.875.
+```text Syntax
+"time" count "over" unit
+```
+
+| Operand | Type | May be |
+| --- | --- | --- |
+| `count` | `number` | A whole number of at least 1, or a sum of them such as `3+2`. Not a decimal such as `4.0`. |
+| `unit` | `number` | 1, 2, 4, 8 or 16. |
+
+Default: `4 over 4`. A bar holds `count` notes of length 1/`unit`, and may last at most 8 whole notes (`count / unit` is at most 8).
+
+A `count` written as a sum groups the bar: `3+2 over 8` is five eighth notes felt as three then two, and the sheet music beams them that way. Any other expression is a single group.
+
+Changing `time` changes the length of a bar. It does not change the length of a beat, which is always a quarter note, or of a step.
+
+```composer-nb Example
+set time 3+2+2 over 8
+play pattern { kick: x-----x---x--- }
+```
+
+```composer-nb Invalid
+set time 7/8
+```
+
+```text Error
+/ is division, so 7/8 is the number 0.875, not a time. Write set time 7 over 8
+```
+
+## tempo
+
+```text Syntax
+"tempo" number
+```
+
+Default: `120`. Range: 20 to 400, fractions allowed. Quarter notes per minute, whatever the time signature: a beat lasts `60 / tempo` seconds.
 
 ## swing
 
-`set swing on` swings the eighths, as a part marked *Swing* is played: the off-beat eighth falls two thirds of the way through the beat, where a triplet's third note would, and sixteenths move with the eighth they belong to. It is off unless it's set, and `set swing off` turns it off again. Only the sound moves: the grid stays as written, and the sheet says *Swing* above the first staff.
-
-```composer-nb
-set swing on
-set tempo 100
-
-play block {
-  ride: x-x-x-x-x-x-x-x-,
-  hat.pedal: 4*- x 7*- x 3*-,
-  kick: x 7*- x 7*-,
-}
+```text Syntax
+"swing" ("on" | "off")
 ```
 
-## with
+Default: `off`. With `on`, each beat is split two thirds and one third instead of in half, so the off-beat eighth lands on the last triplet of the beat. Steps between move in proportion. Swing changes playback only: the grid and the sheet music stay straight.
 
-`with`, then settings with commas between them, then a block: `with key E, mode minor { ... }`. The settings apply to the block only, and what was set before comes back at its `}`. A `with` takes any setting `set` takes, each once, and at least one. Names declared inside a `with` stay inside it, as names in any block do, and nothing in it carries into later cells.
+## key
 
-A `with`'s block holds what could stand where the `with` is:
-
-| Where | The block holds | Plays |
-| --- | --- | --- |
-| At the top of a cell | Statements: declarations, `play` and other `with`s. | Each `play` in it, with the settings. |
-| In a `play`, a pattern or `every` | Lines, groups, values with `on bar`, `every` and other `with`s. | As a `pattern` on a line of its own: together with the other lines, repeating until what it's in ends. |
-| In a [group](/language/patterns#groups) | The same. | As one part in order. |
-
-An instrument's block of layers and a named value hold values, not lines, so a `with` goes around the line instead: `with octave 5 { piano: { ... } }`.
-
-```composer-nb
-set tempo 96
-chords walk = i ii|iii iv|v vi|vii i
-
-with key E, mode minor {
-  play block {
-    piano: chords walk,
-    with octave 2 { bass: notes i---v---, },
-  },
-}
-
-chords prog = i vi|iv v
-play (
-  with key E { piano: chords prog, }
-  with key G { piano: chords prog, }
-)
+```text Syntax
+"key" pitch_class
+pitch_class ::= ("A" | "B" | "C" | "D" | "E" | "F" | "G") ["#" | "b"]
 ```
 
-The chart walks through every chord of E minor, and the bass plays an octave below it, its figure repeating under each chord. A pattern is evaluated where it is played, so `prog` plays in E and then in G.
+Default: `C`. The tonic: the pitch that degree `1` names. A key is a note only. It has no octave and no quality: A minor is `key A` with `mode minor`.
 
-`time`, `tempo` and `swing` go on a `with` around a whole play, or on a part that plays in order. Lines that sound together share one moment, and so one tempo: a `with tempo` beside other lines in a play or a pattern is an error, and so is a pattern that changes the tempo played with other lines. A `with` that holds everything a pattern plays can set its tempo, and the pattern then plays at it wherever it plays in order: `pattern tag = with time 6 over 4 { ... }`.
+Changing `key` moves scale degrees and interval functions. Notes and chords written with letters keep their pitch. See [Key and mode](/pitched/key).
 
-```composer-nb
-pattern beat = {
-  hat: x-,
-  kick: x 7*-,
-  snare: 4*- x 3*-,
-}
-
-play (
-  with tempo 90 { 2 bars beat, }
-  with tempo 120 { 2 bars beat, }
-)
+```composer-nb Invalid
+set key Am
 ```
 
+```text Error
+A key is a note: set key A, then set mode minor
+```
+
+## mode
+
+```text Syntax
+"mode" mode
+mode ::= "major" | "minor" | "dorian" | "phrygian" | "lydian" | "mixolydian"
+       | "locrian" | "harmonicMinor" | "melodicMinor" | "wholeTone"
+```
+
+Default: `major`. The scale built on the key. It decides which pitch each degree names, the quality of each degree's chord, where interval functions land, and the key signature and spelling on the sheet. `ionian` and `aeolian` are not mode names: they are `major` and `minor`. The scales are listed in [Modes](/pitched/key#modes).
+
+## octave
+
+```text Syntax
+"octave" number
+```
+
+Default: `3`. Range: a whole number from 1 to 6. The register of every pitch written without an octave of its own. Octaves change at C, and `C4` is middle C. Degree `1` is the tonic in this octave and higher degrees continue upward: under `key A`, `octave 3`, degree `1` is A3 and degree `5` is E4.
+
+A note written with its own octave, such as `E2`, ignores this setting. To move an existing value by octaves, use the [octave function](/functions/intervals#function-index), which is relative.
+
+```composer-nb Example
+with octave 2 { print(1, C, E4, chords 1) }
+```
+
+```text Output
+notes 1(C2), C(C2), E4
+chords 1(C(C2 E2 G2))
+```
+
+## transpose
+
+```text Syntax
+"transpose" number
+```
+
+Default: `0`. Range: a whole number from -12 to 12. Semitones added to every sounding pitch of notes, chords and chord basses, after everything else is resolved.
+
+Written names stay as written: note names, chord symbols and guitar chord shapes are unchanged, and `print` shows the sounding pitches in parentheses. On a guitar, `transpose 4` therefore sounds like the written shapes with a capo at the fourth fret. Kit pieces are not transposed, and setting a transpose other than 0 in a cell that plays only kit pieces is an error.
+
+```composer-nb Example
+with transpose 2 { print(1, chords C) }
+```
+
+```text Output
+notes 1(D3)
+chords C(D(D3 F#3 A3))
+```
+
+## kit
+
+```text Syntax
+"kit" ("rock" | "synth")
+```
+
+Default: `rock`. The sounds of all kit pieces. `rock` is a sampled acoustic kit; `synth` is synthesized. Kit-piece names and step notation are the same for both. See [Drum kit](/drums/kit).
+
+## guitar.electric
+
+```text Syntax
+"guitar.electric" ("clean" | "muted")
+```
+
+Default: `clean`. The sound of the `guitar.electric` instrument; `muted` is palm-muted. No other instrument has a choice of sounds.

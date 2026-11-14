@@ -1,0 +1,130 @@
+---
+title: "Interval functions"
+description: "The built-in functions `unison` to `fifteenth`: move notes and chords through the scale."
+---
+
+```text Syntax
+interval(value: notes | chords, intervalMultiplier: integer = 1)
+    -> notes | chords
+
+interval ::= "unison" | "second" | "third" | "fourth" | "fifth" | "sixth" | "seventh"
+           | "octave" | "eighth" | "ninth" | "tenth" | "eleventh" | "twelfth" | "thirteenth"
+           | "fourteenth" | "fifteenth"
+```
+
+| Parameter | Type | Default | May be |
+| --- | --- | --- | --- |
+| `value` | `notes` or `chords` | Required | A finite `note_seq` or a `chart`: literals, a name, or another interval call. Not `steps`, a pattern or a block. |
+| `intervalMultiplier` | `integer` | `1` | A literal from -64 to 64, with an optional sign. No arithmetic. |
+
+Returns a new value of the same type as `value`, with every pitch moved by the function's interval, `intervalMultiplier` times. A negative multiplier moves down; `0` moves nothing. Rhythm is unchanged: holds, rests, bar lines and accents stay where they were. Nothing is played, and `value` itself is not changed.
+
+Arguments are positional. All sixteen functions share this signature; they differ only in how far they move. These are the only functions in the language: functions cannot be declared, named or passed as values.
+
+## Function index
+
+"Scale positions" are steps along the scale of the key and mode in effect. The last column is the function applied to degree `1`.
+
+| Function | Moves each pitch up by | `f(1)` |
+| --- | --- | --- |
+| `unison` | Nothing. | `1` |
+| `second` | 1 scale position. | `2` |
+| `third` | 2 scale positions. | `3` |
+| `fourth` | 3 scale positions. | `4` |
+| `fifth` | 4 scale positions. | `5` |
+| `sixth` | 5 scale positions. | `6` |
+| `seventh` | 6 scale positions. | `7` |
+| `octave` | 1 octave. | `8` |
+| `eighth` | 1 octave. The same as `octave`. | `8` |
+| `ninth` | 1 octave and 1 scale position. | `9` |
+| `tenth` | 1 octave and 2 scale positions. | `10` |
+| `eleventh` | 1 octave and 3 scale positions. | `11` |
+| `twelfth` | 1 octave and 4 scale positions. | `12` |
+| `thirteenth` | 1 octave and 5 scale positions. | `13` |
+| `fourteenth` | 1 octave and 6 scale positions. | `14` |
+| `fifteenth` | 2 octaves. | `15` |
+
+```composer-nb Example
+print(third(1), fifth(1 3 5), octave(1, -1), fourth(C4 E4))
+```
+
+```text Output
+notes 3(E3), 5(G3) 7(B3) 9(D4), -7(C2), F4 A4
+```
+
+## How pitches move
+
+Movement is along the scale, not by a fixed number of semitones. In C major, `fifth(B3)` is F4, a diminished fifth, because F is four scale positions above B.
+
+- A note that is not in the scale keeps its offset: in C major, `fifth(Bb3)` is Fb4.
+- A chord moves tone by tone, so its quality follows the scale: `fifth(3)` turns E minor into B diminished. A slash bass moves too.
+- `octave`, `eighth` and `fifteenth` always move by whole octaves, in every mode. In `wholeTone`, which has six degrees, `seventh` also moves one octave.
+- Degrees stay degrees. A result that is named resolves against the settings in effect where it is used, like any other value.
+- Functions apply before [transpose](/language/settings#transpose). An interval function changes the value and its name; `transpose` changes only the sound.
+
+Every resulting pitch must be within MIDI 0 to 127.
+
+```composer-nb Example
+print(fifth(B3), fifth(Bb3))
+print(chords fifth(3))
+```
+
+```text Output
+notes F4, Fb4
+chords 7(Bdim(B3 D4 F4))
+```
+
+## Type of the argument
+
+Inside `notes`, a call's argument is read as notes; inside `chords`, as a chart. A name keeps its declared type. Where nothing gives the type, as in `print`, a bare argument is notes: write `print(chords fourth(1))` for the chord.
+
+```composer-nb Example
+chords home = 1
+print(fourth(1), fourth(home), chords fourth(1))
+```
+
+```text Output
+notes 4(F3)
+chords 4(F(F3 A3 C4)), 4(F(F3 A3 C4))
+```
+
+## Nesting
+
+Calls nest, innermost first, up to 32 deep. A repeat may appear inside a notes argument; a `...` fill may not. Put the fill after the call.
+
+```composer-nb Example
+chords tonic = 1
+print(octave(fourth(tonic), -1))
+```
+
+```text Output
+chords -4(F(F2 A2 C3))
+```
+
+In C major this is the chord on degree 4, one octave down. `fourth` is a movement, not a destination: it gives degree 4 only when it starts from degree 1.
+
+## Errors
+
+```composer-nb Invalid
+print(octave(1, 1+1))
+```
+
+```text Error
+octave's count is an integer from -64 to 64: octave(phrase, -1)
+```
+
+```composer-nb Invalid
+print(fourth(1 ...-))
+```
+
+```text Error
+fourth takes notes with a length of their own; put ... outside the function
+```
+
+```composer-nb Invalid
+print(chords octave(1, -4))
+```
+
+```text Error
+"octave(1, -4)" goes outside playable MIDI notes 0 to 127. Change octave or use octave(value, -1)
+```

@@ -1,66 +1,41 @@
 ---
-title: "Assistants"
-description: "composer-nb as a tool for Claude, Cursor or any assistant that speaks MCP: it writes a cell, checks it and draws the sheet."
+title: "MCP integration"
+description: "Connect an assistant to the parser, the renderer, the groove library and this reference."
 ---
 
-An assistant can talk about music all day and produce nothing you can hear. Plugged into composer-nb, what it hands back plays: a cell it has checked against the parser, which plays right in the chat in claude.ai and Claude Desktop, and the sheet music as a picture or a MIDI file.
+## Connection
 
-The connection is an [MCP](https://modelcontextprotocol.io) server. Once it is connected you write in English, in the chat you already use:
+Point an MCP client at this HTTP endpoint:
 
-> Take The Sound of Muzak, put the hi-hat on every eighth, and bring it down to 80.
-
-The assistant writes the cell, calls `parse`, and if the parser says `line 5: The snare line is 6 steps long, which doesn't fit 12 steps a whole number of times`, it fixes the cell before you see it. Then it calls `render` for the sheet.
-
-## Install the plugin
-
-In Claude, the composer-nb plugin brings the connector and four skills: `write-cells` (parse every cell, fix it, hand it over), `groove`, `practice` and `theory`.
-
-**Claude.ai and Claude Desktop.** Customize → Plugins → Add → Add marketplace, with the repository `pkhambat1/composer-nb`. Select composer-nb, then Add. Then add its connector on the plugin's Connectors tab. The server has no sign-in.
-
-**Claude Code.**
-
-```text
-/plugin marketplace add pkhambat1/composer-nb
-/plugin install composer-nb@composer-nb
-```
-
-## Connect it
-
-For the connector alone, or another assistant.
-
-**Claude.ai and Claude Desktop.** Settings → Connectors → Add custom connector, with the URL:
-
-```text
+```text Syntax
 https://composer-nb.vercel.app/mcp
 ```
 
-**Claude Code.**
-
-```bash
-claude mcp add --transport http composer-nb https://composer-nb.vercel.app/mcp
-```
-
-**Cursor, Windsurf, VS Code and the rest** take the same URL as a remote MCP server.
-
-Nothing is stored on the server: a request is a cell in, a result out.
+The [composer-nb plugin](https://github.com/pkhambat1/composer-nb/tree/main/plugin) adds skills for writing cells, grooves, practice routines and theory explanations. Running the server locally is described in the [MCP server README](https://github.com/pkhambat1/composer-nb/tree/main/mcp).
 
 ## Tools
 
-| Tool | Does |
+| Tool | Purpose |
 | --- | --- |
-| `parse` | Checks a cell. Returns the errors with their line numbers, the settings and names in effect, and for each play a grid of every hit and note, bar by bar, with the chords it heard. |
-| `render` | The sheet music as a PNG (the kit on a percussion staff, each instrument on a staff of its own), or a MIDI file, or the ABC notation. |
-| `library` | Searches the grooves, the playground's starter notebook: transcriptions and harmony to start from, each with its code. |
-| `reference` | The pages under Language, Drums and Pitched instruments on this site, for the assistant to read. |
+| `parse` | Checks a cell, optionally continuing from the cells in `after`. Returns errors with line numbers, the settings and names in effect, printed values, and a grid of what each `play` sounds. |
+| `render` | Exports checked music as a sheet-music PNG, a MIDI file or ABC notation. |
+| `library` | Searches the bundled grooves. |
+| `reference` | Returns one reference topic, or all of them with `topic: "all"`. |
 
-The reference pages and the grooves are also MCP resources, for clients that read those.
+Reference topics and library entries are also MCP resources. In clients that support MCP Apps, `parse` shows an editable cell with a player.
 
-In claude.ai and Claude Desktop's chat, `parse` also draws the playground's own cell under the reply: its code, which you can change and run again with Run or Shift+Enter, and its player. What you play there reaches the assistant with your next message. Ask for an empty cell to write in, and you get one.
+## Reference topics
 
-## What to ask for
+| Category | Topic IDs |
+| --- | --- |
+| Index | `symbols`, `grammar` |
+| Language | `overview`, `values`, `scope`, `expressions` |
+| Settings | `settings`, `key` |
+| Value types | `steps`, `notes`, `chords`, `chord-symbols` |
+| Composition | `patterns`, `play` |
+| Functions | `intervals`, `print` |
+| Kit and instruments | `kit`, `instruments` |
 
-- A groove from a description: "seven-eight, hats on every eighth alternating open and closed, kick and snare resolving every two bars."
-- Variations: "the same at 80 with just the hands, then bring it up ten at a time", each a cell.
-- An exercise written out: "a funk groove with the ghost notes on the and of 2 and 4, in 6/8", as a sheet to print.
-- A chord chart with a bass line under it, in a key or a mode, as a MIDI file for your DAW.
-- An explanation that plays: "I don't understand how the ride and the kick line up here", as a cell of just the ride and the kick.
+## Workflow
+
+Read the topic for what is being written, write a short cell, and call `parse`. Pass the cells above it as `after` when it uses their names or settings. Fix every error before showing the cell or calling `render`.

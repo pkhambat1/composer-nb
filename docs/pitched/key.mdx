@@ -1,27 +1,98 @@
 ---
 title: "Key and mode"
-description: "key and mode: the root that degrees and numerals count from, and how the music is written."
+description: "How `key` and `mode` turn scale degrees into pitches, chords and written notes."
 ---
 
-`key` is a note and `mode` is a setting of its own, so `set key E` then `set mode minor` is E minor. Each keeps the other: after `set mode minor`, a later `set key G` is G minor. On a [`with`](/language/settings#with), a block plays in another key.
+`key` gives the tonic and `mode` gives the scale. Together they decide what degrees in [notes](/pitched/notes#pitches) and [chords](/pitched/chords#chords-by-degree) mean, and where [interval functions](/functions/intervals) move. Notes and chords written with letter names are not affected.
 
-Numeric degrees in notes and chords count on the key's own scale, the mode's. In D minor, `3` is F and `6` is Bb; in D dorian, `6` is B; in D major, `3` is F#. So the same line in another mode sounds in that mode: change `set mode` and the notes change with it. A `b` or `#` in front moves a degree or numeral a semitone off the scale, as minor's raised seventh is `#7`. The modes are `major`, `minor`, `dorian`, `phrygian`, `lydian`, `mixolydian`, `locrian`, `harmonicMinor`, `melodicMinor` and `wholeTone`. Each has one name: Ionian is `major` and Aeolian is `minor`. The mode also gives the sheet its key signature (D dorian has none, A mixolydian two sharps; harmonic and melodic minor take natural minor's signature and write their raised notes as accidentals, and whole tone takes major's) and how accidentals are spelt.
+## Modes
 
-```composer-nb
-chords chart = 1 2|3 4|5 6|7 octave(1)|7 6|5 4|3 2|1
+Each mode is a list of semitone distances above the tonic, one for each degree.
 
-with key D, mode dorian { play piano: chords chart, }
-with key D, mode minor { play piano: chords chart, }
-with key D, mode major { play piano: chords chart, }
+| Mode | Semitones above the tonic | Degrees per octave |
+| --- | --- | --- |
+| `major` | `0 2 4 5 7 9 11` | 7 |
+| `minor` | `0 2 3 5 7 8 10` | 7 |
+| `dorian` | `0 2 3 5 7 9 10` | 7 |
+| `phrygian` | `0 1 3 5 7 8 10` | 7 |
+| `lydian` | `0 2 4 6 7 9 11` | 7 |
+| `mixolydian` | `0 2 4 5 7 9 10` | 7 |
+| `locrian` | `0 1 3 5 6 8 10` | 7 |
+| `harmonicMinor` | `0 2 3 5 7 8 11` | 7 |
+| `melodicMinor` | `0 2 3 5 7 9 11` | 7 |
+| `wholeTone` | `0 2 4 6 8 10` | 6 |
+
+`minor` is natural minor. `melodicMinor` is the ascending form in both directions.
+
+## Degrees
+
+```text Syntax
+degree ::= ["-"] ["b" | "#"] digit+
 ```
 
-A plain number in a chart is the chord the scale has on that degree, so one chart goes up the scale and back down in every mode, and each mode makes its own chords. In D dorian they are Dm Em F G Am Bdim C: the `4`, G, is major, where natural minor has Gm. In D minor the same chart plays Dm Edim F Gm Am Bb C, and in D major D Em F#m G A Bm C#dim. A quality after the numeral says the chord outright instead: `4M` is a major chord on the 4th degree whatever the mode, and a plain degree takes the scale's own fifth, so `7` is diminished in major.
+Degree `1` is the tonic in the octave in effect. Positive degrees climb the scale and continue past the octave. Negative degrees descend from the tonic; there is no degree 0. `b` or `#` lowers or raises the resulting pitch by a semitone, and the minus sign comes first: `-b1`.
 
-Harmonic minor is minor with a raised 7th, melodic minor (its ascending form) is minor with a raised 6th and 7th, and whole tone is six notes a whole step apart, so `1` to `6` span its first octave and `7` is the next tonic. The chart above in D harmonic minor plays Dm Edim Faug Gm A Bb C#dim, and in melodic minor Dm Em Faug G A Bdim C#dim.
+| Pitch | Seven-degree modes | `wholeTone` |
+| --- | --- | --- |
+| Tonic | `1` | `1` |
+| Tonic one octave up | `8` | `7` |
+| Tonic two octaves up | `15` | `13` |
+| Scale tone below the tonic | `-1` | `-1` |
+| Tonic one octave down | `-7` | `-6` |
 
-```composer-nb
-chords chart = 1 2|3 4|5 6|7 octave(1)|7 6|5 4|3 2|1
+A degree is a whole number from -128 to 128, and the pitch it names must be within MIDI 0 to 127.
 
-with key D, mode harmonicMinor { play piano: chords chart, }
-with key D, mode melodicMinor { play piano: chords chart, }
+```composer-nb Example
+print(notes 1 3 5 8 -1 -7 b3)
+```
+
+```text Output
+notes 1(C3) 3(E3) 5(G3) 8(C4) -1(B2) -7(C2) b3(Eb3)
+```
+
+```composer-nb Example
+with key A, mode minor { print(notes 1 3 5 8 -1 -7 #7) }
+```
+
+```text Output
+notes 1(A3) 3(C4) 5(E4) 8(A4) -1(G3) -7(A2) #7(G#4)
+```
+
+In `notes`, a degree is one pitch. In `chords`, a degree is the triad the scale builds on that pitch: every other scale tone, three of them. A suffix replaces or alters that triad; see [Chords by degree](/pitched/chords#chords-by-degree).
+
+```composer-nb Example
+print(chords 1 2 3 4 5 6 7)
+```
+
+```text Output
+chords 1(C(C3 E3 G3)) 2(Dm(D3 F3 A3)) 3(Em(E3 G3 B3)) 4(F(F3 A3 C4)) 5(G(G3 B3 D4)) 6(Am(A3 C4 E4)) 7(Bdim(B3 D4 F4))
+```
+
+```composer-nb Example
+with mode minor { print(chords 1 2 3 4 5 6 7) }
+```
+
+```text Output
+chords 1(Cm(C3 Eb3 G3)) 2(Ddim(D3 F3 Ab3)) 3(Eb(Eb3 G3 Bb3)) 4(Fm(F3 Ab3 C4)) 5(Gm(G3 Bb3 D4)) 6(Ab(Ab3 C4 Eb4)) 7(Bb(Bb3 D4 F4))
+```
+
+## Spelling and key signature
+
+Degrees are written with the letters of the scale, one letter per degree. An accidental on a degree is relative to the scale: `#7` in `minor` is the raised seventh. `wholeTone` has six degrees for seven letters, so its sixth degree takes the seventh letter: D whole tone is D E F# G# A# C.
+
+The mode sets the key signature on the sheet. `harmonicMinor` and `melodicMinor` use the signature of `minor`, and `wholeTone` uses the signature of `major`; their other notes are written with accidentals.
+
+## Named values and the key
+
+A named `notes` or `chords` value keeps its degrees as degrees. It is resolved against the key, mode and octave in effect where it is played or printed, not where it was declared.
+
+```composer-nb Example
+notes riff = 1 3 5
+with key D { print(riff) }
+with key F, mode minor { print(riff) }
+```
+
+```text Output
+notes 1(D3) 3(F#3) 5(A3)
+notes 1(F3) 3(Ab3) 5(C4)
 ```

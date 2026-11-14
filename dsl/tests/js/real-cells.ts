@@ -16,8 +16,13 @@ export function realCells(group: string): RealCell[] {
   if (group === "docs") {
     const cells: RealCell[] = []
     for (const page of pages)
-      for (const block of examples(read(page)))
-        cells.push({ title: `${page}:${block.line}`, source: block.source, inherited: initialState() })
+      // A block titled Invalid is there to show an error; it ships no cell that plays.
+      for (const block of examples(read(page)).filter((b) => !b.invalid))
+        cells.push({
+          title: `${page}:${block.line}`,
+          source: block.source,
+          inherited: initialState(),
+        })
     return cells
   }
   if (group === "grooves") {

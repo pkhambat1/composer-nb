@@ -296,6 +296,63 @@ describe("scale interval functions", () => {
   })
 })
 
+describe("eighth", () => {
+  const modes = Object.keys(MODE_TABLE)
+  it("is octave, for notes and chords, in every mode and multiplier", () => {
+    for (const mode of modes)
+      for (const n of [-2, -1, 0, 1, 2]) {
+        const s = `set key D\nset mode ${mode}`
+        expect(notes(`eighth(1 3--- ^5 ~7, ${n})`, s).map((e) => e.note.midi), mode).toEqual(
+          notes(`octave(1 3--- ^5 ~7, ${n})`, s).map((e) => e.note.midi),
+        )
+        expect(
+          chords(`eighth(1 4m7/5|b3, ${n})`, s).map((e) => [e.label, e.chord.notesMidi]),
+          mode,
+        ).toEqual(chords(`octave(1 4m7/5|b3, ${n})`, s).map((e) => [e.label, e.chord.notesMidi]))
+      }
+    expect(notes("eighth(1)")[0].note.midi).toBe(60)
+    expect(notes("eighth(1, -1)")[0].note.midi).toBe(36)
+    expect(notes("eighth(1, 0)")[0].note.midi).toBe(48)
+    expect(notes("eighth(1)", "set mode wholeTone")[0].note.midi).toBe(60)
+  })
+
+  it("nests inside and around other interval functions", () => {
+    for (const mode of modes) {
+      const s = `set mode ${mode}`
+      const m = (v: string) => notes(v, s).map((e) => e.note.midi)
+      expect(m("eighth(fifth(1 3))"), mode).toEqual(m("octave(fifth(1 3))"))
+      expect(m("fifth(eighth(1 3, -1), 2)"), mode).toEqual(m("fifth(octave(1 3, -1), 2)"))
+      expect(m("third(eighth(octave(1)))"), mode).toEqual(m("third(octave(eighth(1)))"))
+    }
+    expect(chords("eighth(fifth(1 6m))").map((e) => e.label)).toEqual(["G", "Em"])
+  })
+
+  it("keeps accents and ghosts", () => {
+    expect(notes("^eighth(1) ~eighth(2)").map((e) => [e.accent, e.ghost])).toEqual([
+      [true, false],
+      [false, true],
+    ])
+    expect(notes("^eighth(1) ~eighth(2)").map((e) => [e.note.midi, e.accent, e.ghost])).toEqual(
+      notes("^octave(1) ~octave(2)").map((e) => [e.note.midi, e.accent, e.ghost]),
+    )
+  })
+
+  it("is a reserved word and names itself in errors", () => {
+    expect(errors("notes eighth = 1---")).toMatch(/already means something/)
+    expect(Object.keys(INTERVALS)).toContain("eighth")
+    expect(errors("play piano: notes eighth(1, 65)")).toMatch(/eighth's count/)
+    expect(errors("play piano: notes eighth(1, 1.5)")).toMatch(/eighth's count/)
+    expect(errors("play piano: notes eighth(1, 2, 3)")).toMatch(/eighth takes/)
+    expect(errors("play piano: notes eighth()")).toMatch(/eighth needs/)
+    expect(errors("play piano: notes eighth(1")).toMatch(/eighth\(\.\.\.\) is missing/)
+    expect(errors("steps beat = x-\nplay piano: notes eighth(beat)")).toMatch(/steps/)
+    expect(errors("chords chart = 1 5\nplay piano: notes eighth(chart)")).toMatch(/chords/)
+    expect(parseCell("play piano: notes eighth(1 ...-)").errors.length).toBeGreaterThan(0)
+    expect(parseCell("play piano: notes eighth(127---)").errors.length).toBeGreaterThan(0)
+    expect(parseCell("play piano: notes eighth(C7---, 6)").errors.length).toBeGreaterThan(0)
+  })
+})
+
 describe("pitch syntax highlighting", () => {
   it("preserves source and colors numeric chords, functions, counts and wrapped arguments", () => {
     for (const source of [

@@ -1,27 +1,61 @@
 ---
-title: "Kit"
-description: "The drum kit: its pieces, a line each, and the kit setting."
+title: "Drum kit"
+description: "The kit pieces: the names that take `steps`."
 ---
 
-The drum kit is one instrument, and each piece of it has a line of its own. A kit piece's line holds [`steps`](/drums/steps).
+## Kit-piece lines
+
+```text Syntax
+line ::= kit_piece ":" steps_expr
+```
+
+| Operand | Type | May be |
+| --- | --- | --- |
+| `kit_piece` | `kit_piece` | One of the 14 names in [Kit pieces](/drums/kit#kit-pieces). |
+| `steps_expr` | `steps` | Step words, a `steps` name, repeats, a Euclidean rhythm, a fill, or layers; see [steps](/drums/steps). |
+
+A kit-piece line gives a `steps` value to one piece of the kit. `kit_piece` is a fixed name, not a value: it cannot be declared, assigned or passed to a function. A kit piece takes only `steps`, so nothing is written between the colon and the steps.
+
+The line is a [part](/language/patterns#parts): it stands in a body or directly after `play`.
+
+```composer-nb Example
+play pattern {
+  kick: x--- --x-,
+  snare: ---- x---,
+  snare.ghost: -x-- ---x,
+  hat: x-,
+}
+```
+
+## Kit pieces
 
 | Name | Kit piece |
 | --- | --- |
-| `kick` | Bass drum |
-| `snare` | Snare drum |
-| `snare.ghost` | Snare ghost notes |
-| `snare.rim` | Rimshot |
-| `snare.cross` | Cross-stick |
-| `hat` | Closed hi-hat |
-| `hat.open` | Open hi-hat. Rings until the next `hat` or `hat.pedal`. |
-| `hat.pedal` | Hi-hat played with the foot |
-| `ride` | Ride cymbal |
-| `ride.bell` | Ride bell |
-| `crash` | Crash cymbal |
-| `tom.high` | High tom |
-| `tom.low` | Low tom |
-| `tom.floor` | Floor tom |
+| `kick` | Bass drum. |
+| `snare` | Snare drum. Does not take `~`. |
+| `snare.ghost` | The snare's ghost notes. Takes `x` and `d`; not `^` or `~`. |
+| `snare.rim` | Rimshot. |
+| `snare.cross` | Cross-stick. |
+| `hat` | Closed hi-hat. |
+| `hat.open` | Open hi-hat. Rings until the next hi-hat hit. |
+| `hat.pedal` | Hi-hat closed with the foot. |
+| `ride` | Ride cymbal. |
+| `ride.bell` | Bell of the ride. |
+| `crash` | Crash cymbal. |
+| `tom.high` | High tom. |
+| `tom.low` | Low tom. |
+| `tom.floor` | Floor tom. |
 
-## kit
+These are all the names. There are no aliases, and `tom` alone is not a kit piece.
 
-`set kit rock` or `set kit synth` chooses the kit. `rock`, the default, is a recorded kit, loaded from the network on first use. `synth` is synthesized and works offline. On a [`with`](/language/settings#with), a block can play the other kit.
+- A body may hold one line for each kit piece. Several figures for one piece are [layers](/drums/steps#layers) on that line.
+- When `hat.open` and `hat` hit at the same time, the open hit is kept.
+- The [kit](/language/settings#kit) setting chooses the sounds, `rock` or `synth`. It changes no names and no notation.
+
+```composer-nb Invalid
+play pattern { tom: x--- }
+```
+
+```text Error
+"tom" isn't a drum. The toms are tom.high, tom.low and tom.floor
+```

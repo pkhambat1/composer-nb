@@ -1,47 +1,102 @@
 ---
-title: "Introduction"
-description: "composer-nb is a typed, declarative language for composing music."
+title: "composer-nb language reference"
+description: "The complete definition of the composer-nb language: every statement, type, setting, function, kit piece and instrument."
 ---
 
-A cell describes what plays: settings, named parts and `play` statements. The interpreter evaluates the cell and renders each `play` to audio, with a grid of every hit and note, or the same as sheet music.
+composer-nb is a typed language for writing music as text. A notebook cell holds settings, declarations and statements; `play` renders music and `print` displays values. For each construct, this reference gives its syntax, the type of every operand and what may be written there, its meaning, and its errors.
 
-```composer-nb
-set time 7 over 8
-set tempo 110
-set octave 2
-set guitar.electric muted
+## Contents
 
-pattern groove = {
-  kick: x--x---,
-  snare.rim: ----x--,
-  ride.bell: x--,
-  guitar.electric: notes D---E D-D--,
+| Tab | Pages |
+| --- | --- |
+| Reference | [Anatomy of a cell](/#anatomy-of-a-cell), [Notation](/#notation), [Symbol index](/reference/symbols), [Grammar](/reference/grammar) |
+| Language | [Cells and statements](/language/overview), [Types](/language/values), [Scope](/language/scope), [Numbers and lengths](/language/expressions) |
+| Settings | [Settings](/language/settings), [Key and mode](/pitched/key) |
+| Value types | [steps](/drums/steps), [notes](/pitched/notes), [chords](/pitched/chords), [Chord symbol catalog](/pitched/chord-symbols) |
+| Composition | [Parts and composition](/language/patterns), [play](/language/play) |
+| Functions | [Interval functions](/functions/intervals), [print](/functions/print) |
+| Kit and instruments | [Drum kit](/drums/kit), [Pitched instruments](/pitched/instruments) |
+| Guides | [Using the notebook](/for-musicians), [MCP integration](/assistants) |
+
+## Anatomy of a cell
+
+Every position in a cell has a type, and the type decides what else may be written there.
+
+```composer-nb Example
+set tempo 96
+steps pulse = x--x--x-
+play pattern {
+  kick: pulse,
+  hat: x-,
+  piano: chords C G,
 }
-
-play (
-  block { snare.rim: ^-, }
-  pattern {
-    pattern { crash: x 13*-, } on bar 1,
-    groove,
-  }
-) for 3 bars
 ```
 
-This is *What Happens Now?* by Porcupine Tree. The `play` holds a block and a pattern in brackets, so they play [in order](/language/overview#blocks): an accented rim as a pickup, once, and after it the groove with a crash in its first bar. Each line of `groove` repeats at its own length: 7 steps for the kick and rim, 3 for the ride bell, 10 for the guitar. They only meet again after 15 bars, and `for 3 bars` stops it after three.
+| Written | What it is | What else may stand there |
+| --- | --- | --- |
+| `set tempo 96` | A [set](/language/scope#set) statement. `tempo 96` is a `setting`. | Any of the nine [settings](/language/settings#settings-index). |
+| `steps pulse = x--x--x-` | A [declaration](/language/values#declarations) of a `steps` name. | A declaration of any of the five [value types](/language/values#value-types). |
+| `play` | The [play](/language/play) statement. It takes a `part`. | `print`, to display values instead. |
+| `pattern { ... }` | A [pattern](/language/patterns#pattern): a `part` whose lines repeat. | `block { ... }`, a pattern or block name, a group `( ... )`, or a single line; see [Parts](/language/patterns#parts). |
+| `kick` | A `kit_piece`. | Any of the 14 [kit pieces](/drums/kit#kit-pieces). |
+| `pulse` | A `steps` value, by name. | Anything of type [steps](/drums/steps): step words, a repeat, a Euclidean rhythm, a fill, layers. |
+| `x-` | A `steps` value, written out. | The same. |
+| `piano` | An `instrument`. | Any of the 6 [instruments](/pitched/instruments#instruments). |
+| `chords C G` | A [chords](/pitched/chords) value, with its type keyword. | `notes` and a [notes](/pitched/notes) value, or layers of both. |
 
-## Why instructions
+## Notation
 
-- **You state the rules, the interpreter writes the bars.** Two lines of different lengths make a polyrhythm that would take pages to write out, and you hear where they meet without working it out.
-- **Every edit is a new take.** Change a step, a length or the time signature, evaluate, and listen.
-- **Parts are values.** A groove is named once and reused under every section, a song is its sections in brackets, in order, and a cell is source you can diff, version and generate.
+### Syntax
 
-## Run it
+Syntax is given as grammar rules in boxes labelled Syntax.
 
-- **Playground.** Open [composer-nb.vercel.app](https://composer-nb.vercel.app), sign in, select a cell and press Shift+Enter. Nothing to install.
-- **An assistant.** Connect Claude or Cursor to the MCP server and ask for a groove in words. See [Assistants](/assistants).
+```text Syntax
+play_stmt ::= "play" part ["for" length]
+```
 
-To hear an example on this site, paste it into a cell in the playground and run it.
+| Notation | Meaning |
+| --- | --- |
+| `name ::= ...` | A rule: `name` is written as the right-hand side. |
+| `"play"` | Literal text, written exactly as shown, without the quotes. |
+| `part` | Another rule, or one of the categories in [Types](/language/values). |
+| `[ x ]` | `x` is optional. |
+| `x*`, `x+` | `x` zero or more times; `x` one or more times. |
+| `x \\| y` | Either `x` or `y`. |
+| `( x y )` | Grouping. |
 
-## The reference
+The language itself uses braces, parentheses, bar lines and stars, so in a rule those characters are literal only inside quotes. Every rule is collected in the [Grammar](/reference/grammar).
 
-[Language](/language/overview) covers what every cell has: settings, names and types, blocks, patterns and `play`. The drums and the pitched instruments are two separate parts, and a cell can use either or both. [Drums](/drums/kit) covers the kit pieces and their `steps` type. [Pitched instruments](/pitched/instruments) covers the instruments, the key, and their `notes` and `chords` types.
+### Operands
+
+Under a rule, a table lists each operand with its type and what may be written for it. A type is one of the five [value types](/language/values#value-types), `steps`, `notes`, `chords`, `pattern` and `block`, or one of the [other categories](/language/values#other-categories-used-in-signatures) such as `kit_piece`, `instrument`, `number` and `part`.
+
+Functions are given as signatures: `name(parameter: type = default) -> result type`.
+
+### Boxes
+
+| Label | Contents |
+| --- | --- |
+| Syntax | A rule or signature. Not code to run. |
+| Example | A complete cell that runs as shown. Every example in this reference is checked against the language. |
+| Output | What the example above it prints. |
+| Invalid | A cell that is an error. |
+| Error | The error the cell above it reports. |
+
+## Common tasks
+
+| To | See |
+| --- | --- |
+| Write a drum part | [steps](/drums/steps), [Kit pieces](/drums/kit#kit-pieces) |
+| Write a melody or bass line | [notes](/pitched/notes) |
+| Write a chord progression | [chords](/pitched/chords), [Chord symbol catalog](/pitched/chord-symbols) |
+| Play several things together | [pattern](/language/patterns#pattern), [block](/language/patterns#block) |
+| Play things one after another | [Groups](/language/patterns#groups) |
+| Repeat something, or play it once | [pattern](/language/patterns#pattern), [block](/language/patterns#block), [What plays how often](/language/play#what-plays-how-often) |
+| Set how long something lasts | [Length of a part](/language/patterns#length-of-a-part), [play duration](/language/play#duration) |
+| Write triplets or eighth notes | [every](/language/patterns#every) |
+| Start something at a bar | [on bar](/language/patterns#on-bar) |
+| Change tempo, key or another setting | [set](/language/scope#set), [Settings](/language/settings) |
+| Give one part its own settings | [with](/language/scope#with) |
+| Move notes or chords up or down the scale | [Interval functions](/functions/intervals) |
+| Move everything by semitones | [transpose](/language/settings#transpose) |
+| See what a note or chord resolves to | [print](/functions/print) |
