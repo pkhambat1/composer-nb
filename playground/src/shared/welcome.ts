@@ -19,7 +19,7 @@ const examples: Groove[] = [
   ),
   {
     section: "Harmony",
-    title: "Ask Dorian a question",
+    title: "Dorian chords",
     body: "What is the fourth chord in D Dorian, and what happens when every chord moves up a fourth? Run this cell to print the names and tones: `chords 4` gives G major, while `fourth(triads)` moves every tone of each triad through the scale. Change the key or mode and run it again to compare.",
     source: `with key D, mode dorian {
   chords triads = 1 2 3 4 5 6 7,
