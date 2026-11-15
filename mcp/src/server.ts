@@ -10,10 +10,11 @@ import type { Output, Parsed } from "composer-nb/language"
 import { SITE } from "composer-nb/links"
 import { CELL_UI, registerCellApp } from "./app.ts"
 import { describe, parse, playersOf } from "./cell.ts"
-import { INSTRUCTIONS } from "./instructions.ts"
+import { INSTRUCTIONS, NOTEBOOK_INSTRUCTIONS } from "./instructions.ts"
 import { REFERENCE } from "./reference.ts"
 import { midiOf, pngOf, sheetOf } from "./render.ts"
 import { registerNotebookTools, type NotebookRepository } from "./notebook.ts"
+import { localWorkspace, type NotebookWorkspace } from "./notebook-workspace.ts"
 
 // The package's own file, one folder up from both src/ and lib/
 const { version: VERSION } = z
@@ -21,7 +22,11 @@ const { version: VERSION } = z
   .parse(createRequire(import.meta.url)("../package.json"))
 
 // What a server is made with: the playground its links open
-export type Options = { site?: string; notebook?: NotebookRepository }
+export type Options = {
+  site?: string
+  notebook?: NotebookRepository
+  workspace?: NotebookWorkspace
+}
 
 const text = (t: string) => ({ type: "text" as const, text: t })
 const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? "" : "s"}`
@@ -54,14 +59,18 @@ function playLine(o: Output, i: number): string {
   )
 }
 
-export function createServer({ site = SITE, notebook }: Options = {}): McpServer {
+export function createServer({ site = SITE, notebook, workspace }: Options = {}): McpServer {
+  const securitySchemes = workspace?.cloud ? [{ type: "oauth2", scopes: [] }] : [{ type: "noauth" }]
   const server = new McpServer(
     { name: "composer-nb", version: VERSION },
-    { instructions: INSTRUCTIONS },
+    {
+      instructions: workspace?.cloud ? `${NOTEBOOK_INSTRUCTIONS}\n\n${INSTRUCTIONS}` : INSTRUCTIONS,
+    },
   )
   // Where a groove can be read in full: its resource
   const grooveUri = (g: Groove) => `composer-nb://grooves/${slugOf(g.title)}`
-  if (notebook) registerNotebookTools(server, notebook)
+  if (workspace) registerNotebookTools(server, workspace)
+  else if (notebook) registerNotebookTools(server, localWorkspace(notebook))
   const query = (source: string, after?: string) =>
     `src=${encodeURIComponent(source)}` + (after ? `&after=${encodeURIComponent(after)}` : "")
 
@@ -72,13 +81,26 @@ export function createServer({ site = SITE, notebook }: Options = {}): McpServer
     "parse",
     {
       title: "Check a cell and see what it plays",
-      description:
-        "Checks a composer-nb cell and says what it plays. Returns the errors with their line numbers (a cell with errors plays nothing), the settings and names in effect at the end, and for each play a grid of every hit and note, bar by bar, with the chords it heard. Where the client renders MCP Apps, the cell is drawn too, for the user to change and play: its code, the audio, the grid or the sheet, the chords. What the user plays there comes back with their next message. When the user wants to write a cell themselves, call it with an empty source: they get an empty cell to type in and play. Call it on every cell before showing the cell to anyone; fix the errors and call it again.",
+      description: workspace?.cloud
+        ? "Validate music before saving it to a notebook. Returns errors, settings and a grid of every hit. This tool does not save or create a playable notebook. After validation, use create_notebook with source, add_music_cell with source, or update_music_cell, then show the saved notebook. Pass preceding cells as after when they supply settings or definitions."
+        : "Checks a composer-nb cell and says what it plays. Returns the errors with their line numbers (a cell with errors plays nothing), the settings and names in effect at the end, and for each play a grid of every hit and note, bar by bar, with the chords it heard. Where the client renders MCP Apps, the cell is drawn too, for the user to change and play: its code, the audio, the grid or the sheet, the chords. What the user plays there comes back with their next message. When the user wants to write a cell themselves, call it with an empty source: they get an empty cell to type in and play. Call it on every cell before showing the cell to anyone; fix the errors and call it again.",
       inputSchema: { source: SOURCE, after: AFTER },
-      _meta: { ui: { resourceUri: CELL_UI } },
+      _meta: {
+        securitySchemes,
+        ui: workspace?.cloud ? { visibility: ["model"] } : { resourceUri: CELL_UI },
+      },
     },
     async ({ source, after }) => {
-      if (!source.trim()) return { content: [text(EMPTY)] }
+      if (!source.trim())
+        return {
+          content: [
+            text(
+              workspace?.cloud
+                ? "The empty source is valid. parse does not save. Use create_notebook or add_music_cell to give the user an empty saved cell."
+                : EMPTY,
+            ),
+          ],
+        }
       const { parsed, earlier } = parse(source, after)
       return {
         isError: parsed.errors.length > 0,
@@ -91,6 +113,7 @@ export function createServer({ site = SITE, notebook }: Options = {}): McpServer
     "render",
     {
       title: "Sheet music, MIDI or ABC for a cell",
+      _meta: { securitySchemes },
       description:
         "Draws a cell's plays as sheet music (a PNG: the kit on a percussion staff with the hands up and the feet down, each instrument on a staff of its own, a guitar with its tab), or writes them as a MIDI file for a DAW or a notation program, or gives the ABC notation. A cell with errors renders nothing, so parse first.",
       inputSchema: {
@@ -149,6 +172,7 @@ export function createServer({ site = SITE, notebook }: Options = {}): McpServer
     "library",
     {
       title: "Grooves to start from",
+      _meta: { securitySchemes },
       description:
         "Searches the grooves library: transcriptions (Porcupine Tree in 7 and 9, Gavin Harrison's paradiddle challenge, a 3 over 4 over 5 polyrhythm, Polyrhythmics), harmony cells (interval functions and with scopes, a ii–V–I with a walking bass, and the chords of each mode, from lydian to locrian). Each comes as a cell to start from, with its page, where it plays. Search by words (dorian, blues, 7/8, guitar) or leave the query empty for the list.",
       inputSchema: {
@@ -173,9 +197,7 @@ export function createServer({ site = SITE, notebook }: Options = {}): McpServer
       const rest = q ? found.slice(3) : found
       const out: string[] = []
       for (const g of full) {
-        out.push(
-          `## ${g.title}\n${plain(g.byline)}\n\n${plain(g.body)}\n\n${fence(g.source)}`,
-        )
+        out.push(`## ${g.title}\n${plain(g.byline)}\n\n${plain(g.body)}\n\n${fence(g.source)}`)
       }
       if (rest.length) {
         out.push(
@@ -197,6 +219,7 @@ export function createServer({ site = SITE, notebook }: Options = {}): McpServer
     "reference",
     {
       title: "The language reference",
+      _meta: { securitySchemes },
       description: `The language reference, page by page: ${REFERENCE.map((p) => `${p.id} (${p.description.replace(/\.$/, "").toLowerCase()})`).join(", ")}. Read the page before writing something you haven't written before; "all" is the whole reference.`,
       inputSchema: { topic: z.enum(topics as [string, ...string[]]).default("all") },
     },

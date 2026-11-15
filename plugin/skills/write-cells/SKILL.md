@@ -9,18 +9,47 @@ The composer-nb connector sends its language guide when it connects, and its `re
 
 If the `parse` tool isn't there, the connector isn't connected: in claude.ai or Claude Desktop, open the plugin from Customize > Plugins and connect it on its Connectors tab. Don't hand over a cell that hasn't parsed.
 
-## Workflow
+## Saved notebook workflow
 
-1. Write the cell.
-2. Call `parse`. If it reports errors, fix them and call `parse` again, until it reports none.
-3. Read the grid it returns against what was asked: the hits on the right steps, the bar count, the chords it heard.
-4. Give the cell in a `composer-nb` code block. Call `render` when the user wants the sheet music or a MIDI file.
+The hosted plugin requires a linked Composer.nb account for every tool. Let the
+host display its OAuth flow; never ask for passwords or tokens in chat.
 
-A cell that uses the settings or names of earlier cells is parsed with their source in `after`. For several cells, parse each in turn with the ones before it as `after`, and give them in order with a line of text before each.
+A request to make music, including a groove, progression, exercise or empty cell,
+means saving it in a notebook. Respect explicit preview-only or no-save requests.
 
-In claude.ai and Claude Desktop, `parse` draws the cell under the reply, where the user can change it and play it again, so don't describe what it already shows. A cell the user changed there comes back with their next message: build on that version.
+1. Use the selected notebook ID from app context, or find the notebook the user
+   names with `list_notebooks`. If neither is specified, create a descriptively
+   named notebook. Never choose an arbitrary existing notebook.
+2. Before writing, state the destination and action: “I'll add a new groove cell
+   to **Rhythm sketches**,” or “I'll create **Half-time shuffle** in your notebooks.”
+   Append a new cell by default. Replace a cell only when the user asks to edit
+   it, and identify the notebook and cell being changed. This announcement does
+   not require a separate confirmation for the requested composition.
+3. Read `get_notebook` before editing. Preserve its stable IDs and unrelated
+   content. Write the source, call `parse`, fix errors and check its grid against
+   the request. Pass earlier music cells as `after` for inherited definitions.
+4. Save with `create_notebook` plus `source` for a new notebook,
+   `add_music_cell` plus `source` and the fresh `expectedRevision` to append, or
+   `update_music_cell` with `notebookId`, `cellId`, `source` and the fresh revision
+   to edit. Creation and appending validate before saving. For an empty cell,
+   omit `source` from create/add and leave it empty.
+5. Show the saved notebook with `open_notebook` when the save result has not
+   already opened it. Confirm the actual result: “Saved a new groove as cell 3
+   in **Rhythm sketches**,” or “Created **Half-time shuffle** with your groove.”
+   These changes also appear on the Composer website. Do not claim a save until
+   the tool succeeds. Explain a failed save as unsaved.
 
-When the user wants to write the cell themselves ("give me a cell", "I'll write it"), call `parse` with an empty source and don't fill it in. They get an empty cell to type in and play.
+`parse` validates; it never saves. An unsaved code block or standalone player does
+not complete a composition request. A revision conflict means read again and
+reapply only the intended change; never retry blindly or overwrite other edits.
+For several cells, save them in order with a fresh revision each time. Call
+`render` when the user asks for sheet music or MIDI, after saving the composition.
+For a read-only explanation or an explicit no-save preview, explain the result
+without creating or changing notebooks.
+
+The separate local development server may expose only stateless tools. Only in
+that environment, return validated code or a standalone player and explicitly say
+it has not been saved to a notebook.
 
 ## The standard
 

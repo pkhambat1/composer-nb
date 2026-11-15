@@ -30,7 +30,12 @@ export default defineConfig(({ mode }) => ({
       },
     },
   ],
-  server: { proxy: { "/mcp": "http://127.0.0.1:4179", "/widget": "http://127.0.0.1:4179" } },
+  server: {
+    proxy: {
+      "/mcp": process.env.COMPOSER_NB_DEV_API || "http://127.0.0.1:4179",
+      "/widget": process.env.COMPOSER_NB_DEV_API || "http://127.0.0.1:4179",
+    },
+  },
   // The engine's source (dsl/js), not its build in dsl/lib
   resolve: { conditions: ["composer-nb-source", ...defaultClientConditions] },
   define: {
@@ -49,6 +54,8 @@ export default defineConfig(({ mode }) => ({
       entry: mode === "bootstrap" ? "bootstrap.ts" : "main.ts",
       formats: ["es"],
       fileName: () => (mode === "bootstrap" ? "bootstrap.js" : "app.js"),
+      // cellHtml embeds this CSS in both inline and externally hosted renderers.
+      cssFileName: "composer-nb-mcp",
     },
     rollupOptions: { output: { inlineDynamicImports: true } },
   },

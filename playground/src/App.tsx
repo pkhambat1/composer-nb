@@ -11,13 +11,26 @@ import type { Account } from "./components/AccountMenu.tsx"
 import AuthGate from "./components/AuthGate.tsx"
 import type { Session } from "@supabase/supabase-js"
 import { supabase } from "./lib/supabase.ts"
+import { OAuthConsent, ConnectedApps } from "./components/ConnectedApps.tsx"
 
 // ============================================================================
 // App
 // ============================================================================
 
 export default function App() {
-  return <AuthGate>{(session) => <WebsiteNotebook session={session} />}</AuthGate>
+  return (
+    <AuthGate>
+      {(session) =>
+        window.location.pathname === "/oauth/consent" ? (
+          <OAuthConsent session={session} />
+        ) : window.location.pathname === "/connections" ? (
+          <ConnectedApps />
+        ) : (
+          <WebsiteNotebook session={session} />
+        )
+      }
+    </AuthGate>
+  )
 }
 
 // Website-only persistence, navigation and chrome never enter the MCP adapter.

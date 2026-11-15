@@ -7,8 +7,9 @@ import { createHash } from "node:crypto"
 import { RESOURCE_MIME_TYPE, registerAppResource } from "@modelcontextprotocol/ext-apps/server"
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 
-export const CELL_UI = "ui://composer-nb/cell"
-export const NOTEBOOK_UI = "ui://composer-nb/notebook"
+// Hosts cache resources by URI. v2 includes the editor's extracted stylesheet.
+export const CELL_UI = "ui://composer-nb/cell/v2"
+export const NOTEBOOK_UI = "ui://composer-nb/notebook/v3"
 
 // Where the player fetches its sounds: the drum kit, the sampled instruments.
 export const SOUND_HOSTS = [
@@ -26,6 +27,19 @@ const ASSET_ORIGIN = process.env.COMPOSER_NB_APP_ORIGIN
   : null
 
 let scriptLoading: Promise<string> | null = null
+let stylesLoading: Promise<string> | null = null
+function styles(): Promise<string> {
+  if (!stylesLoading) {
+    stylesLoading = readFile(
+      new URL("../app/dist/composer-nb-mcp.css", import.meta.url),
+      "utf8",
+    ).catch((error: unknown) => {
+      stylesLoading = null
+      throw error
+    })
+  }
+  return stylesLoading
+}
 // The build is in app/dist/, one folder up from both src/ and lib/
 function script(): Promise<string> {
   if (!scriptLoading) {
@@ -56,9 +70,7 @@ function appVersion(): Promise<string> {
 
 // The page the host renders.
 export async function cellHtml(): Promise<string> {
-  const assetUrl = ASSET_ORIGIN
-    ? `${ASSET_ORIGIN}/app.js?v=${await appVersion()}`
-    : null
+  const assetUrl = ASSET_ORIGIN ? `${ASSET_ORIGIN}/app.js?v=${await appVersion()}` : null
   // Inline JS must not close its own tag; "<\/" is the same string to JavaScript.
   const scriptTag = ASSET_ORIGIN
     ? `<script type="module">${(await readFile(new URL("../app/dist/bootstrap.js", import.meta.url), "utf8")).replace(/<\/script/gi, "<\\/script")}</script>`
@@ -71,6 +83,7 @@ export async function cellHtml(): Promise<string> {
 <meta name="color-scheme" content="light dark">
 <title>composer-nb</title>
 <link rel="stylesheet" href="${FONTS}">
+<style data-composer-editor>${(await styles()).replace(/<\/style/gi, "<\\/style")}</style>
 </head>
 <body>
 <div id="status">Loading the player…</div>
