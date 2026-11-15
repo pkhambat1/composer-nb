@@ -22,6 +22,7 @@ export function NotebookApp({
   const [epoch, setEpoch] = React.useState(0)
   const [snapshot, setSnapshot] = React.useState<NotebookSnapshot | null>(null)
   const [message, setMessage] = React.useState("Saved")
+  const [syncError, setSyncError] = React.useState<string | null>(null)
   const current = React.useRef(initial)
   const pending = React.useRef<NotebookSnapshot | null>(null)
   const saving = React.useRef(false)
@@ -63,6 +64,7 @@ export function NotebookApp({
           if (alive.current) {
             setDocument(saved)
             setMessage("Saved")
+            setSyncError(null)
           }
         }
       } catch (error) {
@@ -112,18 +114,22 @@ export function NotebookApp({
   )
   React.useEffect(() => {
     alive.current = true
-    let reading = false
-    const poll = setInterval(async () => {
-      if (
-        reading ||
-        saving.current ||
-        pending.current ||
-        window.document.visibilityState === "hidden"
-      )
+    let stopped = false
+    let failures = 0
+    let timer: ReturnType<typeof setTimeout>
+    const schedule = () => {
+      if (!stopped) timer = setTimeout(poll, Math.min(5000 * 2 ** failures, 30000))
+    }
+    const poll = async () => {
+      if (saving.current || pending.current || window.document.visibilityState === "hidden") {
+        schedule()
         return
-      reading = true
+      }
       try {
         const remote = await request("get_notebook", { notebookId: current.current.id })
+        if (stopped) return
+        failures = 0
+        setSyncError(null)
         if (
           alive.current &&
           !pending.current &&
@@ -136,14 +142,17 @@ export function NotebookApp({
           setMessage("Latest saved changes loaded")
         }
       } catch (error) {
-        if (alive.current) setMessage(error instanceof Error ? error.message : String(error))
+        failures = Math.min(failures + 1, 3)
+        if (!stopped) setSyncError(error instanceof Error ? error.message : String(error))
       } finally {
-        reading = false
+        schedule()
       }
-    }, 2000)
+    }
+    schedule()
     return () => {
+      stopped = true
       alive.current = false
-      clearInterval(poll)
+      clearTimeout(timer)
       if (debounce.current) clearTimeout(debounce.current)
     }
   }, [request])
@@ -165,6 +174,11 @@ export function NotebookApp({
       <p className="notebook-save-notice">
         Editing “{document.title}”. Changes save to this notebook automatically.
       </p>
+      {syncError && (
+        <p className="notebook-save-notice" role="status" title={syncError}>
+          Couldn’t check for updates. Retrying…
+        </p>
+      )}
       {onBack && (
         <div className="notebook-back">
           <button
