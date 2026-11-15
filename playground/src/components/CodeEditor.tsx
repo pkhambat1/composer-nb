@@ -27,6 +27,37 @@ type Props = {
   errorLines: Set<number> | null
 }
 
+// On a touch screen Monaco takes a swipe that starts on a cell to scroll the editor itself,
+// and cancels the page's scroll; a cell is as tall as its source, so nothing moved at all.
+// Monaco hears touches at the document, so a swipe stopped at the editor leaves it to the
+// page. A touch that ends where it started still reaches Monaco, as the tap that places the
+// caret; one that moved is kept from it too, or Monaco would take it for that tap.
+function scrollPageOnTouch(host: HTMLElement): () => void {
+  let start: { x: number; y: number } | null = null
+  const moved = (touch: Touch) =>
+    !!start && Math.hypot(touch.pageX - start.x, touch.pageY - start.y) > 10
+  const onStart = (event: TouchEvent) => {
+    const touch = event.touches[0]
+    start = event.touches.length === 1 && touch ? { x: touch.pageX, y: touch.pageY } : null
+  }
+  const onMove = (event: TouchEvent) => {
+    if (start) event.stopPropagation()
+  }
+  const onEnd = (event: TouchEvent) => {
+    const touch = event.changedTouches[0]
+    if (touch && moved(touch)) event.stopPropagation()
+    start = null
+  }
+  host.addEventListener("touchstart", onStart, { passive: true })
+  host.addEventListener("touchmove", onMove, { passive: true })
+  host.addEventListener("touchend", onEnd, { passive: true })
+  return () => {
+    host.removeEventListener("touchstart", onStart)
+    host.removeEventListener("touchmove", onMove)
+    host.removeEventListener("touchend", onEnd)
+  }
+}
+
 type Monaco = typeof import("./monaco.ts")
 let loading: Promise<Monaco> | null = null
 const loadMonaco = () => (loading ??= import("./monaco.ts"))
@@ -114,6 +145,7 @@ const CodeEditor = React.forwardRef<CodeEditorHandle, Props>(function CodeEditor
         editor.onDidChangeCursorSelection(markLines),
         editor.onDidFocusEditorText(() => latest.current.onFocus?.()),
         editor.onDidBlurEditorText(() => latest.current.onBlur?.()),
+        { dispose: scrollPageOnTouch(host) },
       ]
       markLines()
       fit()

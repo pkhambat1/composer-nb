@@ -289,6 +289,12 @@ body {
   border-bottom: 1px solid var(--border);
   margin: 0;
 }
+/* The drawer's controls only show on narrow screens (see the max-width: 760px block) */
+.lhs-toggle,
+.lhs-close,
+.lhs-scrim {
+  display: none;
+}
 .lhs-brand-link {
   display: flex;
   align-items: center;
@@ -1173,6 +1179,11 @@ body {
 .code-editor {
   min-height: 72px;
 }
+/* Monaco draws a keyboard button in every editor on iPhones and iPads. Tapping the code
+   brings the keyboard up already, so the button is only clutter. */
+.code-editor .iPadShowKeyboard {
+  display: none;
+}
 /* The source as text while Monaco loads, where Monaco will put it */
 .code-hl {
   font-family: var(--font-mono);
@@ -1702,88 +1713,59 @@ body {
   font-style: italic;
 }
 
-/* Phones and narrow windows: the sidebar becomes a top bar, cells take the width, and the
-   player's controls wrap under the waveform. */
+/* Phones and narrow windows: the sidebar becomes a drawer that slides in from the left
+   over a dimmed page, cells take the width, and the player's controls wrap under the
+   waveform. */
 @media (max-width: 760px) {
   .app-shell {
-    flex-direction: column;
+    display: block;
   }
   .app-lhs {
-    width: auto;
-    height: auto;
-    position: static;
-    flex-direction: row;
-    align-items: center;
-    padding: 4px 8px 32px;
-    border-right: 0;
-    border-bottom: 1px solid var(--border);
-    overflow: visible;
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 41;
+    width: min(280px, 85vw);
+    height: 100dvh;
+    box-shadow: var(--shadow-menu);
+    transform: translateX(-100%);
+    visibility: hidden;
+    transition:
+      transform var(--motion-slow) var(--ease),
+      visibility 0s linear var(--motion-slow);
   }
-  .lhs-brand {
-    height: auto;
-    flex-basis: auto;
-    padding: 4px 8px 4px 4px;
-    flex-shrink: 0;
-    border-bottom: 0;
+  .app-lhs-open {
+    transform: none;
+    visibility: visible;
+    transition: transform var(--motion-slow) var(--ease);
   }
-  .lhs-nav {
-    flex-direction: row;
-    align-items: center;
-    gap: 2px;
-    padding: 0;
-    overflow-x: auto;
-    min-width: 0;
+  .lhs-scrim {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 40;
+    background: rgba(0, 0, 0, 0.32);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity var(--motion-slow) var(--ease);
   }
-  .lhs-nav > .lhs-section:first-child {
-    height: auto;
-    flex-basis: auto;
-    margin: 0;
-    padding: 0;
-    border-bottom: 0;
+  .lhs-scrim-open {
+    opacity: 1;
+    pointer-events: auto;
   }
-  /* In a line: the notebooks, + for a new one, then the reference */
-  .lhs-section {
-    display: contents;
+  /* The menu button sits at the left of the notebook's title bar, which makes room for it */
+  .lhs-toggle {
+    --btn-h: 32px;
+    display: inline-flex;
+    position: fixed;
+    top: 6px;
+    left: 8px;
+    z-index: 22;
   }
-  .lhs-section-label {
-    display: none;
-  }
-  .lhs-section-btn {
-    --btn-h: 26px;
-    margin: 0 8px 0 0;
-    flex-shrink: 0;
-    order: 1;
-  }
-  .lhs-tab-ref {
-    order: 2;
-  }
-  .lhs-tab {
-    padding: 6px 8px;
-    white-space: nowrap;
-    flex-shrink: 0;
-  }
-  .lhs-tab-label {
-    max-width: 160px;
-  }
-  .lhs-account {
-    margin: 0 0 0 auto;
-    padding: 0 0 0 8px;
-    border-top: 0;
-    flex-shrink: 0;
-  }
-  .account-row {
-    padding: 4px;
-  }
-  .account-text,
-  .account-chevron {
-    display: none;
-  }
-  .account-menu {
-    left: auto;
-    right: 0;
-    bottom: auto;
-    top: calc(100% + 4px);
-    width: 240px;
+  .lhs-close {
+    display: inline-flex;
+    margin-left: auto;
   }
   .nb-title-menu {
     left: 0;
@@ -1792,10 +1774,11 @@ body {
     height: auto;
     overflow: visible;
   }
-  /* The sticky header stays short: no subtitle, less padding */
+  /* The sticky header stays short: no subtitle, less padding, and room on the left for
+     the menu button */
   .nb-title-bar {
     height: auto;
-    padding: 6px 12px;
+    padding: 6px 12px 6px 48px;
   }
   .nb-title-bar .panel-subtitle {
     display: none;
