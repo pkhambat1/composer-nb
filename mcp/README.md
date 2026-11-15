@@ -25,8 +25,8 @@ development; assistants connect to the hosted one at https://composer-nb.vercel.
 
 For a remote host such as ChatGPT, expose the HTTP endpoint through an HTTPS service
 you control. Set `COMPOSER_NB_APP_ORIGIN=https://your-server.example` before starting
-this server so it serves the renderer at `/app.js` from that same origin. Without an
-asset origin, the UI resource carries the complete bundle.
+this server so it serves the hashed renderer assets at `/mcp-assets/` from that
+same origin. Without an asset origin, the UI resource carries the complete bundle.
 `COMPOSER_NB_SITE` sets the website used by the sheet and MIDI download links.
 
 This local file-backed server is for one notebook owner. A hosted service should
@@ -87,6 +87,15 @@ consent/connection endpoints. Without the server configuration the MCP endpoint
 returns 503; partial configuration also fails closed. There is no anonymous hosted
 MCP fallback. The migration and
 local tests do not configure or deploy the production project automatically.
+
+Hosted UI resources use `COMPOSER_NB_ORIGIN` as their default asset origin. The
+Vercel build publishes content-hashed bootstrap, renderer and CSS files under
+`/mcp-assets/`, with cross-origin loading and immutable browser/CDN caching. Each
+`resources/read` returns only a small HTML page, rather than transferring the
+multi-megabyte editor through a function on every notebook open.
+`COMPOSER_NB_APP_ORIGIN` overrides the asset origin when another host serves these
+files. The build writes `mcp/app/dist/manifest.json` and its matching `static/`
+directory together; deploy both so cached filenames always match the resource.
 
 The MCP SDK supplies OAuth protocol handling, client validation and S256 PKCE.
 Supabase verifies website login; website session tokens never reach the MCP host.
@@ -221,8 +230,9 @@ loading the renderer. Neither adapter duplicates the shared notebook UI.
 packaging includes `app/dist`. Tests exercise parsing, transport, persistence,
 revision conflicts and UI selection stability.
 
-The UI resource embeds `app/dist/composer-nb-mcp.css` as well as the renderer.
+The UI resource includes `app/dist/composer-nb-mcp.css` as well as the renderer,
+using cached static files when an asset origin is configured.
 Vite extracts Monaco's layout styles into this file; omitting it exposes the
-editor's internal textarea and breaks positioning. Both inline and external-script
-loading need these styles. UI resource URIs are versioned when their HTML contract
+editor's internal textarea and breaks positioning. Both inline and external-asset
+loading include these styles. UI resource URIs are versioned when their HTML contract
 changes so hosts can fetch the updated resource.

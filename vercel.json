@@ -1,14 +1,23 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": null,
-  "buildCommand": "npm run build:lib -w dsl && npm run build:lib -w mcp && npm run build:app -w mcp && npm run build -w playground",
+  "buildCommand": "npm run build:lib -w dsl && npm run build:lib -w mcp && npm run build:app -w mcp && npm run build -w playground && cp -R mcp/app/dist/static playground/dist/mcp-assets",
   "outputDirectory": "playground/dist",
+  "headers": [
+    {
+      "source": "/mcp-assets/:path*",
+      "headers": [
+        { "key": "Access-Control-Allow-Origin", "value": "*" },
+        { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
+      ]
+    }
+  ],
   "functions": {
     "api/mcp.ts": {
-      "includeFiles": "mcp/app/dist/**"
+      "includeFiles": "mcp/app/dist/manifest.json"
     },
     "api/composer.ts": {
-      "includeFiles": "mcp/app/dist/**"
+      "includeFiles": "mcp/app/dist/manifest.json"
     }
   },
   "rewrites": [
