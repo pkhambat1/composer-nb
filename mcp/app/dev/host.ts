@@ -2,7 +2,7 @@ import { CallToolResultSchema } from "@modelcontextprotocol/sdk/types.js"
 import { Client } from "@modelcontextprotocol/sdk/client/index.js"
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js"
 import { AppBridge, PostMessageTransport } from "@modelcontextprotocol/ext-apps/app-bridge"
-import { notebookSchema } from "../../src/notebook-document.ts"
+import { notebookOf } from "../../src/notebook-document.ts"
 
 const frame = document.getElementById("notebook")
 const context = document.getElementById("context")
@@ -23,19 +23,8 @@ bridge.onupdatemodelcontext = async ({ content }) => {
       .map((item) => item.text)
       .join("\n") ?? ""
   context.textContent = text
-  const jsonStart = text.indexOf("\n")
-  try {
-    const snapshot: unknown = JSON.parse(text.slice(jsonStart + 1))
-    if (
-      typeof snapshot === "object" &&
-      snapshot !== null &&
-      "selectedId" in snapshot &&
-      typeof snapshot.selectedId === "string"
-    )
-      selectedId = snapshot.selectedId
-  } catch {
-    selectedId = null
-  }
+  // The context names the selected cell: "Its cell ID is <id> and it reads:"
+  selectedId = /cell ID is (\S+) and/.exec(text)?.[1] ?? null
   return {}
 }
 const demoEdit = async (text: string) => {
@@ -44,7 +33,8 @@ const demoEdit = async (text: string) => {
   const read = CallToolResultSchema.parse(
     await client.callTool({ name: "get_notebook", arguments: {} }, CallToolResultSchema),
   )
-  const notebook = notebookSchema.parse(read.structuredContent?.notebook)
+  const notebook = notebookOf(read)
+  if (!notebook) throw new Error("The server returned an invalid notebook.")
   const edited = CallToolResultSchema.parse(
     await client.callTool(
       {
@@ -52,7 +42,7 @@ const demoEdit = async (text: string) => {
         arguments: {
           cellId: selectedId,
           expectedRevision: notebook.revision,
-          source: "play block {\n  kick: 1 3\n  snare: 2 4\n  hat: 1 2 3 4\n}",
+          source: "play block {\n  kick: x 7*- x 7*-,\n  snare: 4*- x 7*- x 3*-,\n  hat: 8*x-,\n}",
         },
       },
       CallToolResultSchema,

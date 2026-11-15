@@ -10,68 +10,15 @@ body {
   font-family: var(--font-sans);
   font-size: 14px;
 }
-.notebook-browser {
-  max-width: 760px;
-  margin: 0 auto;
-  padding: 32px 24px;
-  font-family: var(--font-sans);
-  color: var(--text);
-}
-.notebook-browser h1 {
-  font-size: 26px;
-  margin: 0 0 10px;
-}
-.notebook-browser p {
-  color: var(--text-mute);
-  line-height: 1.5;
-}
-.notebook-create {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin: 28px 0;
-}
-.notebook-create label {
-  flex-basis: 100%;
-  font-weight: 600;
-}
-.notebook-create input {
-  min-width: 120px;
-  flex: 1;
-  padding: 10px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  background: var(--bg);
-  color: inherit;
-}
-.notebook-list {
-  list-style: none;
-  padding: 0;
-}
-.notebook-list li {
-  border-bottom: 1px solid var(--border);
-}
-.notebook-list button {
-  width: 100%;
-  display: flex;
-  justify-content: space-between;
-  gap: 20px;
-  padding: 18px 4px;
-  background: transparent;
-  border: 0;
-  color: inherit;
-  text-align: left;
-  font: inherit;
-  cursor: pointer;
-}
-.notebook-list button span {
-  flex-shrink: 0;
+/* A line in the place of a notebook: nothing open yet, or what went wrong */
+.notebook-notice {
+  margin: 0;
+  padding: 24px;
+  font: 14px/1.5 var(--font-sans);
   color: var(--text-mute);
 }
-.notebook-back {
-  padding: 12px 16px 0;
-}
-.notebook-save-notice {
+/* Above the notebook when a check for changes failed; the save status stays in the title */
+.notebook-sync-notice {
   margin: 0;
   padding: 12px 20px;
   font: 13px/1.5 var(--font-sans);

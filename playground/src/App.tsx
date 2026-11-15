@@ -6,6 +6,7 @@ import { NotebookWorkspace, NotebookToolbar } from "./notebook/index.ts"
 import { useNotebooks } from "./hooks/useNotebooks.ts"
 import NotebookTitle, { type NotebookMenu } from "./components/NotebookTitle.tsx"
 import { useTheme } from "./components/theme-panel.tsx"
+import AccountMenu from "./components/AccountMenu.tsx"
 import Sidebar from "./components/Sidebar.tsx"
 import type { Account } from "./components/AccountMenu.tsx"
 import AuthGate from "./components/AuthGate.tsx"
@@ -111,10 +112,14 @@ function WebsiteNotebook({ session }: { session: Session }) {
         onOpenNotebook={openNotebook}
         onNewNotebook={newNotebook}
         onRenameNotebook={notebooks.rename}
-        theme={theme}
-        onSetTheme={(v) => setSetting("theme", v)}
-        account={accountOf(session)}
-        onSignOut={() => void supabase?.auth.signOut()}
+        footer={
+          <AccountMenu
+            account={accountOf(session)}
+            theme={theme}
+            onSetTheme={(v) => setSetting("theme", v)}
+            onSignOut={() => void supabase?.auth.signOut()}
+          />
+        }
       />
 
       <div className="app-main">

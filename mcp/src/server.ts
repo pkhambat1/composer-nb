@@ -82,7 +82,7 @@ export function createServer({ site = SITE, notebook, workspace }: Options = {})
     {
       title: "Check a cell and see what it plays",
       description: workspace?.cloud
-        ? "Validate music before saving it to a notebook. Returns errors, settings and a grid of every hit. This tool does not save or create a playable notebook. After validation, use create_notebook with source, add_music_cell with source, or update_music_cell, then show the saved notebook. Pass preceding cells as after when they supply settings or definitions."
+        ? "Check a cell without saving it: the errors, the settings and a grid of every hit. For a preview the user asked not to save. To save music, call create_notebook or add_music_cell with the source directly: they check it the same way and return the same report, so parsing first only writes the cell twice. Pass preceding cells as after when they supply settings or definitions."
         : "Checks a composer-nb cell and says what it plays. Returns the errors with their line numbers (a cell with errors plays nothing), the settings and names in effect at the end, and for each play a grid of every hit and note, bar by bar, with the chords it heard. Where the client renders MCP Apps, the cell is drawn too, for the user to change and play: its code, the audio, the grid or the sheet, the chords. What the user plays there comes back with their next message. When the user wants to write a cell themselves, call it with an empty source: they get an empty cell to type in and play. Call it on every cell before showing the cell to anyone; fix the errors and call it again.",
       inputSchema: { source: SOURCE, after: AFTER },
       _meta: {
@@ -96,7 +96,7 @@ export function createServer({ site = SITE, notebook, workspace }: Options = {})
           content: [
             text(
               workspace?.cloud
-                ? "The empty source is valid. parse does not save. Use create_notebook or add_music_cell to give the user an empty saved cell."
+                ? "The empty source is valid. parse does not save. Use create_notebook or add_music_cell without source to give the user an empty saved cell."
                 : EMPTY,
             ),
           ],

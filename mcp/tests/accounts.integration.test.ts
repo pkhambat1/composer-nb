@@ -6,7 +6,7 @@ import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/
 import { CallToolResultSchema } from "@modelcontextprotocol/sdk/types.js"
 import { afterAll, beforeAll, describe, expect, it } from "vitest"
 import { createHostedApp } from "../src/hosted.ts"
-import { notebookSchema } from "../src/notebook-document.ts"
+import { notebookOf, notebookSchema } from "../src/notebook-document.ts"
 import { ComposerOAuthProvider } from "../src/oauth.ts"
 import { SupabaseOAuthStore } from "../src/oauth-store.ts"
 
@@ -181,10 +181,9 @@ describe.skipIf(!statusPath)("account-linked MCP with real local Supabase", () =
     const alice = await connect(sessions[0].oauthToken),
       bob = await connect(sessions[1].oauthToken)
     const created = await call(alice, "create_notebook", { title: "Account integration test" })
-    const notebook = notebookSchema.parse(created.structuredContent?.notebook)
+    const notebook = notebookSchema.parse(notebookOf(created))
     const second = notebookSchema.parse(
-      (await call(alice, "create_notebook", { title: "Second notebook" })).structuredContent
-        ?.notebook,
+      notebookOf(await call(alice, "create_notebook", { title: "Second notebook" })),
     )
     expect((await call(bob, "get_notebook", { notebookId: notebook.id })).isError).toBe(true)
     expect(
@@ -202,7 +201,7 @@ describe.skipIf(!statusPath)("account-linked MCP with real local Supabase", () =
       expectedRevision: notebook.revision,
       source: "play piano: chords 1maj7 | 4m6",
     })
-    const after = notebookSchema.parse(saved.structuredContent?.notebook)
+    const after = notebookSchema.parse(notebookOf(saved))
     expect(after.revision).toBe(notebook.revision + 1)
     expect(
       (
@@ -277,21 +276,19 @@ describe.skipIf(!statusPath)("account-linked MCP with real local Supabase", () =
       before.structuredContent,
     )
     const created = await call(client, "create_notebook", { title: "My groove", source })
-    const notebook = notebookSchema.parse(created.structuredContent?.notebook)
+    const notebook = notebookSchema.parse(notebookOf(created))
     expect(notebook.cells[0].source).toBe(source)
     expect(created.structuredContent?.change).toContain('Created notebook "My groove"')
     const appended = await call(client, "add_music_cell", {
       notebookId: notebook.id,
-      expectedRevision: notebook.revision,
       source: "play beat for 4 bars",
     })
-    const after = notebookSchema.parse(appended.structuredContent?.notebook)
+    const after = notebookSchema.parse(notebookOf(appended))
     expect(after.cells[0]).toEqual(notebook.cells[0])
     expect(after.cells[1].source).toBe("play beat for 4 bars")
     expect(appended.structuredContent?.change).toContain('Added cell 2 to "My groove"')
     const rejected = await call(client, "add_music_cell", {
       notebookId: notebook.id,
-      expectedRevision: after.revision,
       source: "play missingPattern",
     })
     expect(rejected.isError).toBe(true)

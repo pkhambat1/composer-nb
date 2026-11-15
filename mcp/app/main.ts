@@ -11,7 +11,7 @@ import { NotebookEditor, type SavedCell, type Theme } from "../../playground/src
 import playgroundCss from "../../playground/src/styles/app.css?inline"
 import themeCss from "./theme.css?inline"
 import { NotebookBrowser, type NotebookView } from "./NotebookBrowser.tsx"
-import { notebookSchema, notebookListSchema } from "../src/notebook-document.ts"
+import { notebookChangeSchema, notebookListSchema, notebookOf } from "../src/notebook-document.ts"
 
 // The package's version, which Vite writes in (app/vite.config.ts)
 declare const __VERSION__: string
@@ -104,9 +104,9 @@ function showResult(result: CallToolResult) {
     )
     return
   }
-  const parsed = notebookSchema.safeParse(result.structuredContent?.notebook)
-  if (parsed.success) {
-    notebook = parsed.data
+  const opened = notebookOf(result)
+  if (opened) {
+    notebook = opened
     render()
     return
   }
@@ -114,6 +114,15 @@ function showResult(result: CallToolResult) {
   if (list.success) {
     notebook = list.data
     render()
+    return
+  }
+  // A host that kept the result's _meta from the app: read the notebook it names
+  const change = notebookChangeSchema.safeParse(result.structuredContent)
+  if (change.success && app) {
+    void app
+      .callServerTool({ name: "get_notebook", arguments: { notebookId: change.data.notebookId } })
+      .then(showResult)
+      .catch((err: unknown) => status(err instanceof Error ? err.message : String(err)))
     return
   }
   if (shown === null) status("The cell wasn't passed to the player. Parse it again.")
