@@ -18,7 +18,16 @@ export default defineConfig(({ mode }) => ({
     {
       name: "compact-mcp-bundle",
       enforce: "post",
-      renderChunk: (code) => transformWithEsbuild(code, "app.js", { minify: true }),
+      // Vite preserves whitespace for ESM library builds after renderChunk.
+      // Compact the final emitted code before computing static asset hashes.
+      async generateBundle(_options, bundle) {
+        for (const output of Object.values(bundle)) {
+          if (output.type === "chunk")
+            output.code = (
+              await transformWithEsbuild(output.code, output.fileName, { minify: true })
+            ).code
+        }
+      },
     },
     {
       name: "composer-development-host",
@@ -37,7 +46,15 @@ export default defineConfig(({ mode }) => ({
     },
   },
   // The engine's source (dsl/js), not its build in dsl/lib
-  resolve: { conditions: ["composer-nb-source", ...defaultClientConditions] },
+  resolve: {
+    conditions: ["composer-nb-source", ...defaultClientConditions],
+    // A sandbox cannot start a Worker on the renderer's different origin.
+    // Vite's inline worker uses a blob rather than a broken sandbox /assets URL.
+    alias: {
+      "monaco-editor/esm/vs/editor/editor.worker.js?worker":
+        "monaco-editor/esm/vs/editor/editor.worker.js?worker&inline",
+    },
+  },
   define: {
     "process.env.NODE_ENV": JSON.stringify("production"),
     __VERSION__: JSON.stringify(version),

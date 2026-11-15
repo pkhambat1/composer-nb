@@ -24,18 +24,28 @@ createHttpServer((req, res) => {
   if (process.env.COMPOSER_DEBUG) console.error(req.method, req.url)
   if (req.method === "GET" && req.url === "/widget") {
     void cellHtml()
-      .then((html) =>
-        res.writeHead(200, { "content-type": "text/html; charset=utf-8" }).end(html),
-      )
+      .then((html) => res.writeHead(200, { "content-type": "text/html; charset=utf-8" }).end(html))
       .catch(() => res.writeHead(500).end("Build the MCP App first"))
     return
   }
-  if (req.method === "GET" && req.url === "/app.js") {
-    void readFile(new URL("../app/dist/app.js", import.meta.url))
+  const staticAsset = req.url?.match(
+    /^\/mcp-assets\/((?:app|bootstrap|composer-nb-mcp)\.[a-f0-9]{16}\.(?:js|css))$/,
+  )?.[1]
+  if (req.method === "GET" && (req.url === "/app.js" || staticAsset)) {
+    void readFile(
+      new URL(`../app/dist/${staticAsset ? `static/${staticAsset}` : "app.js"}`, import.meta.url),
+    )
       .then((source) => {
         res.setHeader("Access-Control-Allow-Origin", "*")
-        res.setHeader("Content-Type", "text/javascript; charset=utf-8")
-        res.setHeader("Cache-Control", "no-cache")
+        res.setHeader(
+          "Content-Type",
+          staticAsset?.endsWith(".css") ? "text/css" : "text/javascript; charset=utf-8",
+        )
+        res.setHeader(
+          "Cache-Control",
+          staticAsset ? "public, max-age=31536000, immutable" : "no-cache",
+        )
+        res.setHeader("Vary", "Accept-Encoding")
         if (req.headers["accept-encoding"]?.includes("gzip")) {
           res.setHeader("Content-Encoding", "gzip")
           res.end(gzipSync(source))
@@ -52,6 +62,4 @@ createHttpServer((req, res) => {
     console.error(err)
     if (!res.headersSent) res.writeHead(500).end()
   })
-}).listen(port, "127.0.0.1", () =>
-  console.error(`composer-nb-mcp at http://localhost:${port}/mcp`),
-)
+}).listen(port, "127.0.0.1", () => console.error(`composer-nb-mcp at http://localhost:${port}/mcp`))
