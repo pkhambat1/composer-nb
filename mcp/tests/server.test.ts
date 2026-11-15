@@ -174,14 +174,14 @@ describe("the MCP App", () => {
   it("is what parse names for a host that renders UI", async () => {
     const { tools } = await client.listTools()
     const byName = Object.fromEntries(tools.map((t) => [t.name, t]))
-    expect(byName.parse._meta?.ui).toMatchObject({ resourceUri: "ui://composer-nb/cell/v3" })
+    expect(byName.parse._meta?.ui).toMatchObject({ resourceUri: "ui://composer-nb/cell/v4" })
     expect(byName.render._meta?.ui).toBeUndefined()
   })
 
   it("reads as one page with the player in it, and no way out to the playground", async () => {
     const { resources } = await client.listResources()
-    expect(resources.map((r) => r.uri)).toContain("ui://composer-nb/cell/v3")
-    const [page] = (await client.readResource({ uri: "ui://composer-nb/cell/v3" })).contents
+    expect(resources.map((r) => r.uri)).toContain("ui://composer-nb/cell/v4")
+    const [page] = (await client.readResource({ uri: "ui://composer-nb/cell/v4" })).contents
     if (!("text" in page)) throw new Error("Missing HTML page")
     expect(page.mimeType).toBe("text/html;profile=mcp-app")
     expect(page.text).not.toContain("Open in the playground")

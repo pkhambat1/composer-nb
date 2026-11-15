@@ -133,7 +133,7 @@ export function NotebookApp({
           current.current = remote
           setDocument(remote)
           setEpoch((value) => value + 1)
-          setMessage("Updated by the assistant")
+          setMessage("Latest saved changes loaded")
         }
       } catch (error) {
         if (alive.current) setMessage(error instanceof Error ? error.message : String(error))
@@ -157,7 +157,7 @@ export function NotebookApp({
       current.current = initial
       setDocument(initial)
       setEpoch((value) => value + 1)
-      setMessage("Updated by the assistant")
+      setMessage("Latest saved changes loaded")
     }
   }, [initial])
   return (
