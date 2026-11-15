@@ -7,17 +7,12 @@ description: Build a drum groove from a description as a composer-nb cell that p
 
 1. Call `library` with the style or meter in the description. Start from the closest groove there and say which one; start from nothing when none is close.
 2. Change it to the description: `set time`, `set tempo`, `set swing on` for a shuffle, the kit pieces, the accents and ghost notes. Read `reference` (topics `steps`, `patterns`) for anything you haven't written.
-3. Parse and fix it as the `write-cells` skill says, and hold the cell to its standard.
+3. Save it as the `write-cells` skill says, fix what the save reports, and hold the cell to its standard.
 4. Say in a line or two what plays: the ostinato, where the backbeat sits, how the bars differ. Don't walk through the grid.
 
 The groove is a named pattern. A crash on the one or a fill goes in the play, so the pattern stays reusable.
 
-Follow the saved notebook workflow in `write-cells` for every requested composition
-or playable example: announce the destination before writing, save in the selected
-or named notebook (or create a clearly named one), and confirm the notebook title
-and cell saved afterward. Append by default; replace only a requested edit. Do not
-present an unsaved parser result as completed music. Pure explanations do not
-change notebooks.
+Save each cell as the `write-cells` skill says: one call writes it, checks it and shows it.
 
 ## Example
 

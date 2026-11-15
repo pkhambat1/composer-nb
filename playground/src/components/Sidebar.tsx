@@ -1,33 +1,37 @@
 // components/Sidebar.tsx — The left side: the notebooks, the reference, and at the foot the
-// signed-in account with its menu (dark mode, keyboard shortcuts, sign out)
+// signed-in account with its menu (dark mode, keyboard shortcuts, sign out). The MCP App
+// draws the same sidebar inside an assistant, where the host owns the account and the
+// theme: it passes no account, and leaves out what it can't do.
 import React from "react"
 import { APP_CONSTANTS } from "../shared/constants.ts"
-import type { Notebook, Theme } from "../shared/types.ts"
-import AccountMenu, { type Account } from "./AccountMenu.tsx"
+
+// What the sidebar needs of a notebook
+type NotebookTab = { id: string; title: string }
 
 export default function Sidebar({
   notebooks,
   onOpenNotebook,
   onNewNotebook,
   onRenameNotebook,
-  theme,
-  onSetTheme,
-  account,
-  onSignOut,
+  onMoreNotebooks,
+  logo = "/composer-mark.png",
+  footer,
 }: {
-  notebooks: { list: Notebook[]; current: Notebook | null }
+  notebooks: { list: NotebookTab[]; current: NotebookTab | null }
   onOpenNotebook: (id: string) => void
   onNewNotebook: () => void
-  onRenameNotebook: (id: string, title: string) => void
-  theme: Theme
-  onSetTheme: (theme: Theme) => void
-  account: Account
-  onSignOut: () => void
+  /** Without it, a notebook's name can't be changed here */
+  onRenameNotebook?: (id: string, title: string) => void
+  /** When the list has more notebooks than it shows */
+  onMoreNotebooks?: () => void
+  logo?: string
+  /** What sits at the foot: the account menu, on the website */
+  footer?: React.ReactNode
 }) {
   const [renaming, setRenaming] = React.useState<{ id: string; title: string } | null>(null)
   const { list, current } = notebooks
   const finishRename = () => {
-    if (renaming) onRenameNotebook(renaming.id, renaming.title)
+    if (renaming) onRenameNotebook?.(renaming.id, renaming.title)
     setRenaming(null)
   }
 
@@ -35,7 +39,7 @@ export default function Sidebar({
     <aside className="app-lhs" aria-label="Workspace">
       <div className="lhs-brand">
         <button type="button" className="lhs-brand-link" title="composer-nb">
-          <img className="lhs-brand-logo" src="/composer-mark.png" width="28" height="28" alt="" />
+          <img className="lhs-brand-logo" src={logo} width="28" height="28" alt="" />
           <span className="lhs-brand-title">
             Composer<span className="lhs-brand-ext">.nb</span>
           </span>
@@ -91,14 +95,20 @@ export default function Sidebar({
               }
               onClick={() => onOpenNotebook(nb.id)}
               onDoubleClick={(event) => {
+                if (!onRenameNotebook) return
                 event.preventDefault()
                 setRenaming({ id: nb.id, title: nb.title })
               }}
-              title={`${nb.title} — double-click to rename`}
+              title={onRenameNotebook ? `${nb.title} — double-click to rename` : nb.title}
             >
               <span className="lhs-tab-label">{nb.title}</span>
             </button>
           ),
+        )}
+        {onMoreNotebooks && (
+          <button type="button" className="lhs-tab" onClick={onMoreNotebooks}>
+            <span className="lhs-tab-label">More notebooks…</span>
+          </button>
         )}
 
         <div className="lhs-section">
@@ -114,7 +124,7 @@ export default function Sidebar({
           <span className="lhs-tab-label">Docs ↗</span>
         </a>
       </nav>
-      <AccountMenu account={account} theme={theme} onSetTheme={onSetTheme} onSignOut={onSignOut} />
+      {footer}
     </aside>
   )
 }

@@ -8,15 +8,10 @@ description: Explain a music theory idea with small composer-nb cells the user c
 1. Say the idea in a sentence or two, as one musician would to another.
 2. Write a cell for each step of it, smallest first: the scale, then the chord built on it, then the progression that uses it. A cell plays one thing, or two side by side when the point is the contrast.
 3. Write scales by degree and charts by numeric degree, so a later cell can change `set key` and play the same name to show the idea moves. Letters only where the note names are the point. Read `reference` (topics `notes`, `chords`) for anything you haven't written, such as `fifth(...)`.
-4. Parse each cell as the `write-cells` skill says, passing the earlier cells as `after` where their names carry on. Check every claim against what `parse` returns: the degrees on the grid, the chords it heard.
-5. Give the cells in order, each after a line saying what to listen for. Open the saved notebook for playback.
+4. Save each cell as the `write-cells` skill says; in a notebook the names of the cells above carry on. Check every claim against the report the save returns: the degrees on the grid, the chords it heard.
+5. Give the cells in order, each after a line saying what to listen for.
 
-Follow the saved notebook workflow in `write-cells` for every requested composition
-or playable example: announce the destination before writing, save in the selected
-or named notebook (or create a clearly named one), and confirm the notebook title
-and cell saved afterward. Append by default; replace only a requested edit. Do not
-present an unsaved parser result as completed music. Pure explanations do not
-change notebooks.
+Save each cell as the `write-cells` skill says: one call writes it, checks it and shows it.
 
 ## Example
 
@@ -29,7 +24,7 @@ with key D, mode minor { play piano: chords chart, }
 with key D, mode dorian { play piano: chords chart, }
 ```
 
-The raised 6 makes the 4 major: G in D dorian, where natural minor has Gm. The same chart in another key, parsed with the first cell as `after`:
+The raised 6 makes the 4 major: G in D dorian, where natural minor has Gm. The same chart in another key, as the next cell of the notebook:
 
 ```composer-nb
 with key A, mode dorian { play piano: chords chart, }

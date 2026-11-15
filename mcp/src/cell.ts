@@ -178,8 +178,7 @@ export function describe(parsed: Parsed, earlier: Parsed | null, source = ""): s
     )
     if (i === 0) out.push(`  ${LEGEND}`)
     for (const b of o.blocks) {
-      if (o.blocks.length > 1) out.push(`  ${blockHead(b)}`)
-      else out.push(`  ${blockHead(b)}`)
+      out.push(`  ${blockHead(b)}`)
       for (const l of gridText(b)) out.push(l ? `  ${l}` : "")
       for (const l of chordsText(b)) out.push(`  chords ${l}`)
     }

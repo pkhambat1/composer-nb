@@ -6,19 +6,14 @@ description: Turn a groove, riff or chart into a practice routine of composer-nb
 # Practice
 
 1. Get the material: the user's cell, a groove from `library`, or a cell written as the `write-cells` skill says.
-2. Write the routine out as cells, each parsed clean:
+2. Write the routine out as cells, each saved clean:
    - A tempo ladder: the same named pattern played again under each new `set tempo`, slowest first. Start where it plays clean, often 60 to 70 percent of the target, and climb 5 to 10 at a time.
    - A hard part alone first, then in context: the hands, then the feet, then both.
    - A play-along: the same groove with the user's part left out, as a pattern without those lines.
    - A count-in, when it helps: a bar of quarter notes on the hi-hat in front, in brackets with what it counts in.
-3. Give the cells in order, each after a line saying what to listen for and when to move on. Open the saved notebook, where the user can change the tempo and play it again.
+3. Give the cells in order, each after a line saying what to listen for and when to move on. The saved notebook is where the user changes the tempo and plays it again.
 
-Follow the saved notebook workflow in `write-cells` for every requested composition
-or playable example: announce the destination before writing, save in the selected
-or named notebook (or create a clearly named one), and confirm the notebook title
-and cell saved afterward. Append by default; replace only a requested edit. Do not
-present an unsaved parser result as completed music. Pure explanations do not
-change notebooks.
+Save each cell as the `write-cells` skill says: one call writes it, checks it and shows it.
 
 ## Examples
 

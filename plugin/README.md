@@ -4,8 +4,9 @@ The [composer-nb](https://composer-nb.vercel.app) connector and four skills, as 
 
 | Skill         | For                                                                                          |
 | ------------- | -------------------------------------------------------------------------------------------- |
-| `write-cells` | Any cell: the parse-and-fix workflow and the standard a cell is held to.                     |
+| `write-cells` | Any cell: the one-call save workflow and the standard a cell is held to.                     |
 | `groove`      | A drum groove from a description, starting from the grooves library.                         |
+| `harmony`     | A progression, piano part, bass line or melody, derived with the interval functions.         |
 | `practice`    | A routine on a groove, riff or chart, written out as cells: a tempo ladder, or a play-along. |
 | `theory`      | A theory idea as small cells you can hear, one idea a cell.                                  |
 

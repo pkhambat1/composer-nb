@@ -5,7 +5,13 @@ import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js"
 import { createServer } from "../src/server.ts"
 import { NOTEBOOK_UI } from "../src/app.ts"
 import { NotebookStore } from "../src/notebook.ts"
-import { notebookSchema, type NotebookDocument } from "../src/notebook-document.ts"
+import {
+  CONFLICT_META,
+  NOTEBOOK_META,
+  notebookOf,
+  notebookSchema,
+  type NotebookDocument,
+} from "../src/notebook-document.ts"
 
 const fixture: NotebookDocument = {
   id: "test-notebook",
@@ -19,7 +25,7 @@ const fixture: NotebookDocument = {
 }
 
 describe("host-owned notebook", () => {
-  it("preserves stable IDs and rejects stale or dependent-invalid edits atomically", () => {
+  it("preserves stable IDs and rejects stale edits atomically", () => {
     const store = new NotebookStore({
       id: "test",
       title: "Test",
@@ -29,8 +35,6 @@ describe("host-owned notebook", () => {
         { id: "play", type: "music", source: "play beat" },
       ],
     })
-    expect(() => store.save([{ id: "play", type: "music", source: "play beat" }], 0)).toThrow()
-    expect(store.read().revision).toBe(0)
     const original = store.read()
     store.save(original.cells, 0)
     expect(() => store.save(original.cells, 0)).toThrow("changed")
@@ -65,9 +69,10 @@ describe("host-owned notebook", () => {
         "openai/ui": { availableDisplayModes: ["fullscreen"] },
       })
       const opened = await first.callTool({ name: "open_notebook", arguments: {} })
-      const before = notebookSchema.parse(
-        CallToolResultSchema.parse(opened).structuredContent?.notebook,
-      )
+      // The notebook goes to the app in _meta; the model gets where it is, not its source
+      expect(JSON.stringify(opened.structuredContent)).not.toContain("chords Am F")
+      expect(JSON.stringify(opened.content)).not.toContain("chords Am F")
+      const before = notebookSchema.parse(notebookOf(CallToolResultSchema.parse(opened)))
       const edited = await second.callTool({
         name: "update_music_cell",
         arguments: {
@@ -92,6 +97,133 @@ describe("host-owned notebook", () => {
   })
 })
 
+describe("the assistant's writes", () => {
+  const connect = async (store: NotebookStore) => {
+    const [a, b] = InMemoryTransport.createLinkedPair()
+    await createServer({ notebook: store }).connect(b)
+    const client = new Client({ name: "notebook-test", version: "1" })
+    await client.connect(a)
+    return client
+  }
+  const textOf = (result: unknown) =>
+    CallToolResultSchema.parse(result)
+      .content.map((item) => (item.type === "text" ? item.text : ""))
+      .join("\n")
+
+  it("appends in one call: no revision, the parse report back, the notebook for the app only", async () => {
+    const store = new NotebookStore(fixture)
+    const client = await connect(store)
+    try {
+      const added = await client.callTool({
+        name: "add_music_cell",
+        arguments: { source: "play piano: chords 1 4|5 1" },
+      })
+      expect(added.isError).toBeFalsy()
+      expect(textOf(added)).toContain('Added cell 4 to "Test notebook"')
+      expect(textOf(added)).toContain("No errors.")
+      expect(textOf(added)).toContain("chords bar 1: C (C E G) · F (F A C)")
+      // What the cells above set reaches the report
+      expect(textOf(added)).toContain("tempo 92")
+      expect(added.structuredContent).toMatchObject({ revision: 1, cellCount: 4, cellNumber: 4 })
+      expect(JSON.stringify([added.content, added.structuredContent])).not.toContain("Am F")
+      expect(notebookSchema.parse(added._meta?.[NOTEBOOK_META]).cells).toHaveLength(4)
+    } finally {
+      await client.close()
+    }
+  })
+  it("saves nothing when the cell has errors, and says them", async () => {
+    const store = new NotebookStore(fixture)
+    const client = await connect(store)
+    try {
+      const added = await client.callTool({
+        name: "add_music_cell",
+        arguments: { source: "piano: Am F" },
+      })
+      expect(added.isError).toBe(true)
+      expect(textOf(added)).toContain("Not saved.")
+      expect(textOf(added)).toContain("line 1")
+      expect(store.read()).toEqual(fixture)
+    } finally {
+      await client.close()
+    }
+  })
+  it("writes beside a draft the user left unfinished", async () => {
+    const store = new NotebookStore({
+      ...fixture,
+      cells: [...fixture.cells, { id: "draft", type: "music", source: "pattern unfinished = {" }],
+    })
+    const client = await connect(store)
+    try {
+      const added = await client.callTool({
+        name: "add_music_cell",
+        arguments: { source: "play piano: chords 1" },
+      })
+      expect(added.isError).toBeFalsy()
+      const updated = await client.callTool({
+        name: "update_music_cell",
+        arguments: {
+          cellId: "progression",
+          source: "play piano: chords 6 4|1 5",
+          expectedRevision: 1,
+        },
+      })
+      expect(updated.isError).toBeFalsy()
+      expect(store.read().cells.find((c) => c.id === "draft")?.source).toBe(
+        "pattern unfinished = {",
+      )
+    } finally {
+      await client.close()
+    }
+  })
+  it("names the cells below that an edit broke, and marks a stale revision as a conflict", async () => {
+    const store = new NotebookStore({
+      id: "test",
+      title: "Test",
+      revision: 0,
+      cells: [
+        { id: "definition", type: "music", source: "pattern beat = { kick: x--- }" },
+        { id: "play", type: "music", source: "play beat" },
+      ],
+    })
+    const client = await connect(store)
+    try {
+      const updated = await client.callTool({
+        name: "update_music_cell",
+        arguments: {
+          cellId: "definition",
+          source: "pattern pulse = { kick: x--- }",
+          expectedRevision: 0,
+        },
+      })
+      expect(updated.isError).toBeFalsy()
+      expect(textOf(updated)).toContain("Cell 2 now has errors")
+      const stale = await client.callTool({
+        name: "update_music_cell",
+        arguments: { cellId: "definition", source: "set tempo 90", expectedRevision: 0 },
+      })
+      expect(stale.isError).toBe(true)
+      expect(stale._meta?.[CONFLICT_META]).toBe(true)
+      const revision = await client.callTool({ name: "notebook_revision", arguments: {} })
+      expect(revision.structuredContent).toEqual({ notebookId: "test", revision: 1 })
+      const renamed = await client.callTool({
+        name: "rename_notebook",
+        arguments: { title: "  Sketches  " },
+      })
+      expect(renamed.structuredContent).toEqual({ id: "test", title: "Sketches", revision: 1 })
+      expect(store.read().cells).toHaveLength(2)
+      const emptied = await client.callTool({ name: "rename_notebook", arguments: { title: " " } })
+      expect(emptied.structuredContent).toMatchObject({ title: "Untitled" })
+      const saved = await client.callTool({
+        name: "save_notebook",
+        arguments: { cells: store.read().cells, expectedRevision: 1 },
+      })
+      expect(saved.structuredContent).toEqual({ notebookId: "test", revision: 2 })
+    } finally {
+      await client.close()
+    }
+  })
+})
+
 describe("saved notebooks", () => {
   it("survives reopening, rejects stale edits and preserves unfinished editor drafts", async () => {
     const { mkdtempSync, rmSync } = await import("node:fs")
@@ -106,11 +238,7 @@ describe("saved notebooks", () => {
       const saved = first.save(fixture.cells, 0)
       const second = new FileNotebookStore(path)
       expect(second.read()).toEqual(saved)
-      first.save(
-        [{ id: "draft", type: "music", source: "pattern unfinished = {" }],
-        saved.revision,
-        { validate: false },
-      )
+      first.save([{ id: "draft", type: "music", source: "pattern unfinished = {" }], saved.revision)
       expect(() => second.save(fixture.cells, saved.revision)).toThrow("changed")
       expect(second.read().cells[0].source).toBe("pattern unfinished = {")
     } finally {
