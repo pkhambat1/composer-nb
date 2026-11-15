@@ -10,8 +10,8 @@ import { App } from "@modelcontextprotocol/ext-apps"
 import { NotebookEditor, type SavedCell, type Theme } from "../../playground/src/notebook/index.ts"
 import playgroundCss from "../../playground/src/styles/app.css?inline"
 import themeCss from "./theme.css?inline"
-import { NotebookApp } from "./NotebookApp.tsx"
-import { notebookSchema, type NotebookDocument } from "../src/notebook-document.ts"
+import { NotebookBrowser, type NotebookView } from "./NotebookBrowser.tsx"
+import { notebookSchema, notebookListSchema } from "../src/notebook-document.ts"
 
 // The package's version, which Vite writes in (app/vite.config.ts)
 declare const __VERSION__: string
@@ -33,7 +33,7 @@ const status = (text: string) => {
 let app: App | null = null // the host, once connected
 let root: Root | null = null
 let theme: Theme = "light"
-let notebook: NotebookDocument | null = null
+let notebook: NotebookView | null = null
 // What is drawn now, so a repeat of the input doesn't redraw
 let shown: { key: string; cells: SavedCell[]; after: string } | null = null
 let edited = false // whether anything played differs from what the assistant wrote
@@ -59,7 +59,7 @@ function onRun(cells: SavedCell[]) {
 function render() {
   if (notebook && app) {
     root ??= createRoot($("cells"))
-    root.render(createElement(NotebookApp, { app, initial: notebook, theme }))
+    root.render(createElement(NotebookBrowser, { app, initial: notebook, theme }))
     status("")
     return
   }
@@ -95,9 +95,24 @@ function applyTheme(context: { theme?: string } | undefined) {
 }
 
 function showResult(result: CallToolResult) {
+  if (result.isError) {
+    status(
+      result.content
+        .filter((item) => item.type === "text")
+        .map((item) => item.text)
+        .join("\n"),
+    )
+    return
+  }
   const parsed = notebookSchema.safeParse(result.structuredContent?.notebook)
   if (parsed.success) {
     notebook = parsed.data
+    render()
+    return
+  }
+  const list = notebookListSchema.safeParse(result.structuredContent)
+  if (list.success) {
+    notebook = list.data
     render()
     return
   }

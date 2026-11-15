@@ -1,0 +1,26 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "composer-nb",
+  "version": "0.5.0",
+  "description": "Write, play and edit music in your own Composer.nb notebooks from ChatGPT or another MCP host.",
+  "author": {
+    "name": "Pezanne Khambatta",
+    "url": "https://github.com/pkhambat1"
+  },
+  "homepage": "https://composer-nb.vercel.app",
+  "repository": "https://github.com/pkhambat1/composer-nb",
+  "license": "MIT",
+  "keywords": ["music", "drums", "notation", "chords", "practice"],
+  "extensions": {
+    "com.openai": {
+      "interface": {
+        "displayName": "Composer.nb",
+        "shortDescription": "Your music notebooks, inside your assistant",
+        "defaultPrompt": [
+          "Open my composer-nb notebooks",
+          "Write an interesting piano progression in my notebook"
+        ]
+      }
+    }
+  }
+}

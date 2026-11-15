@@ -11,10 +11,12 @@ export function NotebookApp({
   app,
   initial,
   theme,
+  onBack,
 }: {
   app: App
   initial: NotebookDocument
   theme: Theme
+  onBack?: () => void
 }) {
   const [document, setDocument] = React.useState(initial)
   const [epoch, setEpoch] = React.useState(0)
@@ -52,6 +54,7 @@ export function NotebookApp({
         while (pending.current && alive.current) {
           const changes = pending.current
           const saved = await request("save_notebook", {
+            notebookId: current.current.id,
             cells: changes.cells,
             expectedRevision: current.current.revision,
           })
@@ -88,15 +91,21 @@ export function NotebookApp({
         const selectedIndex = next.cells.findIndex((cell) => cell.id === next.selectedId)
         const target = next.selection?.selectedText
           ? `Selected text in cell ${selectedIndex + 1}: ${next.selection.selectedText}`
-          : selectedIndex >= 0 ? `Cell ${selectedIndex + 1} selected` : "No cell selected"
-        contextQueue.current = contextQueue.current.then(async () => {
-          await app.updateModelContext({
-            content: [{
-              type: "text",
-              text: `${target}. Full notebook source follows; use get_notebook before saving:\n${JSON.stringify(next)}`,
-            }],
+          : selectedIndex >= 0
+            ? `Cell ${selectedIndex + 1} selected`
+            : "No cell selected"
+        contextQueue.current = contextQueue.current
+          .then(async () => {
+            await app.updateModelContext({
+              content: [
+                {
+                  type: "text",
+                  text: `${target}. Notebook ID: ${current.current.id}. Always pass this notebookId to get_notebook and edit tools. Full notebook source follows; read its latest revision before saving:\n${JSON.stringify(next)}`,
+                },
+              ],
+            })
           })
-        }).catch(() => {})
+          .catch(() => {})
       }
     },
     [app, flush],
@@ -114,7 +123,7 @@ export function NotebookApp({
         return
       reading = true
       try {
-        const remote = await request("get_notebook", {})
+        const remote = await request("get_notebook", { notebookId: current.current.id })
         if (
           alive.current &&
           !pending.current &&
@@ -138,8 +147,38 @@ export function NotebookApp({
       if (debounce.current) clearTimeout(debounce.current)
     }
   }, [request])
+  React.useEffect(() => {
+    if (
+      initial.id === current.current.id &&
+      initial.revision > current.current.revision &&
+      !pending.current &&
+      !saving.current
+    ) {
+      current.current = initial
+      setDocument(initial)
+      setEpoch((value) => value + 1)
+      setMessage("Updated by the assistant")
+    }
+  }, [initial])
   return (
     <>
+      <p className="notebook-save-notice">
+        Editing “{document.title}”. Changes save to this notebook automatically.
+      </p>
+      {onBack && (
+        <div className="notebook-back">
+          <button
+            className="btn btn-secondary"
+            onClick={() =>
+              void flush().then(() => {
+                if (!pending.current) onBack()
+              })
+            }
+          >
+            ← Your notebooks
+          </button>
+        </div>
+      )}
       <NotebookEditor
         key={epoch}
         host={{ cells: document.cells, theme }}

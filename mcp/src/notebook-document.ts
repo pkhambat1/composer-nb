@@ -13,3 +13,10 @@ export const notebookSchema = z.object({
 })
 export type NotebookDocument = z.infer<typeof notebookSchema>
 export type DocumentCell = z.infer<typeof notebookCellSchema>
+
+export const notebookSummarySchema = notebookSchema.pick({ id: true, title: true, revision: true })
+export const notebookListSchema = z.object({
+  notebooks: z.array(notebookSummarySchema),
+  nextOffset: z.number().int().nonnegative().optional(),
+})
+export type NotebookList = z.infer<typeof notebookListSchema>

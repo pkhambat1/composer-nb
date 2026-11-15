@@ -2143,3 +2143,10 @@ button.dg-cell:focus-visible {
   -webkit-text-stroke: 0;
   color: var(--text-mute);
 }
+
+.connection-card { max-width: 520px; }
+.connection-card h2 { font-size: 18px; margin: 20px 0 8px; }
+.connection-card ul { padding-left: 22px; line-height: 1.7; }
+.connection-actions { display: flex; justify-content: flex-end; gap: 10px; margin: 24px 0; }
+.connection-destination { overflow-wrap: anywhere; }
+.connection-item { padding: 16px 0; border-top: 1px solid var(--border); }

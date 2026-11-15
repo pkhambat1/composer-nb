@@ -3,6 +3,70 @@
   "framework": null,
   "buildCommand": "npm run build:lib -w dsl && npm run build:lib -w mcp && npm run build:app -w mcp && npm run build -w playground",
   "outputDirectory": "playground/dist",
-  "functions": { "api/mcp.ts": { "includeFiles": "mcp/app/dist/**" } },
-  "rewrites": [{ "source": "/mcp", "destination": "/api/mcp" }]
+  "functions": {
+    "api/mcp.ts": {
+      "includeFiles": "mcp/app/dist/**"
+    },
+    "api/composer.ts": {
+      "includeFiles": "mcp/app/dist/**"
+    }
+  },
+  "rewrites": [
+    {
+      "source": "/mcp",
+      "destination": "/api/mcp"
+    },
+    {
+      "source": "/authorize",
+      "destination": "/api/composer?route=/authorize"
+    },
+    {
+      "source": "/token",
+      "destination": "/api/composer?route=/token"
+    },
+    {
+      "source": "/register",
+      "destination": "/api/composer?route=/register"
+    },
+    {
+      "source": "/revoke",
+      "destination": "/api/composer?route=/revoke"
+    },
+    {
+      "source": "/oauth/request",
+      "destination": "/api/composer?route=/oauth/request"
+    },
+    {
+      "source": "/oauth/decision",
+      "destination": "/api/composer?route=/oauth/decision"
+    },
+    {
+      "source": "/oauth/connections",
+      "destination": "/api/composer?route=/oauth/connections"
+    },
+    {
+      "source": "/oauth/disconnect",
+      "destination": "/api/composer?route=/oauth/disconnect"
+    },
+    {
+      "source": "/.well-known/oauth-authorization-server",
+      "destination": "/api/composer?route=/.well-known/oauth-authorization-server"
+    },
+    {
+      "source": "/.well-known/oauth-protected-resource",
+      "destination": "/api/composer?route=/.well-known/oauth-protected-resource"
+    },
+    {
+      "source": "/.well-known/oauth-protected-resource/mcp",
+      "destination": "/api/composer?route=/.well-known/oauth-protected-resource/mcp"
+    },
+    {
+      "source": "/oauth/consent",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/connections",
+      "destination": "/index.html"
+    }
+  ]
 }

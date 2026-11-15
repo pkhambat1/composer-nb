@@ -3,6 +3,7 @@ import type { Session } from "@supabase/supabase-js"
 import { hasSupabaseConfig, supabase } from "../lib/supabase.ts"
 
 export default function AuthGate({ children }: { children: (session: Session) => React.ReactNode }) {
+  const returnTo = window.location.origin + window.location.pathname + window.location.search
   const [session, setSession] = React.useState<Session | null>(null)
   const [loading, setLoading] = React.useState(true)
   const [mode, setMode] = React.useState<"login" | "signup">("login")
@@ -37,7 +38,7 @@ export default function AuthGate({ children }: { children: (session: Session) =>
     setMessage(mode === "login" ? "Signing in…" : "Creating account…")
     const result = mode === "login"
       ? await supabase.auth.signInWithPassword({ email, password })
-      : await supabase.auth.signUp({ email, password, options: { emailRedirectTo: window.location.origin } })
+      : await supabase.auth.signUp({ email, password, options: { emailRedirectTo: returnTo } })
     if (result.error) setMessage(result.error.message)
     else if (mode === "signup" && !result.data.session) setMessage("Check your email to confirm your account.")
   }
@@ -48,7 +49,7 @@ export default function AuthGate({ children }: { children: (session: Session) =>
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
-        redirectTo: window.location.origin,
+        redirectTo: returnTo,
         queryParams: { access_type: "offline", prompt: "select_account" },
       },
     })

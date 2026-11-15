@@ -12,6 +12,13 @@ description: Build a drum groove from a description as a composer-nb cell that p
 
 The groove is a named pattern. A crash on the one or a fill goes in the play, so the pattern stays reusable.
 
+Follow the saved notebook workflow in `write-cells` for every requested composition
+or playable example: announce the destination before writing, save in the selected
+or named notebook (or create a clearly named one), and confirm the notebook title
+and cell saved afterward. Append by default; replace only a requested edit. Do not
+present an unsaved parser result as completed music. Pure explanations do not
+change notebooks.
+
 ## Example
 
 "A two-bar funk groove at 96: ghost notes on the snare, the hat opening on the & of 4, a crash to start."
