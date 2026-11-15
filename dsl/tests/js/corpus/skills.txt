@@ -71,6 +71,66 @@ drums:
   9.6875 inst=hat art=open lane=hat.open kit=rock tick=1488 vel=0.7 line=5
   9.6875 inst=snare art=ghost lane=snare.ghost kit=rock tick=1488 vel=0.3 ghost=true line=7
 
+## harmony example 1
+errors: none
+names: pair chords line 5, cycle chords line 6, roots notes line 7, line notes line 8
+from above: none
+length: 11.4286 s
+block startSec=0 durSec=11.4286 bars=4 time=4 over 4 tempo=84 key=A unit=4 barTicks=384 res=1
+notes:
+  0 tick=0 ticks=192 note={"midi":45,"name":"A2","spell":{"letter":"A","alter":0}} label=1 instrument=bass voice=0 vel=0.7 line=12 secDur=1.4286
+  1.4286 tick=192 ticks=192 note={"midi":50,"name":"D3","spell":{"letter":"D","alter":0}} label=4 instrument=bass voice=0 vel=0.7 line=12 secDur=1.4286
+  2.8571 tick=384 ticks=192 note={"midi":43,"name":"G2","spell":{"letter":"G","alter":0}} label=G2 instrument=bass voice=0 vel=0.7 line=12 secDur=1.4286
+  4.2857 tick=576 ticks=192 note={"midi":48,"name":"C3","spell":{"letter":"C","alter":0}} label=C3 instrument=bass voice=0 vel=0.7 line=12 secDur=1.4286
+  5.7143 tick=768 ticks=192 note={"midi":41,"name":"F2","spell":{"letter":"F","alter":0}} label=F2 instrument=bass voice=0 vel=0.7 line=12 secDur=1.4286
+  7.1429 tick=960 ticks=192 note={"midi":47,"name":"B2","spell":{"letter":"B","alter":0}} label=B2 instrument=bass voice=0 vel=0.7 line=12 secDur=1.4286
+  8.5714 tick=1152 ticks=384 note={"midi":38,"name":"D2","spell":{"letter":"D","alter":0}} label=-4 instrument=bass voice=0 vel=0.7 line=12 secDur=2.8571
+chords:
+  0 tick=0 ticks=192 chord={"input":"1m7","label":"Am7","rootPc":9,"bassMidi":57,"notesMidi":[69,72,76,79],"noteNames":["A4","C5","E5","G5"],"bassName":"A3"} label=Am7 instrument=piano transpose=0 line=11 secDur=1.4286
+  1.4286 tick=192 ticks=192 chord={"input":"fourth(1m7, 1)","label":"Dm7","rootPc":2,"bassMidi":62,"notesMidi":[74,77,81,84],"noteNames":["D5","F5","A5","C6"],"bassName":"D4"} label=Dm7 instrument=piano transpose=0 line=11 secDur=1.4286
+  2.8571 tick=384 ticks=192 chord={"input":"second(1m7, -1)","label":"G7","rootPc":7,"bassMidi":55,"notesMidi":[67,71,74,77],"noteNames":["G4","B4","D5","F5"],"bassName":"G3"} label=G7 instrument=piano transpose=0 line=11 secDur=1.4286
+  4.2857 tick=576 ticks=192 chord={"input":"second(fourth(1m7, 1), -1)","label":"Cmaj7","rootPc":0,"bassMidi":60,"notesMidi":[72,76,79,83],"noteNames":["C5","E5","G5","B5"],"bassName":"C4"} label=Cmaj7 instrument=piano transpose=0 line=11 secDur=1.4286
+  5.7143 tick=768 ticks=192 chord={"input":"second(1m7, -2)","label":"Fmaj7","rootPc":5,"bassMidi":53,"notesMidi":[65,69,72,76],"noteNames":["F4","A4","C5","E5"],"bassName":"F3"} label=Fmaj7 instrument=piano transpose=0 line=11 secDur=1.4286
+  7.1429 tick=960 ticks=192 chord={"input":"second(fourth(1m7, 1), -2)","label":"Bm7b5","rootPc":11,"bassMidi":59,"notesMidi":[71,74,77,81],"noteNames":["B4","D5","F5","A5"],"bassName":"B3"} label=Bm7b5 instrument=piano transpose=0 line=11 secDur=1.4286
+  8.5714 tick=1152 ticks=384 chord={"input":"5dom7","label":"E7","rootPc":4,"bassMidi":64,"notesMidi":[76,80,83,86],"noteNames":["E5","G#5","B5","D6"],"bassName":"E4"} label=E7 instrument=piano transpose=0 line=11 secDur=2.8571
+
+## harmony example 2
+errors: none
+names: pair chords line 5, cycle chords line 6, roots notes line 7, line notes line 8, motif notes line 5, tune notes line 6, under chords line 7, pedal notes line 8
+from above: none
+length: 10 s
+block startSec=0 durSec=10 bars=4 time=4 over 4 tempo=96 key=D unit=4 barTicks=384 res=1
+notes:
+  0 tick=0 ticks=192 note={"midi":38,"name":"D2","spell":{"letter":"D","alter":0}} label=1 instrument=bass voice=0 vel=0.7 line=13 secDur=1.25
+  0 tick=0 ticks=96 note={"midi":62,"name":"D4","spell":{"letter":"D","alter":0}} label=1 instrument=piano voice=0 vel=0.7 line=11 secDur=0.625
+  0.625 tick=96 ticks=96 note={"midi":65,"name":"F4","spell":{"letter":"F","alter":0}} label=3 instrument=piano voice=0 vel=0.7 line=11 secDur=0.625
+  1.25 tick=192 ticks=192 note={"midi":45,"name":"A2","spell":{"letter":"A","alter":0}} label=5 instrument=bass voice=0 vel=0.7 line=13 secDur=1.25
+  1.25 tick=192 ticks=96 note={"midi":69,"name":"A4","spell":{"letter":"A","alter":0}} label=5 instrument=piano voice=0 vel=0.7 line=11 secDur=0.625
+  1.875 tick=288 ticks=96 note={"midi":65,"name":"F4","spell":{"letter":"F","alter":0}} label=3 instrument=piano voice=0 vel=0.7 line=11 secDur=0.625
+  2.5 tick=384 ticks=192 note={"midi":40,"name":"E2","spell":{"letter":"E","alter":0}} label=E2 instrument=bass voice=0 vel=0.7 line=13 secDur=1.25
+  2.5 tick=384 ticks=96 note={"midi":64,"name":"E4","spell":{"letter":"E","alter":0}} label=E4 instrument=piano voice=0 vel=0.7 line=11 secDur=0.625
+  3.125 tick=480 ticks=96 note={"midi":67,"name":"G4","spell":{"letter":"G","alter":0}} label=G4 instrument=piano voice=0 vel=0.7 line=11 secDur=0.625
+  3.75 tick=576 ticks=192 note={"midi":47,"name":"B2","spell":{"letter":"B","alter":0}} label=B2 instrument=bass voice=0 vel=0.7 line=13 secDur=1.25
+  3.75 tick=576 ticks=96 note={"midi":71,"name":"B4","spell":{"letter":"B","alter":0}} label=B4 instrument=piano voice=0 vel=0.7 line=11 secDur=0.625
+  4.375 tick=672 ticks=96 note={"midi":67,"name":"G4","spell":{"letter":"G","alter":0}} label=G4 instrument=piano voice=0 vel=0.7 line=11 secDur=0.625
+  5 tick=768 ticks=192 note={"midi":41,"name":"F2","spell":{"letter":"F","alter":0}} label=F2 instrument=bass voice=0 vel=0.7 line=13 secDur=1.25
+  5 tick=768 ticks=96 note={"midi":65,"name":"F4","spell":{"letter":"F","alter":0}} label=F4 instrument=piano voice=0 vel=0.7 line=11 secDur=0.625
+  5.625 tick=864 ticks=96 note={"midi":69,"name":"A4","spell":{"letter":"A","alter":0}} label=A4 instrument=piano voice=0 vel=0.7 line=11 secDur=0.625
+  6.25 tick=960 ticks=192 note={"midi":48,"name":"C3","spell":{"letter":"C","alter":0}} label=C3 instrument=bass voice=0 vel=0.7 line=13 secDur=1.25
+  6.25 tick=960 ticks=96 note={"midi":72,"name":"C5","spell":{"letter":"C","alter":0}} label=C5 instrument=piano voice=0 vel=0.7 line=11 secDur=0.625
+  6.875 tick=1056 ticks=96 note={"midi":69,"name":"A4","spell":{"letter":"A","alter":0}} label=A4 instrument=piano voice=0 vel=0.7 line=11 secDur=0.625
+  7.5 tick=1152 ticks=192 note={"midi":36,"name":"C2","spell":{"letter":"C","alter":0}} label=C2 instrument=bass voice=0 vel=0.7 line=13 secDur=1.25
+  7.5 tick=1152 ticks=96 note={"midi":60,"name":"C4","spell":{"letter":"C","alter":0}} label=C4 instrument=piano voice=0 vel=0.7 line=11 secDur=0.625
+  8.125 tick=1248 ticks=96 note={"midi":64,"name":"E4","spell":{"letter":"E","alter":0}} label=E4 instrument=piano voice=0 vel=0.7 line=11 secDur=0.625
+  8.75 tick=1344 ticks=192 note={"midi":43,"name":"G2","spell":{"letter":"G","alter":0}} label=G2 instrument=bass voice=0 vel=0.7 line=13 secDur=1.25
+  8.75 tick=1344 ticks=96 note={"midi":67,"name":"G4","spell":{"letter":"G","alter":0}} label=G4 instrument=piano voice=0 vel=0.7 line=11 secDur=0.625
+  9.375 tick=1440 ticks=96 note={"midi":64,"name":"E4","spell":{"letter":"E","alter":0}} label=E4 instrument=piano voice=0 vel=0.7 line=11 secDur=0.625
+chords:
+  0 tick=0 ticks=384 chord={"input":"1m7","label":"Dm7","rootPc":2,"bassMidi":38,"notesMidi":[50,53,57,60],"noteNames":["D3","F3","A3","C4"],"bassName":"D2"} label=Dm7 instrument=organ transpose=0 line=12 secDur=2.5
+  2.5 tick=384 ticks=384 chord={"input":"second(1m7, 1)","label":"Em7","rootPc":4,"bassMidi":40,"notesMidi":[52,55,59,62],"noteNames":["E3","G3","B3","D4"],"bassName":"E2"} label=Em7 instrument=organ transpose=0 line=12 secDur=2.5
+  5 tick=768 ticks=384 chord={"input":"third(1m7, 1)","label":"Fmaj7","rootPc":5,"bassMidi":41,"notesMidi":[53,57,60,64],"noteNames":["F3","A3","C4","E4"],"bassName":"F2"} label=Fmaj7 instrument=organ transpose=0 line=12 secDur=2.5
+  7.5 tick=1152 ticks=384 chord={"input":"second(1m7, -1)","label":"Cmaj7","rootPc":0,"bassMidi":36,"notesMidi":[48,52,55,59],"noteNames":["C3","E3","G3","B3"],"bassName":"C2"} label=Cmaj7 instrument=organ transpose=0 line=12 secDur=2.5
+
 ## practice example 1
 errors: none
 names: funk pattern line 3
