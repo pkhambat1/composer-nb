@@ -8,8 +8,8 @@ import { RESOURCE_MIME_TYPE, registerAppResource } from "@modelcontextprotocol/e
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 
 // Hosts cache resources by URI. These versions load hosted assets from static storage.
-export const CELL_UI = "ui://composer-nb/cell/v3"
-export const NOTEBOOK_UI = "ui://composer-nb/notebook/v4"
+export const CELL_UI = "ui://composer-nb/cell/v4"
+export const NOTEBOOK_UI = "ui://composer-nb/notebook/v5"
 
 // Where the player fetches its sounds: the drum kit, the sampled instruments.
 export const SOUND_HOSTS = [

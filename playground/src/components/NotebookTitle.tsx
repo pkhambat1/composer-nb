@@ -59,7 +59,7 @@ export default function NotebookTitle({
     ? null
     : subtitle === "Saved to Supabase" ||
         subtitle === "Saved" ||
-        subtitle === "Updated by the assistant"
+        subtitle === "Latest saved changes loaded"
       ? "saved"
       : subtitle === "Saving…"
         ? "saving"
@@ -70,9 +70,7 @@ export default function NotebookTitle({
             : "error"
   const saveLabel =
     saveState === "saved"
-      ? subtitle === "Updated by the assistant"
-        ? "Updated"
-        : "Saved"
+      ? "Saved"
       : saveState === "error"
         ? "Save failed"
         : subtitle.startsWith("Unsaved:")
@@ -114,7 +112,13 @@ export default function NotebookTitle({
               aria-haspopup="menu"
               aria-expanded={open}
             >
-              <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor" aria-hidden="true">
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 14 14"
+                fill="currentColor"
+                aria-hidden="true"
+              >
                 <circle cx="3" cy="7" r="1.2" />
                 <circle cx="7" cy="7" r="1.2" />
                 <circle cx="11" cy="7" r="1.2" />
@@ -131,12 +135,24 @@ export default function NotebookTitle({
             {item("Delete", menu.remove, "menu-item-danger")}
           </div>
         )}
-        {saveState && <div className={`save-indicator save-indicator-${saveState}`} role="status" title={saveState === "error" || saveState === "unsaved" ? subtitle : saveLabel}>
-          <span className="save-indicator-icon" aria-hidden="true">
-            {saveState === "error" ? "!" : ""}
-          </span>
-          <span>{saveLabel}</span>
-        </div>}
+        {saveState && (
+          <div
+            className={`save-indicator save-indicator-${saveState}`}
+            role="status"
+            title={
+              saveState === "error" ||
+              saveState === "unsaved" ||
+              subtitle === "Latest saved changes loaded"
+                ? subtitle
+                : saveLabel
+            }
+          >
+            <span className="save-indicator-icon" aria-hidden="true">
+              {saveState === "error" ? "!" : ""}
+            </span>
+            <span>{saveLabel}</span>
+          </div>
+        )}
       </div>
     </div>
   )
