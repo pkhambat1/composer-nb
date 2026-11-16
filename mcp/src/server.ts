@@ -91,6 +91,7 @@ export function createServer({
         ? "Check a cell without saving it: the errors, the settings and a grid of every hit. For a preview the user asked not to save. To save music, call create_notebook or add_music_cell with the source directly: they check it the same way and return the same report, so parsing first only writes the cell twice. Pass preceding cells as after when they supply settings or definitions."
         : "Checks a composer-nb cell and says what it plays. Returns the errors with their line numbers (a cell with errors plays nothing), the settings and names in effect at the end, and for each play a grid of every hit and note, bar by bar, with the chords it heard. Where the client renders MCP Apps, the cell is drawn too, for the user to change and play: its code, the audio, the grid or the sheet, the chords. What the user plays there comes back with their next message. When the user wants to write a cell themselves, call it with an empty source: they get an empty cell to type in and play. Call it on every cell before showing the cell to anyone; fix the errors and call it again.",
       inputSchema: { source: SOURCE, after: AFTER },
+      annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false },
       _meta: {
         securitySchemes,
         ui: workspace?.cloud ? { visibility: ["model"] } : { resourceUri: CELL_UI },
@@ -119,6 +120,7 @@ export function createServer({
     "render",
     {
       title: "Sheet music, MIDI or ABC for a cell",
+      annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false },
       _meta: { securitySchemes },
       description:
         "Draws a cell's plays as sheet music (a PNG: the kit on a percussion staff with the hands up and the feet down, each instrument on a staff of its own, a guitar with its tab), or writes them as a MIDI file for a DAW or a notation program, or gives the ABC notation. A cell with errors renders nothing, so parse first.",
@@ -178,6 +180,7 @@ export function createServer({
     "library",
     {
       title: "Grooves to start from",
+      annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false },
       _meta: { securitySchemes },
       description:
         "Searches the grooves library: transcriptions (Porcupine Tree in 7 and 9, Gavin Harrison's paradiddle challenge, a 3 over 4 over 5 polyrhythm, Polyrhythmics), harmony cells (interval functions and with scopes, a ii–V–I with a walking bass, and the chords of each mode, from lydian to locrian). Each comes as a cell to start from, with its page, where it plays. Search by words (dorian, blues, 7/8, guitar) or leave the query empty for the list.",
@@ -225,6 +228,7 @@ export function createServer({
     "reference",
     {
       title: "The language reference",
+      annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false },
       _meta: { securitySchemes },
       description: `The language reference, page by page: ${REFERENCE.map((p) => `${p.id} (${p.description.replace(/\.$/, "").toLowerCase()})`).join(", ")}. Read the page before writing something you haven't written before; "all" is the whole reference.`,
       inputSchema: { topic: z.enum(topics as [string, ...string[]]).default("all") },

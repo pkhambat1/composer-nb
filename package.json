@@ -22,7 +22,8 @@
     "eval": "node --conditions=composer-nb-source mcp/evals/run.ts",
     "seed:local": "node --conditions=composer-nb-source scripts/seed-local-data.mjs",
     "seed:local:check": "node --conditions=composer-nb-source scripts/seed-local-data.mjs --check",
-    "verify:local-auth": "node --conditions=composer-nb-source scripts/verify-local-auth.mjs"
+    "verify:local-auth": "node --conditions=composer-nb-source scripts/verify-local-auth.mjs",
+    "plugin:zip": "sh scripts/plugin-zip.sh"
   },
   "devDependencies": {
     "@eslint/js": "^9.13.0",

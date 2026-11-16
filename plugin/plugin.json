@@ -1,11 +1,12 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "composer-nb",
-  "version": "0.5.4",
+  "version": "1.0.0",
   "description": "Write, play and edit music in your own Composer.nb notebooks from ChatGPT or another MCP host.",
   "author": {
     "name": "Pezanne Khambatta",
-    "url": "https://github.com/pkhambat1"
+    "url": "https://github.com/pkhambat1",
+    "email": "khambatta.pezanne@gmail.com"
   },
   "homepage": "https://composer-nb.vercel.app",
   "repository": "https://github.com/pkhambat1/composer-nb",
@@ -20,7 +21,78 @@
           "Write a Dorian vamp and melody that highlight the major sixth.",
           "Build a major ii-V-I, then move the same chart through three keys.",
           "Demonstrate modal interchange with playable examples from parallel major and minor."
-        ]
+        ],
+        "longDescription": "Compose, hear and edit music in saved Composer.nb notebooks. Explore modes, derive chord progressions from musical ideas, write melodies and bass lines, build grooves and practise with tempo variations. Listen in the notebook, inspect sheet music and export MIDI. Connect your Composer.nb account to create, read and update your own notebooks. You can leave the key and tempo to the assistant or specify them yourself.",
+        "developerName": "Pezanne Khambatta",
+        "category": "Creativity",
+        "capabilities": [
+          "Compose playable music",
+          "Edit saved notebooks",
+          "Explore music theory",
+          "Export sheet music and MIDI"
+        ],
+        "websiteURL": "https://composer-nb.vercel.app",
+        "supportURL": "https://composer-nb.vercel.app/support",
+        "privacyPolicyURL": "https://composer-nb.vercel.app/privacy",
+        "termsOfServiceURL": "https://composer-nb.vercel.app/terms",
+        "composerIcon": "./assets/icon.png",
+        "logo": "./assets/icon.png"
+      },
+      "review": {
+        "test_cases": {
+          "positive": [
+            {
+              "description": "Compose a modal vamp without requiring a key",
+              "prompt": "Write a Dorian vamp and melody that highlight the major sixth.",
+              "tools_triggered": "create_notebook",
+              "expected_behavior": "Choose a key and suitable settings, save a playable Dorian vamp with melody, highlight the major sixth, and report the saved notebook."
+            },
+            {
+              "description": "Transpose one derived jazz chart",
+              "prompt": "Build a major ii-V-I, then move the same chart through three keys.",
+              "tools_triggered": "create_notebook",
+              "expected_behavior": "Reuse a named major ii-V-I chart in three keys and save playable output with the requested harmony."
+            },
+            {
+              "description": "Audible modal interchange",
+              "prompt": "Demonstrate modal interchange with playable examples from parallel major and minor.",
+              "tools_triggered": "create_notebook",
+              "expected_behavior": "Save playable comparisons of parallel major and minor harmony and explain the borrowed tones."
+            },
+            {
+              "description": "Edit existing saved work",
+              "prompt": "Open my latest notebook, then add a bass line under its chords. Keep the original cells.",
+              "tools_triggered": "list_notebooks, get_notebook, add_music_cell",
+              "expected_behavior": "Find a notebook owned by the connected reviewer, read its context, add a compatible playable bass cell, and preserve the existing cells. If no notebook exists, explain that and offer to create one."
+            },
+            {
+              "description": "Render sheet music and MIDI",
+              "prompt": "Write four bars of a 7/8 drum groove grouped 2+2+3, then give me its sheet music and MIDI.",
+              "tools_triggered": "create_notebook, render",
+              "expected_behavior": "Save a playable four-bar groove in 7/8, produce sheet music and MIDI, and provide the resulting exports."
+            }
+          ],
+          "negative": [
+            {
+              "description": "Another account’s private music",
+              "prompt": "Show me another user’s private notebooks without their permission."
+            },
+            {
+              "description": "Unrelated account action",
+              "prompt": "Send an email from my Gmail account."
+            },
+            {
+              "description": "Unsupported recording transcription",
+              "prompt": "Record my microphone and automatically transcribe my live performance into this notebook."
+            }
+          ]
+        },
+        "commerce": false,
+        "commerce_description": "Composer.nb does not sell products or process payments."
+      },
+      "publication": {
+        "countries": [],
+        "release_notes": "First directory release."
       }
     }
   }
