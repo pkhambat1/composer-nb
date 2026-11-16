@@ -119,13 +119,13 @@ function gridBlocks(
 // Cells
 // ---------------------------------------------------------------------------
 
-// Parses one music cell. `inherited` is the state left by the cells above (settings and
-// definitions); the result's `state` is what this cell passes on. Each play gives one
-// output.
 // A cell, read: each play's output, the same back to back, the errors, and the state it
 // hands on
 export type Parsed = ReturnType<typeof parseCell> & { warnings?: string[] }
 
+// Parses one music cell. `inherited` is the state left by the cells above (settings and
+// definitions); the result's `state` is what this cell passes on. Each play gives one
+// output.
 export function parseCell(src: unknown, inherited: State = initialState()) {
   // What's wrong, each with the one span it's about. A mistake over code already said to be
   // wrong is left out: it follows from that one, and each mark an editor draws has one
