@@ -1,5 +1,5 @@
-import { pianoRange, type PianoRange } from "../notebook/pianoRange.ts"
-// components/ChordDiagram.tsx — Chord diagrams: guitar fingering grid & piano keyboard
+import { pianoRange, type PianoRange } from "./pianoRange.ts"
+// notebook/ChordDiagram.tsx — Chord diagrams: guitar fingering grid & piano keyboard
 import React from "react"
 import * as ChordLookup from "composer-nb/chord-lookup"
 import type { Position } from "composer-nb/chord-lookup"

@@ -1,4 +1,4 @@
-// components/MarkdownCell.tsx — Markdown rendering (marked -> React, no innerHTML)
+// notebook/MarkdownCell.tsx — Markdown rendering (marked -> React, no innerHTML)
 import type React from "react"
 import { marked, type Token, type Tokens } from "marked"
 

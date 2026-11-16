@@ -1,0 +1,230 @@
+/* Between two cells, and above the first and below the last: a strip over the space between
+   them, where a + shows on hover, centred, to add a cell right there. It overlaps the cells'
+   margins, so the space stays as it was. */
+.cell-gap {
+  position: relative;
+  z-index: 2;
+  height: 12px;
+  margin: -6px 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+/* The + between cells shows on hover */
+.cell-gap-btn {
+  opacity: 0;
+}
+.cell-gap:hover .cell-gap-btn,
+.cell-gap-open .cell-gap-btn,
+.cell-gap-btn:focus-visible {
+  opacity: 1;
+}
+.cell-gap-open .cell-gap-btn {
+  background: var(--hover-bg);
+  color: var(--text);
+}
+/* While a cell is dragged: no +, and a line where the cell will land */
+.cells-dragging .cell-gap-btn {
+  display: none;
+}
+.cell-gap-drop::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 3px;
+  margin-top: -1.5px;
+  border-radius: var(--radius-sm);
+  background: var(--accent);
+}
+/* The dragged cell stays in its place, faded, at the height it had when the drag began. Once
+   the pointer leaves it, its place closes up (cells-collapsed): the cells around it meet, and
+   the line shows where it will land, its own place included. */
+.cell-dragging {
+  opacity: 0.4;
+}
+.cells-dragging .cell-dragging {
+  height: var(--drag-height);
+  overflow: hidden;
+  transition:
+    height var(--motion-fast) var(--ease),
+    margin var(--motion-fast) var(--ease),
+    opacity var(--motion-fast) var(--ease);
+}
+.cells-collapsed .cell-dragging {
+  height: 0;
+  margin-block: 0;
+  border-width: 0;
+  opacity: 0;
+}
+/* The space the cell gave up moves to the end of the list, so the list keeps its height:
+   the page doesn't jump, and the area below the last cell still takes the drop */
+.cells-collapsed {
+  padding-bottom: calc(var(--drag-height) + 2 * var(--cell-pad-y));
+}
+@media (prefers-reduced-motion: reduce) {
+  .cells-dragging .cell-dragging {
+    transition: none;
+  }
+}
+/* The grip a cell is dragged by, shown on hover alongside the menu. */
+.cell-drag {
+  position: absolute;
+  top: 9px;
+  left: 10px;
+  z-index: 5;
+  width: 18px;
+  height: 22px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--radius);
+  color: var(--text-mute);
+  cursor: grab;
+  opacity: 0;
+  transition:
+    opacity var(--motion-fast) var(--ease),
+    background-color var(--motion-fast) var(--ease),
+    color var(--motion-fast) var(--ease);
+}
+.cell:hover .cell-drag,
+.cell-selected .cell-drag {
+  opacity: 1;
+}
+.cell-drag:hover {
+  color: var(--text);
+  background: var(--hover-bg);
+}
+.cell-drag:active {
+  cursor: grabbing;
+}
+.cell-gap-menu {
+  top: calc(50% + 14px);
+  left: 50%;
+  margin-top: 0;
+  transform: translateX(-50%);
+}
+.cell-selected {
+  border-color: transparent;
+}
+.cell-editing {
+}
+.cell-running {
+  border-color: color-mix(in srgb, var(--busy-bar) 40%, transparent);
+  box-shadow: -2px 0 0 0 var(--busy-bar);
+}
+
+.cell-prompt {
+  font-family: var(--font-mono);
+  color: var(--text-mute);
+  font-size: 11px;
+  padding: 9px 6px 0 6px;
+  text-align: right;
+  user-select: none;
+  letter-spacing: -0.01em;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 5px;
+}
+/* Run, top left of the code */
+.cell-run-btn {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  z-index: 3;
+}
+.cell-wait-btn {
+  --btn-fill: var(--text-mute);
+  animation: pulse 1.8s ease-in-out infinite;
+}
+.cell-run-btn:disabled {
+  --btn-fill: var(--busy-bar);
+}
+.prompt-text {
+  white-space: nowrap;
+}
+.prompt-running {
+  color: var(--busy-bar);
+  animation: pulse 1.2s ease-in-out infinite;
+}
+.prompt-waiting {
+  color: var(--text-mute);
+  animation: pulse 1.8s ease-in-out infinite;
+}
+.cell-run-confirmation { padding: 6px 4px 0; color: var(--text-mute); font: 12px/1.5 var(--font-sans); }
+
+.cell-body {
+  min-width: 0;
+  padding: var(--cell-pad-y) var(--cell-pad-x) var(--cell-pad-y) 4px;
+  position: relative;
+}
+
+/* Markdown / preview, top right of a text cell: a toggle set in small mono */
+.md-preview-toggle {
+  position: absolute;
+  top: 6px;
+  right: 8px;
+  z-index: 2;
+  font: 10px var(--font-mono);
+  letter-spacing: 0.04em;
+}
+
+.cell-menu-wrap {
+  position: absolute;
+  top: calc(var(--cell-pad-y) + 7px);
+  right: calc(var(--cell-pad-x) + 7px);
+  z-index: 5;
+}
+/* The cell's menu, shown on hover, focus, or selection. */
+.cell-menu-btn {
+  opacity: 0;
+}
+.cell:hover .cell-menu-btn,
+.cell-selected .cell-menu-btn,
+.cell-menu-wrap:focus-within .cell-menu-btn,
+.cell-menu-btn.btn-open {
+  opacity: 1;
+}
+.cell-text.cell-editing .cell-menu-wrap {
+  right: calc(var(--cell-pad-x) + 86px);
+}
+
+.cell-menu-dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  background: var(--paper);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-menu);
+  padding: 4px;
+  min-width: 140px;
+  z-index: 10;
+}
+.text-split {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  position: relative;
+}
+.text-area-split {
+  border-right: 1px solid var(--border-soft);
+  border-radius: var(--radius) 0 0 var(--radius);
+}
+.text-rendered-split {
+  background: var(--paper);
+  border: 1px solid var(--border-soft);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  padding: 8px 12px;
+  overflow: auto;
+  min-height: 72px;
+}
+
+.code-input {
+  position: relative;
+  background: var(--code-bg);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius);
+  overflow: hidden;
+}

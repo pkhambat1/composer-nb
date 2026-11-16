@@ -2,7 +2,7 @@
 // the tokens. Monaco loads on demand; until it's in, the source shows highlighted as text.
 import React from "react"
 import { highlightMusic, type Part } from "composer-nb/highlight"
-import { CellIdContext, SelectionContext } from "../notebook/SelectionContext.tsx"
+import { CellIdContext, SelectionContext } from "./SelectionContext.tsx"
 import type { Checked, Diagnostic } from "../shared/types.ts"
 
 // Where a cell is in being run, as its button shows it

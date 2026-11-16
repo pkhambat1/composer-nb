@@ -4,7 +4,7 @@
 import React from "react"
 import type { App } from "@modelcontextprotocol/ext-apps"
 import Sidebar from "../../playground/src/components/Sidebar.tsx"
-import NotebookTitle from "../../playground/src/components/NotebookTitle.tsx"
+import NotebookTitle from "../../playground/src/notebook/NotebookTitle.tsx"
 import type { Theme } from "../../playground/src/notebook/index.ts"
 import logo from "./composer-mark.png"
 import {

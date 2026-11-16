@@ -1,8 +1,8 @@
 /* The shared cell surface. Website and MCP adapters supply state, not markup. */
 import React from "react"
 import { CellIdContext } from "./SelectionContext.tsx"
-import Cell from "../components/Cell.tsx"
-import CellGap from "../components/CellGap.tsx"
+import Cell from "./Cell.tsx"
+import CellGap from "./CellGap.tsx"
 import type { Place, useCellManager } from "../hooks/useCellManager.ts"
 import type { NotebookRuntime } from "../hooks/useNotebookRuntime.ts"
 import type { PlayerProps } from "./types.ts"
@@ -115,7 +115,9 @@ export default function NotebookCells({
 
   return (
     <div
-      className={"cells" + (dragId ? " cells-dragging" : "") + (collapsed ? " cells-collapsed" : "")}
+      className={
+        "cells" + (dragId ? " cells-dragging" : "") + (collapsed ? " cells-collapsed" : "")
+      }
       style={dragId ? ({ "--drag-height": `${dragHeight}px` } as React.CSSProperties) : undefined}
       onDragOver={single ? undefined : dragOver}
       onDrop={single ? undefined : drop}

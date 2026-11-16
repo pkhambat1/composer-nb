@@ -1,4 +1,4 @@
-// components/CellGap.tsx — The space between two cells, where a + shows on hover. It adds a
+// notebook/CellGap.tsx — The space between two cells, where a + shows on hover. It adds a
 // music or a text cell right there, as the toolbar's + adds one at the end. While a cell is
 // dragged, a line in it shows where the cell will land (`dropHere`).
 import React from "react"

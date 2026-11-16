@@ -5,13 +5,13 @@ import { pianoRange } from "./pianoRange.ts"
 import type { GridBlock, Parsed } from "composer-nb/language"
 import type { DrumView } from "../shared/types.ts"
 import type { PlayerProps } from "./types.ts"
-import DrumGrid from "../components/DrumGrid.tsx"
+import DrumGrid from "./DrumGrid.tsx"
 import PrintedValues from "./PrintedValues.tsx"
 const VIEWS: DrumView[] = ["bricks", "sheet"]
 const noTime = () => 0
 // Loaded when first shown: the chord shapes for the diagrams, abcjs for the sheet music
-const ChordDiagram = React.lazy(() => import("../components/ChordDiagram.tsx"))
-const DrumSheet = React.lazy(() => import("../components/DrumSheet.tsx"))
+const ChordDiagram = React.lazy(() => import("./ChordDiagram.tsx"))
+const DrumSheet = React.lazy(() => import("./DrumSheet.tsx"))
 
 // Everything below the playback row: settings summary, the drums and notes as a grid of
 // bricks or as sheet music, chord diagrams, errors.
@@ -83,12 +83,7 @@ export default function MusicViews({
           {sheet ? (
             <React.Suspense fallback={<div className="dg-head">Drawing the staff…</div>}>
               <div className="sheet-print">
-                <DrumSheet
-                  blocks={parsed.blocks}
-                  counts
-                  getTime={getTime}
-                  playing={playing}
-                />
+                <DrumSheet blocks={parsed.blocks} counts getTime={getTime} playing={playing} />
               </div>
             </React.Suspense>
           ) : (

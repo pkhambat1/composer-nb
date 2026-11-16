@@ -1,5 +1,5 @@
-// components/DrumSheet.tsx — A play's output as sheet music, a system per block, with a playhead
-import { NotebookTarget } from "../notebook/SelectionContext.tsx"
+// notebook/DrumSheet.tsx — A play's output as sheet music, a system per block, with a playhead
+import { NotebookTarget } from "./SelectionContext.tsx"
 import React from "react"
 import abcjs, { type NoteTimingEvent, type TuneObject } from "abcjs"
 import type { GridBlock } from "composer-nb/language"

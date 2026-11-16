@@ -1,4 +1,4 @@
-// components/MusicOutput.tsx — Music cell output: waveform, piano roll, chord chips, errors
+// notebook/MusicOutput.tsx — Music cell output: waveform, piano roll, chord chips, errors
 import React from "react"
 import WaveSurfer from "wavesurfer.js"
 import * as MusicEngine from "composer-nb/engine"
@@ -6,9 +6,9 @@ import type { NotebookCell } from "../shared/types.ts"
 
 // What a cell's output plays and draws with: which cell is playing, what plays and stops
 // it, and how the page draws the hits
-import type { PlayerProps } from "../notebook/types.ts"
-import MusicViews from "../notebook/MusicViews.tsx"
-export type { PlayerProps } from "../notebook/types.ts"
+import type { PlayerProps } from "./types.ts"
+import MusicViews from "./MusicViews.tsx"
+export type { PlayerProps } from "./types.ts"
 
 function themeColors(theme: string, accent: string) {
   if (theme === "retro") {
@@ -229,14 +229,18 @@ export default function MusicOutput({
       const context = node instanceof GainNode ? node.context : null
       const resumed = context instanceof AudioContext ? context.resume() : Promise.resolve()
       resumed
-        .then(() => { if (!cancelled) return ws.play() })
+        .then(() => {
+          if (!cancelled) return ws.play()
+        })
         .catch((err: unknown) => {
           if (cancelled) return
           console.warn("Playback failed:", err instanceof Error ? err.message : String(err))
           onPlaybackFinishedRef.current(cell.id)
         })
     } else if (ws.isPlaying()) ws.pause()
-    return () => { cancelled = true }
+    return () => {
+      cancelled = true
+    }
   }, [focusedCellId, isPlaying, cell.id, ready])
 
   if (!output) return null
@@ -308,7 +312,11 @@ export default function MusicOutput({
   }
 
   if (output.kind === "info") {
-    return <div className="cell-run-confirmation" role="status">Cell executed successfully.</div>
+    return (
+      <div className="cell-run-confirmation" role="status">
+        Cell executed successfully.
+      </div>
+    )
   }
 
   const parsed = output.parsed
@@ -350,21 +358,29 @@ export default function MusicOutput({
                 </svg>
               )}
             </button>
-            {showStop && <button
-              type="button"
-              className="btn btn-secondary btn-soft btn-icon btn-round player-btn stop-btn"
-              title="Stop and return to the beginning"
-              aria-label="Stop"
-              disabled={!ready}
-              onClick={(e) => {
-                e.stopPropagation()
-                onStopPlayback(cell.id)
-              }}
-            >
-              <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor" aria-hidden="true">
-                <rect x="3" y="3" width="8" height="8" rx="1" />
-              </svg>
-            </button>}
+            {showStop && (
+              <button
+                type="button"
+                className="btn btn-secondary btn-soft btn-icon btn-round player-btn stop-btn"
+                title="Stop and return to the beginning"
+                aria-label="Stop"
+                disabled={!ready}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onStopPlayback(cell.id)
+                }}
+              >
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 14 14"
+                  fill="currentColor"
+                  aria-hidden="true"
+                >
+                  <rect x="3" y="3" width="8" height="8" rx="1" />
+                </svg>
+              </button>
+            )}
             <div
               className="waveform-wrap"
               onClick={(e) => e.stopPropagation()}

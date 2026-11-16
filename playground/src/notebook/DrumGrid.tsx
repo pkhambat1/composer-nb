@@ -1,4 +1,4 @@
-// components/DrumGrid.tsx — Drum hits and notes bar by bar, counted 1 e & a, with a playhead
+// notebook/DrumGrid.tsx — Drum hits and notes bar by bar, counted 1 e & a, with a playhead
 import React from "react"
 import { TPQ, type GridBlock } from "composer-nb/language"
 import { countingOf, gridCounts, gridRows } from "composer-nb/grid"
@@ -42,11 +42,7 @@ function DrumBlock({ block, index }: { block: GridBlock; index: number }) {
                 } else if (e?.held) cls += " dg-held"
                 const label = `${row.label || row.key}, block ${index + 1}, bar ${bar + 1}, step ${col + 1} of ${per}, ${block.res} steps per quarter note, offset ${col * (TPQ / block.res)} ticks within bar (${TPQ} ticks per quarter note), ${e?.hit ? "hit" : e?.held ? "held note" : "rest"}`
                 return (
-                  <div
-                    key={col}
-                    className={cls}
-                    aria-label={label}
-                  >
+                  <div key={col} className={cls} aria-label={label}>
                     {e?.text}
                   </div>
                 )

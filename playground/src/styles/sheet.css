@@ -1,0 +1,306 @@
+/* Music cell output: settings summary, drum grid, info */
+.music-meta {
+  grid-column: 1 / -1;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-mute);
+  padding: 6px 0 0;
+}
+.drum-grid {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 2px 0 6px;
+}
+.dg-head {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-dim);
+  margin: 2px 0 4px;
+}
+/* The drums as sheet music: abcjs draws the staff in currentColor */
+.drum-sheet {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 2px 0 6px;
+  color: var(--text);
+}
+.ds-staff {
+  width: 100%;
+}
+/* Nothing of the staff is cut: what abcjs draws past its box still shows */
+.ds-staff svg {
+  display: block;
+  max-width: 100%;
+  overflow: visible;
+}
+.ds-now,
+.ds-now * {
+  fill: var(--accent);
+  color: var(--accent);
+}
+.sheet-print {
+  display: block;
+  min-width: 0;
+}
+/* Printing a sheet: only that cell's staves, in black, at the top of the page */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  .printing,
+  .printing * {
+    visibility: visible;
+  }
+  .printing {
+    display: block;
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    color: #000;
+  }
+  .printing .ds-now,
+  .printing .ds-now * {
+    fill: #000;
+    color: #000;
+  }
+}
+.dg-bar {
+  position: relative;
+  display: grid;
+  gap: 2px;
+  align-items: center;
+  margin-bottom: 6px;
+}
+.dg-lane {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-dim);
+  white-space: nowrap;
+}
+.dg-bar-num {
+  color: var(--text-mute);
+  font-size: 10px;
+}
+.dg-cell {
+  height: 16px;
+  border-radius: var(--radius-sm);
+  background: var(--border-soft);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 16px;
+  text-align: center;
+  color: var(--paper);
+  overflow: hidden;
+}
+.dg-alt {
+  background: var(--border);
+}
+.dg-hit {
+  background: color-mix(in srgb, var(--accent) 62%, var(--paper));
+  position: relative;
+  isolation: isolate;
+}
+.dg-hit::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  background-image: url("../assets/brand/blue-1-texture.png");
+  background-size: 138px auto;
+  background-position: 28% 40%;
+  opacity: 1;
+  mix-blend-mode: multiply;
+  filter: saturate(1.75) contrast(1.22);
+  pointer-events: none;
+}
+.dg-hit:nth-of-type(3n + 1)::before {
+  background-image: url("../assets/brand/blue-3-texture.png");
+  background-position: 72% 30%;
+}
+.dg-hit:nth-of-type(3n + 2)::before {
+  background-image: url("../assets/brand/blue-1-texture.png");
+  background-position: 18% 76%;
+}
+.dg-acc {
+  background-color: var(--accent);
+}
+.dg-ghost {
+  opacity: 0.45;
+}
+/* Notes are orange, so a pitched line stands out from the drums */
+.dg-note.dg-hit {
+  background: color-mix(in srgb, var(--note-color) 62%, var(--paper));
+}
+.dg-note.dg-hit::before {
+  background-image: url("../assets/brand/warm-1-texture.png");
+  background-position: 34% 62%;
+}
+.dg-note.dg-hit:nth-of-type(3n + 1)::before {
+  background-image: url("../assets/brand/warm-3-texture.png");
+  background-position: 74% 38%;
+}
+.dg-note.dg-hit:nth-of-type(3n + 2)::before {
+  background-image: url("../assets/brand/warm-1-texture.png");
+  background-position: 18% 74%;
+}
+.dg-note.dg-acc {
+  background-color: var(--note-color);
+}
+.dg-note.dg-held::before {
+  background: color-mix(in srgb, var(--note-color) 62%, var(--paper));
+}
+/* A note still sounding from the step before: a line running on out of it, across the gap
+   between cells, so it doesn't read as another hit */
+.dg-held {
+  position: relative;
+  overflow: visible;
+}
+.dg-held::before {
+  content: "";
+  position: absolute;
+  left: -2px;
+  right: 0;
+  top: 50%;
+  height: 4px;
+  margin-top: -2px;
+  background: color-mix(in srgb, var(--accent) 62%, var(--paper));
+}
+/* A double stroke: a full brick like any hit, with two thin strokes in it, one a stroke */
+.dg-dbl {
+  position: relative;
+  background-color: var(--accent);
+}
+.dg-dbl::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 25%;
+  box-sizing: border-box;
+  width: 6px;
+  height: 50%;
+  transform: translateX(-50%);
+  border-left: 1.5px solid var(--paper);
+  border-right: 1.5px solid var(--paper);
+}
+/* The playhead: one outline around the column of the step playing now, every row of it.
+   Placed in the bar's grid, over the step's column, it takes that column's size. */
+.dg-now-col {
+  display: none;
+  position: absolute;
+  inset: -1px;
+  border: 1.5px solid var(--text);
+  border-radius: var(--radius-sm);
+  pointer-events: none;
+}
+.dg-now-col.dg-now {
+  display: block;
+}
+.dg-count {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  text-align: center;
+  color: var(--text-mute);
+}
+.dg-count-beat {
+  color: var(--text);
+  font-weight: 600;
+}
+.dg-count.dg-now {
+  color: var(--accent);
+  font-weight: 700;
+}
+.music-warning {
+  color: var(--busy-bar);
+}
+
+/* One cell with nothing around it: the MCP app's cell view (NotebookWorkspace's single) */
+.single-root .cells {
+  max-width: none;
+}
+.single-root .cell {
+  grid-template-columns: 1fr;
+  margin: 0;
+  border-color: var(--border-soft);
+}
+.single-root .cell-prompt,
+.single-root .cell-menu-wrap {
+  display: none;
+}
+.single-root .cell-body {
+  padding-left: var(--cell-pad-x);
+}
+
+/* Shared interaction affordances, including hosts with a narrow notebook panel. */
+button.dg-cell {
+  padding: 0;
+  border: 0;
+  cursor: pointer;
+  min-width: 0;
+}
+button.dg-cell:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.notebook-sync-status {
+  padding: 8px 20px;
+  color: var(--text-mute);
+  font: 12px var(--font-sans);
+}
+.notebook-chat-context {
+  padding: 6px 20px;
+  color: var(--text-mute);
+  font: 12px var(--font-sans);
+  overflow-wrap: anywhere;
+}
+[data-notebook-target][aria-pressed="true"] {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+/* Printed values: one line per type, in the editor's font at one size. Only the values
+   take the text colour; the type and the pitches in parentheses are quieter. */
+.printed-values {
+  display: flex;
+  flex-direction: column;
+  /* As in a Jupyter notebook, output is the input's text carried on: the editor's font,
+     size and line height, starting at the column where the code starts (past the
+     editor's border and line-number gutter). */
+  padding: 0 0 0 34px;
+  font: 13px/20px var(--font-mono);
+}
+.print-type,
+.print-meaning {
+  color: color-mix(in srgb, var(--text-dim) 74%, var(--paper));
+}
+.print-note {
+  white-space: nowrap;
+}
+.print-value {
+  font-weight: 500;
+  /* a hair heavier than 500: the system font has no weight between 500 and 600 */
+  -webkit-text-stroke: 0.2px currentColor;
+  color: var(--text);
+}
+.print-steps .print-value {
+  letter-spacing: 1px;
+}
+.print-quiet .print-value,
+.print-comma {
+  font-weight: 400;
+  -webkit-text-stroke: 0;
+  color: var(--text-mute);
+}
+
+.connection-card { max-width: 520px; }
+.connection-card h2 { font-size: 18px; margin: 20px 0 8px; }
+.connection-card ul { padding-left: 22px; line-height: 1.7; }
+.connection-actions { display: flex; justify-content: flex-end; gap: 10px; margin: 24px 0; }
+.connection-destination { overflow-wrap: anywhere; }
+.connection-item { padding: 16px 0; border-top: 1px solid var(--border); }

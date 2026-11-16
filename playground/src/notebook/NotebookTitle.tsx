@@ -1,4 +1,4 @@
-// components/NotebookTitle.tsx — The open notebook's name, which opens its menu: rename it,
+// notebook/NotebookTitle.tsx — The open notebook's name, which opens its menu: rename it,
 // duplicate it, delete it
 import React from "react"
 

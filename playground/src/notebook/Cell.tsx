@@ -1,4 +1,4 @@
-// components/Cell.tsx — Single cell (music or text)
+// notebook/Cell.tsx — Single cell (music or text)
 import React from "react"
 import { afterRun } from "../hooks/useKeyboard.ts"
 import type { Checked, NotebookCell } from "../shared/types.ts"

@@ -1,4 +1,4 @@
-// components/Toolbar.tsx — Top bar controls
+// notebook/Toolbar.tsx — Top bar controls
 import React from "react"
 import type { KernelStatus } from "../shared/types.ts"
 
@@ -103,7 +103,9 @@ export default function Toolbar({
   ) => (
     <button
       className={
-        "btn " + (opts.primary ? "btn-primary" : "btn-secondary") + (opts.danger ? " btn-danger" : "")
+        "btn " +
+        (opts.primary ? "btn-primary" : "btn-secondary") +
+        (opts.danger ? " btn-danger" : "")
       }
       title={title}
       onClick={onClick}

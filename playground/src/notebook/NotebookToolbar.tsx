@@ -1,5 +1,5 @@
 import type { NotebookController } from "../hooks/useNotebookController.ts"
-import Toolbar from "../components/Toolbar.tsx"
+import Toolbar from "./Toolbar.tsx"
 
 export function NotebookToolbar({ controller }: { controller: NotebookController }) {
   const { manager, runtime } = controller
