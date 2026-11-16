@@ -105,6 +105,12 @@ describe("tools", () => {
     )
     expect(t).toMatch(/chords bar 1: Am \(A C E\) · F \(F A C\)/)
     expect(t).toMatch(/piano\s+E5/)
+    expect(t).toContain("name each chord exactly as the chords lines above spell it")
+  })
+
+  it("asks for chord names from the report only when chords play", async () => {
+    const t = textOf(await call("parse", { source: MUZAK }))
+    expect(t).not.toContain("name each chord exactly")
   })
 
   it("render gives the ABC", async () => {

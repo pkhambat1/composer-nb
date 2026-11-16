@@ -183,5 +183,10 @@ export function describe(parsed: Parsed, earlier: Parsed | null, source = ""): s
       for (const l of chordsText(b)) out.push(`  chords ${l}`)
     }
   })
+  if (parsed.outputs.some((o) => o.blocks.some((b) => b.chordEvents?.length)))
+    out.push(
+      "",
+      "When you write about this music, name each chord exactly as the chords lines above spell it, quality included: if they say G7, write G7, not G or Gmaj7.",
+    )
   return out.join("\n")
 }
