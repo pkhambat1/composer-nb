@@ -1,0 +1,171 @@
+// notebook/Toolbar.tsx — Top bar controls
+import React from "react"
+import type { KernelStatus } from "../shared/types.ts"
+
+// The + menu: a music cell or a text cell, at the end of the notebook
+function AddCellDropdown({
+  onAddCode,
+  onAddText,
+}: {
+  onAddCode: () => void
+  onAddText: () => void
+}) {
+  const [open, setOpen] = React.useState(false)
+  const ref = React.useRef<HTMLDivElement>(null)
+
+  React.useEffect(() => {
+    if (!open) return
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
+    }
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false)
+    document.addEventListener("mousedown", handler)
+    document.addEventListener("keydown", onKey)
+    return () => {
+      document.removeEventListener("mousedown", handler)
+      document.removeEventListener("keydown", onKey)
+    }
+  }, [open])
+
+  return (
+    <div className="tb-dropdown-wrap" ref={ref}>
+      <button
+        className={"btn btn-secondary" + (open ? " btn-open" : "")}
+        title="Add a cell at the end"
+        aria-label="Add a cell"
+        aria-haspopup="menu"
+        aria-expanded={open}
+        onClick={() => setOpen((v) => !v)}
+      >
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+          <path d="M8 3v10M3 8h10" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+        </svg>
+        <svg width="12" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+          <path
+            d="M4 6l4 4 4-4"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.4"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+      </button>
+      {open && (
+        <div className="tb-dropdown" role="menu">
+          <button
+            className="menu-item"
+            onClick={() => {
+              onAddCode()
+              setOpen(false)
+            }}
+          >
+            Music cell
+          </button>
+          <button
+            className="menu-item"
+            onClick={() => {
+              onAddText()
+              setOpen(false)
+            }}
+          >
+            Text cell
+          </button>
+        </div>
+      )}
+    </div>
+  )
+}
+
+export default function Toolbar({
+  onAddCode,
+  onAddText,
+  onRunAll,
+  onStop,
+  kernelStatus,
+}: {
+  onAddCode: () => void
+  onAddText: () => void
+  onRunAll: () => void
+  onStop: () => void
+  kernelStatus: KernelStatus
+}) {
+  const Icon = (children: React.ReactNode, viewBox = "0 0 16 16") => (
+    <svg width="14" height="14" viewBox={viewBox} fill="currentColor">
+      {children}
+    </svg>
+  )
+  const btn = (
+    title: string,
+    onClick: () => void,
+    children: React.ReactNode,
+    opts: { primary?: boolean; danger?: boolean } = {},
+  ) => (
+    <button
+      className={
+        "btn " +
+        (opts.primary ? "btn-primary" : "btn-secondary") +
+        (opts.danger ? " btn-danger" : "")
+      }
+      title={title}
+      onClick={onClick}
+    >
+      {children}
+    </button>
+  )
+
+  return (
+    <div className="panel-header toolbar">
+      <div className="toolbar-left">
+        <div className="tb-group">
+          <AddCellDropdown onAddCode={onAddCode} onAddText={onAddText} />
+        </div>
+        <div className="tb-group">
+          {kernelStatus === "busy"
+            ? btn(
+                "Rendering — click to stop",
+                onStop,
+                <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                    <circle
+                      cx="7"
+                      cy="7"
+                      r="5"
+                      stroke="currentColor"
+                      strokeWidth="1.6"
+                      strokeDasharray="6 6"
+                      strokeLinecap="round"
+                    >
+                      <animateTransform
+                        attributeName="transform"
+                        type="rotate"
+                        from="0 7 7"
+                        to="360 7 7"
+                        dur="0.9s"
+                        repeatCount="indefinite"
+                      />
+                    </circle>
+                  </svg>
+                  <span style={{ fontSize: 12, fontWeight: 600 }}>Rendering&hellip;</span>
+                </span>,
+                { primary: true },
+              )
+            : btn(
+                "Run every cell, top to bottom",
+                onRunAll,
+                <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+                  {Icon(
+                    <>
+                      <polygon points="2,2 7,8 2,14" />
+                      <polygon points="8,2 13,8 8,14" />
+                    </>,
+                  )}
+                  <span style={{ fontSize: 12, fontWeight: 600 }}>Run all</span>
+                </span>,
+                { primary: true },
+              )}
+        </div>
+      </div>
+    </div>
+  )
+}

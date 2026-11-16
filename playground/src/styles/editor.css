@@ -1,0 +1,129 @@
+/* Monaco fills this and sets its height to the source's (CodeEditor.tsx) */
+.code-editor {
+  min-height: 72px;
+}
+/* Monaco draws a keyboard button in every editor on iPhones and iPads. Tapping the code
+   brings the keyboard up already, so the button is only clutter. */
+.code-editor .iPadShowKeyboard {
+  display: none;
+}
+/* The source as text while Monaco loads, where Monaco will put it */
+.code-hl {
+  font-family: var(--font-mono);
+  font-variant-ligatures: none;
+  font-size: 13px;
+  line-height: 20px;
+  padding: 40px var(--code-pad-x) var(--code-pad-y) 52px;
+  margin: 0;
+  white-space: pre-wrap;
+  tab-size: 2;
+  color: var(--text);
+}
+.code-context-selection {
+  color: inherit;
+  background: color-mix(in srgb, var(--accent) 28%, transparent);
+}
+.code-input:focus-within .code-context-selection {
+  background: transparent;
+}
+.code-input:focus-within {
+  border-color: var(--border-soft);
+}
+.code-diagnostics {
+  padding: 6px 12px;
+  border-top: 1px solid var(--border-soft);
+  color: var(--traceback);
+  font: 11px var(--font-mono);
+}
+.tk-comment,
+.code-editor .tk-comment {
+  color: var(--tk-comment);
+  font-style: italic;
+}
+/* Tokens must not add spacing: this layer shares the textarea's exact geometry. */
+.tk-directive-key,
+.code-editor .tk-directive-key {
+  color: var(--tk-key);
+  font-weight: 500;
+}
+.tk-inst,
+.code-editor .tk-inst {
+  color: var(--tk-instrument);
+  font-weight: 500;
+}
+.tk-word,
+.code-editor .tk-word {
+  color: var(--tk-name);
+  font-weight: 500;
+}
+.tk-directive-val,
+.code-editor .tk-directive-val {
+  color: var(--tk-value);
+}
+.tk-root,
+.tk-root-maj,
+.tk-root-min,
+.tk-root-abs,
+.tk-note,
+.tk-bass,
+.code-editor .tk-root,
+.code-editor .tk-root-maj,
+.code-editor .tk-root-min,
+.code-editor .tk-root-abs,
+.code-editor .tk-note,
+.code-editor .tk-bass {
+  color: var(--tk-pitch);
+}
+.tk-quality,
+.tk-ext,
+.code-editor .tk-quality,
+.code-editor .tk-ext {
+  color: var(--tk-pitch-detail);
+}
+.tk-rhythm,
+.tk-beat,
+.tk-step,
+.code-editor .tk-rhythm,
+.code-editor .tk-beat,
+.code-editor .tk-step {
+  color: var(--tk-rhythm);
+}
+.tk-mod,
+.code-editor .tk-mod {
+  color: var(--tk-value);
+}
+.tk-bar,
+.tk-slash,
+.tk-punct,
+.code-editor .tk-bar,
+.code-editor .tk-slash,
+.code-editor .tk-punct {
+  color: var(--tk-faint);
+}
+.tk-rest,
+.code-editor .tk-rest {
+  color: var(--tk-rest);
+}
+.tk-step-acc,
+.code-editor .tk-step-acc {
+  font-weight: 600;
+}
+/* A mistake the engine reports, marked as Monaco marks it, while Monaco loads */
+.code-error {
+  text-decoration: underline wavy var(--tk-error);
+  text-decoration-skip-ink: none;
+  text-underline-offset: 3px;
+}
+/* A mistake's message on hover, without Monaco's problem and quick-fix links */
+.code-editor .monaco-hover .hover-row.status-bar {
+  display: none;
+}
+.tk-blank::before {
+  content: "";
+  position: absolute;
+  left: var(--code-pad-x);
+  right: var(--code-pad-x);
+  margin-top: 0.72em;
+  border-top: 1px dashed var(--border);
+}
+

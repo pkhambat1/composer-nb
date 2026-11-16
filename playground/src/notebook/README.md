@@ -37,7 +37,7 @@ Output rendering and playback ticks do not emit duplicate snapshots. The adapter
 decides when to persist edits or share selection with an assistant.
 
 When adding a renderer or changing a view toggle, edit `MusicViews` or its renderer
-in `components/`, not the host adapter. When adding a host capability, keep SDK calls
+in `notebook/`, not the host adapter. When adding a host capability, keep SDK calls
 in the adapter and pass typed data or callbacks across this boundary.
 
 Validation commands:

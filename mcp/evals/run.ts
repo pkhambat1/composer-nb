@@ -176,7 +176,7 @@ async function sourceHash(): Promise<string> {
       else if (entry.isFile() && (allFiles || entry.name.endsWith(".ts"))) await add(child)
     }
   }
-  for (const path of ["dsl/js", "mcp/src", "mcp/evals"]) await walk(path)
+  for (const path of ["dsl/src", "mcp/src", "mcp/evals"]) await walk(path)
   await walk("plugin", true)
   for (const path of ["mcp/app/context.ts", "package-lock.json"]) await add(path)
   return hash.digest("hex")

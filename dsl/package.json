@@ -8,62 +8,62 @@
   "type": "module",
   "exports": {
     "./hover": {
-      "composer-nb-source": "./js/hover.ts",
+      "composer-nb-source": "./src/hover.ts",
       "types": "./lib/hover.d.ts",
       "default": "./lib/hover.js"
     },
     "./engine": {
-      "composer-nb-source": "./js/music-engine.ts",
+      "composer-nb-source": "./src/music-engine.ts",
       "types": "./lib/music-engine.d.ts",
       "default": "./lib/music-engine.js"
     },
     "./language": {
-      "composer-nb-source": "./js/language.ts",
+      "composer-nb-source": "./src/language.ts",
       "types": "./lib/language.d.ts",
       "default": "./lib/language.js"
     },
     "./chord-lookup": {
-      "composer-nb-source": "./js/chord-lookup.ts",
+      "composer-nb-source": "./src/chord-lookup.ts",
       "types": "./lib/chord-lookup.d.ts",
       "default": "./lib/chord-lookup.js"
     },
     "./editing": {
-      "composer-nb-source": "./js/editing.ts",
+      "composer-nb-source": "./src/editing.ts",
       "types": "./lib/editing.d.ts",
       "default": "./lib/editing.js"
     },
     "./grid": {
-      "composer-nb-source": "./js/grid.ts",
+      "composer-nb-source": "./src/grid.ts",
       "types": "./lib/grid.d.ts",
       "default": "./lib/grid.js"
     },
     "./sheet": {
-      "composer-nb-source": "./js/sheet.ts",
+      "composer-nb-source": "./src/sheet.ts",
       "types": "./lib/sheet.d.ts",
       "default": "./lib/sheet.js"
     },
     "./midi": {
-      "composer-nb-source": "./js/midi.ts",
+      "composer-nb-source": "./src/midi.ts",
       "types": "./lib/midi.d.ts",
       "default": "./lib/midi.js"
     },
     "./highlight": {
-      "composer-nb-source": "./js/highlight.ts",
+      "composer-nb-source": "./src/highlight.ts",
       "types": "./lib/highlight.d.ts",
       "default": "./lib/highlight.js"
     },
     "./chords": {
-      "composer-nb-source": "./js/chords.ts",
+      "composer-nb-source": "./src/chords.ts",
       "types": "./lib/chords.d.ts",
       "default": "./lib/chords.js"
     },
     "./grooves": {
-      "composer-nb-source": "./js/grooves.ts",
+      "composer-nb-source": "./src/grooves.ts",
       "types": "./lib/grooves.d.ts",
       "default": "./lib/grooves.js"
     },
     "./links": {
-      "composer-nb-source": "./js/links.ts",
+      "composer-nb-source": "./src/links.ts",
       "types": "./lib/links.d.ts",
       "default": "./lib/links.js"
     }

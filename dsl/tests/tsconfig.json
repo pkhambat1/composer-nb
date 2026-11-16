@@ -10,5 +10,5 @@
     "rootDir": "..",
     "noEmit": true
   },
-  "include": ["js", "../js"]
+  "include": [".", "../src"]
 }

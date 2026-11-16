@@ -4,7 +4,7 @@ import { parseHTML } from "linkedom"
 import { afterEach, expect, it, vi } from "vitest"
 import type { App } from "@modelcontextprotocol/ext-apps"
 import type { NotebookSnapshot } from "../../playground/src/notebook/index.ts"
-import NotebookTitle from "../../playground/src/components/NotebookTitle.tsx"
+import NotebookTitle from "../../playground/src/notebook/NotebookTitle.tsx"
 import { NotebookApp } from "../app/NotebookApp.tsx"
 
 const mock = vi.hoisted(() => ({ snapshot: null as null | ((value: NotebookSnapshot) => void) }))

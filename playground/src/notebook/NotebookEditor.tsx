@@ -4,7 +4,7 @@ import { APP_CONSTANTS } from "../shared/constants.ts"
 import { useNotebookController } from "../hooks/useNotebookController.ts"
 import { NotebookWorkspace } from "./NotebookWorkspace.tsx"
 import { NotebookToolbar } from "./NotebookToolbar.tsx"
-import NotebookTitle from "../components/NotebookTitle.tsx"
+import NotebookTitle from "./NotebookTitle.tsx"
 import type { NotebookSnapshot, NotebookSelection } from "./types.ts"
 
 /** A host-owned editor. Storage and MCP SDK calls belong in the adapter, not here.
@@ -37,22 +37,24 @@ export function NotebookEditor({
   }, [theme])
   const { cells, selectedId } = controller.manager
   const selectedCell = cells.find((cell) => cell.id === selectedId)
-  const validSelection = selection?.cellId === selectedId && (
-    selection.kind !== "source" || selection.selectedText === undefined ||
-    selectedCell?.source.slice(selection.start, selection.end) === selection.selectedText
-  ) ? selection : null
+  const validSelection =
+    selection?.cellId === selectedId &&
+    (selection.kind !== "source" ||
+      selection.selectedText === undefined ||
+      selectedCell?.source.slice(selection.start, selection.end) === selection.selectedText)
+      ? selection
+      : null
   const lastSnapshot = React.useRef("")
   React.useEffect(() => {
     if (!onSnapshot) return
     const snapshot: NotebookSnapshot = {
       cells: cells.map(({ id, type, source }) => ({ id, type, source })),
       selectedId,
-      selection:
-        validSelection
-          ? validSelection
-          : selectedId
-            ? { cellId: selectedId, kind: "cell", label: "Cell" }
-            : null,
+      selection: validSelection
+        ? validSelection
+        : selectedId
+          ? { cellId: selectedId, kind: "cell", label: "Cell" }
+          : null,
     }
     const signature = JSON.stringify(snapshot)
     if (signature === lastSnapshot.current) return
@@ -71,8 +73,11 @@ export function NotebookEditor({
           <NotebookToolbar controller={controller} />
           {showChatContext && (
             <div className="notebook-chat-context" role="status">
-              Chat context: notebook{selectedCell ? ` · Cell ${cells.indexOf(selectedCell) + 1}` : ""}
-              {validSelection?.selectedText ? ` · Selected text: “${validSelection.selectedText.replace(/\s+/g, " ").slice(0, 100)}${validSelection.selectedText.length > 100 ? "…" : ""}”` : ""}
+              Chat context: notebook
+              {selectedCell ? ` · Cell ${cells.indexOf(selectedCell) + 1}` : ""}
+              {validSelection?.selectedText
+                ? ` · Selected text: “${validSelection.selectedText.replace(/\s+/g, " ").slice(0, 100)}${validSelection.selectedText.length > 100 ? "…" : ""}”`
+                : ""}
             </div>
           )}
         </>

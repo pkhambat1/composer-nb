@@ -3,7 +3,7 @@ import react from "@vitejs/plugin-react"
 
 export default defineConfig({
   plugins: [react()],
-  // The engine's source (dsl/js), not its build in dsl/lib, so an edit shows at once
+  // The engine's source (dsl/src), not its build in dsl/lib, so an edit shows at once
   resolve: { conditions: ["composer-nb-source", ...defaultClientConditions] },
   server: {
     proxy: Object.fromEntries(

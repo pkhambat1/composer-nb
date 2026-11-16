@@ -1,0 +1,371 @@
+// Source editor: Monaco, the editor VS Code uses, with composer-nb's highlighter painting
+// the tokens. Monaco loads on demand; until it's in, the source shows highlighted as text.
+import React from "react"
+import { highlightMusic, type Part } from "composer-nb/highlight"
+import { CellIdContext, SelectionContext } from "./SelectionContext.tsx"
+import type { Checked, Diagnostic } from "../shared/types.ts"
+
+// Where a cell is in being run, as its button shows it
+export type RunState = "idle" | "waiting" | "running"
+
+// What a cell can do with its editor
+export type CodeEditorHandle = {
+  // Takes the caret, at the end of the source
+  focusAtEnd: (preventScroll: boolean) => void
+  hasFocus: () => boolean
+}
+
+type Props = {
+  value: string
+  onChange: (value: string) => void
+  onFocus?: () => void
+  onBlur?: () => void
+  placeholder?: string
+  onRun?: () => void
+  onInterrupt?: () => void
+  runState: RunState
+  // What's wrong with the source, and the source that was read for it
+  diagnostics: Checked | null
+}
+
+// A line's highlighted parts, cut where a mistake starts or ends, each part saying whether
+// it's in one: how the source shows before Monaco is in, marked as Monaco marks it
+function markParts(
+  parts: Part[],
+  line: number,
+  errors: Diagnostic[],
+): (Part & { wrong: boolean })[] {
+  const length = parts.reduce((n, p) => n + p.s.length, 0)
+  const ranges = errors
+    .filter((e) => e.line <= line && line <= e.endLine)
+    .map((e) => [e.line === line ? e.col : 0, e.endLine === line ? e.endCol : length])
+  const cuts = new Set(ranges.flat())
+  const out: (Part & { wrong: boolean })[] = []
+  let at = 0
+  for (const part of parts) {
+    let from = 0
+    for (let i = 1; i <= part.s.length; i++) {
+      if (i < part.s.length && !cuts.has(at + i)) continue
+      const start = at + from
+      out.push({
+        c: part.c,
+        s: part.s.slice(from, i),
+        wrong: ranges.some(([a, b]) => a <= start && start < b),
+      })
+      from = i
+    }
+    at += part.s.length
+  }
+  return out
+}
+
+// On a touch screen Monaco takes a swipe that starts on a cell to scroll the editor itself,
+// and cancels the page's scroll; a cell is as tall as its source, so nothing moved at all.
+// Monaco hears touches at the document, so a swipe stopped at the editor leaves it to the
+// page. A touch that ends where it started still reaches Monaco, as the tap that places the
+// caret; one that moved is kept from it too, or Monaco would take it for that tap.
+function scrollPageOnTouch(host: HTMLElement): () => void {
+  let start: { x: number; y: number } | null = null
+  const moved = (touch: Touch) =>
+    !!start && Math.hypot(touch.pageX - start.x, touch.pageY - start.y) > 10
+  const onStart = (event: TouchEvent) => {
+    const touch = event.touches[0]
+    start = event.touches.length === 1 && touch ? { x: touch.pageX, y: touch.pageY } : null
+  }
+  const onMove = (event: TouchEvent) => {
+    if (start) event.stopPropagation()
+  }
+  const onEnd = (event: TouchEvent) => {
+    const touch = event.changedTouches[0]
+    if (touch && moved(touch)) event.stopPropagation()
+    start = null
+  }
+  host.addEventListener("touchstart", onStart, { passive: true })
+  host.addEventListener("touchmove", onMove, { passive: true })
+  host.addEventListener("touchend", onEnd, { passive: true })
+  return () => {
+    host.removeEventListener("touchstart", onStart)
+    host.removeEventListener("touchmove", onMove)
+    host.removeEventListener("touchend", onEnd)
+  }
+}
+
+type Monaco = typeof import("./monaco.ts")
+let loading: Promise<Monaco> | null = null
+const loadMonaco = () => (loading ??= import("./monaco.ts"))
+
+const CodeEditor = React.forwardRef<CodeEditorHandle, Props>(function CodeEditor(props, ref) {
+  // onChange, onFocus, onBlur and placeholder reach Monaco through `latest`
+  const { value, onRun, onInterrupt, runState, diagnostics } = props
+  const hostRef = React.useRef<HTMLDivElement>(null)
+  const editorRef = React.useRef<import("monaco-editor").editor.IStandaloneCodeEditor | null>(null)
+  const contextRef = React.useRef<
+    import("monaco-editor").editor.IEditorDecorationsCollection | null
+  >(null)
+  const [ready, setReady] = React.useState(false)
+  // A focus asked for before Monaco was in
+  const pendingFocus = React.useRef<boolean | null>(null)
+  // The latest props, for Monaco's listeners
+  const latest = React.useRef(props)
+  latest.current = props
+
+  React.useImperativeHandle(ref, () => ({
+    focusAtEnd(preventScroll) {
+      const editor = editorRef.current
+      if (!editor) {
+        pendingFocus.current = preventScroll
+        return
+      }
+      const model = editor.getModel()!
+      const end = model.getFullModelRange().getEndPosition()
+      editor.setPosition(end)
+      if (preventScroll) {
+        const x = window.scrollX
+        const y = window.scrollY
+        editor.focus()
+        window.scrollTo(x, y)
+      } else {
+        editor.focus()
+        editor.revealPosition(end)
+      }
+    },
+    hasFocus: () => editorRef.current?.hasTextFocus() ?? false,
+  }))
+
+  React.useEffect(() => {
+    let disposed = false
+    let dispose = () => {}
+    loadMonaco().then(({ monaco, OPTIONS, themeName, tokenDecorations, setErrorMarkers }) => {
+      const host = hostRef.current
+      if (disposed || !host) return
+      const editor = monaco.editor.create(host, {
+        ...OPTIONS,
+        value: latest.current.value,
+        theme: themeName(),
+        placeholder: latest.current.placeholder,
+      })
+      const model = editor.getModel()!
+      const tokens = editor.createDecorationsCollection(tokenDecorations(model))
+      contextRef.current = editor.createDecorationsCollection()
+
+      // Where the caret or selection is, for the notebook's selection (selection.ts): its
+      // lines, a selection ending at the start of a line not counting that line, and its text
+      const markLines = () => {
+        const s = editor.getSelection()
+        if (!s) return
+        const empty = s.isEmpty()
+        host.dataset.fromLine = String(s.startLineNumber)
+        host.dataset.toLine = String(
+          !empty && s.endColumn === 1 && s.endLineNumber > s.startLineNumber
+            ? s.endLineNumber - 1
+            : s.endLineNumber,
+        )
+        host.dataset.start = String(model.getOffsetAt(s.getStartPosition()))
+        host.dataset.end = String(model.getOffsetAt(s.getEndPosition()))
+        host.dataset.selectedText = empty ? "" : model.getValueInRange(s)
+      }
+      // Grow with the source, as the cell does
+      const fit = () => {
+        host.style.height = editor.getContentHeight() + "px"
+        editor.layout()
+      }
+      const subscriptions = [
+        model.onDidChangeContent(() => {
+          setErrorMarkers(model, [])
+          tokens.set(tokenDecorations(model))
+          const text = model.getValue()
+          if (text !== latest.current.value) latest.current.onChange(text)
+        }),
+        editor.onDidContentSizeChange(fit),
+        editor.onDidChangeCursorSelection(markLines),
+        editor.onDidFocusEditorText(() => latest.current.onFocus?.()),
+        editor.onDidBlurEditorText(() => latest.current.onBlur?.()),
+        { dispose: scrollPageOnTouch(host) },
+      ]
+      markLines()
+      fit()
+      editorRef.current = editor
+      setReady(true)
+      if (pendingFocus.current !== null) {
+        const preventScroll = pendingFocus.current
+        pendingFocus.current = null
+        requestAnimationFrame(() => {
+          const end = model.getFullModelRange().getEndPosition()
+          editor.setPosition(end)
+          const x = window.scrollX
+          const y = window.scrollY
+          editor.focus()
+          if (preventScroll) window.scrollTo(x, y)
+        })
+      }
+      dispose = () => {
+        subscriptions.forEach((s) => s.dispose())
+        editor.dispose()
+        model.dispose()
+        editorRef.current = null
+        contextRef.current = null
+      }
+    })
+    return () => {
+      disposed = true
+      dispose()
+    }
+  }, [])
+
+  // A source changed from outside the editor: another notebook, an undone delete
+  React.useEffect(() => {
+    const model = editorRef.current?.getModel()
+    if (model && model.getValue() !== value) model.setValue(value)
+  }, [value, ready])
+
+  // Mark only the source that was checked. Editing invalidates the old markers, including
+  // during a deferred notebook check or while the editor module is loading.
+  const errors = diagnostics && diagnostics.source === value ? diagnostics.errors : null
+  React.useEffect(() => {
+    const model = editorRef.current?.getModel()
+    if (!ready || !model) return
+    let cancelled = false
+    loadMonaco().then(({ setErrorMarkers }) => {
+      if (cancelled || model.isDisposed()) return
+      setErrorMarkers(model, diagnostics?.source === model.getValue() ? diagnostics.errors : [])
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [value, diagnostics, ready])
+
+  // The part of the source the assistant has as context, shaded while the editor isn't focused
+  const selection = React.useContext(SelectionContext)
+  const cellId = React.useContext(CellIdContext)
+  const context =
+    selection?.cellId === cellId &&
+    selection.kind === "source" &&
+    selection.start !== undefined &&
+    selection.end !== undefined
+      ? [selection.start, selection.end]
+      : null
+  const contextKey = context?.join("-") ?? ""
+  React.useEffect(() => {
+    const model = editorRef.current?.getModel()
+    if (!ready || !model || !contextRef.current) return
+    if (!context) return contextRef.current.clear()
+    loadMonaco().then(({ monaco }) => {
+      const from = model.getPositionAt(context[0])
+      const to = model.getPositionAt(context[1])
+      contextRef.current?.set([
+        {
+          range: new monaco.Range(from.lineNumber, from.column, to.lineNumber, to.column),
+          options: { inlineClassName: "code-context-selection" },
+        },
+      ])
+    })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [contextKey, ready, value])
+
+  const diagnosticLines = [...new Set((errors ?? []).map((e) => e.line))].sort((a, b) => a - b)
+  const lines = React.useMemo(
+    () =>
+      ready ? [] : highlightMusic(value).map((parts, i) => markParts(parts, i + 1, errors ?? [])),
+    [value, ready, errors],
+  )
+
+  return (
+    <div className="code-input" aria-invalid={diagnosticLines.length > 0}>
+      <div
+        ref={hostRef}
+        className="code-editor"
+        data-source-lines=""
+        onClick={(e) => e.stopPropagation()}
+      >
+        {!ready && (
+          <pre className="code-hl code-hl-loading" aria-hidden="true">
+            {lines.map((parts, i) => (
+              <React.Fragment key={i}>
+                {i > 0 ? "\n" : null}
+                {parts.map((part, j) =>
+                  part.c || part.wrong ? (
+                    <span
+                      key={j}
+                      className={[part.c, part.wrong && "code-error"].filter(Boolean).join(" ")}
+                    >
+                      {part.s}
+                    </span>
+                  ) : (
+                    part.s
+                  ),
+                )}
+              </React.Fragment>
+            ))}
+            {"\n"}
+          </pre>
+        )}
+      </div>
+      {diagnosticLines.length > 0 && (
+        <div className="code-diagnostics" role="status">
+          Check {diagnosticLines.length === 1 ? "line" : "lines"} {diagnosticLines.join(", ")}
+        </div>
+      )}
+      {runState === "waiting" && onInterrupt && (
+        <button
+          className="btn btn-primary cell-run-btn cell-wait-btn"
+          onClick={(e) => {
+            e.stopPropagation()
+            onInterrupt()
+          }}
+          title="Waiting its turn — click to cancel"
+        >
+          <svg width="10" height="10" viewBox="0 0 10 10">
+            <circle cx="5" cy="5" r="4" stroke="currentColor" strokeWidth="1.2" fill="none" />
+            <path
+              d="M5 3v2.5l1.5 1"
+              stroke="currentColor"
+              strokeWidth="1.2"
+              fill="none"
+              strokeLinecap="round"
+            />
+          </svg>
+          <span>Waiting</span>
+        </button>
+      )}
+      {runState === "idle" && onRun && (
+        <button
+          className="btn btn-primary cell-run-btn"
+          onClick={(e) => {
+            e.stopPropagation()
+            onRun()
+          }}
+          title="Run this cell (Shift+Enter)"
+        >
+          <svg width="10" height="10" viewBox="0 0 10 10">
+            <polygon points="2,1 9,5 2,9" fill="currentColor" />
+          </svg>
+          <span>Run</span>
+        </button>
+      )}
+      {runState === "running" && onInterrupt && (
+        <button
+          className="btn btn-primary cell-run-btn cell-wait-btn"
+          onClick={(e) => {
+            e.stopPropagation()
+            onInterrupt()
+          }}
+          title="Rendering the audio — click to stop"
+        >
+          <svg width="10" height="10" viewBox="0 0 10 10">
+            <circle cx="5" cy="5" r="4" stroke="currentColor" strokeWidth="1.2" fill="none" />
+            <path
+              d="M5 3v2.5l1.5 1"
+              stroke="currentColor"
+              strokeWidth="1.2"
+              fill="none"
+              strokeLinecap="round"
+            />
+          </svg>
+          <span>Rendering</span>
+        </button>
+      )}
+    </div>
+  )
+})
+
+export default CodeEditor

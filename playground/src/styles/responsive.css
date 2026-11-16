@@ -1,0 +1,114 @@
+/* Phones and narrow windows: the sidebar becomes a drawer that slides in from the left
+   over a dimmed page, cells take the width, and the player's controls wrap under the
+   waveform. */
+@media (max-width: 760px) {
+  .app-shell {
+    display: block;
+  }
+  .app-lhs {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 41;
+    width: min(280px, 85vw);
+    height: 100dvh;
+    box-shadow: var(--shadow-menu);
+    transform: translateX(-100%);
+    visibility: hidden;
+    transition:
+      transform var(--motion-slow) var(--ease),
+      visibility 0s linear var(--motion-slow);
+  }
+  .app-lhs-open {
+    transform: none;
+    visibility: visible;
+    transition: transform var(--motion-slow) var(--ease);
+  }
+  .lhs-scrim {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 40;
+    background: rgba(0, 0, 0, 0.32);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity var(--motion-slow) var(--ease);
+  }
+  .lhs-scrim-open {
+    opacity: 1;
+    pointer-events: auto;
+  }
+  /* The menu button sits at the left of the notebook's title bar, which makes room for it */
+  .lhs-toggle {
+    --btn-h: 32px;
+    display: inline-flex;
+    position: fixed;
+    top: 6px;
+    left: 8px;
+    z-index: 22;
+  }
+  .lhs-close {
+    display: inline-flex;
+    margin-left: auto;
+  }
+  .nb-title-menu {
+    left: 0;
+  }
+  .app-main {
+    height: auto;
+    overflow: visible;
+  }
+  /* The sticky header stays short: no subtitle, less padding, and room on the left for
+     the menu button */
+  .nb-title-bar {
+    height: auto;
+    padding: 6px 12px 6px 48px;
+  }
+  .nb-title-bar .panel-subtitle {
+    display: none;
+  }
+  .nb-title-bar .panel-title {
+    font-size: 17px;
+  }
+  .toolbar {
+    height: auto;
+    padding: 8px 12px;
+  }
+  .nb-main {
+    padding: 8px 4px 70px;
+  }
+  .cell {
+    grid-template-columns: 28px 1fr;
+  }
+  .cell-prompt {
+    padding: 9px 2px 0 2px;
+  }
+  .cell-body {
+    padding-right: 6px;
+  }
+  .cell-output {
+    grid-template-columns: 1fr;
+  }
+  .out-prompt {
+    display: none;
+  }
+  .out-content {
+    padding: 0;
+  }
+  .music-row {
+    flex-wrap: wrap;
+    padding: 8px;
+  }
+  .dg-cell {
+    height: 12px;
+    font-size: 8px;
+    line-height: 12px;
+  }
+  .dg-lane,
+  .dg-count,
+  .dg-head {
+    font-size: 9px;
+  }
+}
+

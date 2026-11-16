@@ -1,7 +1,13 @@
 import { readFileSync } from "node:fs"
 import { describe, expect, it } from "vitest"
 
-const css = readFileSync(new URL("../src/styles/app.css", import.meta.url), "utf8")
+// app.css only @imports the style files; read them in the same order the bundler does
+const styles = new URL("../src/styles/", import.meta.url)
+const css = [
+  ...readFileSync(new URL("app.css", styles), "utf8").matchAll(/@import "\.\/([^"]+)";/g),
+]
+  .map((match) => readFileSync(new URL(match[1], styles), "utf8"))
+  .join("")
 const tokenNames = [
   "comment",
   "key",

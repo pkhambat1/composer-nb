@@ -14,8 +14,8 @@
     "rewriteRelativeImportExtensions": true,
     "declaration": true,
     "skipLibCheck": true,
-    "rootDir": "js",
+    "rootDir": "src",
     "outDir": "lib"
   },
-  "include": ["js"]
+  "include": ["src"]
 }
