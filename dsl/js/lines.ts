@@ -19,7 +19,7 @@ import {
   located,
   sourcesOf,
 } from "./parts.ts"
-import { reportIn } from "./diagnostics.ts"
+import { reportIn, type At } from "./diagnostics.ts"
 import type { SourceText } from "./source.ts"
 import type { Line, Piece, State } from "./state.ts"
 import {
@@ -230,6 +230,9 @@ export function classify({ ln, parts }: Line, err: Report, st: State): ReadLine 
   const sections = st.sections
   // The line as text, its blocks shown as { ... }, for how it starts and for messages
   const text = textOf(parts)
+  // The line, for a mistake about all of it: the text it starts with, or, when it starts
+  // with a block, the whole of it as the reader was given it
+  const lineAt = (): At => headOf(parts) || (err.source?.text ? err.source.span : text)
   if (singularLength(text, ln, err)) return null
   const decl = readDecl(parts)
   if (decl) return classifyDecl(decl, ln, err, st)
@@ -310,13 +313,9 @@ export function classify({ ln, parts }: Line, err: Report, st: State): ReadLine 
       !/^\d/.test(first) &&
       buildChord(first, parseKey("C"))
     ) {
-      err(ln, `Chords go on an instrument's line, e.g. ${"piano"}: chords ${text}`, headOf(parts))
+      err(ln, `Chords go on an instrument's line, e.g. ${"piano"}: chords ${text}`, lineAt())
     } else if (!tokens.some((t) => sections[t]) && tokens.some(drawsNotes)) {
-      err(
-        ln,
-        `Notes go on an instrument's line, e.g. guitar: notes ${spaceNotes(text)}`,
-        headOf(parts),
-      )
+      err(ln, `Notes go on an instrument's line, e.g. guitar: notes ${spaceNotes(text)}`, lineAt())
     } else if (/^[A-Za-z(*\d{]/.test(first)) {
       // intro verse verse: patterns to play, one after another
       const items = readSequence(parts, ln, err, st)

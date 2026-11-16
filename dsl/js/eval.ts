@@ -235,7 +235,7 @@ export function checkSection(
       if (it.items) names(it.items, ln, at)
       else if (it.block) {
         // a with's block is checked with its settings
-        const inner = it.with ? withState(it.with, at, ln, err) : at
+        const inner = it.with ? withState(it.with, at, it.span?.line ?? ln, err) : at
         if (inner) checkSection(it.block, inner, err, owner)
       } else if (it.name === owner)
         err(ln, `${owner} plays itself, so it would never end`, itemAt(it))
@@ -289,7 +289,7 @@ export function sequenceClip(
       return null
     }
     // A with's block plays with its settings, and what's around it keeps its own
-    const inner = it.with ? withState(it.with, state, ln, err) : state
+    const inner = it.with ? withState(it.with, state, it.span?.line ?? ln, err) : state
     if (!inner) return null
     // A length in front of a pattern's name repeats it for that long. In front of braces
     // it is the block's own length, which is the same thing when the block has one, and
