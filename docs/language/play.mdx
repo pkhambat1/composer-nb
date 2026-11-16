@@ -37,6 +37,8 @@ Without `for`, the output lasts as long as the part. With `for`, the output last
 
 `for` only bounds the output. A named part keeps its own length, and everything inside it must still fit by its own rules.
 
+Bars are the music's own: when the part sets its time with `with`, `for 8 bars` is eight of its bars, and parts in order in different meters count their bars one after another. A tempo of its own is only a speed, so its length counts the bars of the play it's in.
+
 One output may last at most 600 seconds.
 
 ```composer-nb Example

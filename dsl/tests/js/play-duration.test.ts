@@ -23,4 +23,57 @@ describe("play durations", () => {
       expect(parsed.outputs, play).toEqual([])
     }
   })
+
+  // A length counts bars of the music it's given to, in the meter and tempo it plays in.
+  describe("counts bars of the music's own meter", () => {
+    const seven = "with time 7 over 8 { kick: x-------------, }"
+    const cases: [string, string, number, string[]][] = [
+      ["block with time", `set tempo 120\nplay block { ${seven}, } for 8 bars`, 14, ["8 7 over 8"]],
+      [
+        "pattern with time",
+        `set tempo 120\nplay pattern { ${seven}, } for 8 bars`,
+        14,
+        ["8 7 over 8"],
+      ],
+      [
+        "a name holding a with",
+        `set tempo 120\npattern seven = { ${seven}, }\nplay seven for 8 bars`,
+        14,
+        ["8 7 over 8"],
+      ],
+      [
+        "a length on the definition",
+        `set tempo 120\npattern seven = 8 bars { ${seven}, }\nplay seven`,
+        14,
+        ["8 7 over 8"],
+      ],
+      [
+        "meters in order, bar by bar",
+        `set tempo 120\npattern seven = { ${seven}, }\npattern four = { kick: x---------------, }\nplay (seven four) for 3 bars`,
+        5.5,
+        ["1 7 over 8", "1 4 over 4", "1 7 over 8"],
+      ],
+      [
+        "set time at the top, as before",
+        "set tempo 120\nset time 7 over 8\nplay pattern { kick: x-------------, } for 8 bars",
+        14,
+        ["8 7 over 8"],
+      ],
+    ]
+    // A tempo of its own is only a speed: its length is in the bars of what it's in.
+    cases.push([
+      "with tempo, in the outer bars",
+      "set tempo 120\nplay block { with tempo 60 { kick: x---------------, }, } for 2 bars",
+      4,
+      ["1 4 over 4"],
+    ])
+    for (const [name, source, seconds, bars] of cases) {
+      it(name, () => {
+        const parsed = parseCell(source)
+        expect(parsed.errors).toEqual([])
+        expect(parsed.outputs[0].durSec).toBeCloseTo(seconds, 9)
+        expect(parsed.outputs[0].blocks.map((b) => `${b.bars} ${b.time}`)).toEqual(bars)
+      })
+    }
+  })
 })
