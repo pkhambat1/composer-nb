@@ -393,7 +393,7 @@ export function isBareValue(text: string, st: State, depth = 0): boolean {
   text = text.trim()
   if (!depth && /^(notes|chords|steps)\s+\S/.test(text)) {
     // notes riff F---: a new name and then its value is a declaration missing its =
-    const [, type, first, rest] = /^(\w+)\s+(\S+)\s*(.*)$/.exec(text)!
+    const [, type, first, rest] = /^(\w+)\s+(\S+)\s*([\s\S]*)$/.exec(text)!
     const reads =
       type === "notes"
         ? !!noteSteps(first)

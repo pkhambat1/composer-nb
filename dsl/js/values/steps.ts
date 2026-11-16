@@ -317,6 +317,9 @@ export function beatsAsSteps(
 }
 
 export const STEP_HELP = "Use x (hit), ^ (accent), ~ (ghost), d (double) or - (nothing)"
+// What isn't a step in a word of steps: the first run of characters that aren't steps
+// (the q in x-q-), or the whole word when none of it is steps
+const notSteps = (word: string) => /[^-x^~d]+/.exec(word)?.[0] ?? word
 
 // One step character → hit modifiers; null for -, undefined when it isn't valid here. A
 // mistake is marked on the step itself, or on `at` when the step isn't written on this line
@@ -407,7 +410,7 @@ export function stepParts(
         `"${word}" is a chord, and ${part.name} is a drum. Chords go on a pitched instrument's line: piano: chords ${word}`,
         word,
       )
-    return fail(`"${word}" isn't a step word. ${STEP_HELP}`, word)
+    return fail(`"${word}" isn't a step word. ${STEP_HELP}`, notSteps(word))
   }
   const size = (tokens: string[], strict = false) =>
     tokens.reduce(
@@ -627,7 +630,7 @@ export function stepPattern(
           at,
         )
       } else {
-        err(part.ln, `"${tok}"${where} isn't a step. ${STEP_HELP}`, at)
+        err(part.ln, `"${tok}"${where} isn't a step. ${STEP_HELP}`, viaWord ?? notSteps(tok))
       }
       ok = false
       return
@@ -831,7 +834,7 @@ function stepLayerRun(
       return fail(misplaced(tok, st.sections[tok].type, { line: "drum", layer: true })!, tok)
     } else if (NAME_LIKE.test(tok)) {
       return fail(`"${tok}" isn't defined above. Name it first: steps ${tok} = ^-x-`, tok)
-    } else return fail(`"${tok}" isn't a step. ${STEP_HELP}`, tok)
+    } else return fail(`"${tok}" isn't a step. ${STEP_HELP}`, notSteps(tok))
   }
   return { run, toEnd, fill }
 }

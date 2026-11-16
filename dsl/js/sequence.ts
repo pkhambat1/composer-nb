@@ -163,14 +163,16 @@ export function readSequence(
         fail(WITH_HELP, "with")
         return null
       }
+      // A with in a group can be on a later line than the line the group starts on
+      const span = written?.slice(i, i + 4).span
       const shown = textFrom(i + 4)
-      const settings = readWithHeader(shown, ln, err)
+      const settings = readWithHeader(shown, span?.line ?? ln, err)
       if (!settings) {
         ok = false
         return null
       }
       i = j + 1
-      return { with: settings, shown: `with ${shown.trim()}`, block: playable(block), bars }
+      return { with: settings, shown: `with ${shown.trim()}`, block: playable(block), bars, span }
     }
     // pattern { ... }, block { ... }: braces that are a value say their type
     const word = /^(pattern|block)\s*$/.exec(textFrom(i))
