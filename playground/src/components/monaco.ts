@@ -6,6 +6,9 @@
 import * as monaco from "monaco-editor/esm/vs/editor/edcore.main.js"
 import EditorWorker from "monaco-editor/esm/vs/editor/editor.worker.js?worker"
 import { highlightMusic } from "composer-nb/highlight"
+import { hoverAt } from "composer-nb/hover"
+import { APP_CONSTANTS } from "../shared/constants.ts"
+import type { Diagnostic } from "../shared/types.ts"
 
 self.MonacoEnvironment = { getWorker: () => new EditorWorker() }
 
@@ -13,6 +16,27 @@ export { monaco }
 export const LANGUAGE = "composer-nb"
 
 monaco.languages.register({ id: LANGUAGE })
+monaco.languages.registerHoverProvider(LANGUAGE, {
+  provideHover(model, position) {
+    const help = hoverAt(model.getValue(), position.lineNumber, position.column - 1)
+    if (!help) return null
+    return {
+      range: new monaco.Range(
+        help.span.line,
+        help.span.col + 1,
+        help.span.endLine,
+        help.span.endCol + 1,
+      ),
+      contents: [
+        { value: `\`\`\`text\n${help.signature}\n\`\`\`` },
+        { value: help.description },
+        {
+          value: `\`\`\`text\n${help.example}\n\`\`\`\n\n[Language reference](${APP_CONSTANTS.DOCS_URL}/${help.page})`,
+        },
+      ],
+    }
+  },
+})
 monaco.languages.setLanguageConfiguration(LANGUAGE, {
   comments: { lineComment: "//" },
   brackets: [
@@ -42,7 +66,10 @@ monaco.languages.setLanguageConfiguration(LANGUAGE, {
 // The notebook's own keys (useKeyboard): Monaco would otherwise take Cmd+Enter to insert a
 // line, and the run never reaches the notebook
 monaco.editor.addKeybindingRules([
-  { keybinding: monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, command: "-editor.action.insertLineAfter" },
+  {
+    keybinding: monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter,
+    command: "-editor.action.insertLineAfter",
+  },
   {
     keybinding: monaco.KeyMod.CtrlCmd | monaco.KeyMod.Shift | monaco.KeyCode.Enter,
     command: "-editor.action.insertLineBefore",
@@ -118,6 +145,7 @@ export function themeName(): string {
       "editor.lineHighlightBorder": "#00000000",
       "editorBracketMatch.border": "#00000000",
       focusBorder: cssColor("--accent", dark ? "#7eb6ff" : "#1a73e8"),
+      "editorError.foreground": cssColor("--tk-error", dark ? "#f391a8" : "#c81640"),
     },
   })
   return name
@@ -131,7 +159,9 @@ new MutationObserver(() => monaco.editor.setTheme(themeName())).observe(document
 document.fonts?.ready.then(() => monaco.editor.remeasureFonts())
 
 // The highlighter's tokens as decorations, each carrying its .tk-* class
-export function tokenDecorations(model: monaco.editor.ITextModel): monaco.editor.IModelDeltaDecoration[] {
+export function tokenDecorations(
+  model: monaco.editor.ITextModel,
+): monaco.editor.IModelDeltaDecoration[] {
   const out: monaco.editor.IModelDeltaDecoration[] = []
   highlightMusic(model.getValue()).forEach((parts, i) => {
     let column = 1
@@ -148,12 +178,21 @@ export function tokenDecorations(model: monaco.editor.ITextModel): monaco.editor
   return out
 }
 
-// Lines the last run found mistakes on
-export function errorDecorations(lines: Iterable<number>): monaco.editor.IModelDeltaDecoration[] {
-  return [...lines].map((line) => ({
-    range: new monaco.Range(line, 1, line, 1),
-    options: { isWholeLine: true, className: "hl-error-line" },
-  }))
+// What's wrong with the source, as Monaco's markers: each mistake underlined over the span
+// the engine gives it, with its message on hover. Nothing else marks code as wrong.
+export function setErrorMarkers(model: monaco.editor.ITextModel, errors: Diagnostic[]) {
+  monaco.editor.setModelMarkers(
+    model,
+    LANGUAGE,
+    errors.map((e) => ({
+      severity: monaco.MarkerSeverity.Error,
+      message: e.msg,
+      startLineNumber: e.line,
+      startColumn: e.col + 1,
+      endLineNumber: e.endLine,
+      endColumn: e.endCol + 1,
+    })),
+  )
 }
 
 export const OPTIONS: monaco.editor.IStandaloneEditorConstructionOptions = {
@@ -179,7 +218,12 @@ export const OPTIONS: monaco.editor.IStandaloneEditorConstructionOptions = {
   renderLineHighlightOnlyWhenFocus: true,
   // Room above the code for the Run button
   padding: { top: 40, bottom: 12 },
-  scrollbar: { alwaysConsumeMouseWheel: false, vertical: "hidden", horizontal: "hidden", useShadows: false },
+  scrollbar: {
+    alwaysConsumeMouseWheel: false,
+    vertical: "hidden",
+    horizontal: "hidden",
+    useShadows: false,
+  },
   overviewRulerLanes: 0,
   overviewRulerBorder: false,
   hideCursorInOverviewRuler: true,
@@ -191,7 +235,8 @@ export const OPTIONS: monaco.editor.IStandaloneEditorConstructionOptions = {
   suggestOnTriggerCharacters: false,
   wordBasedSuggestions: "off",
   parameterHints: { enabled: false },
-  hover: { enabled: false },
+  // Hovering a mistake shows its message
+  hover: { enabled: true, delay: 200 },
   links: false,
   contextmenu: false,
   occurrencesHighlight: "off",

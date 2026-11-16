@@ -1,0 +1,85 @@
+// Settings, set and with, and print: a setting's name and value, a with's header, and
+// print's call and its arguments
+import type { Case } from "./cases.ts"
+
+export const CASES: Case[] = [
+  // A setting's value
+  { cell: "set time ⟦7/8⟧" },
+  { cell: "set time ⟦7⟧" },
+  { cell: "set time ⟦7.5⟧ over 8" },
+  { cell: "set time 7 over ⟦3⟧" },
+  { cell: "set time ⟦9 over 1⟧" },
+  { cell: "set tempo ⟦900⟧" },
+  { cell: "set tempo ⟦999⟧ // fast" },
+  { cell: "set swing ⟦yes⟧" },
+  { cell: "set key ⟦H⟧" },
+  { cell: "set key ⟦Em⟧" },
+  { cell: "set key ⟦E dorian⟧" },
+  { cell: "set mode ⟦Dorian⟧" },
+  { cell: "set mode ⟦foo⟧" },
+  { cell: "set transpose ⟦13⟧" },
+  { cell: "set octave ⟦9⟧" },
+  { cell: "set kit ⟦foo⟧" },
+  { cell: "set guitar.electric ⟦loud⟧" },
+  { cell: "set key E\nset tempo ⟦999⟧" },
+
+  // A setting's name
+  { cell: "⟦set⟧" },
+  { cell: "set ⟦tempo⟧" },
+  { cell: "set ⟦guitar.electric⟧" },
+  { cell: "set ⟦piano⟧ bright" },
+  { cell: "set ⟦tempi⟧ 90" },
+  { cell: "set ⟦zzzzzz⟧ 90" },
+
+  // A with's header
+  { cell: "⟦with⟧ { print(1) }" },
+  { cell: "with ⟦,⟧ key E { print(1) }" },
+  { cell: "with key E⟦,,⟧ mode minor { print(1) }" },
+  { cell: "with key E⟦, ,⟧ mode minor { print(1) }" },
+  { cell: "with key E⟦,⟧ { print(1) }" },
+  { cell: "with key E, ⟦mode minor,⟧ { print(1) }" },
+  { cell: "with ⟦set⟧ key E { print(1) }" },
+  { cell: "with key E ⟦mode minor⟧ { print(1) }" },
+  { cell: "with key D, ⟦key E⟧ { print(1) }" },
+  { cell: "with ⟦octave⟧ { print(1) }" },
+  { cell: "with ⟦tempi⟧ 90 { print(1) }" },
+  { cell: "with octave 2, transpose ⟦30⟧ { print(1) }" },
+  { cell: "with key ⟦H⟧ { print(1) }" },
+  { cell: "play with octave ⟦9⟧ { bass: notes 1---5--- }" },
+  { cell: "pattern groove = with octave ⟦9⟧ { bass: notes 1---5--- }" },
+  { cell: "play pattern {\n  kick: x---,\n  with octave ⟦9⟧ { bass: notes 1---5--- },\n}" },
+  { cell: "play pattern {\n  kick: x---,\n  with key E ⟦key F⟧ { bass: notes 1---5--- },\n}" },
+
+  // How print is called
+  { cell: "⟦print⟧ 1 2" },
+  { cell: "print⟦(⟧1 2" },
+  { cell: "print(1) ⟦2⟧" },
+  { cell: "print⟦()⟧" },
+  { cell: "print(1⟦, ,⟧ 2)" },
+  { cell: "print⟦(,⟧ 2)" },
+  { cell: "print(1⟦,)⟧" },
+
+  // print's arguments
+  { cell: "print(⟦notes⟧)" },
+  { cell: "print(1, ⟦chords⟧)" },
+  { cell: "print(⟦groove⟧)", above: "pattern groove = { kick: x--- }" },
+  { cell: "print(⟦melody harmony⟧)", above: "notes melody = 1\nchords harmony = C" },
+  { cell: "⟦melody harmony⟧", above: "notes melody = 1\nchords harmony = C" },
+  { cell: "print(⟦chords |⟧)" },
+  { cell: "print(⟦...⟧1)" },
+  { cell: "print(steps ⟦...⟧x-)" },
+  { cell: "print(chords ⟦%⟧ | 1)" },
+  { cell: "print(chords ⟦octave(G, 2)⟧)", above: "set octave 6\nset transpose 12" },
+  {
+    cell: "print(chords ⟦prog⟧)",
+    above: "set octave 6\nset transpose 12\nchords prog = octave(G, 2)",
+  },
+  { cell: "print(notes ⟦harmony⟧)", above: "chords harmony = C G" },
+  { cell: "print(notes ⟦E---F#E-E--⟧)" },
+  { cell: "print(notes 1 ⟦H⟧)" },
+  { cell: "print(⟦vii⟧)", above: "set mode wholeTone" },
+  { cell: "print(notes ⟦riff⟧)", above: "notes riff = vii\nset mode wholeTone" },
+  { cell: "⟦riff⟧", above: "notes riff = vii\nset mode wholeTone" },
+  { cell: "print(notes ⟦50⟧)", above: "set octave 6" },
+  { cell: "print(notes ⟦riff⟧)", above: "set octave 6\nnotes riff = 40" },
+]

@@ -25,12 +25,15 @@ import {
 } from "../intervals.ts"
 import { misplaced } from "../check.ts"
 import { CHORDS_BLOCK } from "../declare.ts"
-import { bracesIn, headOf, onlyBraces, textOf } from "../parts.ts"
+import { bracesIn, headOf, onlyBraces, textOf, withHead, sourceOf } from "../parts.ts"
+import { atCursor, reportIn } from "../diagnostics.ts"
+import { SourceText, locatedTokens, tokenSources, repeatTokens } from "../source.ts"
 import { TRACK_RE } from "../lines.ts"
 import { keyOf, withInLayers } from "../settings.ts"
 import { NAME_LIKE } from "../resolve.ts"
 import type { Line, Piece, State } from "../state.ts"
 import { barSlotTicks, lcm, MAX_BARS, meterOf, sayTicks, timeLabel, type Report } from "../time.ts"
+import { INTERVALS } from "../vocab.ts"
 import {
   CHORD_MARKS,
   chordPattern,
@@ -61,7 +64,12 @@ type Step = NoteStep | null
 // A line of notes read, as tokens with its repeats written out, then as steps: whether it
 // ends in ..., and what fills the rest when it does
 type NoteParts = { tokens: string[]; open: boolean; fill: NoteStep | null }
-type Voice = { bars: Step[][]; open?: boolean; fill?: NoteStep | null }
+type Voice = {
+  bars: Step[][]
+  sources: (SourceText | undefined)[]
+  open?: boolean
+  fill?: NoteStep | null
+}
 // A pitched instrument's line: its name, where it is, and what it holds
 export type PitchedPart = Part & { value: Piece[] }
 // One note, as it sounds
@@ -237,6 +245,21 @@ export function spacedNotes(run: string): string | null {
 // `text` with the notes in it spaced apart, for showing in a message as the line to write.
 export const spaceNotes = (text: string) => text.replace(/[^\s|,{}]+/g, (w) => spacedNotes(w) || w)
 
+// What to mark when the interval call `text` starts with is written wrong: its name when
+// there's no function by that name, the name and ( when its ) is missing, or else the call.
+export function callAt(text: string): string {
+  const head = /^[\^~]?([a-z][A-Za-z0-9]*)\s*\(/.exec(text)
+  if (!head) return text
+  if (!Object.hasOwn(INTERVALS, head[1])) return head[1]
+  let depth = 1
+  let end = head[0].length
+  for (; end < text.length && depth; end++) {
+    if (text[end] === "(") depth++
+    else if (text[end] === ")") depth--
+  }
+  return depth ? head[0] : text.slice(0, end)
+}
+
 export const notesTouch = (run: string, spaced: string) =>
   `"${run}": notes don't touch, so put a space between them: ${spaced}`
 
@@ -279,16 +302,19 @@ export function noteParts(
   let open = false
   let fill: NoteStep | null = null
   const limit = Math.floor((MAX_BARS * meterOf(st).barTicks) / st.stepTicks)
-  const fail = (msg: string): null => {
-    if (!failed) err(ln, msg)
+  // A mistake is marked on `where`, the text of `value` it's about, as it's written
+  const fail = (msg: string, where: string, from?: number): null => {
+    if (!failed) err(ln, msg, atCursor(err, value, at, where, from))
     failed = true
     return null
   }
-  if (depth > 32) return fail("Interval functions can nest at most 32 levels")
-  if (value.includes("'")) return fail(OCTAVE_HELP)
-  if (/\b(?:steps?|beats?|bars?)\b/.test(value))
+  if (depth > 32) return fail("Interval functions can nest at most 32 levels", value)
+  if (value.includes("'")) return fail(OCTAVE_HELP, /[^\s|]*'[^\s|]*/.exec(value)![0])
+  const lengthWord = /\b(?:steps?|beats?|bars?)\b/.exec(value)
+  if (lengthWord)
     return fail(
       "Notes use step words and * repeats: 1 7*- holds degree 1 for eight steps; 8*_ is eight silent steps",
+      lengthWord[0],
     )
   const ws = () => {
     while (at < value.length && /\s/.test(value[at])) at++
@@ -310,52 +336,65 @@ export function noteParts(
           type
             ? `${t} is ${type}, so it can't go in notes`
             : notNotes(t, st, part?.name ?? "piano", `piano: chords ${t}`),
+          t,
         )
       }
       return n + (length ?? 0)
     }, 0)
-  // Read a word, keeping each interval call together.
-  const word = (): string | null => {
+  // Read a word, keeping each interval call together. `needs` (the repeat or ... in front of
+  // it) is what's missing a word when there isn't one.
+  const word = (needs: string): string | null => {
     const start = at
     const fn = intervalCall(value.slice(at))
     if (fn) {
-      if (fn.error) return fail(fn.error)
+      if (fn.error) return fail(fn.error, callAt(value.slice(at)))
       at += fn.call!.end
       while (at < value.length && /[-_]/.test(value[at])) at++
     } else {
       const nextCall = callStarts.find((start) => start > at) ?? value.length
       const found = /^[^\s(),|*]+/.exec(value.slice(at, nextCall))?.[0]
-      if (!found) return fail("A repeat needs a note word or group: 4*1- or 2*(1--- 3---)")
+      if (!found) return fail("A repeat needs a note word or group: 4*1- or 2*(1--- 3---)", needs)
       at += found.length
       if (found === "rest")
-        return fail("A silent note step is _. Repeat silence with 8*_ or fill with ..._")
+        return fail("A silent note step is _. Repeat silence with 8*_ or fill with ..._", found)
     }
     if (at < value.length && /[-_]/.test(value[at - 1]) && !/[\s(),|*]/.test(value[at])) {
-      if (!word()) return null
+      if (!word(needs)) return null
     }
     return value.slice(start, at)
   }
-  const expandWord = (token: string): string[] | null => {
+  const expandWord = (token: string, source?: SourceText): string[] | null => {
     const atoms = tokenize(token)
     if (atoms.length > 1) {
       const expanded: string[] = []
       for (const atom of atoms) {
-        const more = expandWord(atom)
+        const more = expandWord(atom, source?.select(atom) ?? source)
         if (!more) return null
         expanded.push(...more)
       }
-      return expanded
+      return locatedTokens(expanded, source && expanded.map(() => source))
     }
     const fn = intervalCall(token)
-    if (!fn) return [token]
-    if (fn.error) return fail(fn.error)
+    if (!fn) return locatedTokens([token], source && [source])
+    if (fn.error) return fail(fn.error, callAt(token))
     const call = fn.call!
     const tail = token.slice(call.end)
     if (!/^[-_]*$/.test(tail))
       return fail(
         `Put a space after ${call.name}(...); only note holds and rests can touch its closing )`,
+        token,
       )
-    const inner = noteParts(call.body, st, err, ln, part, depth + 1, false)
+    const bodyFrom = token.indexOf("(") + 1
+    const argument = source
+      ?.slice(
+        bodyFrom,
+        bodyFrom +
+          token.slice(bodyFrom).length -
+          token.slice(bodyFrom).trimStart().length +
+          call.body.length,
+      )
+      .trim()
+    const inner = noteParts(call.body, st, reportIn(err, argument), ln, part, depth + 1, false)
     if (!inner) {
       failed = true
       return null
@@ -363,99 +402,122 @@ export function noteParts(
     if (inner.open)
       return fail(
         `${call.name} takes notes with a length of their own; put ... outside the function`,
+        "...",
       )
     const out: string[] = []
     for (const t of inner.tokens) {
       const named = st.words[t]
       const type = named?.type ?? st.sections[t]?.type
-      if (type && type !== "notes") return fail(`${t} is ${type}, so it can't go in notes`)
+      if (type && type !== "notes") return fail(`${t} is ${type}, so it can't go in notes`, t)
       for (const atom of named?.tokens ?? [t]) {
+        // A mistake in a name's notes is marked on the name, which is what's written here
         if (atom !== "|" && (!noteSteps(atom) || spacedNotes(atom)))
-          return fail(notNotes(atom, st, part?.name ?? "piano", `piano: chords ${atom}`))
+          return fail(notNotes(atom, st, part?.name ?? "piano", `piano: chords ${atom}`), t)
         out.push(atom === "|" || /^[-_]+$/.test(atom) ? atom : wrapInterval(call, atom))
       }
     }
     if (tail) out.push(tail)
-    return out
+    return locatedTokens(out, source && out.map(() => source))
   }
   const atom = (nesting: number): string[] | null => {
+    const start = at
     const counted = /^([^\s(),|*]+)\s*\*/.exec(value.slice(at))
     if (counted) {
       const n = Number(counted[1])
       if (!/^\d+$/.test(counted[1]) || !Number.isSafeInteger(n) || n < 2)
-        return fail("A repeat count is an integer of at least 2: 7*- or 2*(1--- 3---)")
+        return fail("A repeat count is an integer of at least 2: 7*- or 2*(1--- 3---)", counted[1])
       at += counted[0].length
       ws()
       let tokens: string[] | null
       if (value[at] === "(") {
-        if (nesting >= 32) return fail("Note repeats can nest at most 32 levels")
+        const open = at
+        if (nesting >= 32) return fail("Note repeats can nest at most 32 levels", "(", open)
         at++
         tokens = sequence(nesting + 1)
         if (!tokens) return null
-        if (value[at] !== ")") return fail("A note repeat's ( is missing its )")
+        if (value[at] !== ")") return fail("A note repeat's ( is missing its )", "(", open)
         at++
-        if (!tokens.length) return fail("A note repeat's parentheses need at least one word")
+        if (!tokens.length)
+          return fail("A note repeat's parentheses need at least one word", value.slice(open, at))
       } else {
-        const one = word()
-        tokens = one === null ? null : expandWord(one)
+        const from = at
+        const one = word(counted[0])
+        tokens = one === null ? null : expandWord(one, err.source?.slice(from, at))
       }
       if (!tokens) return null
       const length = size(tokens, true)
       if (failed) return null
       if (!length || n > limit / length || n * tokens.length > limit * 2)
-        return fail(`A note sequence can be at most ${MAX_BARS} bars long`)
-      return Array.from({ length: n }, () => tokens!).flat()
+        return fail(`A note sequence can be at most ${MAX_BARS} bars long`, value.slice(start, at))
+      return repeatTokens(tokens, n)
     }
-    if (value[at] === "(") return fail("Parentheses in notes need a repeat count: 2*(1--- 3---)")
-    const one = word()
-    return one === null ? null : expandWord(one)
+    if (value[at] === "(")
+      return fail("Parentheses in notes need a repeat count: 2*(1--- 3---)", "(")
+    const one = word(value[at])
+    return one === null ? null : expandWord(one, err.source?.slice(start, at))
   }
   const sequence = (nesting: number): string[] | null => {
     const tokens: string[] = []
+    const sources: SourceText[] = []
+    const result = () => locatedTokens(tokens, err.source && sources)
+    const begin = at
     let length = 0
     for (;;) {
       ws()
-      if (at >= value.length || value[at] === ")") return tokens
+      if (at >= value.length || value[at] === ")") return result()
       if (value[at] === ",")
         return fail(
           "Notes separate words with spaces: 1 7*- 3 7*-. Commas separate brace entries or function arguments",
+          ",",
         )
       if (value[at] === "|") {
         tokens.push("|")
+        if (err.source) sources.push(err.source.slice(at, at + 1))
         at++
         continue
       }
       if (value.startsWith("...", at)) {
         if (nesting)
-          return fail("... fills the containing block, so it cannot go inside a bounded repeat")
+          return fail(
+            "... fills the containing block, so it cannot go inside a bounded repeat",
+            "...",
+          )
         at += 3
         ws()
-        const one = word()
+        const one = word("...")
         if (one === null) return null
         const expanded = expandWord(one)
         const steps = expanded?.flatMap((t) => noteSteps(t) ?? [])
         if (!steps || steps.length !== 1)
-          return fail("... takes one note, - to sustain, or _ for silence: ...1, ...-, ..._")
+          return fail("... takes one note, - to sustain, or _ for silence: ...1, ...-, ..._", one)
         fill = steps[0]
         open = true
         ws()
-        if (at < value.length) return fail("... is the rest of the block, so nothing goes after it")
-        return tokens
+        if (at < value.length)
+          return fail("... is the rest of the block, so nothing goes after it", value.slice(at))
+        return result()
       }
+      const start = at
       const more = atom(nesting)
       if (!more) return null
       length += size(more)
       if (failed) return null
       if (length > limit || tokens.length + more.length > limit * 2)
-        return fail(`A note sequence can be at most ${MAX_BARS} bars long`)
+        return fail(`A note sequence can be at most ${MAX_BARS} bars long`, value.slice(begin, at))
       tokens.push(...more)
+      if (err.source)
+        sources.push(...(tokenSources(more) ?? more.map(() => err.source!.slice(start, at))))
+      // The repeat or word just read, and what touches it
       if (at < value.length && !/[\s),|]/.test(value[at]) && !/[-_]/.test(value[at - 1]))
-        return fail("Put a space between note words and repeats: 1 7*- 2*(3--- 5---)")
+        return fail(
+          "Put a space between note words and repeats: 1 7*- 2*(3--- 5---)",
+          value.slice(start, at) + /^[^\s|)]*/.exec(value.slice(at))![0],
+        )
     }
   }
   const tokens = sequence(0)
   if (!tokens) return null
-  if (at < value.length) return fail("This ) doesn't close a note repeat")
+  if (at < value.length) return fail("This ) doesn't close a note repeat", ")")
   if (repeats && !open && tokens.every((t) => knownSize(t) !== null)) {
     const expanded = tokens.flatMap((t) => st.words[t]?.tokens ?? [t])
     const run = expanded.filter((t) => t !== "|").join(" ")
@@ -469,6 +531,7 @@ export function noteParts(
       const head = part ? `${part.name}: notes ` : ""
       return fail(
         `${head}${value} repeats ${short}. Write ${head}${short}: a pattern repeats it. Use a block to play a finite sequence once`,
+        value,
       )
     }
   }
@@ -539,11 +602,15 @@ function noteVoice(
   err: Report,
   repeats: boolean,
 ): Voice | null {
+  err = reportIn(err, sourceOf(line.parts))
   const text = textOf(line.parts)
   if (bracesIn(line.parts).length) {
+    // What's beside the block is the mistake
+    const beside = line.parts.find((p): p is string => typeof p === "string" && !!p.trim())
     err(
       line.ln,
       `A block is everything ${part.name} plays, so nothing goes beside it: ${part.name}: { ... }`,
+      beside ?? "{",
     )
     return null
   }
@@ -551,26 +618,38 @@ function noteVoice(
   if (!parts) return null
   const steps: Step[] = []
   const bars: Step[][] = []
+  const written: (SourceText | undefined)[] = []
+  const sources: (SourceText | undefined)[] = []
   let barStart = 0
   let ok = true
-  const fail = (msg: string) => {
-    err(line.ln, msg)
+  const fail = (msg: string, at: string) => {
+    err(line.ln, msg, at)
     ok = false
   }
   const key = keyOf(st)!
   const chart = tokenize(text).every(
     (t) => CHORD_MARKS.includes(t) || st.words[t]?.type === "chords" || buildChord(t, key),
   )
-  const barLine = () => {
-    if (steps.length > barStart) bars.push(steps.slice(barStart))
+  const finishBar = () => {
+    if (steps.length > barStart) {
+      bars.push(steps.slice(barStart))
+      const parts = written.slice(barStart).filter((s): s is SourceText => !!s)
+      sources.push(parts.length ? SourceText.join(parts, " ") : undefined)
+    }
     barStart = steps.length
+  }
+  // A mistake in a name's notes is marked on that name at its use site.
+  const barLine = (viaWord?: string) => {
+    finishBar()
     const problem = ok && st.noteStepTicks && barLineProblem(steps.length, st)
     if (!problem) return
     fail(
       chart ? `${problem}. For chords, put chords in front: ${part.name}: chords ${text}` : problem,
+      viaWord ?? "|",
     )
   }
   const add = (tok: string, viaWord?: string) => {
+    const at = viaWord ?? tok
     const run = noteSteps(tok)
     const spaced = run && spacedNotes(tok)
     // A degree counts on the key's scale, and whole tone has six notes: no 7 in it
@@ -578,13 +657,17 @@ function noteVoice(
       if (!s) return false
       return s.degree !== undefined && !s.numeric && pastScale(key, s.degree)
     })
-    if (past) fail(`"${tok}": ${pastScaleMessage(key)}`)
-    else if (spaced) fail(notesTouch(tok, spaced))
-    else if (run) steps.push(...run)
-    else if (viaWord) fail(`"${tok}" (in ${viaWord}) isn't a note. ${NOTE_HELP}`)
-    else fail(notNotes(tok, st, part.name, `${part.name}: chords ${text}`))
+    if (past) fail(`"${tok}": ${pastScaleMessage(key)}`, at)
+    else if (spaced) fail(notesTouch(tok, spaced), at)
+    else if (run) {
+      steps.push(...run)
+      written.push(...run.map(() => err.source))
+    } else if (viaWord) fail(`"${tok}" (in ${viaWord}) isn't a note. ${NOTE_HELP}`, at)
+    else fail(notNotes(tok, st, part.name, `${part.name}: chords ${text}`), at)
   }
-  for (const tok of parts.tokens) {
+  const outerReport = err
+  for (const [index, tok] of parts.tokens.entries()) {
+    err = reportIn(outerReport, tokenSources(parts.tokens)?.[index])
     const w = st.words[tok]
     if (tok === "|") barLine()
     else if (!w) add(tok)
@@ -595,15 +678,16 @@ function noteVoice(
         text,
         chart,
       })
-      if (problem) fail(problem)
-      else for (const t of w.tokens) t === "|" ? barLine() : add(t, tok)
+      if (problem) fail(problem, tok)
+      else for (const t of w.tokens) t === "|" ? barLine(tok) : add(t, tok)
     }
   }
+  err = outerReport
   if (ok && !steps.length && !parts.fill) {
-    fail(`${part.name} has nothing to play`)
+    fail(`${part.name} has nothing to play`, text || part.name)
   }
-  if (steps.length > barStart) bars.push(steps.slice(barStart))
-  return ok ? { bars, open: parts.open, fill: parts.fill } : null
+  finishBar()
+  return ok ? { bars, sources, open: parts.open, fill: parts.fill } : null
 }
 
 // A note's written pitch, shared by playback and print inspection. Transpose is
@@ -634,20 +718,22 @@ export function resolveNote(
 // then `fill`, a note held to the end or silence, and has no length of its own.
 function notePattern(
   part: PitchedPart,
-  { bars, open = false, fill = null }: Voice,
+  { bars, sources, open = false, fill = null }: Voice,
   st: State,
   err: Report,
 ): PitchedClip | null {
   const barTicks = meterOf(st).barTicks
   const steps: { step: Step; tick: number }[] = []
   let ticks = 0
-  for (const bar of bars) {
+  const text = textOf(part.value)
+  for (const [index, bar] of bars.entries()) {
     const slot = st.noteStepTicks ?? barSlotTicks(barTicks, bar.length)
     if (!slot) {
       err(
         part.ln,
         `A ${timeLabel(st)} bar can't be split evenly into ${bar.length}. ` +
           "Use - to hold a note for another slot, e.g. 1 - 3 5, or every for fixed-step timing",
+        sources[index]?.span ?? text,
       )
       return null
     }
@@ -657,13 +743,15 @@ function notePattern(
     }
   }
   if (ticks > MAX_BARS * barTicks) {
-    err(part.ln, `A note sequence can be at most ${MAX_BARS} bars long`)
+    err(part.ln, `A note sequence can be at most ${MAX_BARS} bars long`, text)
     return null
   }
   const key = keyOf(st)!
   const sound = st.sounds[part.name]
   const pitch = (s: NoteStep) => resolveNote(s, st, key)
   const transpose = st.transpose
+  // The note is marked where it's written on the line, or else the whole line when it isn't
+  // (it's in a name, or an interval function moved it)
   for (const step of [...steps.map((s) => s.step), fill]) {
     if (!step || step.cut) continue
     const written = pitch(step)
@@ -671,6 +759,7 @@ function notePattern(
       err(
         part.ln,
         `"${step.label}" goes outside playable MIDI notes 0 to 127. Change octave or use octave(value, -1)`,
+        text.includes(step.label!) ? step.label! : text,
       )
       return null
     }
@@ -736,13 +825,14 @@ function pitchedLayer(
   err: Report,
   repeats = true,
 ): PitchedClip | ChartClip | null {
+  err = reportIn(err, sourceOf(line.parts))
   const here = { ...part, ln: line.ln, value: line.parts }
   const text = textOf(line.parts)
-  const tokens = tokenize(text)
+  const tokens = tokenize(text, err.source)
   if (tokens[0] === "chords") {
-    const chart = tokens.slice(1)
+    const chart = locatedTokens(tokens.slice(1), tokenSources(tokens)?.slice(1))
     if (bracesIn(line.parts).length) {
-      err(line.ln, CHORDS_BLOCK)
+      err(line.ln, CHORDS_BLOCK, "{")
       return null
     }
     return chordPattern(here, chart, st, barTicks, err)
@@ -754,12 +844,14 @@ function pitchedLayer(
       const chart = tokens.every(
         (t) => CHORD_MARKS.includes(t) || st.words[t]?.type === "chords" || buildChord(t, key),
       )
+      // The line's value is missing the word that says which, so the value is marked
       err(
         line.ln,
         `${part.name} takes notes or chords, and says which: ` +
           (chart
             ? `${part.name}: chords ${text}`
             : `${part.name}: notes ${spaceNotes(text) || "F---G---"}`),
+        headOf(line.parts).trim() || text,
       )
       return null
     }
@@ -767,10 +859,9 @@ function pitchedLayer(
     return voice && notePattern(here, voice, st, err)
   }
   // notes, then what the line plays: the word is dropped and the rest is read as notes
-  const [first, ...others] = line.parts
   const bare: Line = {
     ...line,
-    parts: [(first as string).replace(/^\s*notes\s*/, ""), ...others],
+    parts: withHead(line.parts, headOf(line.parts).replace(/^\s*notes\s*/, "")),
   }
   const voice = noteVoice(bare, part, st, err, repeats)
   return voice && notePattern(here, voice, st, err)
@@ -791,13 +882,15 @@ export function pitchedPattern(
     return pitchedLayer({ ln: part.ln, parts: part.value }, part, st, barTicks, err, repeats)
   const layers = block.lines.map((line) => {
     if (/^with(\s|\{|$)/.test(textOf(line.parts))) {
-      err(line.ln, withInLayers(part.name))
+      err(line.ln, withInLayers(part.name), "with")
       return null
     }
-    if (TRACK_RE.test(headOf(line.parts))) {
+    const track = TRACK_RE.exec(headOf(line.parts))
+    if (track) {
       err(
         line.ln,
         `A block after ${part.name}: holds what ${part.name} plays, one layer a line. ${textOf(line.parts)} is an instrument's line, which goes in a pattern`,
+        track[1],
       )
       return null
     }
@@ -805,25 +898,29 @@ export function pitchedPattern(
   })
   if (layers.includes(null)) return null
   const all = layers as (PitchedClip | ChartClip)[]
-  // A layer ended in ... has no say in the block's length, and has to fit in it.
+  // A layer ended in ... has no say in the block's length, and has to fit in it. A mistake
+  // in the block as a whole is marked on its {, and one in a layer on that layer.
   const fixed = all.filter((l) => !("open" in l && l.open))
   if (!fixed.length) {
     err(
       block.ln,
       "Every layer here ends in ..., so nothing says how long the block is. One layer needs a length of its own",
+      "{",
     )
     return null
   }
   const ticks = fixed.reduce((a, l) => lcm(a, l.ticks), 1)
   if (ticks > MAX_BARS * barTicks) {
-    err(block.ln, `This block's layers only line up again after more than ${MAX_BARS} bars`)
+    err(block.ln, `This block's layers only line up again after more than ${MAX_BARS} bars`, "{")
     return null
   }
-  for (const l of all) {
+  for (const [i, l] of all.entries()) {
     if ("open" in l && l.open && l.ticks > ticks) {
+      const layer = block.lines[i]
       err(
-        block.ln,
+        layer.ln,
         `A layer's notes run ${sayTicks(l.ticks, st, barTicks)} before its ..., and the block is only ${sayTicks(ticks, st, barTicks)} long`,
+        textOf(layer.parts),
       )
       return null
     }

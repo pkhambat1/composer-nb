@@ -18,10 +18,13 @@ import {
 import { defineBlock, defineWord } from "./declare.ts"
 import { classify, paceTicks, readPart, type PartLine, type ReadLine } from "./lines.ts"
 import { Scope, undefinedName } from "./resolve.ts"
-import type { Item, Playable } from "./sequence.ts"
+import { itemAt, type Item, type Playable } from "./sequence.ts"
 import { pacing, setInBlock, withState } from "./settings.ts"
 import { cloneState, type Line, type Section, type State } from "./state.ts"
 import { meterOf, type Report } from "./time.ts"
+import { reportIn } from "./diagnostics.ts"
+import { sourceOf } from "./parts.ts"
+import { SourceText } from "./source.ts"
 
 // What plays in a block: its instruments' lines, patterns, bars and paces.
 export const PLAYS: readonly string[] = ["part", "sequence", "placed", "paced"]
@@ -41,14 +44,18 @@ function readLines(
 ): ReadLine[] {
   const read: ReadLine[] = []
   for (const line of lines) {
-    const l = classify(line, err, st)
+    const source = sourceOf(line.parts)
+    const report = reportIn(err, source)
+    const l = classify(line, report, st)
     if (!l) continue
+    l.source = source
     read.push(l)
     if (PLAYS.includes(l.kind)) (l as { st?: State }).st = cloneState(st)
-    if (l.kind === "setting") err(l.ln, setInBlock(l))
-    else if (l.kind === "word") defineWord(l.type, l.name, l.value, l.ln, st, err)
+    if (l.kind === "setting") report(l.ln, setInBlock(l), "set")
+    else if (l.kind === "word")
+      defineWord(l.type, l.name, l.value, l.ln, st, reportIn(report, sourceOf(l.value)))
     else if (l.kind === "blockdef") {
-      const sec = defineBlock(l, st, err)
+      const sec = defineBlock(l, st, report)
       if (sec && named) named(sec)
     }
   }
@@ -60,6 +67,7 @@ function readLines(
       l.ln,
       `The lines of a play or a pattern play together, so they share one ${own.name}. Put the with around the whole play, ` +
         `with ${own.name} ${own.value} { play ... }, or on a part that plays in order: ( with ${own.name} ${own.value} { ... } )`,
+      l.items[0].shown!,
     )
     return false
   })
@@ -79,6 +87,14 @@ export const blockBeside = (what: string, written: (fig: string) => string, fig 
 // Each instrument has one line in a block. Its layers go in a block on that line.
 const secondLine = (name: string, where: string) =>
   `${name} already has a line ${where}. To layer it, put its lines in a block: ${name}: { ... }`
+// An instrument's second line, where it's written: its head, and the first of what it
+// plays, which tells it from a first line written beside it
+function lineWritten(l: PartLine) {
+  const header = l.source?.slice(0, l.name.length)
+  if (header?.text) return header.span
+  const first = l.value[0]
+  return `${l.name}: ${typeof first === "string" ? first.split(/\s/)[0] : "{"}`
+}
 
 // Lines in braces are one block: they play together, and what's defined inside stays
 // inside. `bars` is the length written in front of the block, if any. In a pattern every
@@ -101,7 +117,7 @@ export function blockClip(
   for (const l of read) {
     if (l.kind !== "part") continue
     if (parts.some((p) => p.name === l.name)) {
-      err(l.ln, secondLine(l.name, ctx.where))
+      err(l.ln, secondLine(l.name, ctx.where), lineWritten(l))
       continue
     }
     parts.push(l)
@@ -116,7 +132,7 @@ export function blockClip(
     const item = l.items[0]
     const sec = item?.block ?? (item?.name ? l.st?.sections[item.name] : null)
     if (sec?.type === "block") once.push({ ...clip, ln: l.ln })
-    else repeated.push({ clip, what: loopName(item), ln: l.ln })
+    else repeated.push({ clip, what: loopName(item), ln: l.ln, at: itemAt(item) })
   }
   for (const l of read) {
     if (l.kind !== "paced") continue
@@ -127,11 +143,11 @@ export function blockClip(
       [l.line],
       { ...l.st!, stepTicks: ticks, noteStepTicks: ticks },
       err,
-      paceCtx(l.ln),
+      paceCtx(l.ln, l.shown),
       stack,
     )
     if (!clip) return null
-    repeated.push({ clip, what: "This pattern", ln: l.ln })
+    repeated.push({ clip, what: "This pattern", ln: l.ln, at: l.shown })
   }
   for (const l of read) {
     if (l.kind !== "placed") continue
@@ -145,7 +161,7 @@ export function blockClip(
   if (!parts.length && !once.length && !repeated.length) {
     // A line that's already been reported as a mistake doesn't need this too.
     if (lines.length && read.length === lines.length) {
-      err(lines[0].ln, `Nothing to play ${ctx.where}`)
+      err(lines[0].ln, `Nothing to play ${ctx.where}`, ctx.at)
     }
     return null
   }
@@ -173,9 +189,12 @@ export function sectionClip(
     return blockClip(sec.lines, state, err, withCtx(sec.ln, sec.shown), stack, sec.bars)
   if (sec.anon && sec.type === "block")
     return oneShot(blockClip(sec.lines, state, err, onceCtx(sec.ln), stack, sec.bars))
-  if (sec.anon) return blockClip(sec.lines, state, err, anonCtx(sec.ln), stack, sec.bars)
+  if (sec.anon) {
+    const ctx = anonCtx(sec.ln, sec.type ?? "(")
+    return blockClip(sec.lines, state, err, ctx, stack, sec.bars)
+  }
   if (stack.includes(sec.name!)) {
-    err(ln, `${sec.name} plays itself, so it would never end`)
+    err(ln, `${sec.name} plays itself, so it would never end`, sec.name!)
     return null
   }
   const clip = blockClip(
@@ -207,7 +226,7 @@ export function checkSection(
   const parts = read.filter((l) => l.kind === "part")
   parts.forEach((l, i) => {
     if (parts.slice(0, i).some((p) => p.name === l.name)) {
-      err(l.ln, secondLine(l.name, `in ${where}`))
+      err(l.ln, secondLine(l.name, `in ${where}`), lineWritten(l))
     }
     readPart(l, l.st!, meterOf(l.st!).barTicks, err, sec.type !== "block")
   })
@@ -218,8 +237,9 @@ export function checkSection(
         // a with's block is checked with its settings
         const inner = it.with ? withState(it.with, at, ln, err) : at
         if (inner) checkSection(it.block, inner, err, owner)
-      } else if (it.name === owner) err(ln, `${owner} plays itself, so it would never end`)
-      else if (!at.sections[it.name!]) err(ln, undefinedName(it.name!, at))
+      } else if (it.name === owner)
+        err(ln, `${owner} plays itself, so it would never end`, itemAt(it))
+      else if (!at.sections[it.name!]) err(ln, undefinedName(it.name!, at), itemAt(it))
     }
   }
   for (const l of read) {
@@ -242,6 +262,7 @@ export function checkSection(
       sec.anon
         ? `This ${sec.type ?? "pattern"} has nothing to play`
         : `${sec.name} has nothing to play`,
+      sec.anon ? (sec.type ?? "pattern") : sec.name!,
     )
   }
 }
@@ -258,9 +279,13 @@ export function sequenceClip(
   const out: Omit<Clip, "durSec"> = { events: [], drumEvents: [], spans: [] }
   const seen = new Set<string>()
   for (const it of items) {
+    const itemReport = reportIn(
+      err,
+      it.span && SourceText.writtenAs(it.name ?? "(", it.span, err.cell),
+    )
     const sec: Playable | null | undefined = it.items ? null : it.block || state.sections[it.name!]
     if (!it.items && !sec) {
-      err(ln, undefinedName(it.name!, state))
+      err(ln, undefinedName(it.name!, state), itemAt(it))
       return null
     }
     // A with's block plays with its settings, and what's around it keeps its own
@@ -279,18 +304,20 @@ export function sequenceClip(
             ln,
             stack,
           )
-        : sectionClip(sec!, state, err, ln, stack)
+        : sectionClip(sec!, state, itemReport, ln, stack)
     if (!clip) return null
     if (it.bars && !it.block && sec?.type === "block") {
       err(
         ln,
         `${sec.name} is a block and plays once. Put its length in its declaration, or use a pattern to repeat.`,
+        itemAt(it),
       )
       return null
     }
     if (it.bars && !it.block) {
       const what = loopName(it)
-      clip = layer([], [], [{ clip, what, ln }], state, it.bars, err, playCtx(ln))
+      const at = itemAt(it)
+      clip = layer([], [], [{ clip, what, ln, at }], state, it.bars, err, playCtx(ln, at))
       if (!clip) return null
     }
     const moved = shift(clip, t, it.name != null && seen.has(it.name))

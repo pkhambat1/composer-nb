@@ -1738,7 +1738,7 @@ describe("one instrument per line", () => {
     )
     // said on the layer's own line
     expect(parseSource("play snare.ghost: {\n  --x-,\n  --~-\n}").errors).toEqual([
-      { line: 3, msg: '"~": every hit on snare.ghost is a ghost note already, so write x' },
+      { line: 3, col: 4, endLine: 3, endCol: 5, msg: '"~": every hit on snare.ghost is a ghost note already, so write x' },
     ])
     expect(firstError("play piano: chords {\n  Am F\n}")).toMatch(
       /Chords play one at a time, so they can't be layered in a block/,

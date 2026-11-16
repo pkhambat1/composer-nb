@@ -1285,18 +1285,15 @@ body {
 .code-editor .tk-step-acc {
   font-weight: 600;
 }
-.tk-error,
-.code-editor .tk-error {
-  color: var(--tk-error);
-  background: var(--tk-error-bg);
-  border-radius: var(--radius-sm);
+/* A mistake the engine reports, marked as Monaco marks it, while Monaco loads */
+.code-error {
   text-decoration: underline wavy var(--tk-error);
+  text-decoration-skip-ink: none;
   text-underline-offset: 3px;
 }
-.hl-error-line {
-  background: var(--tk-error-bg);
-  border-radius: var(--radius-sm);
-  box-shadow: -6px 0 0 var(--tk-error-bg);
+/* A mistake's message on hover, without Monaco's problem and quick-fix links */
+.code-editor .monaco-hover .hover-row.status-bar {
+  display: none;
 }
 .tk-blank::before {
   content: "";

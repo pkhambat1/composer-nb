@@ -7,6 +7,11 @@
   "license": "MIT",
   "type": "module",
   "exports": {
+    "./hover": {
+      "composer-nb-source": "./js/hover.ts",
+      "types": "./lib/hover.d.ts",
+      "default": "./lib/hover.js"
+    },
     "./engine": {
       "composer-nb-source": "./js/music-engine.ts",
       "types": "./lib/music-engine.d.ts",

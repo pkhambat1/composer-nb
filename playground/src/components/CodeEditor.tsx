@@ -1,8 +1,9 @@
 // Source editor: Monaco, the editor VS Code uses, with composer-nb's highlighter painting
 // the tokens. Monaco loads on demand; until it's in, the source shows highlighted as text.
 import React from "react"
-import { highlightMusic } from "composer-nb/highlight"
+import { highlightMusic, type Part } from "composer-nb/highlight"
 import { CellIdContext, SelectionContext } from "../notebook/SelectionContext.tsx"
+import type { Checked, Diagnostic } from "../shared/types.ts"
 
 // Where a cell is in being run, as its button shows it
 export type RunState = "idle" | "waiting" | "running"
@@ -23,8 +24,39 @@ type Props = {
   onRun?: () => void
   onInterrupt?: () => void
   runState: RunState
-  // The lines the last run found mistakes on
-  errorLines: Set<number> | null
+  // What's wrong with the source, and the source that was read for it
+  diagnostics: Checked | null
+}
+
+// A line's highlighted parts, cut where a mistake starts or ends, each part saying whether
+// it's in one: how the source shows before Monaco is in, marked as Monaco marks it
+function markParts(
+  parts: Part[],
+  line: number,
+  errors: Diagnostic[],
+): (Part & { wrong: boolean })[] {
+  const length = parts.reduce((n, p) => n + p.s.length, 0)
+  const ranges = errors
+    .filter((e) => e.line <= line && line <= e.endLine)
+    .map((e) => [e.line === line ? e.col : 0, e.endLine === line ? e.endCol : length])
+  const cuts = new Set(ranges.flat())
+  const out: (Part & { wrong: boolean })[] = []
+  let at = 0
+  for (const part of parts) {
+    let from = 0
+    for (let i = 1; i <= part.s.length; i++) {
+      if (i < part.s.length && !cuts.has(at + i)) continue
+      const start = at + from
+      out.push({
+        c: part.c,
+        s: part.s.slice(from, i),
+        wrong: ranges.some(([a, b]) => a <= start && start < b),
+      })
+      from = i
+    }
+    at += part.s.length
+  }
+  return out
 }
 
 // On a touch screen Monaco takes a swipe that starts on a cell to scroll the editor itself,
@@ -64,11 +96,12 @@ const loadMonaco = () => (loading ??= import("./monaco.ts"))
 
 const CodeEditor = React.forwardRef<CodeEditorHandle, Props>(function CodeEditor(props, ref) {
   // onChange, onFocus, onBlur and placeholder reach Monaco through `latest`
-  const { value, onRun, onInterrupt, runState, errorLines } = props
+  const { value, onRun, onInterrupt, runState, diagnostics } = props
   const hostRef = React.useRef<HTMLDivElement>(null)
   const editorRef = React.useRef<import("monaco-editor").editor.IStandaloneCodeEditor | null>(null)
-  const errorsRef = React.useRef<import("monaco-editor").editor.IEditorDecorationsCollection | null>(null)
-  const contextRef = React.useRef<import("monaco-editor").editor.IEditorDecorationsCollection | null>(null)
+  const contextRef = React.useRef<
+    import("monaco-editor").editor.IEditorDecorationsCollection | null
+  >(null)
   const [ready, setReady] = React.useState(false)
   // A focus asked for before Monaco was in
   const pendingFocus = React.useRef<boolean | null>(null)
@@ -102,7 +135,7 @@ const CodeEditor = React.forwardRef<CodeEditorHandle, Props>(function CodeEditor
   React.useEffect(() => {
     let disposed = false
     let dispose = () => {}
-    loadMonaco().then(({ monaco, OPTIONS, themeName, tokenDecorations }) => {
+    loadMonaco().then(({ monaco, OPTIONS, themeName, tokenDecorations, setErrorMarkers }) => {
       const host = hostRef.current
       if (disposed || !host) return
       const editor = monaco.editor.create(host, {
@@ -113,7 +146,6 @@ const CodeEditor = React.forwardRef<CodeEditorHandle, Props>(function CodeEditor
       })
       const model = editor.getModel()!
       const tokens = editor.createDecorationsCollection(tokenDecorations(model))
-      errorsRef.current = editor.createDecorationsCollection()
       contextRef.current = editor.createDecorationsCollection()
 
       // Where the caret or selection is, for the notebook's selection (selection.ts): its
@@ -124,7 +156,9 @@ const CodeEditor = React.forwardRef<CodeEditorHandle, Props>(function CodeEditor
         const empty = s.isEmpty()
         host.dataset.fromLine = String(s.startLineNumber)
         host.dataset.toLine = String(
-          !empty && s.endColumn === 1 && s.endLineNumber > s.startLineNumber ? s.endLineNumber - 1 : s.endLineNumber,
+          !empty && s.endColumn === 1 && s.endLineNumber > s.startLineNumber
+            ? s.endLineNumber - 1
+            : s.endLineNumber,
         )
         host.dataset.start = String(model.getOffsetAt(s.getStartPosition()))
         host.dataset.end = String(model.getOffsetAt(s.getEndPosition()))
@@ -137,6 +171,7 @@ const CodeEditor = React.forwardRef<CodeEditorHandle, Props>(function CodeEditor
       }
       const subscriptions = [
         model.onDidChangeContent(() => {
+          setErrorMarkers(model, [])
           tokens.set(tokenDecorations(model))
           const text = model.getValue()
           if (text !== latest.current.value) latest.current.onChange(text)
@@ -168,7 +203,6 @@ const CodeEditor = React.forwardRef<CodeEditorHandle, Props>(function CodeEditor
         editor.dispose()
         model.dispose()
         editorRef.current = null
-        errorsRef.current = null
         contextRef.current = null
       }
     })
@@ -184,16 +218,30 @@ const CodeEditor = React.forwardRef<CodeEditorHandle, Props>(function CodeEditor
     if (model && model.getValue() !== value) model.setValue(value)
   }, [value, ready])
 
+  // Mark only the source that was checked. Editing invalidates the old markers, including
+  // during a deferred notebook check or while the editor module is loading.
+  const errors = diagnostics && diagnostics.source === value ? diagnostics.errors : null
   React.useEffect(() => {
-    if (!ready) return
-    loadMonaco().then(({ errorDecorations }) => errorsRef.current?.set(errorDecorations(errorLines ?? [])))
-  }, [errorLines, ready])
+    const model = editorRef.current?.getModel()
+    if (!ready || !model) return
+    let cancelled = false
+    loadMonaco().then(({ setErrorMarkers }) => {
+      if (cancelled || model.isDisposed()) return
+      setErrorMarkers(model, diagnostics?.source === model.getValue() ? diagnostics.errors : [])
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [value, diagnostics, ready])
 
   // The part of the source the assistant has as context, shaded while the editor isn't focused
   const selection = React.useContext(SelectionContext)
   const cellId = React.useContext(CellIdContext)
   const context =
-    selection?.cellId === cellId && selection.kind === "source" && selection.start !== undefined && selection.end !== undefined
+    selection?.cellId === cellId &&
+    selection.kind === "source" &&
+    selection.start !== undefined &&
+    selection.end !== undefined
       ? [selection.start, selection.end]
       : null
   const contextKey = context?.join("-") ?? ""
@@ -214,8 +262,12 @@ const CodeEditor = React.forwardRef<CodeEditorHandle, Props>(function CodeEditor
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [contextKey, ready, value])
 
-  const diagnosticLines = [...(errorLines ?? [])].sort((a, b) => a - b)
-  const lines = React.useMemo(() => (ready ? [] : highlightMusic(value)), [value, ready])
+  const diagnosticLines = [...new Set((errors ?? []).map((e) => e.line))].sort((a, b) => a - b)
+  const lines = React.useMemo(
+    () =>
+      ready ? [] : highlightMusic(value).map((parts, i) => markParts(parts, i + 1, errors ?? [])),
+    [value, ready, errors],
+  )
 
   return (
     <div className="code-input" aria-invalid={diagnosticLines.length > 0}>
@@ -231,8 +283,11 @@ const CodeEditor = React.forwardRef<CodeEditorHandle, Props>(function CodeEditor
               <React.Fragment key={i}>
                 {i > 0 ? "\n" : null}
                 {parts.map((part, j) =>
-                  part.c ? (
-                    <span key={j} className={part.c}>
+                  part.c || part.wrong ? (
+                    <span
+                      key={j}
+                      className={[part.c, part.wrong && "code-error"].filter(Boolean).join(" ")}
+                    >
                       {part.s}
                     </span>
                   ) : (

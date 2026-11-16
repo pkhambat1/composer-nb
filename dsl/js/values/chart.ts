@@ -22,10 +22,13 @@ import {
 import { misplaced } from "../check.ts"
 import { keyOf } from "../settings.ts"
 import { NAME_LIKE } from "../resolve.ts"
-import type { State } from "../state.ts"
-import { drawsNotes, spaceNotes } from "./notes.ts"
+import { textOf } from "../parts.ts"
+import type { Piece, State } from "../state.ts"
+import { callAt, drawsNotes, spaceNotes } from "./notes.ts"
 import { splitBars, tokenize } from "./steps.ts"
 import { barSlotTicks, timeLabel, type Report } from "../time.ts"
+import { reportIn } from "../diagnostics.ts"
+import { locatedTokens, SourceText, tokenSources } from "../source.ts"
 
 export type Key = NonNullable<ReturnType<typeof parseKey>>
 export type Chord = NonNullable<ReturnType<typeof buildChord>>
@@ -75,26 +78,43 @@ export function dimMarkProblem(tok: string): string | null {
   return `"${tok}": a diminished numeral takes dim, as a chord does: ${written} (viidim, viidim7, or viim7b5 for half-diminished)`
 }
 
-export function chordSlot(tok: string, part: Part, st: State, key: Key, err: Report): Slot | null {
+// A chord's slot. A mistake is marked on `at`, the chord as it's written on the line: `tok`
+// itself, or the name or interval call `tok` came from.
+export function chordSlot(
+  tok: string,
+  part: Part,
+  st: State,
+  key: Key,
+  err: Report,
+  at: string = tok,
+): Slot | null {
   if (tok === "-") return { hold: true }
   if (tok === "_") return { rest: true }
   if (tok === "%") {
-    err(part.ln, "% stands for a whole bar, so it goes between bar lines on its own: Am F|%")
+    err(part.ln, "% stands for a whole bar, so it goes between bar lines on its own: Am F|%", at)
     return null
   }
   const fn = intervalCall(tok)
   if (fn) {
     if (fn.error) {
-      err(part.ln, fn.error)
+      err(part.ln, fn.error, at === tok ? callAt(tok) : at)
       return null
     }
     const call = fn.call!
     if (call.end !== tok.length || call.prefix) {
-      err(part.ln, "A chord interval call ends at its closing ): fifth(1)")
+      err(part.ln, "A chord interval call ends at its closing ): fifth(1)", at)
       return null
     }
-    // Apply the musical operation before the playback-only transpose setting.
-    const inner = chordSlot(call.body, part, { ...st, transpose: 0 }, key, err)
+    // Apply the musical operation before the playback-only transpose setting. A call that's
+    // written as is has its chord written inside it.
+    const inner = chordSlot(
+      call.body,
+      part,
+      { ...st, transpose: 0 },
+      key,
+      err,
+      at === tok ? call.body : at,
+    )
     if (!inner?.chord) return inner
     const chord = moveChord(inner.chord, key, intervalSteps(call, key))
     chord.input = tok
@@ -103,6 +123,7 @@ export function chordSlot(tok: string, part: Part, st: State, key: Key, err: Rep
       err(
         part.ln,
         `"${tok}" goes outside playable MIDI notes 0 to 127. Change octave or use octave(value, -1)`,
+        at,
       )
       return null
     }
@@ -114,6 +135,7 @@ export function chordSlot(tok: string, part: Part, st: State, key: Key, err: Rep
       st.sections[tok]
         ? misplaced(tok, st.sections[tok].type, { line: "chart" })!
         : `"${tok}" isn't defined above. Name it first: chords ${tok} = Am F|C G`,
+      at,
     )
     return null
   }
@@ -129,6 +151,7 @@ export function chordSlot(tok: string, part: Part, st: State, key: Key, err: Rep
         (drawsNotes(tok)
           ? `"${tok}" is notes, and this line says chords. A line of notes says notes in front: ${part.name}: notes ${spaceNotes(tok)}`
           : `"${tok}" isn't a chord I know`),
+      at,
     )
     return null
   }
@@ -171,7 +194,8 @@ function moveChord(chord: Chord, key: Key, steps: number): Chord {
 }
 
 // Expand names and calls without resolving their pitches. Bars inside an inline
-// call stay inline; a named chart retains its existing bar boundaries.
+// call stay inline; a named chart retains its existing bar boundaries. `origins`, when
+// given, gets the place in `tokens` that each token returned came from.
 export function expandChordTokens(
   tokens: string[],
   st: State,
@@ -179,15 +203,33 @@ export function expandChordTokens(
   ln: number,
   depth = 0,
   declaration = false,
+  origins?: number[],
 ): string[] | null {
-  const fail = (msg: string) => {
-    err(ln, msg)
+  // A mistake is marked on `at`, the token it's about, as it's written
+  const fail = (msg: string, at: string) => {
+    err(ln, msg, at)
     return null
   }
-  if (depth > 32) return fail("Interval functions can nest at most 32 levels")
+  if (depth > 32) return fail("Interval functions can nest at most 32 levels", tokens.join(" "))
   const out: string[] = []
-  for (const token of tokens) {
-    if (token.includes("'")) return fail(OCTAVE_HELP)
+  const from: number[] = []
+  const sources = tokenSources(tokens)
+  const written: SourceText[] = []
+  const outer = err
+  for (const [i, token] of tokens.entries()) {
+    const source = sources?.[i]
+    err = reportIn(outer, source)
+    const push = (...more: string[]) => {
+      out.push(...more)
+      from.push(...more.map(() => i))
+      if (source)
+        written.push(
+          ...more.map((t) =>
+            t === source.text ? source : SourceText.writtenAs(t, source.span, source.owner),
+          ),
+        )
+    }
+    if (token.includes("'")) return fail(OCTAVE_HELP, token)
     const word = st.words[token]
     if (word) {
       if (word.type !== "chords")
@@ -195,43 +237,54 @@ export function expandChordTokens(
           declaration
             ? `${token} is ${word.type}, so it can't go in chords`
             : misplaced(token, word.type, { line: "chart" })!,
+          token,
         )
       // A single chord fills a slot just like its literal. A chart keeps its bars.
-      if (word.tokens.length === 1 && !CHORD_MARKS.includes(word.tokens[0]))
-        out.push(...word.tokens)
-      else out.push("|", ...word.tokens, "|")
+      if (word.tokens.length === 1 && !CHORD_MARKS.includes(word.tokens[0])) push(...word.tokens)
+      else push("|", ...word.tokens, "|")
       continue
     }
     if (st.sections[token])
-      return fail(misplaced(token, st.sections[token].type, { line: "chart" })!)
+      return fail(misplaced(token, st.sections[token].type, { line: "chart" })!, token)
     const fn = intervalCall(token)
     if (!fn) {
-      out.push(token)
+      push(token)
       continue
     }
-    if (fn.error) return fail(fn.error)
+    if (fn.error) return fail(fn.error, callAt(token))
     const call = fn.call!
     if (call.end !== token.length || call.prefix)
-      return fail("A chord interval call ends at its closing ): fifth(1)")
-    const inner = expandChordTokens(tokenize(call.body), st, err, ln, depth + 1, declaration)
+      return fail("A chord interval call ends at its closing ): fifth(1)", token)
+    const bodyFrom = token.indexOf("(") + 1
+    const leading = token.slice(bodyFrom).length - token.slice(bodyFrom).trimStart().length
+    const body = source?.slice(bodyFrom + leading, bodyFrom + leading + call.body.length)
+    const inner = expandChordTokens(tokenize(call.body, body), st, err, ln, depth + 1, declaration)
     if (!inner) return null
     // % belongs to the argument's own preceding bar, before its tones move.
     const bars = splitBars(inner)
-    for (let i = 0; i < bars.length; i++) {
-      if (bars[i].length === 1 && bars[i][0] === "%") {
-        if (!i)
-          return fail("% inside an interval function needs a preceding bar inside that function")
-        bars[i] = [...bars[i - 1]]
+    for (let b = 0; b < bars.length; b++) {
+      if (bars[b].length === 1 && bars[b][0] === "%") {
+        if (!b)
+          return fail(
+            "% inside an interval function needs a preceding bar inside that function",
+            token,
+          )
+        bars[b] = [...bars[b - 1]]
       }
     }
-    if (inner[0] === "|") out.push("|")
-    bars.forEach((bar, i) => {
-      if (i) out.push("|")
-      out.push(...bar.map((t) => (CHORD_MARKS.includes(t) ? t : wrapInterval(call, t))))
+    if (inner[0] === "|") push("|")
+    bars.forEach((bar, b) => {
+      if (b) push("|")
+      push(...bar.map((t) => (CHORD_MARKS.includes(t) ? t : wrapInterval(call, t))))
     })
-    if (inner.at(-1) === "|") out.push("|")
+    if (inner.at(-1) === "|") push("|")
   }
-  return out.filter((token, i) => token !== "|" || out[i - 1] !== "|")
+  const kept = out.map((token, k) => token !== "|" || out[k - 1] !== "|")
+  origins?.push(...from.filter((_, k) => kept[k]))
+  return locatedTokens(
+    out.filter((_, k) => kept[k]),
+    sources && written.filter((_, k) => kept[k]),
+  )
 }
 
 // Declaration validation uses the same reader as playback, without transpose.
@@ -256,8 +309,9 @@ export function chartRepeat(tokens: string[]): string | null {
   return null
 }
 
+// A chords line: its chords, `tokens`, read from the line's value, when it has one
 export function chordPattern(
-  part: Part,
+  part: Part & { value?: Piece[] },
   tokens: string[],
   st: State,
   barTicks: number,
@@ -265,48 +319,63 @@ export function chordPattern(
 ): ChartClip | null {
   // the state's key was read when it was set
   const key: Key = keyOf(st)!
-  const expanded = expandChordTokens(tokens, st, err, part.ln)
+  const origins: number[] = []
+  const expanded = expandChordTokens(tokens, st, err, part.ln, 0, false, origins)
   if (!expanded) return null
+  // Where each chord is written: the token it came from (a chord, a name, an interval call)
+  const written = (k: number) => tokens[origins[k]]
+  // The bars, each as the places in `expanded` of what it holds
+  const places: number[][] = [[]]
+  expanded.forEach((t, k) => (t === "|" ? places.push([]) : places.at(-1)!.push(k)))
   let ok = true
   const again = chartRepeat(expanded)
   if (again) {
+    const chart = part.value ? textOf(part.value).replace(/^chords\s*/, "") : tokens.join(" ")
     err(
       part.ln,
       `${part.name}: chords ${tokens.join(" ").replace(/ \| /g, "|")} repeats ${again}. ` +
         `Write ${part.name}: chords ${again}: a pattern repeats it`,
+      chart,
     )
     return null
   }
   const bars: Slot[][] = []
-  for (const bar of splitBars(expanded)) {
+  for (const at of places.filter((b) => b.length)) {
+    const bar = at.map((k) => expanded[k])
     if (bar.length === 1 && bar[0] === "%") {
       if (bars.length) bars.push(bars[bars.length - 1])
       else {
-        err(part.ln, "% repeats the bar before it, but this is the first bar")
+        err(part.ln, "% repeats the bar before it, but this is the first bar", written(at[0]))
         ok = false
       }
       continue
     }
     if (!barSlotTicks(barTicks, bar.length)) {
+      // The bar as it's written: each token it came from, once
+      const bar = [...new Set(at.map((k) => origins[k]))].map((i) => tokens[i]).join(" ")
       err(
         part.ln,
-        `A ${timeLabel(st)} bar can't be split evenly into ${bar.length}. ` +
+        `A ${timeLabel(st)} bar can't be split evenly into ${at.length}. ` +
           "Use - to hold a chord for another slot, e.g. Am - F G",
+        bar,
       )
       ok = false
       continue
     }
-    const slots = bar.map((tok) => chordSlot(tok, part, st, key, err))
+    const slots = at.map((k) =>
+      chordSlot(expanded[k], part, st, key, reportIn(err, tokenSources(expanded)?.[k]), written(k)),
+    )
     if (slots.includes(null)) ok = false
     bars.push(slots as Slot[])
   }
   if (!ok) return null
   if (!bars.length) {
-    err(part.ln, `chords needs the chords after it: ${part.name}: chords Am F|C G`)
+    err(part.ln, `chords needs the chords after it: ${part.name}: chords Am F|C G`, "chords")
     return null
   }
   if (bars[0][0].hold) {
-    err(part.ln, "This line starts with - but there's no chord to hold yet")
+    const first = places.find((b) => b.length)![0]
+    err(part.ln, "This line starts with - but there's no chord to hold yet", written(first))
     return null
   }
   const transpose = st.transpose

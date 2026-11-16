@@ -19,9 +19,6 @@
       "include": "#setting"
     },
     {
-      "include": "#invalidSeparator"
-    },
-    {
       "include": "#keyword"
     },
     {
@@ -115,10 +112,6 @@
     "punctuation": {
       "name": "punctuation.composer-nb",
       "match": "[{}()|,:=*%_]"
-    },
-    "invalidSeparator": {
-      "name": "invalid.illegal.composer-nb",
-      "match": "[;']|\\brest\\b"
     },
     "repeatCount": {
       "name": "constant.numeric.repeat.composer-nb",

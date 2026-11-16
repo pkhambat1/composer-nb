@@ -6,6 +6,23 @@ import type { Braces, Line, Piece } from "./state.ts"
 import { lengthPrefix } from "./time.ts"
 import { tokenize } from "./values/steps.ts"
 import { splitOutside } from "./intervals.ts"
+import { SourceText } from "./source.ts"
+
+// Each piece keeps the text the parser read, even when a reader strips its head. The
+// array remains the engine's ordered pieces; positions travel beside them, not in a
+// process-global table keyed by text.
+type LocatedParts = Piece[] & { sources?: SourceText[] }
+export const sourcesOf = (parts: Piece[]) => (parts as LocatedParts).sources
+export const sourceOf = (parts: Piece[]) => {
+  const sources = sourcesOf(parts)
+  return sources && SourceText.join(sources, " ").trim()
+}
+export function located(parts: Piece[], sources?: SourceText[]): Piece[] {
+  if (sources) (parts as LocatedParts).sources = sources
+  return parts
+}
+export const sliceParts = (parts: Piece[], from: number, to = parts.length) =>
+  located(parts.slice(from, to), sourcesOf(parts)?.slice(from, to))
 
 export const isBraces = (p: Piece | undefined): p is Braces => typeof p === "object" && p !== null
 
@@ -44,8 +61,15 @@ export const plain = (ln: number, text: string): Line => ({ ln, parts: text ? [t
 // A line with its text before any block replaced by `head`: what's left after a reader took
 // a head it matched (kick: ..., 4 bars ...)
 export function withHead(parts: Piece[], head: string): Piece[] {
-  const rest = typeof parts[0] === "string" ? parts.slice(1) : parts
-  return head.trim() ? [head.trim(), ...rest] : rest
+  const rest = typeof parts[0] === "string" ? sliceParts(parts, 1) : parts
+  if (!head.trim()) return rest
+  const sources = sourcesOf(parts)
+  const first = sources?.[0]
+  const cut = typeof parts[0] === "string" ? parts[0].length - head.length : 0
+  return located(
+    [head.trim(), ...rest],
+    first && [first.slice(cut).trim(), ...(sourcesOf(rest) ?? [])],
+  )
 }
 
 // A length written in front of a line, and what follows it: 4 bars { ... }

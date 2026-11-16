@@ -2,7 +2,7 @@
    repeats fits, and swing. The one place time arithmetic lives. A time is counted in ticks,
    TPQ to a quarter note; seconds come from the tempo only at the end. */
 
-import { message } from "./diagnostics.ts"
+import { message, type At } from "./diagnostics.ts"
 
 export const TPQ = 96 // ticks per quarter note: fine enough for 1/32 notes and triplets
 // Notes and chords divide each bar into equal slots on the sixteenth-note grid.
@@ -26,8 +26,11 @@ export type Timing = {
   mode: string
 }
 
-// Reports a mistake on a line of the cell
-export type Report = (line: number, msg: string) => void
+// Reports a mistake on a line of the cell, and what in it the mistake is about (see At)
+export type Report = ((line: number, msg: string, at: At) => void) & {
+  source?: import("./source.ts").SourceText
+  cell?: symbol
+}
 
 // A time the way it's written: 7 over 8, or 3+4 over 4.
 export function timeLabel(s: Timing): string {
@@ -171,7 +174,7 @@ export function lengthAt(text: string) {
 export function singularLength(text: string, ln: number, err: Report): boolean {
   const m = /(\S*(?:\d|\)))\s+(bar|beat|step)(?![A-Za-z0-9])/.exec(text)
   if (!m) return false
-  err(ln, `Lengths are always plural, whatever the number: ${m[1]} ${m[2]}s`)
+  err(ln, `Lengths are always plural, whatever the number: ${m[1]} ${m[2]}s`, m[0])
   return true
 }
 
@@ -216,8 +219,9 @@ export function sayTicks(ticks: number, st: Timing, barTicks: number): string {
   return count(ticks / TPQ, "beat")
 }
 
-// Something that repeats: what it's called in a message, how long it is, and its line
-export type Loop = { what: string; ticks: number; ln: number }
+// Something that repeats: what it's called in a message, how long it is, its line, and
+// what in that line is it, as written (see At)
+export type Loop = { what: string; ticks: number; ln: number; at: At }
 
 // Anything that repeats has to fit what it's in a whole number of times. Reports each of
 // `loops` that doesn't fit `total` ticks, and where they'd all fit. Returns whether they
@@ -249,6 +253,7 @@ export function checkLoops(
             hint,
           })
         : message("fit.ownTempo", { what: l.what, total: length }),
+      l.at,
     )
   }
   return false

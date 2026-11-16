@@ -113,8 +113,9 @@ export class Lexer {
     if (kind === "text" || kind === "join") this.#heads[level] += text
     else if (kind === "separator" || kind === "newline") this.#heads[level] = ""
     const start = { line: this.#line, col: this.#col }
-    for (const ch of text) {
-      if (ch === "\n") {
+    // Columns count UTF-16 code units, as source slices and Monaco do.
+    for (let i = 0; i < text.length; i++) {
+      if (text[i] === "\n") {
         this.#line++
         this.#col = 0
       } else this.#col++

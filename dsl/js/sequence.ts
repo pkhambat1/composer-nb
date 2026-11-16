@@ -1,9 +1,12 @@
 /* Sequences: what one line of a block plays, as items. A pattern's name, a block, a with
    and its block, or a group in brackets that plays what's in it in order, each with the
    length in front of it, if any. */
+import { atOffset, reportIn, type At } from "./diagnostics.ts"
 import { undefinedName } from "./resolve.ts"
 import { readWithHeader, WITH_HELP, type SettingWords } from "./settings.ts"
-import { isBraces, textOf } from "./parts.ts"
+import { isBraces, textOf, sourcesOf, located } from "./parts.ts"
+import { SourceText } from "./source.ts"
+import type { Span } from "./syntax.ts"
 import type { Braces, Line, Piece, Section, State } from "./state.ts"
 import { lengthPrefix, MAX_BARS, type Report } from "./time.ts"
 
@@ -19,6 +22,7 @@ export type Playable = Partial<Section> & {
 const UNTYPED_BRACES = "These braces need a type: pattern { ... } repeats, block { ... } plays once"
 // One thing a line plays
 export type Item = {
+  span?: Span
   name?: string
   items?: Item[]
   block?: Playable
@@ -26,6 +30,11 @@ export type Item = {
   shown?: string
   bars: number
 }
+
+// Where an item is written: its name, the ( of a group, a with's header, or the type in
+// front of braces
+export const itemAt = (it: Item) =>
+  it.span ?? (it.name || (it.items ? "(" : it.with ? it.shown! : (it.block?.type ?? "pattern")))
 
 // What one line plays, as an item: a pattern's name, a block, or a group in brackets, with
 // the length in front of it, if any, which it repeats to fill. Lengths are arithmetic:
@@ -42,14 +51,27 @@ export function readSequence(
   st: State | null = null,
 ): Item[] | null {
   // The line one unit at a time: each character of its text, and each block whole
-  const units: Piece[] = parts.flatMap((p): Piece[] => (isBraces(p) ? [p] : [...p]))
+  const units: Piece[] = parts.flatMap((p): Piece[] => (isBraces(p) ? [p] : p.split("")))
+  const sources = sourcesOf(parts)
+  const positions = sources?.flatMap((s, i) =>
+    isBraces(parts[i]) ? [s.positions[0]] : [...s.positions],
+  )
+  const written =
+    positions &&
+    new SourceText(
+      units.map((p) => (isBraces(p) ? "{" : p)).join(""),
+      positions,
+      sources?.find((s) => s.owner)?.owner,
+    )
+  err = reportIn(err, written)
+  const here = (from: number, to: number, fallback: string) => atOffset(err, from, to, fallback)
   const space = (k: number) => typeof units[k] === "string" && /\s/.test(units[k] as string)
   let end = units.length
   while (end > 0 && space(end - 1)) end--
   let i = 0
   let ok = true
-  const fail = (msg: string) => {
-    if (ok) err(ln, msg)
+  const fail = (msg: string, at: At) => {
+    if (ok) err(ln, msg, at)
     ok = false
   }
   // The character at k, or "" for a block or the end
@@ -63,11 +85,22 @@ export function readSequence(
   // Units from `from` to `to`, as the parts of a line
   const partsOf = (from: number, to: number): Piece[] => {
     const out: Piece[] = []
-    for (const u of units.slice(from, to)) {
-      if (isBraces(u) || typeof out[out.length - 1] !== "string") out.push(u)
-      else out[out.length - 1] += u
+    const maps: SourceText[] = []
+    for (let at = from; at < to; at++) {
+      const u = units[at]
+      const map = written?.slice(at, at + 1)
+      if (isBraces(u) || typeof out[out.length - 1] !== "string") {
+        out.push(u)
+        if (map) maps.push(isBraces(u) ? SourceText.block(map.span, map.owner) : map)
+      } else {
+        out[out.length - 1] += u
+        if (map) maps[maps.length - 1] = SourceText.join([maps[maps.length - 1], map])
+      }
     }
-    return out.map((p) => (isBraces(p) ? p : p.trim())).filter((p) => isBraces(p) || p)
+    return located(
+      out.map((p) => (isBraces(p) ? p : p.trim())).filter((p) => isBraces(p) || p),
+      written && maps.map((s) => s.trim()).filter((s) => s.text),
+    )
   }
   const ws = () => {
     while (space(i)) i++
@@ -92,30 +125,33 @@ export function readSequence(
   }
   const thing = (inGroup: boolean): Item | null => {
     if (ch(i) === "*") {
-      fail(`* only multiplies numbers. To repeat, put a length in front: 4 bars ${said(last)}`)
+      fail(`* only multiplies numbers. To repeat, put a length in front: 4 bars ${said(last)}`, "*")
       return null
     }
     let bars = 0
     const head = textFrom(i)
     const len = lengthPrefix(head)
+    // The length as written
+    const length = head.slice(0, head.length - len.rest.length).trim()
     if (len.has) {
       if (!(len.bars > 0 && len.bars <= MAX_BARS)) {
-        fail(`A length is a number of bars up to ${MAX_BARS}, e.g. 3 bars`)
+        fail(`A length is a number of bars up to ${MAX_BARS}, e.g. 3 bars`, length)
         return null
       }
       const start = i
       const trailing = head.length - head.trimEnd().length
       i += len.rest ? head.length - trailing - len.rest.length : head.length
       if (i >= end) {
-        fail(`${textOf(partsOf(start, end))} of what? Put a pattern or its name after it`)
+        fail(`${textOf(partsOf(start, end))} of what? Put a pattern or its name after it`, length)
         return null
       }
       bars = len.bars
     }
     if (ch(i) === "(") {
+      const span = written?.slice(i, i + 1).span
       i++
       const items = group()
-      return items && { items, bars }
+      return items && { items, bars, span }
     }
     // with octave 2 { ... }: a block, played with those settings
     if (/^with(?![A-Za-z0-9.])/.test(textFrom(i))) {
@@ -124,7 +160,7 @@ export function readSequence(
       while (j < end && ch(j) && ch(j) !== "\n") j++
       const block = units[j]
       if (!isBraces(block)) {
-        fail(WITH_HELP)
+        fail(WITH_HELP, "with")
         return null
       }
       const shown = textFrom(i + 4)
@@ -146,7 +182,7 @@ export function readSequence(
     const block = units[i]
     if (isBraces(block)) {
       if (!block.type) {
-        fail(UNTYPED_BRACES)
+        fail(UNTYPED_BRACES, "{")
         return null
       }
       i++
@@ -173,25 +209,28 @@ export function readSequence(
           ? `"${tok}" needs bars after it, e.g. 3 bars groove`
           : `"${tok}" doesn't belong here. A line plays a pattern's name, a block, or ( ) ` +
               "with what plays in order in it, and a length can go in front: 4 bars groove",
+        tok,
       )
       return null
     }
+    const span = written?.slice(i, i + name[0].length).span
     i += name[0].length
-    return { name: name[0], bars }
+    return { name: name[0], bars, span }
   }
   // What's in a group, up to its ), in order
   const group = (): Item[] | null => {
     const out: Item[] = []
+    const open = i - 1 // where its ( is
     for (;;) {
       ws()
       if (i >= end) {
-        fail("A ( is missing its )")
+        fail("A ( is missing its )", here(open, open + 1, "("))
         return null
       }
       if (ch(i) === ")") {
         i++
         if (!out.length) {
-          fail("These brackets have nothing in them")
+          fail("These brackets have nothing in them", here(open, i, units.slice(open, i).join("")))
           return null
         }
         return out
@@ -207,14 +246,14 @@ export function readSequence(
   ws()
   if (i < end) {
     if (ch(i) === ")") {
-      fail("This ) doesn't close anything")
+      fail("This ) doesn't close anything", here(i, i + 1, ")"))
       return null
     }
     // More on the line: what plays in order goes in brackets. A name that isn't defined is
     // said first.
     const unknown = undefinedItem(first)
     if (unknown) {
-      fail(undefinedName(unknown, st!))
+      fail(undefinedName(unknown, st!), itemAt(first))
       return null
     }
     const row = [first]
@@ -225,9 +264,13 @@ export function readSequence(
       ws()
     }
     if (!ok) return null
-    const missing = row.map(undefinedItem).find(Boolean)
-    if (missing) fail(undefinedName(missing, st!))
-    else fail(`What plays in order goes in brackets: (${textOf(parts).replace(/\s+/g, " ")})`)
+    const missing = row.find((it) => undefinedItem(it))
+    if (missing) fail(undefinedName(missing.name!, st!), itemAt(missing))
+    else {
+      // The line as written, when it's all text; otherwise the second thing in it
+      const written = parts.every((p) => typeof p === "string") ? parts.join("") : itemAt(row[1])
+      fail(`What plays in order goes in brackets: (${textOf(parts).replace(/\s+/g, " ")})`, written)
+    }
     return null
   }
   return [first]

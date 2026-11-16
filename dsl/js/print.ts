@@ -1,10 +1,21 @@
 /* Evaluated musical values for inspection. This path never creates a play, an audio
    event or a timeline. The written value and its resolved musical meaning stay together. */
-import { buildChord, chordParts, degreeIndex, degreeNumber, midiToName, pastScale, pastScaleMessage, type Voiced } from "./chords.ts"
+import {
+  buildChord,
+  chordParts,
+  degreeIndex,
+  degreeNumber,
+  midiToName,
+  pastScale,
+  pastScaleMessage,
+  type Voiced,
+} from "./chords.ts"
 import { intervalCall, intervalSteps, splitOutside } from "./intervals.ts"
 import { keyOf } from "./settings.ts"
 import type { State } from "./state.ts"
 import type { Report } from "./time.ts"
+import { atOffset, reportIn } from "./diagnostics.ts"
+import { type SourceText, tokenSources } from "./source.ts"
 import { chordSlot, expandChordTokens } from "./values/chart.ts"
 import {
   noteParts,
@@ -77,8 +88,8 @@ const nameToPc = (name: string) =>
 
 // Printing evaluates musical values; timing marks belong to playback and notation.
 export function printedItems(value: PrintedValue): PrintedItem[] {
-  return value.items.filter((item) =>
-    item.kind === "note" || item.kind === "chord" || item.kind === "step",
+  return value.items.filter(
+    (item) => item.kind === "note" || item.kind === "chord" || item.kind === "step",
   )
 }
 
@@ -104,51 +115,67 @@ function printedChordText(token: string, chord: Voiced, st: State): string {
   }
   const root = moved(degree)
   const bassDegree = bass && /^(-?)([#b]?)(vii|vi|iv|v|iii|ii|i|[1-9]\d*)$/.exec(bass)
-  const over = bass ? "/" + (bassDegree ? moved(bassDegree) : chord.bassName.replace(/-?\d+$/, "")) : ""
+  const over = bass
+    ? "/" + (bassDegree ? moved(bassDegree) : chord.bassName.replace(/-?\d+$/, ""))
+    : ""
   let suffix = chordParts(chord.label)[0].replace(/^[A-G][#b]*/, "")
   if (/^6/.test(suffix)) suffix = "M" + suffix
   else if (/^\d/.test(suffix)) suffix = "dom" + suffix
   for (const text of [root + degree[4] + over, root + over, root + suffix + over]) {
     const candidate = buildChord(text, key, st.octave)
-    if (candidate && candidate.notesMidi.length === chord.notesMidi.length &&
+    if (
+      candidate &&
+      candidate.notesMidi.length === chord.notesMidi.length &&
       candidate.notesMidi.every((m, i) => m === chord.notesMidi[i]) &&
-      (!chord.overBass || candidate.bassMidi === chord.bassMidi)) return text
+      (!chord.overBass || candidate.bassMidi === chord.bassMidi)
+    )
+      return text
   }
   return token
 }
 
+// One argument of a print, evaluated. A mistake in it is about the argument as written, or
+// the one token in it that's wrong.
 function inspect(source: string, st: State, ln: number, err: Report): PrintedValue | null {
   const explicit = /^(notes|chords|steps)(?:\s+|$)/.exec(source)
   const value = explicit ? source.slice(explicit[0].length).trim() : source
   const inferred = explicit ? new Set([explicit[1]]) : inferredTypes(value, st)
   if (!value) {
-    err(ln, "print needs a value after its type")
+    err(ln, "print needs a value after its type", explicit![1])
     return null
   }
   if (inferred.has("pattern") || inferred.has("block")) {
-    err(ln, "print inspects notes, chords and steps; give it a musical value from the block")
+    err(
+      ln,
+      "print inspects notes, chords and steps; give it a musical value from the block",
+      source,
+    )
     return null
   }
   if (inferred.size > 1) {
     err(
       ln,
       "These values have different types. Give print separate arguments: print(melody, harmony)",
+      source,
     )
     return null
   }
   const type = ([...inferred][0] ?? "notes") as PrintedValue["type"]
   const items: PrintedItem[] = []
   let failed = false
-  const report: Report = (line, msg) => {
+  const valueReport = reportIn(err, err.source?.slice(source.length - value.length))
+  const report: Report = (line, msg, at) => {
     failed = true
-    err(line, msg)
+    valueReport(line, msg, at)
   }
+  report.source = valueReport.source
+  report.cell = err.cell
   const key = keyOf(st)!
   if (type === "steps") {
     const parts = stepParts(value, st, report, ln, null, false)
     if (!parts) return null
     if (parts.toEnd) {
-      report(ln, "print needs a finite value; ... needs a containing block")
+      report(ln, "print needs a finite value; ... needs a containing block", "...")
       return null
     }
     for (const t of parts.tokens)
@@ -156,19 +183,25 @@ function inspect(source: string, st: State, ln: number, err: Report): PrintedVal
         for (const text of word)
           items.push({ text, kind: text === "|" ? "bar" : text === "-" ? "rest" : "step" })
   } else if (type === "chords") {
-    const tokens = expandChordTokens(tokenize(value), st, report, ln)
+    const written = tokenize(value, report.source)
+    const tokens = expandChordTokens(written, st, report, ln)
     if (!tokens) return null
     const bars = splitBars(tokens)
     for (let i = 0; i < bars.length; i++) {
       if (bars[i].length === 1 && bars[i][0] === "%") {
         if (!i) {
-          report(ln, "% repeats the bar before it, but this is the first bar")
+          report(ln, "% repeats the bar before it, but this is the first bar", "%")
           return null
         }
-        bars[i] = [...bars[i - 1]]
+        bars[i] = bars[i - 1]
       }
     }
-    for (const token of bars.flatMap((bar, i) => i ? ["|", ...bar] : bar)) {
+    const entries = bars.flatMap((bar, i) => [
+      ...(i ? [{ token: "|", source: undefined }] : []),
+      ...bar.map((token, j) => ({ token, source: tokenSources(bar)?.[j] })),
+    ])
+    for (const { token, source } of entries) {
+      const tokenReport = reportIn(report, source)
       if (["|", "-", "_"].includes(token)) {
         items.push({ text: token, kind: token === "-" ? "hold" : token === "_" ? "rest" : "bar" })
         continue
@@ -178,7 +211,7 @@ function inspect(source: string, st: State, ln: number, err: Report): PrintedVal
         { name: "print", ln },
         { ...st, transpose: 0 },
         key,
-        report,
+        tokenReport,
       )?.chord
       if (!chord) continue
       if (
@@ -186,7 +219,11 @@ function inspect(source: string, st: State, ln: number, err: Report): PrintedVal
           (n) => n + st.transpose < 0 || n + st.transpose > 127,
         )
       ) {
-        report(ln, `"${token}" goes outside playable MIDI notes 0 to 127`)
+        tokenReport(
+          ln,
+          `"${token}" goes outside playable MIDI notes 0 to 127`,
+          source?.span ?? token,
+        )
         continue
       }
       items.push({
@@ -210,17 +247,21 @@ function inspect(source: string, st: State, ln: number, err: Report): PrintedVal
     const parts = noteParts(value, st, report, ln, null, 0, false)
     if (!parts) return null
     if (parts.open) {
-      report(ln, "print needs a finite value; ... needs a containing block")
+      report(ln, "print needs a finite value; ... needs a containing block", "...")
       return null
     }
-    const tokens: string[] = []
-    for (const token of parts.tokens) {
+    // Each note, with how it's written in the cell: itself, or the name it comes from
+    const tokens: { token: string; written: string; source?: SourceText }[] = []
+    for (const [i, token] of parts.tokens.entries()) {
+      const source = tokenSources(parts.tokens)?.[i]
       const named = st.words[token]
       if (named && named.type !== "notes")
-        report(ln, `${token} is ${named.type}, so it can't go in notes`)
-      else tokens.push(...(named?.tokens ?? [token]))
+        reportIn(report, source)(ln, `${token} is ${named.type}, so it can't go in notes`, token)
+      else
+        for (const t of named?.tokens ?? [token]) tokens.push({ token: t, written: token, source })
     }
-    for (const token of tokens) {
+    for (const { token, written, source } of tokens) {
+      const tokenReport = reportIn(report, source)
       if (token === "|") {
         items.push({ text: token, kind: "bar" })
         continue
@@ -228,11 +269,12 @@ function inspect(source: string, st: State, ln: number, err: Report): PrintedVal
       const steps = noteSteps(token)
       const spaced = spacedNotes(token)
       if (!steps || spaced) {
-        report(
+        tokenReport(
           ln,
           spaced
             ? notesTouch(token, spaced)
             : notNotes(token, st, "piano", `print(chords ${value})`),
+          written,
         )
         continue
       }
@@ -243,12 +285,12 @@ function inspect(source: string, st: State, ln: number, err: Report): PrintedVal
         }
         const root = step
         if (root.degree !== undefined && !root.numeric && pastScale(key, root.degree)) {
-          report(ln, pastScaleMessage(key))
+          tokenReport(ln, pastScaleMessage(key), written)
           continue
         }
         const pitch = resolveNote(step, st, key)
         if (pitch.midi + st.transpose < 0 || pitch.midi + st.transpose > 127) {
-          report(ln, `"${step.label}" goes outside playable MIDI notes 0 to 127`)
+          tokenReport(ln, `"${step.label}" goes outside playable MIDI notes 0 to 127`, written)
           continue
         }
         let text = step.label!
@@ -269,19 +311,25 @@ function inspect(source: string, st: State, ln: number, err: Report): PrintedVal
       }
     }
   }
-  if (!items.length && !failed) report(ln, "print needs a musical value")
+  if (!items.length && !failed) report(ln, "print needs a musical value", source)
   if (failed) return null
   const printed = { source, type, text: "", items }
-  printed.text = printedItems(printed).map((i) => i.text).join(" ") || "[]"
+  printed.text =
+    printedItems(printed)
+      .map((i) => i.text)
+      .join(" ") || "[]"
   return printed
 }
 
 // `text` is the part after print. Each comma at the call's own level starts another
-// value; commas in interval functions belong to those functions.
+// value; commas in interval functions belong to those functions. A mistake in how the
+// call is written is about the part of it that's wrong, or print when it has no
+// parentheses.
 export function printValue(text: string, st: State, ln: number, err: Report): PrintOutput | null {
   text = text.trim()
+  err = reportIn(err, err.source?.select(text))
   if (!text.startsWith("(")) {
-    err(ln, "print takes parentheses: print(1, 2, 3)")
+    err(ln, "print takes parentheses: print(1, 2, 3)", "print")
     return null
   }
   let depth = 1
@@ -291,19 +339,37 @@ export function printValue(text: string, st: State, ln: number, err: Report): Pr
     else if (text[end] === ")") depth--
   }
   if (depth) {
-    err(ln, "print(...) is missing its closing )")
+    err(ln, "print(...) is missing its closing )", atOffset(err, 0, 1, "("))
     return null
   }
   if (text.slice(end).trim()) {
-    err(ln, "Nothing follows print(...); put the next statement on its own line")
+    err(
+      ln,
+      "Nothing follows print(...); put the next statement on its own line",
+      err.source?.slice(end).trim().span ?? text.slice(end),
+    )
     return null
   }
-  const args = splitOutside(text.slice(1, end - 1), ",").map((s) => s.trim())
-  if (args.some((a) => !a)) {
-    err(ln, "print needs a value for each argument: print(1, 2, 3)")
+  const written = splitOutside(text.slice(1, end - 1), ",")
+  const args = written.map((s) => s.trim())
+  const empty = args.findIndex((a) => !a)
+  if (empty >= 0) {
+    // The empty argument with what's on either side of it: a comma, or a parenthesis
+    const from = written.slice(0, empty).reduce((n, a) => n + a.length + 1, 0)
+    const to = from + written[empty].length + 2
+    err(
+      ln,
+      "print needs a value for each argument: print(1, 2, 3)",
+      atOffset(err, from, to, text.slice(from, to)),
+    )
     return null
   }
-  const values = args.map((a) => inspect(a, st, ln, err))
+  let offset = 1
+  const values = args.map((a, i) => {
+    const source = err.source?.slice(offset, offset + written[i].length).trim()
+    offset += written[i].length + 1
+    return inspect(a, st, ln, reportIn(err, source))
+  })
   if (values.some((v) => v === null)) return null
   const known = values as PrintedValue[]
   return {
@@ -414,12 +480,11 @@ export function printLayout(prints: PrintOutput[]): PrintRow[] {
     let row: PrintRow | undefined
     for (const value of p.values) {
       const items = printedItems(value)
-      const parts: PrintPart[] =
-        !items.length
-          ? [{ kind: "quiet", text: "[]" }]
-          : value.type === "steps"
-            ? [{ kind: "steps", text: items.map((i) => i.text).join("") }]
-            : items.map(printPart)
+      const parts: PrintPart[] = !items.length
+        ? [{ kind: "quiet", text: "[]" }]
+        : value.type === "steps"
+          ? [{ kind: "steps", text: items.map((i) => i.text).join("") }]
+          : items.map(printPart)
       if (row?.type === value.type) {
         row.parts[row.parts.length - 1].comma = true
         row.parts.push(...parts)

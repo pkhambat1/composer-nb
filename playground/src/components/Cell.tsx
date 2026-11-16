@@ -1,7 +1,7 @@
 // components/Cell.tsx — Single cell (music or text)
 import React from "react"
 import { afterRun } from "../hooks/useKeyboard.ts"
-import type { NotebookCell } from "../shared/types.ts"
+import type { Checked, NotebookCell } from "../shared/types.ts"
 import CodeEditor, { type CodeEditorHandle, type RunState } from "./CodeEditor.tsx"
 import MusicOutput, { type PlayerProps } from "./MusicOutput.tsx"
 import MarkdownContent from "./MarkdownCell.tsx"
@@ -122,6 +122,7 @@ function CellMenu({ onDelete, onMoveUp, onMoveDown, onDuplicate, first, last }: 
 
 function Cell({
   cell,
+  diagnostics,
   index,
   selected,
   editing,
@@ -158,6 +159,8 @@ function Cell({
 }: PlayerProps &
   MenuProps & {
     cell: NotebookCell
+    // What's wrong with the cell's source as it's written now
+    diagnostics: Checked | null
     index: number
     selected: boolean
     editing: boolean
@@ -203,15 +206,6 @@ function Cell({
       : cell.status === "waiting"
         ? "waiting"
         : "idle"
-  // The lines the last run found errors on, for the editor to mark, as long as the
-  // source is still what that run saw
-  const errorLines = React.useMemo(
-    () =>
-      cell.output?.kind === "error" && cell.output.source === cell.source
-        ? new Set(cell.output.lines || [])
-        : null,
-    [cell.output, cell.source],
-  )
 
   return (
     <div
@@ -280,7 +274,7 @@ function Cell({
               onRun={onRun}
               onInterrupt={onInterrupt}
               runState={runState}
-              errorLines={errorLines}
+              diagnostics={diagnostics}
               placeholder="A groove, a riff or a chord chart. Shift+Enter runs it."
             />
             <MusicOutput

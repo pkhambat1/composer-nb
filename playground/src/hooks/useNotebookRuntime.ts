@@ -1,7 +1,7 @@
 /* Shared execution state: parsing, render queue and playback. No storage or host SDK. */
 import React from "react"
 import * as MusicEngine from "composer-nb/engine"
-import type { Host, KernelStatus } from "../shared/types.ts"
+import type { Checked, Host, KernelStatus } from "../shared/types.ts"
 import type { useCellManager } from "./useCellManager.ts"
 import { usePlayback } from "./usePlayback.ts"
 
@@ -51,12 +51,7 @@ export function useNotebookRuntime(
           playback.stopCell(id)
           updateCell(id, {
             status: "idle",
-            output: {
-              kind: "error",
-              error: lines,
-              lines: parsed.errors.map((e) => e.line),
-              source: c.source,
-            },
+            output: { kind: "error", error: lines },
           })
           return
         }
@@ -209,7 +204,30 @@ export function useNotebookRuntime(
     if (hostRef.current) renderAllRef.current()
   }, [])
 
+  // What's wrong with each music cell as it's written now, read as the user types, with the
+  // settings and names of the cells above it as a run reads them. The editors mark exactly
+  // these. Defer the check so source edits can render before the notebook is rechecked.
+  const written = React.useDeferredValue(
+    JSON.stringify([
+      host?.after ?? "",
+      cells.filter((c) => c.type === "music").map((c) => [c.id, c.source]),
+    ]),
+  )
+  const diagnostics = React.useMemo(() => {
+    const [after, music] = JSON.parse(written) as [string, [string, string][]]
+    const out = new Map<string, Checked>()
+    let inherited = MusicEngine.initialState()
+    if (after) inherited = MusicEngine.parseSource(after, inherited).state
+    for (const [id, source] of music) {
+      const parsed = MusicEngine.parseSource(source, inherited)
+      out.set(id, { source, errors: parsed.errors })
+      inherited = parsed.state
+    }
+    return out
+  }, [written])
+
   return {
+    diagnostics,
     kernelStatus,
     activeCellId,
     playback,

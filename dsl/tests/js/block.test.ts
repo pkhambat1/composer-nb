@@ -203,7 +203,7 @@ describe("typed braces", () => {
       "These braces have nothing in them",
     ])
   })
-  it("paints typed braces as keywords, and what's untyped as a mistake", () => {
+  it("paints typed braces without making its own error judgments", () => {
     const painted = (source: string) =>
       highlightMusic(source)
         .flat()
@@ -224,11 +224,11 @@ describe("typed braces", () => {
     expect(
       red("play block {\n  every 3/4 beats 4 bars { kick: x }\n}\npattern gg = 2 bars { kick: x }"),
     ).toEqual([])
-    expect(red("play ({ kick: x--- })")).toEqual(["tk-error:{"])
-    expect(red("play block {\n  { kick: x--- }\n}")).toEqual(["tk-error:{"])
-    expect(red("play block {\n  4 bars { kick: x--- }\n}")).toEqual(["tk-error:{"])
-    expect(red("play { kick: x--- }")).toEqual(["tk-error:{"])
+    expect(red("play ({ kick: x--- })")).toEqual([])
+    expect(red("play block {\n  { kick: x--- }\n}")).toEqual([])
+    expect(red("play block {\n  4 bars { kick: x--- }\n}")).toEqual([])
+    expect(red("play { kick: x--- }")).toEqual([])
     expect(words("play block { kick: x--- }")).toEqual(["tk-directive-key:block", "tk-punct:{"])
-    expect(red("play (\n  { kick: x--- }\n)")).toEqual(["tk-error:{"])
+    expect(red("play (\n  { kick: x--- }\n)")).toEqual([])
   })
 })

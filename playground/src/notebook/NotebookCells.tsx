@@ -130,6 +130,7 @@ export default function NotebookCells({
               selected={c.id === selectedId}
               editing={c.id === editingId}
               isActive={c.id === activeCellId}
+              diagnostics={runtime.diagnostics.get(c.id) ?? null}
               theme={appearance.theme}
               accent={appearance.accent}
               drumView={appearance.drumView}
