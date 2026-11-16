@@ -202,6 +202,24 @@ export function layer(
       return null
     }
   }
+  // A length counts bars of the music it's given to. What plays on its own in a time of
+  // its own, inside a with time, is measured in its own bars, one after another. A tempo
+  // of its own is only a speed, so it's measured in the bars of what it's in.
+  if (bars && !read.length && !once.length && repeated.length === 1) {
+    const { clip, what, ln, at } = repeated[0]
+    const metered = clip.spans.some((s) => s.time !== meter.time)
+    const durSec = metered ? secondsOfBars(clip, bars) : null
+    if (durSec !== null) {
+      const loop = [{ what, ln, at, ticks: clip.durSec / secPerTick }]
+      if (!ctx.cuts && !checkLoops(loop, Math.round(durSec / secPerTick), st, barTicks, err))
+        return null
+      const tiled = tile(clip, durSec)
+      const spans = tiled.spans
+        .filter((s) => s.startSec < durSec - 1e-9)
+        .map((s) => ({ ...s, durSec: Math.min(s.durSec, durSec - s.startSec) }))
+      return { ...tiled, spans, ln }
+    }
+  }
   const fixed = read.filter((p) => !("open" in p && p.open))
   const loops = [
     ...(ctx.repeats
@@ -358,6 +376,23 @@ export function layer(
   }
   if (durSec > covered + 1e-9) spans.push({ ...meter, startSec: covered, durSec: durSec - covered })
   return { durSec, events, drumEvents, spans }
+}
+
+// How long `bars` bars of `clip` last, played end to end, counting each bar in the meter
+// and tempo it plays in. null when its spans say nothing about its bars.
+function secondsOfBars(clip: Clip, bars: number): number | null {
+  const barSecs = clip.spans.map((s) => s.barTicks * s.secPerTick)
+  if (!(clip.durSec > 0) || !clip.spans.length || barSecs.some((b) => !(b > 0))) return null
+  // Whole times through first, then bar by bar into the last one
+  const perPass = clip.spans.reduce((n, s, i) => n + s.durSec / barSecs[i], 0)
+  const passes = Math.max(0, Math.floor(bars / perPass - 1e-9))
+  let left = bars - passes * perPass
+  for (const [i, span] of clip.spans.entries()) {
+    const inSpan = span.durSec / barSecs[i]
+    if (left <= inSpan + 1e-9) return passes * clip.durSec + span.startSec + left * barSecs[i]
+    left -= inSpan
+  }
+  return (passes + 1) * clip.durSec
 }
 
 export function shift(clip: Clip, by: number, again: boolean): Omit<Clip, "durSec"> {
