@@ -38,10 +38,10 @@ export type HostResult = {
 }
 
 export class HostError extends Error {
-  kind: "timeout" | "harness" | "model_mismatch"
+  kind: "timeout" | "harness" | "model_mismatch" | "usage_limit"
   partial?: Partial<HostResult>
   constructor(
-    kind: "timeout" | "harness" | "model_mismatch",
+    kind: "timeout" | "harness" | "model_mismatch" | "usage_limit",
     message: string,
     partial?: Partial<HostResult>,
   ) {
@@ -116,7 +116,7 @@ export function readEvents(events: unknown[], prompt: string, wanted: string): H
     } else if (event.type === "assistant" && isObject(event.message)) {
       const message = event.message
       const model = str(message.model)
-      if (model) {
+      if (model && model !== "<synthetic>") {
         out.model = model
         if (!modelFits(model, wanted)) mismatch ??= model
       }
@@ -259,12 +259,15 @@ export async function runHost(options: {
       throw new HostError("harness", `Could not start ${bin}: ${outcome.spawnError.message}`)
     if (outcome === "timeout")
       throw new HostError("timeout", `No result in ${options.timeoutMs} ms`, partial())
-    if (child.exitCode !== 0)
+    if (child.exitCode !== 0) {
+      const details = partial()
+      const reason = details.reply || stderr.slice(-2000)
       throw new HostError(
-        "harness",
-        `${bin} exited with ${child.exitCode ?? child.signalCode}${tail()}`,
-        partial(),
+        /hit your .*limit|usage limit|rate limit/i.test(reason) ? "usage_limit" : "harness",
+        `${bin} exited with ${child.exitCode ?? child.signalCode}: ${reason}`,
+        details,
       )
+    }
     const result = readEvents(events, options.prompt, options.model)
     const done = events.find((e) => isObject(e) && e.type === "result") as Json | undefined
     if (!done) throw new HostError("harness", `No result event${tail()}`, result)

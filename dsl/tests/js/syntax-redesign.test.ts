@@ -210,6 +210,16 @@ describe("highlighting the redesigned syntax", () => {
       .filter((p) => p.c === "tk-error")
       .map((p) => p.s)
 
+  it("keeps chart names distinct from Roman-numeral chord roots", () => {
+    const parts = painted("play piano: chords iiVI|intro|verse|iim7 vdom7|imaj7")
+    expect(parts.filter((p) => p.c === "tk-word").map((p) => p.s)).toEqual([
+      "iiVI",
+      "intro",
+      "verse",
+    ])
+    expect(parts.filter((p) => p.c?.includes("tk-root")).map((p) => p.s)).toEqual(["ii", "v", "i"])
+  })
+
   it("highlights nested repeats and comma entries across layout newlines", () => {
     for (const source of [
       "play block { kick: 2*(x- 3*(-- ^-)), snare: x }",

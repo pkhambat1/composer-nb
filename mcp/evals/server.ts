@@ -29,7 +29,13 @@ export async function startServer(): Promise<TestServer> {
       if (!res.headersSent) res.writeHead(500).end()
     })
   })
-  await new Promise<void>((resolve) => http.listen(0, "127.0.0.1", resolve))
+  await new Promise<void>((resolve, reject) => {
+    http.once("error", reject)
+    http.listen(0, "127.0.0.1", () => {
+      http.off("error", reject)
+      resolve()
+    })
+  })
   const { port } = http.address() as AddressInfo
   return {
     open(runId, workspace) {

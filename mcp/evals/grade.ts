@@ -35,11 +35,14 @@ type Where = {
 }
 export type ChordHit = Where & {
   instrument: string
+  input: string
+  transpose: number
   label: string
   rootPc: number
   midi: number[]
   pcs: number[]
   bassPc: number
+  overBass: boolean
   ticks: number
 }
 export type NoteHit = Where & {
@@ -116,11 +119,14 @@ export function readCells(chain: ChainCell[]): Music {
           m.chords.push({
             ...where(e.tick),
             instrument: e.instrument,
+            input: e.chord.input,
+            transpose: e.transpose,
             label: e.chord.label,
             rootPc: e.chord.rootPc,
             midi: e.chord.notesMidi,
             pcs: [...new Set(e.chord.notesMidi.map(mod12))].sort((x, y) => x - y),
             bassPc: mod12(e.chord.bassMidi),
+            overBass: !!e.chord.overBass,
             ticks: e.ticks,
           })
         for (const e of b.noteEvents)
@@ -255,8 +261,6 @@ const FUNCTIONS = new Set([
   "fourteenth",
   "fifteenth",
 ])
-const TYPES = new Set(["steps", "notes", "chords", "pattern", "block"])
-
 type Token = { c: string | null; s: string }
 const tokensOf = (src: string): Token[][] =>
   highlightMusic(src).map((line) => line.filter((t) => t.c !== null && !t.c.includes("tk-comment")))
@@ -283,23 +287,29 @@ export function letterNamedRoots(sources: string[]): string[] {
   )
 }
 
-/** Interval function calls, and how often each of the cells' own chords names is used
-    besides its definition */
-function reuseOf(sources: string[]) {
-  let calls = 0
-  const chordNames = new Set<string>()
-  const uses = new Map<string, number>()
-  for (const src of sources)
-    for (const line of tokensOf(src))
-      line.forEach((t, i) => {
-        if (t.c === "tk-directive-key" && FUNCTIONS.has(t.s) && line[i + 1]?.s === "(") calls++
-        if (t.c !== "tk-word") return
-        const type = line[i - 1]?.c === "tk-directive-key" ? line[i - 1].s : null
-        if (type && TYPES.has(type) && line[i + 1]?.s === "=") {
-          if (type === "chords") chordNames.add(t.s)
-        } else uses.set(t.s, (uses.get(t.s) ?? 0) + 1)
-      })
-  return { calls, chordNames, uses }
+/** Expanded chord inputs come from the engine, so unused declarations and note-only
+    functions cannot stand in for deriving the chords that actually play. */
+function usesChordFunction(m: Music): boolean {
+  return m.chords.some((c) =>
+    [...c.input.matchAll(/\b([a-z]+)\s*\(/g)].some((match) => FUNCTIONS.has(match[1])),
+  )
+}
+
+/** The same symbolic chart and rhythm sounding under different keys or modes. This
+    also accepts a chart carried by a named pattern or inherited from an earlier cell. */
+function reusesChart(m: Music): boolean {
+  const settingsByChart = new Map<string, Set<string>>()
+  for (const b of m.blocks) {
+    if (!b.chordEvents.length) continue
+    const chart = JSON.stringify(
+      b.chordEvents.map((e) => [e.tick / b.barTicks, e.ticks / b.barTicks, e.chord.input]),
+    )
+    const settings = settingsByChart.get(chart) ?? new Set<string>()
+    settings.add(`${pcOf(b.key)} ${b.mode}`)
+    if (settings.size >= 2) return true
+    settingsByChart.set(chart, settings)
+  }
+  return false
 }
 
 /** Notes standing in for a chord: two starting together on one instrument, or three across all */
@@ -360,16 +370,9 @@ function transposeKeys(src: string, semitones: number): string | null {
 function notTransposed(chain: ChainCell[], m: Music): string | null {
   const lastWritten = chain.map((c) => c.written).lastIndexOf(true)
   const upto = chain.slice(0, lastWritten + 1)
-  let anyKey = false
-  const shifted = upto.map((c) => {
-    const t = transposeKeys(c.source, 2)
-    if (t !== null) anyKey = true
-    return { ...c, source: t ?? c.source }
-  })
-  if (!anyKey) {
-    const first = shifted.findIndex((c) => c.written)
-    shifted[first] = { ...shifted[first], source: `set key D\n${shifted[first].source}` }
-  }
+  const shifted = upto.map((c) => ({ ...c, source: transposeKeys(c.source, 2) ?? c.source }))
+  // Move the implicit C too, including music outside an explicit `with key` scope.
+  shifted.unshift({ source: "set key D", written: false })
   const t = readCells(shifted)
   if (t.errors.length > m.errors.length)
     return `moving the key up a whole step gives errors (${t.errors[0].msg})`
@@ -377,6 +380,8 @@ function notTransposed(chain: ChainCell[], m: Music): string | null {
     return `${m.chords.length} chords and ${m.notes.length} notes become ${t.chords.length} and ${t.notes.length} a whole step up`
   const fixedChord = m.chords.findIndex(
     (c, i) =>
+      mod12(c.rootPc + 2) !== t.chords[i].rootPc ||
+      (c.overBass && mod12(c.bassPc + 2) !== t.chords[i].bassPc) ||
       c.midi.length !== t.chords[i].midi.length ||
       c.midi.some((x, j) => mod12(x + 2) !== mod12(t.chords[i].midi[j])),
   )
@@ -396,20 +401,14 @@ export function notDerived(chain: ChainCell[], m: Music): string[] {
   if (letters.length)
     out.push(`letters: typed letter-named pitches ${letters.slice(0, 8).join(" ")}`)
 
-  // Functions, or one chords name sounding under two key-and-mode settings
-  const { calls, chordNames, uses } = reuseOf(m.sources)
-  const settings = new Set(
-    m.blocks.filter((b) => b.chordEvents.length).map((b) => `${b.key} ${b.mode}`),
-  )
-  const reused = [...chordNames].filter((n) => (uses.get(n) ?? 0) >= 2)
-  if (!calls && !(settings.size >= 2 && reused.length))
+  if (!m.chords.length) out.push("chords: no chords sound")
+  if (!usesChordFunction(m) && !reusesChart(m))
     out.push(
-      `functions: no interval function call` +
-        (reused.length ? `; ${reused[0]} is reused under one key and mode` : ""),
+      "functions: no sounding chord uses an interval function or a chart reused in another key or mode",
     )
 
   const roots = typedPitches(m.sources, "tk-root").length
-  const sounding = dedupe(m.chords, (c) => c.label).length
+  const sounding = m.chords.length
   if (roots > sounding / 2)
     out.push(`seed: ${roots} chord roots typed for ${sounding} chords that sound`)
 
@@ -494,7 +493,7 @@ function account(c: Case, run: Run): Account {
       if (!blank(added[0].source)) return { ok: "the added cell isn't empty", chain: [] }
       return none
     }
-    if (!added.length) return { ok: "no cell was added", chain: [] }
+    if (added.length !== 1) return { ok: `${added.length} cells added, not 1`, chain: [] }
     const ids = new Set(added.filter((x) => !blank(x.source)).map((x) => x.id))
     return { ok: null, chain: asChain(now, (cell) => ids.has(cell.id)) }
   }

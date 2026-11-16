@@ -2,8 +2,9 @@
    server, grades what was left in the account, and appends a row per run as it finishes,
    so a stopped run resumes where it was and a failed one is retried by running it again.
      npm run eval -- --reps 1 --case h01 */
-import { appendFile, cp, mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises"
+import { appendFile, cp, mkdir, mkdtemp, readFile, readdir, rm, writeFile } from "node:fs/promises"
 import { existsSync } from "node:fs"
+import { createHash } from "node:crypto"
 import { tmpdir } from "node:os"
 import { basename, join, resolve } from "node:path"
 import { fileURLToPath } from "node:url"
@@ -56,6 +57,11 @@ function parseArgs(argv: string[]) {
     if (!Number.isFinite(n) || n <= 0) throw new Error(`--${name} must be a positive number`)
     return n
   }
+  const integer = (name: string, fallback: number) => {
+    const n = positive(name, fallback)
+    if (!Number.isSafeInteger(n)) throw new Error(`--${name} must be a positive integer`)
+    return n
+  }
   const variant = values.get("variant") ?? "baseline"
   if (!/^(baseline|v\d+)$/.test(variant)) throw new Error("--variant is baseline or v<N>")
   const hostCmd = values.get("host-cmd")
@@ -66,9 +72,9 @@ function parseArgs(argv: string[]) {
     flow: values.get("flow") ?? ".claude/hillclimb/plugin-writes",
     variant,
     model: values.get("model") ?? "claude-sonnet-5-5",
-    reps: Math.floor(positive("reps", 3)),
+    reps: integer("reps", 3),
     timeoutS: positive("timeout-s", 300),
-    concurrency: Math.floor(positive("concurrency", 4)),
+    concurrency: integer("concurrency", 4),
     caseFilter: values.get("case"),
     command: command as string[] | undefined,
     dryRun: flags.has("dry-run"),
@@ -93,15 +99,10 @@ async function readLines<T>(path: string): Promise<T[]> {
 }
 
 const mean = (xs: number[]) => (xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : NaN)
-const sd = (xs: number[]) => {
-  if (xs.length < 2) return 0
-  const m = mean(xs)
-  return Math.sqrt(xs.reduce((a, b) => a + (b - m) ** 2, 0) / (xs.length - 1))
-}
 const fmt = (n: number, digits = 3) => (Number.isFinite(n) ? n.toFixed(digits) : "n/a")
 const fmtPerf = (id: string, n: number) => (id === "cost_usd" ? fmt(n, 4) : fmt(n, 2))
 
-/** Mean over per-case means, with the 95% interval of those case means */
+/** Observed mean over per-case means; a small fixed suite is not a confidence bound. */
 function overCases(rows: Row[], read: (row: Row) => number | undefined) {
   const byCase = new Map<string, number[]>()
   for (const row of rows) {
@@ -113,7 +114,6 @@ function overCases(rows: Row[], read: (row: Row) => number | undefined) {
   const m = mean(means)
   return {
     mean: m,
-    half: means.length ? (1.96 * sd(means)) / Math.sqrt(means.length) : NaN,
     n: means.length,
   }
 }
@@ -127,18 +127,22 @@ function summarize(rows: Row[], errors: ErrorRow[], variant: string): string {
       (classes.size ? [...classes].map(([k, v]) => `${k} ${v}`).join(", ") : "none") +
       ".",
     "",
-    "## Metrics (mean over cases, 95% interval)",
+    "## Metrics (observed mean over cases)",
   )
   for (const m of METRICS) {
     const r = overCases(rows, (row) => row.grade[m.id])
-    lines.push(`- ${m.label}: ${fmt(r.mean)} ± ${fmt(r.half)} (n=${r.n} cases)`)
+    lines.push(`- ${m.label}: ${fmt(r.mean)} (n=${r.n} cases)`)
   }
   lines.push("", "## Per run")
   for (const f of PERF_FIELDS)
     lines.push(`- ${f.label}: ${fmtPerf(f.id, mean(rows.map((r) => Number(r[f.id]))))}`)
-  const cost = rows.reduce((a, r) => a + r.cost_usd, 0)
-  const wall = rows.reduce((a, r) => a + r.latency_s, 0)
-  lines.push("", `Total measured cost: $${fmt(cost, 4)}. Total wall time: ${fmt(wall, 1)} s.`, "")
+  const cost = [...rows, ...errors].reduce((a, r) => a + Number(r.cost_usd ?? 0), 0)
+  const elapsed = rows.reduce((a, r) => a + r.latency_s, 0)
+  lines.push(
+    "",
+    `Total measured cost: $${fmt(cost, 4)}. Summed run time: ${fmt(elapsed, 1)} s.`,
+    "",
+  )
   lines.push("## By group", "")
   const columns = [...METRICS.map((m) => m.label), ...PERF_FIELDS.map((f) => f.label)]
   lines.push(`| group | runs | ${columns.join(" | ")} |`)
@@ -152,6 +156,30 @@ function summarize(rows: Row[], errors: ErrorRow[], variant: string): string {
     lines.push(`| ${group} | ${part.length} | ${cells.join(" | ")} |`)
   }
   return lines.join("\n") + "\n"
+}
+
+/** A resumed variant must still measure the same plugin, engine and graders. */
+async function sourceHash(): Promise<string> {
+  const hash = createHash("sha256")
+  const add = async (path: string) => {
+    hash
+      .update(path)
+      .update("\0")
+      .update(await readFile(join(ROOT, path)))
+      .update("\0")
+  }
+  const walk = async (path: string, allFiles = false) => {
+    const entries = await readdir(join(ROOT, path), { withFileTypes: true })
+    for (const entry of entries.sort((a, b) => a.name.localeCompare(b.name))) {
+      const child = join(path, entry.name)
+      if (entry.isDirectory()) await walk(child, allFiles)
+      else if (entry.isFile() && (allFiles || entry.name.endsWith(".ts"))) await add(child)
+    }
+  }
+  for (const path of ["dsl/js", "mcp/src", "mcp/evals"]) await walk(path)
+  await walk("plugin", true)
+  for (const path of ["mcp/app/context.ts", "package-lock.json"]) await add(path)
+  return hash.digest("hex")
 }
 
 export async function main(argv: string[], deps: Deps = {}): Promise<number> {
@@ -187,7 +215,23 @@ export async function main(argv: string[], deps: Deps = {}): Promise<number> {
     return 0
   }
 
+  const manifestPath = join(outDir, "run.json")
+  const manifest = {
+    model: opts.model,
+    command: opts.command ?? ["claude"],
+    sourceHash: await sourceHash(),
+  }
+  if (existsSync(manifestPath)) {
+    const previous = JSON.parse(await readFile(manifestPath, "utf8"))
+    if (JSON.stringify(previous) !== JSON.stringify(manifest))
+      throw new Error(
+        "This variant used different source or model settings. Use a new --variant or --flow.",
+      )
+  } else if (existsSync(resultsPath) || existsSync(errorsPath)) {
+    throw new Error("Existing results have no run.json provenance. Use a new --variant or --flow.")
+  }
   await mkdir(join(outDir, "traces"), { recursive: true })
+  await writeFile(manifestPath, JSON.stringify(manifest, null, 2) + "\n")
   const statePath = resolve(ROOT, opts.flow, "_state.json")
   if (!existsSync(statePath))
     await writeFile(
@@ -203,6 +247,7 @@ export async function main(argv: string[], deps: Deps = {}): Promise<number> {
   })
   const server = await startServer()
   const hiddenTools = await appOnlyTools()
+  let stopped = false
 
   const runOne = async (c: Case, rep: number) => {
     const state = STATES[c.state]
@@ -252,12 +297,19 @@ export async function main(argv: string[], deps: Deps = {}): Promise<number> {
         )
         return
       }
+      const truncated = host.stopReason === "max_tokens"
+      if (truncated) {
+        graded.scores.pass = 0
+        graded.explanation.pass = [graded.explanation.pass, "model output was truncated"]
+          .filter(Boolean)
+          .join("; ")
+      }
       const row = {
         prompt_id: c.id,
         rep,
         prompt: c.prompt,
         tags: [c.group, c.state, ...(c.harmony ? [c.harmony] : [])],
-        status: host.stopReason === "max_tokens" ? "truncated" : "ok",
+        status: truncated ? "truncated" : "ok",
         stop_reason: host.stopReason,
         model: host.model,
         grade: graded.scores,
@@ -266,11 +318,18 @@ export async function main(argv: string[], deps: Deps = {}): Promise<number> {
         latency_s: Number(latency.toFixed(2)),
         cost_usd: host.costUsd,
         usage: host.usage,
-        meta: { state: c.state, writes: c.writes, notebooks_after: after },
+        meta: {
+          state: c.state,
+          writes: c.writes,
+          notebooks_before: before,
+          notebooks_after: after,
+        },
+        calls: host.calls,
       }
       await writeFile(tracePath, JSON.stringify(host.turns, null, 2))
       await appendFile(resultsPath, JSON.stringify(row) + "\n")
     } catch (error) {
+      if (error instanceof HostError && error.kind === "usage_limit") stopped = true
       const partial = error instanceof HostError ? error.partial : undefined
       const turns = host?.turns ?? partial?.turns
       if (turns) await writeFile(tracePath, JSON.stringify(turns, null, 2))
@@ -294,7 +353,7 @@ export async function main(argv: string[], deps: Deps = {}): Promise<number> {
   try {
     let next = 0
     const worker = async () => {
-      while (next < queue.length) {
+      while (!stopped && next < queue.length) {
         const { c, rep } = queue[next++]
         console.log(`run ${c.id} rep ${rep}`)
         await runOne(c, rep)
@@ -306,9 +365,7 @@ export async function main(argv: string[], deps: Deps = {}): Promise<number> {
     await rm(tmp, { recursive: true, force: true })
   }
 
-  const rows = (await readLines<Row & { status: string }>(resultsPath)).filter(
-    (r) => r.status === "ok",
-  )
+  const rows = await readLines<Row & { status: string }>(resultsPath)
   const errors = await readLines<ErrorRow>(errorsPath)
   const text = summarize(rows, errors, opts.variant)
   await writeFile(join(outDir, "summary.md"), text)
@@ -318,7 +375,7 @@ export async function main(argv: string[], deps: Deps = {}): Promise<number> {
   const missing = cases
     .flatMap((c) => Array.from({ length: opts.reps }, (_, rep) => `${c.id}/${rep}`))
     .filter((key) => !have.has(key))
-  return missing.length ? 1 : 0
+  return missing.length || rows.some((r) => r.status !== "ok") ? 1 : 0
 }
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {

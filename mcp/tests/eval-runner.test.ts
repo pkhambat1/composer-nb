@@ -1,6 +1,6 @@
 import { afterEach, beforeAll, describe, expect, it } from "vitest"
 import { existsSync } from "node:fs"
-import { mkdtemp, readFile, readdir, rm } from "node:fs/promises"
+import { mkdtemp, readFile, readdir, rm, writeFile } from "node:fs/promises"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { fileURLToPath } from "node:url"
@@ -167,7 +167,7 @@ describe("the runner", () => {
       tool_errors: 0,
     },
   })
-  const run = async (flow: string) => {
+  const run = async (flow: string, extra: string[] = []) => {
     const argv = [
       "--flow",
       flow,
@@ -179,6 +179,7 @@ describe("the runner", () => {
       JSON.stringify(command),
       "--model",
       "claude-stub-1",
+      ...extra,
     ]
     return main(argv, { cases: [mk("a"), mk("b"), mk("c")], grade })
   }
@@ -203,12 +204,50 @@ describe("the runner", () => {
     expect(new Set(rows.map((r) => `${r.prompt_id}/${r.rep}`)).size).toBe(4)
     expect(rows[0].tags).toEqual(["drums", "empty"])
     expect(rows[0].cost_usd).toBe(0.01)
+    expect(rows[0].calls[0].name).toBe("create_notebook")
+    expect(rows[0].meta.notebooks_before).toEqual([])
     expect(await readdir(join(out, "traces"))).toHaveLength(4)
     expect(existsSync(join(dir, "_state.json"))).toBe(true)
     expect(existsSync(join(out, "summary.md"))).toBe(true)
+    expect(JSON.parse(await readFile(join(out, "run.json"), "utf8"))).toMatchObject({
+      model: "claude-stub-1",
+      sourceHash: expect.stringMatching(/^[a-f0-9]{64}$/),
+    })
     expect(await run(dir)).toBe(0)
     expect(await lines(join(out, "results.jsonl"))).toHaveLength(4)
   }, 60000)
+
+  it("keeps truncated runs in the scores as failures and exits 1", async () => {
+    const dir = await flowDir()
+    process.env.STUB_MODE = "truncated"
+    expect(await run(dir)).toBe(1)
+    const out = join(dir, "baseline")
+    const rows = await lines(join(out, "results.jsonl"))
+    expect(rows).toHaveLength(4)
+    expect(rows.every((row) => row.status === "truncated" && row.grade.pass === 0)).toBe(true)
+    const summary = await readFile(join(out, "summary.md"), "utf8")
+    expect(summary).toContain("Rows scored: 4")
+    expect(summary).toContain("pass: 0.000")
+    expect(await run(dir)).toBe(1)
+  }, 60000)
+
+  it("refuses to mix different model or source settings into an existing variant", async () => {
+    const dir = await flowDir()
+    await run(dir)
+    await expect(run(dir, ["--model", "another-model"])).rejects.toThrow(
+      /different source or model/,
+    )
+    const path = join(dir, "baseline", "run.json")
+    const manifest = JSON.parse(await readFile(path, "utf8"))
+    await writeFile(path, JSON.stringify({ ...manifest, sourceHash: "different" }))
+    await expect(run(dir)).rejects.toThrow(/different source or model/)
+    expect(await lines(join(dir, "baseline", "results.jsonl"))).toHaveLength(4)
+  }, 60000)
+
+  it.each(["reps", "concurrency"])("rejects a fractional --%s", async (option) => {
+    const dir = await flowDir()
+    await expect(run(dir, [`--${option}`, "0.5"])).rejects.toThrow(/positive integer/)
+  })
 
   it("records failures in errors.jsonl and exits 1", async () => {
     const dir = await flowDir()
@@ -219,5 +258,17 @@ describe("the runner", () => {
     const errors = await lines(join(out, "errors.jsonl"))
     expect(errors).toHaveLength(4)
     expect(errors[0].class).toBe("harness")
+  }, 60000)
+
+  it("stops scheduling runs at the account limit and records its reason", async () => {
+    const dir = await flowDir()
+    process.env.STUB_MODE = "usage-limit"
+    expect(await run(dir, ["--concurrency", "1"])).toBe(1)
+    const errors = await lines(join(dir, "baseline", "errors.jsonl"))
+    expect(errors).toHaveLength(1)
+    expect(errors[0]).toMatchObject({
+      class: "usage_limit",
+      message: expect.stringContaining("5-hour limit"),
+    })
   }, 60000)
 })

@@ -25,6 +25,7 @@ function errorsOf(cells: Snapshot["cells"], index: number): string {
 export function contextText(doc: NotebookDocument, snapshot: Snapshot): string {
   const index = snapshot.cells.findIndex((cell) => cell.id === snapshot.selectedId)
   const cell = snapshot.cells[index]
+  const errors = cell ? errorsOf(snapshot.cells, index) : ""
   const where = !cell
     ? "No cell selected"
     : snapshot.selection?.selectedText
@@ -36,9 +37,7 @@ export function contextText(doc: NotebookDocument, snapshot: Snapshot): string {
       ? ` Its cell ID is ${cell.id} and it reads:\n\`\`\`composer-nb\n${cell.source}\n\`\`\``
       : "") +
     // So a fix goes straight to update_music_cell, with no parse to find what's wrong
-    (cell && errorsOf(snapshot.cells, index)
-      ? `\nIt doesn't play. Its errors:${errorsOf(snapshot.cells, index)}`
-      : "") +
+    (errors ? `\nIt doesn't play. Its errors:${errors}` : "") +
     "\nPass this notebookId to the notebook tools. Read get_notebook for the other cells."
   )
 }

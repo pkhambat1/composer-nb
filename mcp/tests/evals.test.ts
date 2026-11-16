@@ -78,7 +78,7 @@ describe("a null run", () => {
 
 describe("harmony", () => {
   const harmonyOf = (id: string, source: string) => {
-    const g = scored(id, create(start("empty"), source))
+    const g = scored(id, create(start("empty"), `set tempo 64\n${source}`))
     expect(g.scores.saved).toBe(1)
     expect(g.scores.harmony).toBe(0)
     return g
@@ -118,7 +118,7 @@ play piano: chords prog
 play piano: chords prog`
     const g = harmonyOf("h01", source)
     expect(g.scores.fits).toBe(1)
-    expect(g.explanation.harmony).toMatch(/^functions: .*prog is reused under one key/)
+    expect(g.explanation.harmony).toMatch(/^functions:/)
   })
 
   it("fails notes stacked to stand in for chords", () => {
@@ -134,7 +134,7 @@ play piano: {
   notes fifth(line),
 }`
     const g = harmonyOf("h01", source)
-    expect(g.explanation.harmony).toMatch(/^stacked notes/)
+    expect(g.explanation.harmony).toMatch(/stacked notes/)
   })
 
   it("fails 1 5 6 4 however it's built", () => {
@@ -150,17 +150,46 @@ play piano: chords loop`
   })
 
   it("fails music that doesn't move with the key", () => {
-    const source = ORACLE_CELLS.h13
-      .replace("set key A\n", "")
-      .concat("\nplay (with key A { pattern { piano: chords one, } })")
+    const source = ORACLE_CELLS.h13.replace("1dom7", "A7")
     const g = harmonyOf("h13", source)
-    expect(g.explanation.harmony).toMatch(/^transposes/)
+    expect(g.explanation.harmony).toMatch(/transposes/)
   })
 
-  it("wants a function in an appended cell too", () => {
+  it("fails an append that replays the original cycle without moving it", () => {
     const g = scored("w02", add(read(start("cycle")), "play organ: chords cycle"))
     expect(g.scores.saved).toBe(1)
-    expect(g.explanation.harmony).toMatch(/^functions/)
+    expect(g.scores.fits).toBe(0)
+    expect(g.scores.pass).toBe(0)
+  })
+
+  it("doesn't credit an unused function declaration", () => {
+    const g = harmonyOf(
+      "h01",
+      `set key F#
+set mode minor
+chords seed = 1m7
+chords unused = fifth(1)
+play pattern { piano: chords seed, } for 8 bars`,
+    )
+    expect(g.scores.fits).toBe(1)
+    expect(g.explanation.harmony).toMatch(/^functions:/)
+  })
+
+  it("moves the implicit key as well as explicit scopes, including a named pattern", () => {
+    const source = `chords iiVI = 2m7 5dom7|1maj7 -
+pattern cadence = { piano: chords iiVI, }
+play cadence
+play with key F { cadence }
+play with key Bb { cadence }`
+    expect(scored("h15", create(start("empty"), source)).explanation).toEqual({})
+  })
+
+  it("counts repeated chord attacks and each instrument in the seed ratio", () => {
+    const source = ORACLE_CELLS.h10.replace(
+      "chords one = 1\nchords call = one fourth(one)|sixth(one) fifth(one)",
+      "chords call = 1 4|6 5",
+    )
+    expect(scored("h10", create(start("empty"), source)).explanation).toEqual({})
   })
 
   it("counts typed pitches against those that sound", () => {
@@ -172,6 +201,69 @@ play piano: chords loop`
 })
 
 describe("fits", () => {
+  const rejects = (id: string, source: string, why: RegExp) => {
+    const g = scored(id, create(start("empty"), source))
+    expect(g.scores.saved).toBe(1)
+    expect(g.scores.fits).toBe(0)
+    expect(g.scores.pass).toBe(0)
+    expect(g.explanation.fits).toMatch(why)
+  }
+
+  it("rejects a fast answer to the slow request", () => {
+    rejects("h01", ORACLE_CELLS.h01.replace("tempo 64", "tempo 240"), /90 BPM/)
+  })
+
+  it("rejects a melody in place of requested chords", () => {
+    rejects(
+      "h01",
+      `set tempo 64
+set key F#
+set mode minor
+notes riff = 1-------third(1)-------
+play pattern { piano: notes riff, } for 8 bars`,
+      /no piano chords/,
+    )
+  })
+
+  it("rejects ii V I on repeat when the prompt rules it out", () => {
+    rejects(
+      "h02",
+      "set key Bb\nchords turn = 2m7 5dom7|1maj7 -\nplay pattern { piano: chords turn, } for 4 bars",
+      /only repeats ii V I/,
+    )
+  })
+
+  it("checks chord tones when returning to the original phrase", () => {
+    rejects(
+      "h05",
+      ORACLE_CELLS.h05.replace("third(seed)|seed", "third(seed)|1M 4M|6m 5M"),
+      /bars 5-6/,
+    )
+  })
+
+  it("requires two bars from each keyboard", () => {
+    rejects(
+      "h10",
+      ORACLE_CELLS.h10.replace("one fourth(one)|sixth(one) fifth(one)", "one fourth(one)"),
+      /bars/,
+    )
+  })
+
+  it("checks the answer's rhythm as well as its roots", () => {
+    rejects(
+      "h10",
+      ORACLE_CELLS.h10.replace(
+        "chords fifth(call)",
+        "chords fifth(one) -|fifth(fourth(one)) fifth(sixth(one)) fifth(fifth(one)) -",
+      ),
+      /chords and rhythm/,
+    )
+  })
+
+  it("requires each literal chord to last its requested bar", () => {
+    rejects("l01", "play piano: chords Am _|F _|C _|G _", /whole bar/)
+  })
+
   it("fails the right cell in the wrong key", () => {
     const g = scored(
       "h01",
@@ -245,5 +337,10 @@ describe("writes", () => {
     update(run, ORACLE_CELLS.w06)
     add(run, ORACLE_CELLS.w02.replace("chords cycle", "chords 1m"))
     expect(scored("w02", run).scores.saved).toBe(0)
+  })
+
+  it("rejects an extra cell when the request was to add one", () => {
+    const run = add(add(start("cycle"), ORACLE_CELLS.w02), "")
+    expect(scored("w02", run).explanation.saved).toMatch(/2 cells added/)
   })
 })

@@ -9,12 +9,12 @@ import type { Theme } from "../../playground/src/notebook/index.ts"
 import logo from "./composer-mark.png"
 import {
   notebookListSchema,
-  notebookOf,
   notebookSummarySchema,
   type NotebookDocument,
   type NotebookList,
 } from "../src/notebook-document.ts"
 import { NotebookApp } from "./NotebookApp.tsx"
+import { notebookFromResult } from "./notebook-result.ts"
 
 export type NotebookView = NotebookDocument | NotebookList
 // A notebook that isn't on the list's first page is still shown in it while it is open
@@ -80,7 +80,9 @@ export function NotebookBrowser({
   const show = React.useCallback(
     async (name: string, args: Record<string, unknown>) => {
       if (leave.current && !(await leave.current())) return // unsaved, and it says so
-      const notebook = notebookOf(await call(name, args))
+      const notebook = await notebookFromResult(await call(name, args), (notebookId) =>
+        call("get_notebook", { notebookId }),
+      )
       if (!notebook) throw new Error("The server returned an invalid notebook.")
       setOpen(notebook)
     },

@@ -1,10 +1,22 @@
 /* A stand-in for `claude -p` in the eval's tests: connects to the server named by
    --mcp-config, creates one notebook and prints stream-json the way the real host does.
-   STUB_MODE: hang | crash | wrong-model */
+   STUB_MODE: hang | crash | wrong-model | truncated | usage-limit */
 import { Client } from "@modelcontextprotocol/sdk/client/index.js"
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js"
 
 const mode = process.env.STUB_MODE
+if (mode === "usage-limit") {
+  console.log(
+    JSON.stringify({
+      type: "assistant",
+      message: {
+        model: "<synthetic>",
+        content: [{ type: "text", text: "You've hit your 5-hour limit · resets 8:40pm" }],
+      },
+    }),
+  )
+  process.exit(1)
+}
 if (mode === "hang") setInterval(() => {}, 1000)
 else {
   if (mode === "crash") {
@@ -81,6 +93,7 @@ else {
     num_turns: 2,
     duration_ms: 5,
     result: "Saved.",
+    stop_reason: mode === "truncated" ? "max_tokens" : "end_turn",
   })
   await client.close()
 }
