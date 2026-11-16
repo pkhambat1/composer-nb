@@ -7,13 +7,12 @@ import {
   degreeNumber,
   midiToName,
   pastScale,
-  pastScaleMessage,
   type Voiced,
   keyOf,
 } from "./chords.ts"
 import { intervalCall, intervalSteps, splitOutside, tokenize, splitBars } from "./intervals.ts"
 import type { State } from "./state.ts"
-import { atOffset, reportIn, type Report } from "./diagnostics.ts"
+import { atOffset, message, reportIn, type Report } from "./diagnostics.ts"
 import { type SourceText, tokenSources } from "./source.ts"
 import { chordSlot, expandChordTokens } from "./values/chart.ts"
 import {
@@ -140,23 +139,15 @@ function inspect(source: string, st: State, ln: number, err: Report): PrintedVal
   const value = explicit ? source.slice(explicit[0].length).trim() : source
   const inferred = explicit ? new Set([explicit[1]]) : inferredTypes(value, st)
   if (!value) {
-    err(ln, "print needs a value after its type", explicit![1])
+    err(ln, message("print.needsValue"), explicit![1])
     return null
   }
   if (inferred.has("pattern") || inferred.has("block")) {
-    err(
-      ln,
-      "print inspects notes, chords and steps; give it a musical value from the block",
-      source,
-    )
+    err(ln, message("print.notMusical"), source)
     return null
   }
   if (inferred.size > 1) {
-    err(
-      ln,
-      "These values have different types. Give print separate arguments: print(melody, harmony)",
-      source,
-    )
+    err(ln, message("print.mixedTypes"), source)
     return null
   }
   const type = ([...inferred][0] ?? "notes") as PrintedValue["type"]
@@ -174,7 +165,7 @@ function inspect(source: string, st: State, ln: number, err: Report): PrintedVal
     const parts = stepParts(value, st, report, ln, null, false)
     if (!parts) return null
     if (parts.toEnd) {
-      report(ln, "print needs a finite value; ... needs a containing block", "...")
+      report(ln, message("print.finite"), "...")
       return null
     }
     for (const t of parts.tokens)
@@ -189,7 +180,7 @@ function inspect(source: string, st: State, ln: number, err: Report): PrintedVal
     for (let i = 0; i < bars.length; i++) {
       if (bars[i].length === 1 && bars[i][0] === "%") {
         if (!i) {
-          report(ln, "% repeats the bar before it, but this is the first bar", "%")
+          report(ln, message("chord.firstBar"), "%")
           return null
         }
         bars[i] = bars[i - 1]
@@ -218,11 +209,7 @@ function inspect(source: string, st: State, ln: number, err: Report): PrintedVal
           (n) => n + st.transpose < 0 || n + st.transpose > 127,
         )
       ) {
-        tokenReport(
-          ln,
-          `"${token}" goes outside playable MIDI notes 0 to 127`,
-          source?.span ?? token,
-        )
+        tokenReport(ln, message("note.outsideMidiPrinted", { tok: token }), source?.span ?? token)
         continue
       }
       items.push({
@@ -246,7 +233,7 @@ function inspect(source: string, st: State, ln: number, err: Report): PrintedVal
     const parts = noteParts(value, st, report, ln, null, 0, false)
     if (!parts) return null
     if (parts.open) {
-      report(ln, "print needs a finite value; ... needs a containing block", "...")
+      report(ln, message("print.finite"), "...")
       return null
     }
     // Each note, with how it's written in the cell: itself, or the name it comes from
@@ -255,7 +242,11 @@ function inspect(source: string, st: State, ln: number, err: Report): PrintedVal
       const source = tokenSources(parts.tokens)?.[i]
       const named = st.words[token]
       if (named && named.type !== "notes")
-        reportIn(report, source)(ln, `${token} is ${named.type}, so it can't go in notes`, token)
+        reportIn(report, source)(
+          ln,
+          message("name.wrongType", { name: token, type: named.type, into: "notes" }),
+          token,
+        )
       else
         for (const t of named?.tokens ?? [token]) tokens.push({ token: t, written: token, source })
     }
@@ -284,12 +275,16 @@ function inspect(source: string, st: State, ln: number, err: Report): PrintedVal
         }
         const root = step
         if (root.degree !== undefined && !root.numeric && pastScale(key, root.degree)) {
-          tokenReport(ln, pastScaleMessage(key), written)
+          tokenReport(
+            ln,
+            message("scale.pastOctave", { mode: key.mode, degrees: key.scale.length }),
+            written,
+          )
           continue
         }
         const pitch = resolveNote(step, st, key)
         if (pitch.midi + st.transpose < 0 || pitch.midi + st.transpose > 127) {
-          tokenReport(ln, `"${step.label}" goes outside playable MIDI notes 0 to 127`, written)
+          tokenReport(ln, message("note.outsideMidiPrinted", { tok: step.label }), written)
           continue
         }
         let text = step.label!
@@ -310,7 +305,7 @@ function inspect(source: string, st: State, ln: number, err: Report): PrintedVal
       }
     }
   }
-  if (!items.length && !failed) report(ln, "print needs a musical value", source)
+  if (!items.length && !failed) report(ln, message("print.needsMusical"), source)
   if (failed) return null
   const printed = { source, type, text: "", items }
   printed.text =
@@ -328,7 +323,7 @@ export function printValue(text: string, st: State, ln: number, err: Report): Pr
   text = text.trim()
   err = reportIn(err, err.source?.select(text))
   if (!text.startsWith("(")) {
-    err(ln, "print takes parentheses: print(1, 2, 3)", "print")
+    err(ln, message("print.parens"), "print")
     return null
   }
   let depth = 1
@@ -338,15 +333,11 @@ export function printValue(text: string, st: State, ln: number, err: Report): Pr
     else if (text[end] === ")") depth--
   }
   if (depth) {
-    err(ln, "print(...) is missing its closing )", atOffset(err, 0, 1, "("))
+    err(ln, message("print.unclosed"), atOffset(err, 0, 1, "("))
     return null
   }
   if (text.slice(end).trim()) {
-    err(
-      ln,
-      "Nothing follows print(...); put the next statement on its own line",
-      err.source?.slice(end).trim().span ?? text.slice(end),
-    )
+    err(ln, message("print.trailing"), err.source?.slice(end).trim().span ?? text.slice(end))
     return null
   }
   const written = splitOutside(text.slice(1, end - 1), ",")
@@ -356,11 +347,7 @@ export function printValue(text: string, st: State, ln: number, err: Report): Pr
     // The empty argument with what's on either side of it: a comma, or a parenthesis
     const from = written.slice(0, empty).reduce((n, a) => n + a.length + 1, 0)
     const to = from + written[empty].length + 2
-    err(
-      ln,
-      "print needs a value for each argument: print(1, 2, 3)",
-      atOffset(err, from, to, text.slice(from, to)),
-    )
+    err(ln, message("print.emptyArgument"), atOffset(err, from, to, text.slice(from, to)))
     return null
   }
   let offset = 1

@@ -22,7 +22,7 @@ import { itemAt, type Item, type Playable } from "./sequence.ts"
 import { pacing, setInBlock, withState } from "./settings.ts"
 import { cloneState, type Line, type Section, type State } from "./state.ts"
 import { meterOf } from "./time.ts"
-import { reportIn, type Report } from "./diagnostics.ts"
+import { message, reportIn, type Report } from "./diagnostics.ts"
 import { sourceOf } from "./parts.ts"
 import { SourceText } from "./source.ts"
 
@@ -63,12 +63,7 @@ function readLines(
   return read.filter((l) => {
     const own = l.kind === "sequence" && l.items[0].with && pacing(l.items[0].with)
     if (!own) return true
-    err(
-      l.ln,
-      `The lines of a play or a pattern play together, so they share one ${own.name}. Put the with around the whole play, ` +
-        `with ${own.name} ${own.value} { play ... }, or on a part that plays in order: ( with ${own.name} ${own.value} { ... } )`,
-      l.items[0].shown!,
-    )
+    err(l.ln, message("with.sharedPace", { name: own.name, value: own.value }), l.items[0].shown!)
     return false
   })
 }
@@ -78,8 +73,7 @@ export const loopName = (it: Item) =>
   it.name || (it.items ? "This group" : it.with ? "This with" : "This pattern")
 
 // Each instrument has one line in a block. Its layers go in a block on that line.
-const secondLine = (name: string, where: string) =>
-  `${name} already has a line ${where}. To layer it, put its lines in a block: ${name}: { ... }`
+const secondLine = (name: string, where: string) => message("block.secondLine", { name, where })
 // An instrument's second line, where it's written: its head, and the first of what it
 // plays, which tells it from a first line written beside it
 function lineWritten(l: PartLine) {
@@ -154,7 +148,7 @@ export function blockClip(
   if (!parts.length && !once.length && !repeated.length) {
     // A line that's already been reported as a mistake doesn't need this too.
     if (lines.length && read.length === lines.length) {
-      err(lines[0].ln, `Nothing to play ${ctx.where}`, ctx.at)
+      err(lines[0].ln, message("block.nothingToPlay", { where: ctx.where }), ctx.at)
     }
     return null
   }
@@ -187,7 +181,7 @@ export function sectionClip(
     return blockClip(sec.lines, state, err, ctx, stack, sec.bars)
   }
   if (stack.includes(sec.name!)) {
-    err(ln, `${sec.name} plays itself, so it would never end`, sec.name!)
+    err(ln, message("block.playsItself", { name: sec.name! }), sec.name!)
     return null
   }
   const clip = blockClip(
@@ -231,7 +225,7 @@ export function checkSection(
         const inner = it.with ? withState(it.with, at, it.span?.line ?? ln, err) : at
         if (inner) checkSection(it.block, inner, err, owner)
       } else if (it.name === owner)
-        err(ln, `${owner} plays itself, so it would never end`, itemAt(it))
+        err(ln, message("block.playsItself", { name: owner }), itemAt(it))
       else if (!at.sections[it.name!]) err(ln, undefinedName(it.name!, at), itemAt(it))
     }
   }
@@ -253,8 +247,8 @@ export function checkSection(
     err(
       sec.ln,
       sec.anon
-        ? `This ${sec.type ?? "pattern"} has nothing to play`
-        : `${sec.name} has nothing to play`,
+        ? message("block.emptyAnon", { type: sec.type ?? "pattern" })
+        : message("block.empty", { name: sec.name! }),
       sec.anon ? (sec.type ?? "pattern") : sec.name!,
     )
   }
@@ -300,11 +294,7 @@ export function sequenceClip(
         : sectionClip(sec!, state, itemReport, ln, stack)
     if (!clip) return null
     if (it.bars && !it.block && sec?.type === "block") {
-      err(
-        ln,
-        `${sec.name} is a block and plays once. Put its length in its declaration, or use a pattern to repeat.`,
-        itemAt(it),
-      )
+      err(ln, message("block.playsOnce", { name: sec.name! }), itemAt(it))
       return null
     }
     if (it.bars && !it.block) {

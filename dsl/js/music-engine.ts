@@ -4,6 +4,7 @@ import * as Tone from "tone"
 import * as ChordLookup from "./chord-lookup.ts"
 import * as Drums from "./drums.ts"
 import { midiToName, spellLike, type Voiced } from "./chords.ts"
+import { message } from "./diagnostics.ts"
 import type { ChordSound, NoteSound, SoundEvent } from "./clips.ts"
 import { parseCell, type Output } from "./language.ts"
 import type { State } from "./state.ts"
@@ -211,9 +212,7 @@ async function renderNow(parsed: Playable): Promise<Tone.ToneAudioBuffer> {
   }
 
   const drumKit = parsed.drumEvents.length ? await Drums.prepareKit(parsed.drumEvents) : null
-  parsed.warnings = drumKit?.missing.length
-    ? ["Couldn't load the recorded drum kit, so the drums use synthesized sounds"]
-    : []
+  parsed.warnings = drumKit?.missing.length ? [message("kit.unloaded")] : []
 
   const totalSec = Math.max(1.0, parsed.totalSec + 1.8)
   const buffer = await Tone.Offline(

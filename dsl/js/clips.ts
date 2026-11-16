@@ -2,7 +2,7 @@
    drums' and the pitched instruments', and spans that say what bar grid is over them.
    layer plays a block's lines, and the clips already made from its patterns, together:
    whatever repeats fits, the lower line wins a moment, and swing moves the sound. */
-import type { At, Report } from "./diagnostics.ts"
+import { message, type At, type Report } from "./diagnostics.ts"
 import type { PartLine, Played } from "./lines.ts"
 import { readPart } from "./lines.ts"
 import type { State } from "./state.ts"
@@ -183,12 +183,9 @@ export function layer(
       )
       if (!own) continue
       const which = own.time !== meter.time ? "time" : own.tempo !== meter.tempo ? "tempo" : "swing"
-      err(
-        r.ln,
-        `${r.what} changes the ${which}, so it can't sound together with other lines. ` +
-          `Play it on its own, or put the with around the whole play: with ${which} ${which === "time" ? own.time : which === "tempo" ? own.tempo : own.swing ? "on" : "off"} { play ... }`,
-        r.at,
-      )
+      const value =
+        which === "time" ? own.time : which === "tempo" ? own.tempo : own.swing ? "on" : "off"
+      err(r.ln, message("fit.ownPace", { what: r.what, which, value }), r.at)
       return null
     }
   }
@@ -231,7 +228,7 @@ export function layer(
   if (!bars && !lengths.length) {
     err(
       ctx.ln ?? read[0].part.ln,
-      `Every line ${ctx.where} ends in ..., so nothing says how long it is. Say so: ${ctx.sized}`,
+      message("fit.openEnded", { where: ctx.where, sized: ctx.sized }),
       ctx.at,
     )
     return null
@@ -242,11 +239,7 @@ export function layer(
     // A length too short for a single tick would be a clip of no length, which nothing
     // can be filled with.
     if (totalTicks < 1) {
-      err(
-        ctx.ln!,
-        `${fmt(bars)} bars is shorter than the shortest note, so nothing fits in it`,
-        ctx.at,
-      )
+      err(ctx.ln!, message("fit.tooShort", { bars: fmt(bars) }), ctx.at)
       return null
     }
   } else if (ctx.repeats) {
@@ -258,8 +251,7 @@ export function layer(
     if (totalTicks > MAX_BARS * barTicks) {
       err(
         ctx.ln ?? loops[0].ln,
-        `What's ${ctx.where} only lines up again after more than ${MAX_BARS} bars. ` +
-          `Say how long it is: ${ctx.sized}`,
+        message("fit.tooLong", { where: ctx.where, max: MAX_BARS, sized: ctx.sized }),
         ctx.at,
       )
       return null
@@ -268,7 +260,11 @@ export function layer(
   if (named > totalTicks) {
     err(
       placed.ln!,
-      `${ctx.what} is ${sayTicks(totalTicks, st, barTicks)} long, so it has no bar ${placed.until}`,
+      message("fit.noBar", {
+        what: ctx.what,
+        length: sayTicks(totalTicks, st, barTicks),
+        bar: placed.until!,
+      }),
       PLACED,
     )
     return null
@@ -278,8 +274,12 @@ export function layer(
     if ("open" in p && p.open && p.ticks > totalTicks && !(ctx.cuts && bars)) {
       err(
         p.part.ln,
-        `${ctx.what} is ${sayTicks(totalTicks, st, barTicks)} long, and the ${p.part.name} ` +
-          `line's hits run ${sayTicks(p.ticks, st, barTicks)} before its ...`,
+        message("fit.openRuns", {
+          what: ctx.what,
+          length: sayTicks(totalTicks, st, barTicks),
+          part: p.part.name,
+          hits: sayTicks(p.ticks, st, barTicks),
+        }),
         lineHead(p.part),
       )
       return null

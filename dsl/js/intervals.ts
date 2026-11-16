@@ -1,6 +1,7 @@
 /* Scale-relative interval calls. Parsing keeps the argument symbolic: a named
    phrase is evaluated in the key and mode where it plays, not where it was named. */
 import { letterStep, midiToName, type Key } from "./chords.ts"
+import { message } from "./diagnostics.ts"
 import { locatedTokens, tokenSources, type SourceText } from "./source.ts"
 import { INTERVALS } from "./vocab.ts"
 
@@ -31,8 +32,6 @@ export function splitOutside(text: string, separator: string): string[] {
 }
 
 export const isIntervalCall = (text: string) => /^[\^~]?[a-z][A-Za-z0-9]*\s*\(/.test(text)
-export const OCTAVE_HELP =
-  "Octave apostrophes are no longer supported. Use octave(1) to move up, octave(1, -1) to move down, or a higher degree such as 8 or 15"
 
 // Keep calls intact when splitting a musical line, including malformed calls
 // whose closing parenthesis is still being typed. The editor uses the same spans
@@ -66,29 +65,25 @@ export function intervalCall(text: string): CallResult | null {
   const head = /^([\^~]?)([a-z][A-Za-z0-9]*)\s*\(/.exec(text)
   if (!head) return null
   const name = head[2] as keyof typeof INTERVALS
-  if (!Object.hasOwn(INTERVALS, name))
-    return {
-      error: `"${name}" isn't an interval function. Use second(...), third(...), fourth(...), fifth(...), or octave(...)`,
-    }
+  if (!Object.hasOwn(INTERVALS, name)) return { error: message("interval.unknown", { name }) }
   let depth = 1
   let end = head[0].length
   for (; end < text.length && depth; end++) {
     if (text[end] === "(") depth++
     else if (text[end] === ")") depth--
-    if (depth > 32) return { error: "Interval functions can nest at most 32 levels" }
+    if (depth > 32) return { error: message("interval.nested") }
   }
-  if (depth) return { error: `${name}(...) is missing its closing )` }
+  if (depth) return { error: message("interval.unclosed", { name }) }
   const args = splitOutside(text.slice(head[0].length, end - 1), ",")
-  if (args.length > 2)
-    return { error: `${name} takes a value and an optional integer count: ${name}(phrase, 2)` }
+  if (args.length > 2) return { error: message("interval.arguments", { name }) }
   const body = args[0].trim()
-  if (!body) return { error: `${name} needs notes or chords inside its parentheses: ${name}(1)` }
+  if (!body) return { error: message("interval.needsValue", { name }) }
   const count = args.length === 1 ? 1 : Number(args[1].trim())
   if (
     args.length === 2 &&
     (!/^[+-]?\d+$/.test(args[1].trim()) || !Number.isSafeInteger(count) || Math.abs(count) > 64)
   )
-    return { error: `${name}'s count is an integer from -64 to 64: ${name}(phrase, -1)` }
+    return { error: message("interval.count", { name }) }
   return { call: { name, body, count, end, prefix: head[1] } }
 }
 

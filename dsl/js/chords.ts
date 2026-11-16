@@ -138,10 +138,6 @@ export const NUMERALS = ["i", "ii", "iii", "iv", "v", "vi", "vii"]
 // Whether a key's scale has no such degree: whole tone has six, so its 7 and vii are past it
 export const pastScale = (key: Key, degree: number) => degree > key.scale.length
 
-// The message for a degree or numeral past the key's scale
-export const pastScaleMessage = (key: Key) =>
-  `${key.mode} has ${key.scale.length} degrees per octave, so vii isn't in its first octave. Use ${key.scale.length + 1} for the next tonic`
-
 // The key as ABC writes it in its K: field: D, Am, D dor.
 export const abcKey = (key: Key) => key.root + modeInfo(key.mode)!.abc
 

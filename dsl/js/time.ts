@@ -168,7 +168,7 @@ export function lengthAt(text: string) {
 export function singularLength(text: string, ln: number, err: Report): boolean {
   const m = /(\S*(?:\d|\)))\s+(bar|beat|step)(?![A-Za-z0-9])/.exec(text)
   if (!m) return false
-  err(ln, `Lengths are always plural, whatever the number: ${m[1]} ${m[2]}s`, m[0])
+  err(ln, message("length.plural", { number: m[1], unit: m[2] }), m[0])
   return true
 }
 

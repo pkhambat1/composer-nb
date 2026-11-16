@@ -1,9 +1,9 @@
 /* Sequences: what one line of a block plays, as items. A pattern's name, a block, a with
    and its block, or a group in brackets that plays what's in it in order, each with the
    length in front of it, if any. */
-import { atOffset, reportIn, type At, type Report } from "./diagnostics.ts"
+import { atOffset, message, reportIn, type At, type Report } from "./diagnostics.ts"
 import { undefinedName } from "./resolve.ts"
-import { readWithHeader, WITH_HELP, type SettingWords } from "./settings.ts"
+import { readWithHeader, type SettingWords } from "./settings.ts"
 import { isBraces, textOf, sourcesOf, located } from "./parts.ts"
 import { SourceText } from "./source.ts"
 import type { Span } from "./syntax.ts"
@@ -18,8 +18,6 @@ export type Playable = Partial<Section> & {
   anon?: boolean
   shown?: string // a with's header, as written
 }
-// What a block without a type is told
-const UNTYPED_BRACES = "These braces need a type: pattern { ... } repeats, block { ... } plays once"
 // One thing a line plays
 export type Item = {
   span?: Span
@@ -125,7 +123,7 @@ export function readSequence(
   }
   const thing = (inGroup: boolean): Item | null => {
     if (ch(i) === "*") {
-      fail(`* only multiplies numbers. To repeat, put a length in front: 4 bars ${said(last)}`, "*")
+      fail(message("group.multiply", { said: said(last) }), "*")
       return null
     }
     let bars = 0
@@ -135,14 +133,14 @@ export function readSequence(
     const length = head.slice(0, head.length - len.rest.length).trim()
     if (len.has) {
       if (!(len.bars > 0 && len.bars <= MAX_BARS)) {
-        fail(`A length is a number of bars up to ${MAX_BARS}, e.g. 3 bars`, length)
+        fail(message("length.range", { max: MAX_BARS }), length)
         return null
       }
       const start = i
       const trailing = head.length - head.trimEnd().length
       i += len.rest ? head.length - trailing - len.rest.length : head.length
       if (i >= end) {
-        fail(`${textOf(partsOf(start, end))} of what? Put a pattern or its name after it`, length)
+        fail(message("group.lengthOf", { written: textOf(partsOf(start, end)) }), length)
         return null
       }
       bars = len.bars
@@ -160,7 +158,7 @@ export function readSequence(
       while (j < end && ch(j) && ch(j) !== "\n") j++
       const block = units[j]
       if (!isBraces(block)) {
-        fail(WITH_HELP, "with")
+        fail(message("with.help"), "with")
         return null
       }
       // A with in a group can be on a later line than the line the group starts on
@@ -184,7 +182,7 @@ export function readSequence(
     const block = units[i]
     if (isBraces(block)) {
       if (!block.type) {
-        fail(UNTYPED_BRACES, "{")
+        fail(message("brace.untyped"), "{")
         return null
       }
       i++
@@ -207,10 +205,7 @@ export function readSequence(
     if (!name) {
       const tok = textFrom(i).split(/\s/)[0]
       fail(
-        /^\d/.test(tok)
-          ? `"${tok}" needs bars after it, e.g. 3 bars groove`
-          : `"${tok}" doesn't belong here. A line plays a pattern's name, a block, or ( ) ` +
-              "with what plays in order in it, and a length can go in front: 4 bars groove",
+        /^\d/.test(tok) ? message("group.needsBars", { tok }) : message("group.notHere", { tok }),
         tok,
       )
       return null
@@ -226,13 +221,13 @@ export function readSequence(
     for (;;) {
       ws()
       if (i >= end) {
-        fail("A ( is missing its )", here(open, open + 1, "("))
+        fail(message("group.unclosed"), here(open, open + 1, "("))
         return null
       }
       if (ch(i) === ")") {
         i++
         if (!out.length) {
-          fail("These brackets have nothing in them", here(open, i, units.slice(open, i).join("")))
+          fail(message("group.empty"), here(open, i, units.slice(open, i).join("")))
           return null
         }
         return out
@@ -248,7 +243,7 @@ export function readSequence(
   ws()
   if (i < end) {
     if (ch(i) === ")") {
-      fail("This ) doesn't close anything", here(i, i + 1, ")"))
+      fail(message("group.stray"), here(i, i + 1, ")"))
       return null
     }
     // More on the line: what plays in order goes in brackets. A name that isn't defined is
@@ -271,7 +266,7 @@ export function readSequence(
     else {
       // The line as written, when it's all text; otherwise the second thing in it
       const written = parts.every((p) => typeof p === "string") ? parts.join("") : itemAt(row[1])
-      fail(`What plays in order goes in brackets: (${textOf(parts).replace(/\s+/g, " ")})`, written)
+      fail(message("group.inOrder", { written: textOf(parts).replace(/\s+/g, " ") }), written)
     }
     return null
   }

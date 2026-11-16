@@ -15,20 +15,23 @@ import { blockClip, checkSection } from "./eval.ts"
 import { classify } from "./lines.ts"
 import { playDuration } from "./play-duration.ts"
 import { Scope } from "./resolve.ts"
-import { applySetting, readWithHeader, setInBlock, WITH_HELP, withState } from "./settings.ts"
+import { applySetting, readWithHeader, setInBlock, withState } from "./settings.ts"
 import { Parser } from "./parser.ts"
 import { bareValue, isBareValue, printValue, type PrintOutput } from "./print.ts"
 import { cloneState, describe, initialState, type Line, type Piece, type State } from "./state.ts"
 import { bracesIn, isBraces, located, plain, sourceOf } from "./parts.ts"
 import type { Block, Span as SourceSpan, Statement, Text } from "./syntax.ts"
-import { locator, overlaps, reportIn, type Diagnostic, type Report } from "./diagnostics.ts"
+import {
+  locator,
+  message,
+  overlaps,
+  reportIn,
+  type Diagnostic,
+  type Report,
+} from "./diagnostics.ts"
 import { SourceText } from "./source.ts"
 import { fmt, lengthPrefix, MAX_SECONDS, singularLength } from "./time.ts"
 import { SETTINGS, TYPED_BRACES_RE, EVERY_RE, PLACE_RE, TYPED_RE } from "./vocab.ts"
-
-// The braces after play say their type, as any others do
-const UNTYPED_PLAY =
-  "These braces need a type: play pattern { ... } repeats, play block { ... } plays once"
 
 type WithStatement = Extract<Statement, { kind: "with" }>
 type PlayStatement = Extract<Statement, { kind: "play" }>
@@ -142,29 +145,16 @@ export class CellReader {
   private reportTreeErrors(): void {
     for (const e of this.tree.errors)
       if (e.code === "syntax.retiredOf")
-        this.syntaxErr(
-          e.span.line,
-          '"of" expressions are no longer supported. Use interval functions such as fifth(5) or third(1); they follow the active scale',
-          e.span,
-        )
-      else if (e.code === "brace.stray")
-        this.syntaxErr(e.span.line, "This } doesn't close anything", e.span)
+        this.syntaxErr(e.span.line, message("syntax.retiredOf"), e.span)
+      else if (e.code === "brace.stray") this.syntaxErr(e.span.line, message("brace.stray"), e.span)
       else if (e.code === "separator.semicolon")
-        this.syntaxErr(
-          e.span.line,
-          "Use commas between entries in braces instead of semicolons; a trailing comma is allowed",
-          e.span,
-        )
+        this.syntaxErr(e.span.line, message("separator.semicolon"), e.span)
       else if (e.code === "separator.empty")
-        this.syntaxErr(
-          e.span.line,
-          "A comma needs an entry before it; only the final comma may go before }",
-          e.span,
-        )
+        this.syntaxErr(e.span.line, message("separator.empty"), e.span)
       else if (e.code === "separator.top")
-        this.syntaxErr(e.span.line, "Outside braces, put each statement on its own line", e.span)
+        this.syntaxErr(e.span.line, message("separator.top"), e.span)
       else if (e.code === "separator.missing")
-        this.syntaxErr(e.span.line, "Put a comma between entries in braces", e.span)
+        this.syntaxErr(e.span.line, message("separator.missing"), e.span)
   }
 
   // Makes mistakes be reported within this statement, quoting it as written
@@ -241,12 +231,12 @@ export class CellReader {
         continue
       }
       if (this.unclosed.has(at(p)))
-        this.syntaxErr(p.span.line, `${what} needs a } to close it`, opening(p))
+        this.syntaxErr(p.span.line, message("brace.unclosed", { what }), opening(p))
       const inner = this.blockLines(p.statements)
       dropped ||= inner.dropped
       if (!inner.body.length) {
         // Unless what was in them was a mistake, already said
-        if (!inner.dropped) this.err(ln, "These braces have nothing in them", p.span)
+        if (!inner.dropped) this.err(ln, message("brace.empty"), p.span)
         dropped = true
         out = []
         sources = []
@@ -292,7 +282,7 @@ export class CellReader {
       const ln = s.span.line
       this.reportWithin(s)
       if (s.kind === "play" || s.kind === "print") {
-        this.err(ln, `${s.kind} goes at the top, not inside braces`, s.kind)
+        this.err(ln, message("brace.topOnly", { kind: s.kind }), s.kind)
         dropped = true
         continue
       }
@@ -314,17 +304,14 @@ export class CellReader {
     return { body, dropped }
   }
 
-  // Nothing follows a closing brace. `front(n)` is the right way to write a length there,
-  // and `written` is the parts the tail was read from.
-  private checkTail(
-    tail: string,
-    ln: number,
-    front: (n: string) => string,
-    written: (Text | Block)[],
-  ) {
+  // Nothing follows a closing brace. A length there goes after `play kind { ... }`, and
+  // `written` is the parts the tail was read from.
+  private checkTail(tail: string, ln: number, kind: string, written: (Text | Block)[]) {
     if (!tail) return true
     const after = /^(\S+)\s+bars$/.exec(tail)
-    const msg = after ? `Write the length like this: ${front(after[1])}` : "Nothing can follow a }"
+    const msg = after
+      ? message("play.lengthAfter", { kind, bars: after[1] })
+      : message("brace.trailing")
     this.err(ln, msg, spanOver(written))
     return false
   }
@@ -372,9 +359,7 @@ export class CellReader {
     if (/^play\s*[:=]/.test(text)) {
       this.err(
         ln,
-        /^play\s*=/.test(text)
-          ? "play is a keyword, not a name, so it takes no =: play groove"
-          : "play is a keyword, not an instrument, so it takes no colon: play groove",
+        /^play\s*=/.test(text) ? message("play.noEquals") : message("play.noColon"),
         "play",
       )
       return true
@@ -388,18 +373,18 @@ export class CellReader {
   private readWith(s: WithStatement, ln: number, braces: Block[], state: State): boolean {
     const block = braces[0]
     if (!block) {
-      this.err(ln, WITH_HELP, "with")
+      this.err(ln, message("with.help"), "with")
       return false
     }
     const head = s.settings.parts.map((p) => (p.kind === "text" ? tidy(p.text) : "")).join(" ")
     const settings = readWithHeader(head, ln, this.err)
     if (this.unclosed.has(at(block))) {
-      this.syntaxErr(ln, "This with needs a } to close it", opening(block))
+      this.syntaxErr(ln, message("brace.unclosed", { what: "This with" }), opening(block))
       return true
     }
     const after = s.parts.slice(s.parts.indexOf(block) + 1)
-    if (after.length) this.err(block.span.endLine, "Nothing can follow a }", spanOver(after))
-    if (!block.statements.length) this.err(ln, "These braces have nothing in them", block.span)
+    if (after.length) this.err(block.span.endLine, message("brace.trailing"), spanOver(after))
+    if (!block.statements.length) this.err(ln, message("brace.empty"), block.span)
     const inner = settings && withState(settings, state, ln, this.err)
     if (inner?.transpose && inner.transpose !== state.transpose) this.transposeLine ??= ln
     // A mistake in the header still has its block read, for the mistakes in that
@@ -409,7 +394,7 @@ export class CellReader {
 
   // print(...): the value shown, evaluated without playing
   private readPrint(s: PrintStatement, ln: number, braces: Block[], state: State): void {
-    if (braces.length) this.err(ln, "print takes musical values, without braces", braces[0].span)
+    if (braces.length) this.err(ln, message("print.noBraces"), braces[0].span)
     else {
       const value = s.value.parts.map((p) => (p.kind === "text" ? p.text : "")).join(" ")
       const printed = printValue(value, state, ln, this.err)
@@ -431,7 +416,7 @@ export class CellReader {
     const duration = playDuration(s.value.parts, ln, this.err)
     if (!duration) return
     if (duration.parts[0]?.kind === "block") {
-      this.err(ln, UNTYPED_PLAY, opening(duration.parts[0]))
+      this.err(ln, message("play.untyped"), opening(duration.parts[0]))
       return
     }
     const head = duration.parts[0]?.kind === "text" ? tidy(duration.parts[0].text) : ""
@@ -447,17 +432,11 @@ export class CellReader {
       // The length as written, in front of the music
       const written = (parts[0] as Text).text
       const shown = written.slice(0, written.length - lengthPrefix(written).rest.length)
-      this.err(ln, "A play's duration follows its music: play groove for 2 bars", shown)
+      this.err(ln, message("play.durationAfter"), shown)
       return
     }
     if (!parts.length) {
-      this.err(
-        ln,
-        bars
-          ? "play needs music before for: play groove for 2 bars"
-          : "play needs something after it: play groove, or play block { ... }",
-        "play",
-      )
+      this.err(ln, bars ? message("play.needsMusic") : message("play.needsSomething"), "play")
       return
     }
     const made = this.playArgument(s, ln, text, braces, inWith, duration, parts, repeats, ok)
@@ -513,13 +492,13 @@ export class CellReader {
     const bars = duration.bars
     const lengthAfter = (tail: string) => /^\S+\s+bars$/.test(tail)
     if (this.unclosed.has(at(block)))
-      this.syntaxErr(block.span.line, "play needs a } to close it", opening(block))
+      this.syntaxErr(block.span.line, message("brace.unclosed", { what: "play" }), opening(block))
     const read = this.blockLines(block.statements)
     if (block.span.endLine > ln)
       label = text.replace(/\{.*$/, "{ … }") + (duration.has ? ` for ${fmt(bars)} bars` : "")
     if (!read.body.length) {
       // Unless what was in them was a mistake, already said
-      if (!read.dropped) this.err(ln, "This play has nothing in its braces", block.span)
+      if (!read.dropped) this.err(ln, message("play.emptyBraces"), block.span)
       ok = false
     }
     const kind = repeats ? "pattern" : "block"
@@ -531,18 +510,11 @@ export class CellReader {
       // play block { ... } outro: things in order go in brackets
       this.err(
         block.span.endLine,
-        `What plays in order goes in brackets: play (${kind} { ... } ${tail})`,
+        message("play.inOrder", { kind, tail }),
         spanOver(parts.slice(1)),
       )
       ok = false
-    } else if (
-      !this.checkTail(
-        tail,
-        block.span.endLine,
-        (n) => `play ${kind} { ... } for ${n} bars`,
-        parts.slice(1),
-      )
-    ) {
+    } else if (!this.checkTail(tail, block.span.endLine, kind, parts.slice(1))) {
       ok = false
     }
     return { arg: read.body, label, ok }
@@ -563,7 +535,7 @@ export class CellReader {
     const ctx = repeats ? patternPlayCtx(ln) : outputCtx(ln)
     const out = ok ? blockClip(arg, state, this.err, ctx, [], bars) : null
     if (out && out.durSec > MAX_SECONDS) {
-      this.err(ln, "This plays for over 10 minutes. Use a shorter length", text)
+      this.err(ln, message("play.tooLong"), text)
     } else if (
       out &&
       !this.errors.some((error) => error.line >= s.span.line && error.line <= s.span.endLine)
@@ -603,7 +575,7 @@ export class CellReader {
         ln,
         noEquals[1] === "pattern"
           ? patternHint(text)
-          : `A block gets its name with =: block ${noEquals[2]} = { ... }`,
+          : message("decl.blockNeedsEquals", { name: noEquals[2] }),
         // What's before its braces: the type and name that need an = after them
         s.parts[0]?.kind === "text" ? s.parts[0].span : text,
       )
@@ -628,7 +600,7 @@ export class CellReader {
     if (after) {
       this.err(
         ln,
-        `A length goes in front of what it measures: pattern ${decl.name} = ${after[1]} bars {`,
+        message("decl.lengthAfterBraces", { name: decl.name, bars: after[1] }),
         spanOver(decl.parts.slice(-1)),
       )
       return
@@ -651,37 +623,25 @@ export class CellReader {
     if (alone.rest.startsWith("{") || TYPED_BRACES_RE.test(alone.rest)) {
       const size = alone.has ? ` for ${fmt(alone.bars)} bars` : ""
       const kind = alone.rest.startsWith("pattern") ? "pattern" : "block"
-      this.err(ln, `Nothing plays this. Write play ${kind} { ... }${size}`, text)
+      this.err(ln, message("play.nothingPlays", { kind, size }), text)
       this.lineOf(s.parts, ln, "This {")
       return true
     }
     const bare = /^([A-Za-z][A-Za-z0-9]*)\s*\{/.exec(text)
     if (bare) {
-      this.err(
-        ln,
-        `${bare[1]} needs a type and = to name its braces: pattern ${bare[1]} = {`,
-        bare[1],
-      )
+      this.err(ln, message("decl.noNameForBraces", { name: bare[1] }), bare[1])
       return true
     }
     // every 3/4 beats { ... } on its own: nothing plays it
     if (EVERY_RE.test(text)) {
       const shown = text.replace(/\{.*$/, "{ ... }")
-      this.err(
-        ln,
-        `Nothing plays this. Put play in front, or give it a name: pattern slow = ${shown}`,
-        text,
-      )
+      this.err(ln, message("play.nothingPlaysEvery", { shown }), text)
       this.lineOf(s.parts, ln, "This {")
       return true
     }
     // fill on bar 2 on its own: placement goes inside a pattern or play
     if (PLACE_RE.test(text)) {
-      this.err(
-        ln,
-        `${text.replace(/\{.*$/, "{ ... }")} goes inside a pattern or a play, to say where in it`,
-        text,
-      )
+      this.err(ln, message("play.placeOutside", { shown: text.replace(/\{.*$/, "{ ... }") }), text)
       this.lineOf(s.parts, ln, "This {")
       return true
     }
@@ -730,12 +690,8 @@ export class CellReader {
       }
     } else if (l.kind === "part") {
       // Nothing floats at the top: what plays is inside a pattern or a play.
-      this.err(
-        ln,
-        `An instrument's line goes inside braces: in a pattern, or play block { ${text} }`,
-        text,
-      )
-    } else this.err(ln, `Nothing plays this line. Write play ${text}`, text)
+      this.err(ln, message("play.instrumentLine", { text }), text)
+    } else this.err(ln, message("play.lineNothing", { text }), text)
   }
 
   // transpose only moves what has pitch, so one in a cell where only drums play is a
@@ -743,11 +699,7 @@ export class CellReader {
   private checkTranspose(): void {
     const pitched = this.outputs.some((o) => o.notes.length || o.chords.length)
     if (this.transposeLine != null && this.outputs.length && !pitched) {
-      this.err(
-        this.transposeLine,
-        "transpose moves notes and chords, and only drums play here. Give an instrument some: piano: chords C G",
-        "transpose",
-      )
+      this.err(this.transposeLine, message("play.transposeDrums"), "transpose")
     }
   }
 

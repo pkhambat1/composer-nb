@@ -241,13 +241,11 @@ function settingWords(
 // The settings in a with's header (key E, mode minor), each a setting and its value, with
 // commas between them. Returns [{ name, value }], or null after saying what's wrong, which
 // is about the one setting or comma that's wrong.
-export const WITH_HELP =
-  "with takes the settings its block plays with, then the block: with octave 2 { ... }"
 export function readWithHeader(head: string, ln: number, err: Report): SettingWords[] | null {
   const header = err.source?.select(head)
   const outerReport = err
   if (!head.trim()) {
-    err(ln, WITH_HELP, "with")
+    err(ln, message("with.help"), "with")
     return null
   }
   const pieces = head.split(",").map((p) => p.trim())
@@ -266,13 +264,13 @@ export function readWithHeader(head: string, ln: number, err: Report): SettingWo
           : k < pieces.length - 1
             ? head.slice(commas[k - 1], commas[k] + 1)
             : head.slice(commas[k - 2] + 1, commas[k - 1] + 1).trim()
-      err(ln, "A comma goes between two settings: with key E, mode minor { ... }", comma)
+      err(ln, message("with.comma"), comma)
       return null
     }
     const words = piece.split(/\s+/)
     if (words[0] === "set") {
       const fixed = pieces.map((p) => p.replace(/^set\s+/, "")).join(", ")
-      err(ln, `A with's settings have no set in front: with ${fixed} { ... }`, "set")
+      err(ln, message("with.noSet", { fixed }), "set")
       return null
     }
     // with key E mode minor: two settings, without the comma between them
@@ -284,18 +282,14 @@ export function readWithHeader(head: string, ln: number, err: Report): SettingWo
         ...pieces.slice(k + 1),
       ]
       // It's the setting without a comma before it that's wrong
-      err(
-        ln,
-        `Settings in a with are separated by commas: with ${fixed.join(", ")} { ... }`,
-        words.slice(next).join(" "),
-      )
+      err(ln, message("with.needsComma", { fixed: fixed.join(", ") }), words.slice(next).join(" "))
       return null
     }
     const s = settingWords(words[0], piece.slice(words[0].length).trim(), ln, err, "with")
     if (!s) return null
     if (out.some((o) => o.name === s.name)) {
       // The second one is the one that's wrong
-      err(ln, `${s.name} is in this with twice. A with sets each setting once`, piece)
+      err(ln, message("with.twice", { name: s.name }), piece)
       return null
     }
     out.push({ ...s, source })
@@ -324,7 +318,7 @@ export const pacing = (settings: SettingWords[]) => settings.find((s) => OWN_PAC
 
 // A set inside a block, which takes a with instead
 export const setInBlock = (l: SettingWords) =>
-  `Inside a block, settings go on a with: with ${l.name} ${l.value} { ... }`
+  message("with.settingInBlock", { name: l.name, value: l.value })
 
 // The key and mode as one name, for headers: E minor, C major.
 export const keyName = (s: State) => `${s.key} ${s.mode}`

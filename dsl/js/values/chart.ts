@@ -9,7 +9,6 @@ import {
   isDegreeChord,
   parseKey,
   pastScale,
-  pastScaleMessage,
   keyOf,
 } from "../chords.ts"
 import { ChordType, Note } from "tonal"
@@ -18,7 +17,6 @@ import {
   intervalSteps,
   moveInScale,
   wrapInterval,
-  OCTAVE_HELP,
   tokenize,
   splitBars,
 } from "../intervals.ts"
@@ -27,7 +25,7 @@ import { textOf } from "../parts.ts"
 import type { Piece, State } from "../state.ts"
 import { callAt, drawsNotes, spaceNotes } from "./notes.ts"
 import { barSlotTicks, timeLabel } from "../time.ts"
-import { reportIn, type Report } from "../diagnostics.ts"
+import { message, reportIn, type Report } from "../diagnostics.ts"
 import { locatedTokens, SourceText, tokenSources } from "../source.ts"
 import { NAME_LIKE } from "../vocab.ts"
 
@@ -66,7 +64,7 @@ export function upperNumeral(tok: string): string | null {
   if (!m) return null
   const [, acc, numeral, rest] = m
   const lower = acc + numeral.toLowerCase() + rest
-  return `"${tok}": numerals are lowercase, and the mode makes the chord major or minor: ${lower}. To say a chord outright, write its quality after it: ${acc}${numeral.toLowerCase()}M, ${acc}${numeral.toLowerCase()}m`
+  return message("chord.upperNumeral", { tok, lower, base: acc + numeral.toLowerCase() })
 }
 
 // vii°, viiø: a diminished numeral is written with dim, as a chord is
@@ -76,7 +74,7 @@ export function dimMarkProblem(tok: string): string | null {
   if (!m) return null
   const [, numeral, mark, rest] = m
   const written = mark === "ø" ? `${numeral}m7b5` : `${numeral}dim${rest}`
-  return `"${tok}": a diminished numeral takes dim, as a chord does: ${written} (viidim, viidim7, or viim7b5 for half-diminished)`
+  return message("chord.dimNumeral", { tok, written })
 }
 
 // A chord's slot. A mistake is marked on `at`, the chord as it's written on the line: `tok`
@@ -92,7 +90,7 @@ export function chordSlot(
   if (tok === "-") return { hold: true }
   if (tok === "_") return { rest: true }
   if (tok === "%") {
-    err(part.ln, "% stands for a whole bar, so it goes between bar lines on its own: Am F|%", at)
+    err(part.ln, message("chord.percentAlone"), at)
     return null
   }
   const fn = intervalCall(tok)
@@ -103,7 +101,7 @@ export function chordSlot(
     }
     const call = fn.call!
     if (call.end !== tok.length || call.prefix) {
-      err(part.ln, "A chord interval call ends at its closing ): fifth(1)", at)
+      err(part.ln, message("chord.callEnds"), at)
       return null
     }
     // Apply the musical operation before the playback-only transpose setting. A call that's
@@ -121,11 +119,7 @@ export function chordSlot(
     chord.input = tok
     applyTranspose(chord, st.transpose)
     if (![chord.bassMidi, ...chord.notesMidi].every((m) => m >= 0 && m <= 127)) {
-      err(
-        part.ln,
-        `"${tok}" goes outside playable MIDI notes 0 to 127. Change octave or use octave(value, -1)`,
-        at,
-      )
+      err(part.ln, message("note.outsideMidi", { tok }), at)
       return null
     }
     return { chord }
@@ -135,7 +129,7 @@ export function chordSlot(
       part.ln,
       st.sections[tok]
         ? misplaced(tok, st.sections[tok].type, { line: "chart" })!
-        : `"${tok}" isn't defined above. Name it first: chords ${tok} = Am F|C G`,
+        : message("chord.undefinedAbove", { tok }),
       at,
     )
     return null
@@ -146,12 +140,12 @@ export function chordSlot(
     const past = degree && pastScale(key, degreeNumber(degree))
     err(
       part.ln,
-      (past && `"${tok}": ${pastScaleMessage(key)}`) ||
+      (past && message("chord.pastScale", { tok, mode: key.mode, degrees: key.scale.length })) ||
         dimMarkProblem(tok) ||
         upperNumeral(tok) ||
         (drawsNotes(tok)
-          ? `"${tok}" is notes, and this line says chords. A line of notes says notes in front: ${part.name}: notes ${spaceNotes(tok)}`
-          : `"${tok}" isn't a chord I know`),
+          ? message("chord.isNotes", { tok, part: part.name, notes: spaceNotes(tok) })
+          : message("chord.unknown", { chord: tok })),
       at,
     )
     return null
@@ -211,7 +205,7 @@ export function expandChordTokens(
     err(ln, msg, at)
     return null
   }
-  if (depth > 32) return fail("Interval functions can nest at most 32 levels", tokens.join(" "))
+  if (depth > 32) return fail(message("interval.nested"), tokens.join(" "))
   const out: string[] = []
   const from: number[] = []
   const sources = tokenSources(tokens)
@@ -230,13 +224,13 @@ export function expandChordTokens(
           ),
         )
     }
-    if (token.includes("'")) return fail(OCTAVE_HELP, token)
+    if (token.includes("'")) return fail(message("octave.apostrophe"), token)
     const word = st.words[token]
     if (word) {
       if (word.type !== "chords")
         return fail(
           declaration
-            ? `${token} is ${word.type}, so it can't go in chords`
+            ? message("name.wrongType", { name: token, type: word.type, into: "chords" })
             : misplaced(token, word.type, { line: "chart" })!,
           token,
         )
@@ -254,8 +248,7 @@ export function expandChordTokens(
     }
     if (fn.error) return fail(fn.error, callAt(token))
     const call = fn.call!
-    if (call.end !== token.length || call.prefix)
-      return fail("A chord interval call ends at its closing ): fifth(1)", token)
+    if (call.end !== token.length || call.prefix) return fail(message("chord.callEnds"), token)
     const bodyFrom = token.indexOf("(") + 1
     const leading = token.slice(bodyFrom).length - token.slice(bodyFrom).trimStart().length
     const body = source?.slice(bodyFrom + leading, bodyFrom + leading + call.body.length)
@@ -265,11 +258,7 @@ export function expandChordTokens(
     const bars = splitBars(inner)
     for (let b = 0; b < bars.length; b++) {
       if (bars[b].length === 1 && bars[b][0] === "%") {
-        if (!b)
-          return fail(
-            "% inside an interval function needs a preceding bar inside that function",
-            token,
-          )
+        if (!b) return fail(message("chord.percentInCall"), token)
         bars[b] = [...bars[b - 1]]
       }
     }
@@ -334,8 +323,11 @@ export function chordPattern(
     const chart = part.value ? textOf(part.value).replace(/^chords\s*/, "") : tokens.join(" ")
     err(
       part.ln,
-      `${part.name}: chords ${tokens.join(" ").replace(/ \| /g, "|")} repeats ${again}. ` +
-        `Write ${part.name}: chords ${again}: a pattern repeats it`,
+      message("chord.repeats", {
+        part: part.name,
+        chart: tokens.join(" ").replace(/ \| /g, "|"),
+        again,
+      }),
       chart,
     )
     return null
@@ -346,7 +338,7 @@ export function chordPattern(
     if (bar.length === 1 && bar[0] === "%") {
       if (bars.length) bars.push(bars[bars.length - 1])
       else {
-        err(part.ln, "% repeats the bar before it, but this is the first bar", written(at[0]))
+        err(part.ln, message("chord.firstBar"), written(at[0]))
         ok = false
       }
       continue
@@ -354,12 +346,7 @@ export function chordPattern(
     if (!barSlotTicks(barTicks, bar.length)) {
       // The bar as it's written: each token it came from, once
       const bar = [...new Set(at.map((k) => origins[k]))].map((i) => tokens[i]).join(" ")
-      err(
-        part.ln,
-        `A ${timeLabel(st)} bar can't be split evenly into ${at.length}. ` +
-          "Use - to hold a chord for another slot, e.g. Am - F G",
-        bar,
-      )
+      err(part.ln, message("chord.splitEvenly", { time: timeLabel(st), slots: at.length }), bar)
       ok = false
       continue
     }
@@ -371,12 +358,12 @@ export function chordPattern(
   }
   if (!ok) return null
   if (!bars.length) {
-    err(part.ln, `chords needs the chords after it: ${part.name}: chords Am F|C G`, "chords")
+    err(part.ln, message("chord.needsChords", { part: part.name }), "chords")
     return null
   }
   if (bars[0][0].hold) {
     const first = places.find((b) => b.length)![0]
-    err(part.ln, "This line starts with - but there's no chord to hold yet", written(first))
+    err(part.ln, message("chord.startsWithHold"), written(first))
     return null
   }
   const transpose = st.transpose

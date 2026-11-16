@@ -1,6 +1,7 @@
 /* Types where names are used. LINE_TAKES says what each kind of line takes, and misplaced
    says why a name of another type can't go there. Every line's reader asks here, so this
    table is the one place that says which type goes where: a new type is a row in it. */
+import { message } from "./diagnostics.ts"
 import { unhandled } from "./syntax.ts"
 import type { Type } from "./vocab.ts"
 
@@ -23,58 +24,38 @@ export type Use =
   | { line: "chart" }
   | { line: "own" }
 
-// Where a name of each type goes, for a message that sends it there
-const ownLine = (name: string, type: Type = "pattern") =>
-  `${name} is a ${type}, so it goes on a line of its own, not on an instrument's line`
-
 // Why `name`, which is `type`, can't be used where `use` says, or null when it can.
 export function misplaced(name: string, type: Type, use: Use): string | null {
   // Beats are hits counted in a bar, so no name goes in a list of them
   if (use.line === "drum" && use.beats) {
     return type === "pattern" || type === "block"
-      ? ownLine(name, type)
-      : `${name} is ${type}, which don't go in a list of beats`
+      ? message("misplaced.ownLine", { name, type })
+      : message("misplaced.beats", { name, type })
   }
   if (LINE_TAKES[use.line] === type || (use.line === "own" && type === "block")) return null
   switch (use.line) {
     case "drum":
-      if (use.layer)
-        return `${name} is ${type === "pattern" || type === "block" ? `a ${type}` : type}, so it can't be a layer of steps`
-      if (type === "pattern" || type === "block") return ownLine(name, type)
-      return `${name} is ${type}, so it goes on a line like piano: ${type} ${name}, not on a drum's`
+      if (use.layer) return message("misplaced.layer", { name, type })
+      if (type === "pattern" || type === "block")
+        return message("misplaced.ownLine", { name, type })
+      return message("misplaced.drum", { name, type })
     case "pitched":
-      if (type === "steps")
-        return `${name} is steps, so it goes on a drum's line, not on ${use.part}'s`
+      if (type === "steps") return message("misplaced.stepsOnPitched", { name, part: use.part })
       if (type === "chords") {
         return use.chart
-          ? `${name} is chords, so chords goes in front of it: ${use.part}: chords ${use.text}`
-          : `${name} is chords, and the rest of this line is notes. A line plays one or the other`
+          ? message("misplaced.chordsInFront", { name, part: use.part, text: use.text })
+          : message("misplaced.chordsAmongNotes", { name })
       }
-      if (type === "notes")
-        return `${name} is notes, so notes goes in front of it: ${use.part}: notes ${name}`
-      return ownLine(name, type)
+      if (type === "notes") return message("misplaced.notesInFront", { name, part: use.part })
+      return message("misplaced.ownLine", { name, type })
     case "chart":
-      if (type === "steps") return `${name} is steps, so it goes on a drum's line, not among chords`
-      if (type === "notes") {
-        return `${name} is notes, and the rest of this line is chords. A line plays one or the other`
-      }
-      return ownLine(name, type)
+      if (type === "steps") return message("misplaced.stepsAmongChords", { name })
+      if (type === "notes") return message("misplaced.notesAmongChords", { name })
+      return message("misplaced.ownLine", { name, type })
     case "own":
-      if (type === "steps") return `${name} is steps, so it goes on a drum's line: hat: ${name}`
-      return `${name} is ${type}, so it goes on an instrument's line: piano: ${type} ${name}`
+      if (type === "steps") return message("misplaced.stepsOnOwn", { name })
+      return message("misplaced.onInstrument", { name, type })
     default:
       return unhandled(use)
   }
 }
-
-export const CHORDS_BLOCK =
-  "Chords play one at a time, so they can't be layered in a block. Put them on one line: piano: chords Am F|C G"
-export const NOTES_BLOCK =
-  "A name holds one line of notes. Notes that play together go in a block on the instrument's line: piano: { ... }"
-
-// A block of steps is the whole of what it's written on: a kit piece's line, a layer, or
-// the steps a name holds. That way two blocks never sit in a row, where a newline between
-// them would be all that told together from in order. Steps go in a row with a block by name.
-export const blockBeside = (what: string, written: (fig: string) => string, fig = "fig") =>
-  `A block is everything ${what}, so nothing goes beside it. ` +
-  `To put steps in a row with a block, name it: steps ${fig} = { ... } and ${written(fig)}`

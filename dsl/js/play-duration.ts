@@ -4,7 +4,7 @@ import type { Block, Text } from "./syntax.ts"
 import { SourceText } from "./source.ts"
 import type { Span } from "./syntax.ts"
 import { lengthPrefix } from "./time.ts"
-import type { Report } from "./diagnostics.ts"
+import { message, type Report } from "./diagnostics.ts"
 
 export function playDuration(
   parts: (Text | Block)[],
@@ -33,11 +33,7 @@ export function playDuration(
       const duration = lengthPrefix(part.text.slice(column + 3).trim())
       if (index !== parts.length - 1 || !duration.has || duration.rest.trim()) {
         // The duration as written, from for to the end of its text
-        error(
-          line,
-          "A play's duration follows its music: play groove for 2 bars",
-          part.text.slice(column),
-        )
+        error(line, message("play.durationAfter"), part.text.slice(column))
         return null
       }
       const before = part.text.slice(0, column).trimEnd()

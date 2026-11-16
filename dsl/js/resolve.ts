@@ -79,32 +79,32 @@ export class Scope {
 export function unknownInstrument(name: string): string {
   // The closed hi-hat is the plain one, which is what most people reach for first
   if (/^hat\.(close|closed|shut)$/.test(name)) {
-    return "The closed hi-hat is hat on its own; hat.open is the open one, and hat.pedal the foot"
+    return message("instrument.closedHat")
   }
   if (among(SPLIT, name)) {
     const lanes = LANES.filter((l) => l.startsWith(name + "."))
-    return `"${name}" isn't a drum. The ${name}s are ${lanes.slice(0, -1).join(", ")} and ${lanes.at(-1)}`
+    return message("instrument.notDrumSplit", { name, drum: name, lanes })
   }
   if (name.includes(".")) {
     const drum = name.split(".")[0]
     if (among(PITCHED, drum)) {
       const sounds = PITCHED.filter((p) => p.startsWith(drum + "."))
       return sounds.length
-        ? `"${name}" isn't an instrument. ${drum}'s other sound is ${sounds.join(", ")}`
-        : `"${name}" isn't an instrument. ${drum} has one sound: ${drum}: notes F---G---`
+        ? message("instrument.otherSound", { name, drum, sounds })
+        : message("instrument.oneSound", { name, drum })
     }
     const close = LANES.find((l) => l.includes(".") && editDistance(name, l) <= 2)
-    if (close) return `"${name}" isn't a drum. Did you mean ${close}?`
+    if (close) return message("instrument.nearDrum", { name, close })
     if (among(SPLIT, drum)) {
       const lanes = LANES.filter((l) => l.startsWith(drum + "."))
-      return `"${name}" isn't a drum. The ${drum}s are ${lanes.slice(0, -1).join(", ")} and ${lanes.at(-1)}`
+      return message("instrument.notDrumSplit", { name, drum, lanes })
     }
     const second = LANES.filter((l) => l.includes(".") && !among(SPLIT, l.split(".")[0]))
-    return `"${name}" isn't a drum. Drums with a second sound: ${second.join(", ")}`
+    return message("instrument.drumSounds", { name, second })
   }
   const best = closest(name, PARTS)
-  if (best[1] <= 2) return `"${name}" isn't an instrument. Did you mean ${best[0]}?`
-  return `"${name}" isn't an instrument. Instruments: ${PARTS.join(", ")}`
+  if (best[1] <= 2) return message("instrument.near", { name, best: best[0] })
+  return message("instrument.unknown", { name, parts: PARTS })
 }
 
 // Why `name` can't be defined, or null if it can.
@@ -120,11 +120,10 @@ export function nameProblem(name: string, value: string): string | null {
         ? "notes F---G---"
         : "x--x---"
       : (chart ? "chords " : pitched ? "notes " : "") + value
-    return `${n} is an instrument, so it takes a colon: ${n}: ${plays}`
+    return message("name.instrument", { name: n, plays })
   }
-  if (TAKEN.has(n) || /^x\d+$/.test(name))
-    return `${name} already means something, so pick another name`
-  if (/^d\d+[ea]?$/.test(name)) return `${name} is a double on a beat, so pick another name`
+  if (TAKEN.has(n) || /^x\d+$/.test(name)) return message("name.taken", { name })
+  if (/^d\d+[ea]?$/.test(name)) return message("name.double", { name })
   return null
 }
 
@@ -134,10 +133,13 @@ export function nameProblem(name: string, value: string): string | null {
 // not, with other capitals (partA, then parta). The message, or null.
 function nameRule(type: string, name: string, st: State): string | null {
   if (!/^[a-z]/.test(name))
-    return `Names start with a lowercase letter: ${type} ${name[0].toLowerCase()}${name.slice(1)}`
-  if (name.length < 2) return "Names need at least two characters, because single letters are steps"
+    return message("name.lowercase", {
+      type,
+      fixed: `${name[0].toLowerCase()}${name.slice(1)}`,
+    })
+  if (name.length < 2) return message("name.tooShort")
   if (among(ROMAN, name) || /^b[1-9]\d*(?:\d|sus|add|maj|min|dim|dom|aug|m|M|b|#)*$/.test(name))
-    return `${name} is a chord, so pick another name`
+    return message("name.chord", { name })
   // A name is defined once in a cell: not again, and not inside a block when it's defined
   // outside it. A name from a cell above can be defined again here.
   const word = st.words[name] as Word | undefined
@@ -148,9 +150,7 @@ function nameRule(type: string, name: string, st: State): string | null {
   const twin = [...Object.keys(st.words), ...Object.keys(st.sections)].find(
     (n) => n !== name && n.toLowerCase() === name.toLowerCase(),
   )
-  return twin
-    ? `${name} differs from ${twin} only in its capitals, so pick another name or write ${twin}`
-    : null
+  return twin ? message("name.capitals", { name, twin }) : null
 }
 
 export function undefinedName(name: string, st: State): string {
@@ -160,10 +160,10 @@ export function undefinedName(name: string, st: State): string {
   }
   // Bridge can't have been named, so the message is the rule, not how to name it
   if (!/^[a-z]/.test(name)) {
-    return `"${name}" can't be a name, since names start with a lowercase letter: ${name[0].toLowerCase()}${name.slice(1)}`
+    return message("name.cantBe", { name, fixed: `${name[0].toLowerCase()}${name.slice(1)}` })
   }
   const names = Object.keys(st.sections)
   return names.length
-    ? `"${name}" isn't defined. Patterns so far: ${names.join(", ")}`
-    : `"${name}" isn't defined. Name it first: pattern ${name} = { ... }`
+    ? message("name.undefinedPatterns", { name, names })
+    : message("name.undefined", { name })
 }

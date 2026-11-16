@@ -1,6 +1,7 @@
 /* A cell's state: its settings and the names it has, as the engine carries them from line to
    line, into blocks, and from cell to cell. Also the shapes the engine reads a cell into:
    a line, which holds its text and the blocks written in it, in order, and a named pattern. */
+import { message } from "./diagnostics.ts"
 import { count, meterOf, TPQ, timeLabel, type Timing } from "./time.ts"
 import type { Setting, Type } from "./vocab.ts"
 
@@ -82,8 +83,9 @@ export const describe = (name: Setting, s: State) =>
 export function barLineProblem(n: number, st: State): string | null {
   const { barTicks } = meterOf(st)
   if ((n * st.stepTicks) % barTicks === 0) return null
-  return (
-    `This | isn't at the end of a bar: it's after ${count(n, "step")}, ` +
-    `and a ${timeLabel(st)} bar is ${count(barTicks / st.stepTicks, "step")}`
-  )
+  return message("step.barLine", {
+    after: count(n, "step"),
+    time: timeLabel(st),
+    bar: count(barTicks / st.stepTicks, "step"),
+  })
 }
