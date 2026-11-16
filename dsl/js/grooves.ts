@@ -102,7 +102,7 @@ with time 9 over 8, tempo 100 { play manias for 4 bars }`,
   kick: x--x---,
   snare.rim: ----x--,
   ride.bell: x--,
-  guitar.electric: notes D---E D-D--
+  every 1/4 beats guitar.electric: notes D---E D-D--
 }
 
 with time 7 over 8, tempo 110, octave 2, guitar.electric muted {

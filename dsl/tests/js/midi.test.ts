@@ -74,12 +74,12 @@ describe("MIDI export", () => {
     expect(String.fromCharCode(...guitar[0].slice(3))).toBe("guitar")
     expect(guitar[1]).toEqual([0, 0xc0, 25]) // steel-string guitar on channel 1
     const notes = guitar.filter((e) => (e[1] & 0xf0) === 0x90 || (e[1] & 0xf0) === 0x80)
-    // C3 on at 0, off at 96 ticks, E3 on, off: delta times
+    // C3 on at 0, off at 192 ticks, E3 on, off: delta times
     expect(notes.map((e) => [e[0], e[1] & 0xf0, e[2]])).toEqual([
       [0, 0x90, 48],
-      [96, 0x80, 48],
+      [192, 0x80, 48],
       [0, 0x90, 52],
-      [96, 0x80, 52],
+      [192, 0x80, 52],
     ])
     const bass = events(b.body)
     expect(bass[1]).toEqual([0, 0xc1, 33])

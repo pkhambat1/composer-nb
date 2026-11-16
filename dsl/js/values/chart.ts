@@ -25,7 +25,7 @@ import { NAME_LIKE } from "../resolve.ts"
 import type { State } from "../state.ts"
 import { drawsNotes, spaceNotes } from "./notes.ts"
 import { splitBars, tokenize } from "./steps.ts"
-import { TPQ, timeLabel, type Report } from "../time.ts"
+import { barSlotTicks, timeLabel, type Report } from "../time.ts"
 
 export type Key = NonNullable<ReturnType<typeof parseKey>>
 export type Chord = NonNullable<ReturnType<typeof buildChord>>
@@ -287,7 +287,7 @@ export function chordPattern(
       }
       continue
     }
-    if (barTicks % bar.length || (barTicks / bar.length) % (TPQ / 4)) {
+    if (!barSlotTicks(barTicks, bar.length)) {
       err(
         part.ln,
         `A ${timeLabel(st)} bar can't be split evenly into ${bar.length}. ` +

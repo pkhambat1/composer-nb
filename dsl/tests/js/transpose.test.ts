@@ -29,7 +29,7 @@ describe("transpose", () => {
       ["guitar", 2, [2, 6, 9]],
       ["piano", 2, [2, 6, 9]],
     ])
-    expect(p.notes.map((e) => e.note.name)).toEqual(["F#3", "F#3", "F#3", "F#3"])
+    expect(p.notes.map((e) => e.note.name)).toEqual(["F#3"])
     expect(
       parseSource(
         "set key C\nset octave 4\nset transpose -3\nplay piano: notes i---iii---",

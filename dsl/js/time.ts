@@ -5,6 +5,11 @@
 import { message } from "./diagnostics.ts"
 
 export const TPQ = 96 // ticks per quarter note: fine enough for 1/32 notes and triplets
+// Notes and chords divide each bar into equal slots on the sixteenth-note grid.
+export function barSlotTicks(barTicks: number, slots: number): number | null {
+  const ticks = barTicks / slots
+  return slots > 0 && ticks % (TPQ / 4) === 0 ? ticks : null
+}
 // The longest a length can be, and a block's layers can take to line up again
 export const MAX_BARS = 64
 // The longest a cell can play, in seconds

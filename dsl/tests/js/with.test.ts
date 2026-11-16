@@ -41,7 +41,7 @@ describe("a key and its mode", () => {
     const voice = sheetAbc(p.outputs[0].blocks[0])
       .abc.split("\n")
       .find((l) => l.startsWith("[V:P1]"))
-    expect(voice).toBe("[V:P1] ^f4 g4 z4 z4 |")
+    expect(voice).toBe("[V:P1] ^f8 g8 |")
     expect(sheetAbc(p.outputs[0].blocks[0]).abc).toContain("K:Gm")
   })
 
@@ -122,8 +122,8 @@ describe("with", () => {
     ).outputs[0]
     expect(chords(o)).toEqual(["Em", "G", "D", "Am"])
     // the bass's two notes, under the whole chart, an octave below
-    expect(notes(o)).toEqual(Array(4).fill(["bass E2", "bass B2"]).flat())
-    expect(o.notes.map((e) => e.secStart).slice(0, 2)).toEqual([0, 0.625])
+    expect(notes(o)).toEqual(Array(2).fill(["bass E2", "bass B2"]).flat())
+    expect(o.notes.map((e) => e.secStart).slice(0, 2)).toEqual([0, 1.25])
     expect(o.durSec).toBe(5)
   })
 
@@ -170,12 +170,7 @@ describe("with", () => {
     const bar = clean(
       "play block {\n  with octave 5 { piano: notes i--- } on bar 2,\n  kick: x---\n} for 2 bars",
     ).outputs[0]
-    expect(bar.notes.map((e) => [e.note.name, e.secStart])).toEqual([
-      ["C5", 2],
-      ["C5", 2.5],
-      ["C5", 3],
-      ["C5", 3.5],
-    ])
+    expect(bar.notes.map((e) => [e.note.name, e.secStart])).toEqual([["C5", 2]])
     expect(
       notes(clean("play every 1/2 beats with octave 5 { piano: notes i- }").outputs[0]),
     ).toEqual(["piano C5"])

@@ -36,6 +36,7 @@ export type Section = {
 }
 
 export type State = Timing & {
+  noteStepTicks?: number // explicit every: notes use fixed steps instead of dividing bars
   transpose: number // semitones that what's pitched sounds from what's written
   octave: number
   kit: string

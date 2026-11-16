@@ -1,6 +1,6 @@
 ---
 title: "notes"
-description: "The `notes` type: one voice of single notes for a pitched instrument, written one note per step."
+description: "The `notes` type: one voice of single notes, dividing each bar evenly like chords."
 ---
 
 ```text Syntax
@@ -14,7 +14,7 @@ call      ::= ["^" | "~"] interval "(" note_seq ["," integer] ")"
 note_fill ::= "..." (pitch | "-" | "_")
 ```
 
-A `notes` value is a melody or bass line: one note at a time on the step grid. It names no instrument: the [instrument line](/pitched/instruments#instrument-lines) it is written on decides what plays it. Several voices at once are [layers](/pitched/instruments#layers) on that line.
+A `notes` value is a melody or bass line: one note at a time, written in bars. It names no instrument: the [instrument line](/pitched/instruments#instrument-lines) it is written on decides what plays it. Several voices at once are [layers](/pitched/instruments#layers) on that line.
 
 ## Where a notes value is written
 
@@ -34,7 +34,7 @@ A `notes` value is a melody or bass line: one note at a time on the step grid. I
 | Name | `riff` | The notes of a declared `notes` name, in place. |
 | Interval call | `octave(riff)`, `fifth(1 3)` | The argument, moved through the scale; see [Interval functions](/functions/intervals). |
 | Repeat | `4*1`, `2*(1-3-)`, `2*riff` | The word, name, call or group, that many times in a row. |
-| Bar line | `\\|` | Checks that a bar ends here. Takes no time. |
+| Bar line | `\\|` | Separates bars. The notes, holds and rests in each bar divide it evenly. |
 | Fill | `...-`, `..._`, `...5` | Last on the line: holds, rests or sounds a note to the end of the surrounding part. |
 
 Items are separated by spaces, which take no time. Two notes may not touch: `F# E`, not `F#E`. A note may be followed directly by its holds and rests, and the next note may follow those: `1---3---`.
@@ -61,15 +61,21 @@ notes C(C3) E4 F#2 Bb(Bb3), 1(C3) 3(E3) b3(Eb3) 8(C4) -1(B2), 1(C3) 3(E3) 5(G3)
 
 ## Steps, holds and rests
 
-Each note, hold and rest lasts one step, however many characters the note takes to write. A step is a sixteenth note unless [every](/language/patterns#every) changes it.
+Each note, hold and rest occupies one slot, however many characters the note takes to write. The slots in each bar divide that bar evenly, just as they do in `chords`: in `4 over 4`, `1 2 3 4` is four quarter notes, `1 5` is two half notes, and `1` is a whole note. Without a bar line, the entire value is one bar; with bar lines, each bar divides independently.
 
-| Token | Effect on its step |
+```composer-nb Example
+play piano: notes 1 2 3 4 | 5 6 7 8 | 8 7 6 5 | 4 3 2 1
+```
+
+As with chords, slots must land on the sixteenth-note grid. For a fixed step length, triplets or a riff shorter than a bar, use [every](/language/patterns#every): `play every 1/4 beats piano: notes 1 2 3` plays three sixteenth notes. Inside `every`, `|` checks that the fixed steps reach a bar boundary.
+
+| Token | Effect on its slot |
 | --- | --- |
 | A pitch | Starts a note. |
 | `^` before a pitch or call | Starts it accented. |
 | `~` before a pitch or call | Starts it soft. |
 | `-` | The note sounding keeps sounding. Silent if nothing is sounding. |
-| `_` | The note sounding stops. The step is silent. |
+| `_` | The note sounding stops. The slot is silent. |
 
 A note sounds until the next note, the next `_`, or the end of the part. In a repeating pattern, a note still held at the end of the line rings into the repeat until the line's first note or rest.
 
@@ -79,7 +85,7 @@ play piano: notes C4--- E4-_- ^G4- ~G4- C5---
 
 ## Length
 
-| Form | Length in steps |
+| Form | Slots contributed |
 | --- | --- |
 | Note word | One per note, hold and rest. |
 | Name | The length of the named value. |
@@ -88,7 +94,7 @@ play piano: notes C4--- E4-_- ^G4- ~G4- C5---
 | `\\|` | 0. |
 | Fill | None of its own; see [Fills](/pitched/notes#fills). |
 
-A finite `notes` value may be at most 64 bars long.
+A finite `notes` value may be at most 64 bars long. Names and interval calls insert their slots and bar lines in place; use `phrase | third(phrase)` to put two phrases in separate bars. Repeats copy slots, so `8*1` plays eight eighth notes in one `4 over 4` bar, while `2*(1 3 |)` plays two bars of half notes.
 
 ## Repeats
 
@@ -103,7 +109,7 @@ repeat ::= integer "*" (note_word | name | call | "(" note_item+ ")")
 
 Plays its right-hand side `integer` times in a row. A repeat copies what it is given: `8*1` is eight separate notes, `1 7*-` is one note held for eight steps, and `8*_` is eight silent steps. Parentheses in notes always need a count.
 
-As with steps, a line in a pattern that is one figure written out several times is an error; see [In a pattern, write the figure once](/drums/steps#in-a-pattern-write-the-figure-once).
+A pattern may repeat attacks within a bar: `4*1` is four notes, not one long note. A sequence of whole bars written out several times in a pattern is an error, since the pattern repeats those bars automatically. Under `every`, the fixed-step repeating-figure rule applies; see [In a pattern, write the figure once](/drums/steps#in-a-pattern-write-the-figure-once).
 
 ```composer-nb Example
 print(notes 2*(1 3) 5 3*-)
@@ -125,10 +131,10 @@ note_fill ::= "..." (pitch | "-" | "_")
 | `..._` | The note sounding stops; silence to the end. |
 | `...pitch` | That note starts and is held to the end. |
 
-A fill is the last item on a line and has no length of its own: another finite line, or an explicit length, must say when the part ends. A value with a fill cannot be named, printed or passed to a function.
+A fill is the last item on a line and has no length of its own: another finite line, or an explicit length, must say when the part ends. It starts after the written bars (or after the fixed steps inside `every`); with no prefix it starts immediately. A value with a fill cannot be named, printed or passed to a function.
 
 ```composer-nb Example
-play block { piano: notes 1-3-5 ...-, kick: x--- x--- x--- x--- }
+play piano: notes 1 3 5 - ...- for 2 bars
 ```
 
 ## Interval calls

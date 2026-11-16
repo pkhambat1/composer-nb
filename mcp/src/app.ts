@@ -9,7 +9,7 @@ import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 
 // Hosts cache resources by URI. These versions load hosted assets from static storage.
 export const CELL_UI = "ui://composer-nb/cell/v5"
-export const NOTEBOOK_UI = "ui://composer-nb/notebook/v7"
+export const NOTEBOOK_UI = "ui://composer-nb/notebook/v8"
 
 // Where the player fetches its sounds: the drum kit, the sampled instruments.
 export const SOUND_HOSTS = [
@@ -24,8 +24,10 @@ const FONTS =
   "https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Serif:wght@400;600&display=swap"
 // Hosted resources must not return the multi-megabyte editor through a function
 // on every open. Local standalone servers retain the self-contained fallback.
-const assetOrigin = process.env.COMPOSER_NB_APP_ORIGIN || process.env.COMPOSER_NB_ORIGIN
-const ASSET_ORIGIN = assetOrigin ? new URL(assetOrigin).origin : null
+const assetOriginOf = (given?: string): string | null => {
+  const origin = process.env.COMPOSER_NB_APP_ORIGIN || given || process.env.COMPOSER_NB_ORIGIN
+  return origin ? new URL(origin).origin : null
+}
 
 let scriptLoading: Promise<string> | null = null
 let stylesLoading: Promise<string> | null = null
@@ -75,9 +77,10 @@ function assets() {
 }
 
 // The page the host renders.
-export async function cellHtml(): Promise<string> {
-  const published = ASSET_ORIGIN ? await assets() : null
-  const base = `${ASSET_ORIGIN}/mcp-assets/`
+export async function cellHtml(assetOrigin?: string): Promise<string> {
+  const origin = assetOriginOf(assetOrigin)
+  const published = origin ? await assets() : null
+  const base = `${origin}/mcp-assets/`
   const assetUrl = published ? `${base}${published.renderer}` : null
   // Inline JS must not close its own tag; "<\/" is the same string to JavaScript.
   const scriptTag = published
@@ -106,7 +109,8 @@ ${scriptTag}
 }
 
 // Registers the page as the resource parse names in its _meta.ui.resourceUri.
-export function registerCellApp(server: McpServer): void {
+export function registerCellApp(server: McpServer, assetOrigin?: string): void {
+  const origin = assetOriginOf(assetOrigin)
   for (const resourceUri of [CELL_UI, NOTEBOOK_UI]) {
     registerAppResource(
       server,
@@ -124,7 +128,7 @@ export function registerCellApp(server: McpServer): void {
             {
               uri: resourceUri,
               mimeType: RESOURCE_MIME_TYPE,
-              text: await cellHtml(),
+              text: await cellHtml(origin ?? undefined),
               _meta: {
                 "openai/ui": {
                   availableDisplayModes:
@@ -133,11 +137,7 @@ export function registerCellApp(server: McpServer): void {
                 ui: {
                   csp: {
                     connectDomains: [...SOUND_HOSTS, "blob:"],
-                    resourceDomains: [
-                      ...FONT_HOSTS,
-                      "blob:",
-                      ...(ASSET_ORIGIN ? [ASSET_ORIGIN] : []),
-                    ],
+                    resourceDomains: [...FONT_HOSTS, "blob:", ...(origin ? [origin] : [])],
                   },
                   prefersBorder: true,
                 },

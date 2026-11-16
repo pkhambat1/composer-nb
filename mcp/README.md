@@ -88,7 +88,9 @@ returns 503; partial configuration also fails closed. There is no anonymous host
 MCP fallback. The migration and
 local tests do not configure or deploy the production project automatically.
 
-Hosted UI resources use `COMPOSER_NB_ORIGIN` as their default asset origin. The
+Hosted UI resources use the configured server origin as their default asset origin.
+Programmatic servers can pass `assetOrigin` to `createServer`; without it,
+`COMPOSER_NB_ORIGIN` supplies the default. The
 Vercel build publishes content-hashed bootstrap, renderer and CSS files under
 `/mcp-assets/`, with cross-origin loading and immutable browser/CDN caching. Each
 `resources/read` returns only a small HTML page, rather than transferring the

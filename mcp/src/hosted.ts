@@ -162,6 +162,7 @@ export function createHostedApp(
     }
     await handleMcp(req, res, {
       site: provider.origin,
+      assetOrigin: provider.origin,
       workspace: new SupabaseNotebookWorkspace(db, owner),
     })
   })

@@ -37,7 +37,7 @@ const examples: Groove[] = [
     body: "A short piano phrase answers itself a third higher. `third(phrase)` keeps the rhythm and moves each note through D Dorian; edit the original phrase and both versions change.",
     source: `with key D, mode dorian, octave 4, tempo 96 {
   notes phrase = 1--- 3-4- 6--- 5-3-|2--- 4--- 1 7*-,
-  play piano: notes phrase third(phrase)
+  play piano: notes phrase | third(phrase)
 }`,
   },
   {
@@ -59,7 +59,7 @@ const examples: Groove[] = [
     source: `with key C, mode major, tempo 108 {
   play block {
     with octave 4 { piano: chords 2m7|5dom7|1maj7|% },
-    with octave 2 { bass: notes 2 15*-|5 15*-|1 31*- }
+    with octave 2 { bass: notes 2|5|1|- }
   }
 }`,
   },

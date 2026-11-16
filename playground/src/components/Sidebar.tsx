@@ -34,6 +34,7 @@ export default function Sidebar({
   onNewNotebook,
   onRenameNotebook,
   onMoreNotebooks,
+  onHome,
   logo = "/composer-mark.png",
   footer,
 }: {
@@ -44,6 +45,7 @@ export default function Sidebar({
   onRenameNotebook?: (id: string, title: string) => void
   /** When the list has more notebooks than it shows */
   onMoreNotebooks?: () => void
+  onHome?: () => void
   logo?: string
   /** What sits at the foot: the account menu, on the website */
   footer?: React.ReactNode
@@ -127,7 +129,17 @@ export default function Sidebar({
         aria-label="Workspace"
       >
         <div className="lhs-brand">
-          <button type="button" className="lhs-brand-link" title="composer-nb">
+          <button
+            type="button"
+            className="lhs-brand-link"
+            title={onHome ? "Your notebooks" : "composer-nb"}
+            onClick={() => {
+              if (onHome) {
+                close()
+                onHome()
+              }
+            }}
+          >
             <img className="lhs-brand-logo" src={logo} width="28" height="28" alt="" />
             <span className="lhs-brand-title">
               Composer<span className="lhs-brand-ext">.nb</span>
@@ -204,6 +216,7 @@ export default function Sidebar({
                 className={
                   "lhs-tab lhs-tab-notebook" + (current?.id === nb.id ? " lhs-tab-active" : "")
                 }
+                aria-current={current?.id === nb.id ? "page" : undefined}
                 onClick={() => {
                   close()
                   onOpenNotebook(nb.id)

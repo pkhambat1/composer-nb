@@ -9,6 +9,7 @@ export default defineConfig({
     proxy: Object.fromEntries(
       [
         "/mcp",
+        "/mcp-assets", // hashed renderer assets from the development server
         "/authorize",
         "/token",
         "/register",

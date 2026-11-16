@@ -242,7 +242,7 @@ every ::= "every" number "beats" (line | name | group | [length] body)
 | `number` | `number` | The length of one step in beats (quarter notes). At least 1/12, and a whole number of ticks at 96 per beat. |
 | Operand | `part` | A line, a `pattern` or `block` name, a group, or a body. The body takes no keyword and is a pattern. |
 
-Sets how long one step lasts inside its part. The default is 1/4 beat, a sixteenth note. The value is absolute, not relative to an enclosing `every`, and an `every` that sets the length already in effect is an error.
+Sets how long one step lasts inside its part. Drum steps default to 1/4 beat, a sixteenth note; notes normally divide bars into equal slots. An explicit `every` switches notes to fixed steps, including `every 1/4 beats` for sixteenths. The value is absolute, not relative to an enclosing `every`; nesting an `every` with the same pace is an error.
 
 | `every` | One step is |
 | --- | --- |
@@ -253,7 +253,7 @@ Sets how long one step lasts inside its part. The default is 1/4 beat, a sixteen
 | `every 3/4 beats` | A dotted eighth note. |
 | `every 1 beats` | A quarter note. |
 
-`every` changes `steps` and `notes`. It does not change `chords`, whose slots divide bars. Lines outside the `every` keep their own step length.
+`every` changes `steps` and `notes`. It does not change `chords`, whose slots always divide bars. Lines outside the `every` keep their own timing.
 
 ```composer-nb Example
 play pattern {

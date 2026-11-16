@@ -12,7 +12,7 @@ const clean = (source: string) => {
   return parsed
 }
 const notes = (value: string, settings = "") =>
-  clean(`${settings}\nplay piano: notes ${value}`).notes
+  clean(`${settings}\nplay every 1/4 beats { block { piano: notes ${value} } }`).notes
 const chords = (value: string, settings = "") =>
   clean(`${settings}\nplay piano: chords ${value}`).chords
 const errors = (source: string) =>
@@ -218,7 +218,7 @@ describe("scale interval functions", () => {
   it("keeps rhythms, articulations, rests, lengths, bar lines and chart holds", () => {
     const silence = clean("play piano: notes fifth(----)")
     expect(silence.notes).toEqual([])
-    expect(silence.totalSec).toBe(0.5)
+    expect(silence.totalSec).toBe(2)
     const source = "^1--- ~2--- _--- 3---|4--- 5--- 6--- 7---"
     const timing = (events: ReturnType<typeof notes>) =>
       events.map((e) => [e.tick, e.ticks, e.vel, e.accent, e.ghost])
@@ -281,7 +281,7 @@ describe("scale interval functions", () => {
       "banana(1)",
       "fifth(1)x",
     ]) {
-      const p = parseCell(`play piano: notes ${value}`)
+      const p = parseCell(`play every 1/4 beats { block { piano: notes ${value} } }`)
       expect(p.errors.length, value).toBeGreaterThan(0)
       expect(p.outputs, value).toEqual([])
     }
@@ -302,9 +302,10 @@ describe("eighth", () => {
     for (const mode of modes)
       for (const n of [-2, -1, 0, 1, 2]) {
         const s = `set key D\nset mode ${mode}`
-        expect(notes(`eighth(1 3--- ^5 ~7, ${n})`, s).map((e) => e.note.midi), mode).toEqual(
-          notes(`octave(1 3--- ^5 ~7, ${n})`, s).map((e) => e.note.midi),
-        )
+        expect(
+          notes(`eighth(1 3--- ^5 ~7, ${n})`, s).map((e) => e.note.midi),
+          mode,
+        ).toEqual(notes(`octave(1 3--- ^5 ~7, ${n})`, s).map((e) => e.note.midi))
         expect(
           chords(`eighth(1 4m7/5|b3, ${n})`, s).map((e) => [e.label, e.chord.notesMidi]),
           mode,

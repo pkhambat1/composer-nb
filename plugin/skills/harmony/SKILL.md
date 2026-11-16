@@ -10,7 +10,7 @@ Build the part from an idea and the language's functions. Don't list chords or n
 1. Say the idea in a line, in theory terms: the key and mode, and what the harmony does. A cycle of fifths that falls home; a motif answered a third higher; a pedal bass under moving chords; the same chart borrowed from the parallel minor.
 2. Call `library` with the idea's words (`fifth`, `dorian`, `ii–V–I`) for a cell to start from, and read `reference` (topics `chords`, `notes`, `intervals`) for anything you haven't written.
 3. Write a seed and derive the rest:
-   - **The seed is small and named**: one or two chords, or a motif of a few notes, by degree. `chords pair = 1m7 fourth(1m7)`, `notes motif = 1---3---5---3---`.
+   - **The seed is small and named**: one or two chords, or a motif of a few notes, by degree. `chords pair = 1m7 fourth(1m7)`, `notes motif = 1 3 5 3`.
    - **Sequence it** with an interval function: `second(pair, -1)` is the same two chords a step lower, `third(motif)` the motif a third up. Every tone moves through the scale, so the qualities come out right for the key.
    - **Let the mode choose the chords.** A plain degree is the chord the scale has there; write a quality only to depart from it (`5dom7` for a dominant in minor, `4m` borrowed in major). Change the colour with `set mode` or a `with`, not with accidentals.
    - **Give the bass a line of its own**: the roots as a named line sequenced the same way, or a slash bass that walks (`1 1/3|4 5/7`), in `with octave 2`.
@@ -31,8 +31,8 @@ set mode minor
 
 chords pair = 1m7 fourth(1m7)
 chords cycle = pair|second(pair, -1)|second(pair, -2)|5dom7 -
-notes roots = 1-------4-------
-notes line = roots|second(roots, -1)|second(roots, -2)|-4 15*-
+notes roots = 1 4
+notes line = roots|second(roots, -1)|second(roots, -2)|-4 -
 
 play block {
   with octave 4 { piano: chords cycle, },
@@ -49,14 +49,13 @@ set tempo 96
 set key D
 set mode dorian
 
-notes motif = 1---3---5---3---
+notes motif = 1 3 5 3
 notes tune = motif|second(motif)|third(motif)|second(motif, -1)
 chords under = 1m7|second(1m7)|third(1m7)|second(1m7, -1)
-notes pedal = 1-------5-------
 
 play block {
   with octave 4 { piano: notes tune, },
   organ: chords under,
-  with octave 2 { bass: notes pedal|second(pedal)|third(pedal)|second(pedal, -1), },
+  with octave 2 { bass: notes 1 - 5 -|second(1 - 5 -)|third(1 - 5 -)|second(1 - 5 -, -1), },
 }
 ```

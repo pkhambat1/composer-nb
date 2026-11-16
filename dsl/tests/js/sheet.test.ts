@@ -2,11 +2,13 @@ import { describe, it, expect, vi } from "vitest"
 
 vi.mock("tone", () => ({}))
 
-const { parseSource } = await import("../../js/music-engine.ts")
+const { parseSource, initialState } = await import("../../js/music-engine.ts")
 const { sheetAbc } = await import("../../js/sheet.ts")
 
 const sheet = (src: string, opts?: Parameters<typeof sheetAbc>[1]) => {
-  const p = parseSource(src)
+  // These engraving fixtures specify exact sixteenth-note rhythms, as inside
+  // every 1/4 beats. Bar-relative engraving is covered by note-timing.test.ts.
+  const p = parseSource(src, { ...initialState(), noteStepTicks: 24 })
   expect(p.errors).toEqual([])
   return sheetAbc(p.outputs[0].blocks[0], opts)
 }

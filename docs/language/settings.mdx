@@ -50,7 +50,7 @@ Default: `4 over 4`. A bar holds `count` notes of length 1/`unit`, and may last 
 
 A `count` written as a sum groups the bar: `3+2 over 8` is five eighth notes felt as three then two, and the sheet music beams them that way. Any other expression is a single group.
 
-Changing `time` changes the length of a bar. It does not change the length of a beat, which is always a quarter note, or of a step.
+Changing `time` changes the length of a bar and therefore the slots of notes and chords. It does not change the length of a beat, which is always a quarter note, or of a drum step or a note step set by `every`.
 
 ```composer-nb Example
 set time 3+2+2 over 8
