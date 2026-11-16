@@ -108,7 +108,7 @@ integration has not yet been deployed through the published connector above.
 
 | Folder        | What it is                                                                                                                                                                                             |
 | ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `dsl/`        | The language: the parser, chord builder and audio renderer in `dsl/js/`, which the playground and the MCP server both run. Not published.                                                              |
+| `dsl/`        | The language: the parser, chord builder and audio renderer in `dsl/src/`, which the playground and the MCP server both run. Not published.                                                              |
 | `playground/` | A notebook-style web app for writing the language and hearing it. It uses `dsl/` as a package, so both always run the same parser.                                                                     |
 | `mcp/`        | The [MCP server](mcp/README.md): the language for assistants, and the notebook app they open. `api/` serves it on Vercel at `/mcp`, with the sheet and MIDI of a cell at `/api/sheet` and `/api/midi`. |
 | `plugin/`     | The [Claude plugin](plugin/README.md): that server as its connector, and skills. `.claude-plugin/marketplace.json` lists it, so this repository is its marketplace.                                    |
@@ -127,7 +127,7 @@ npm run mcp     # the MCP server at localhost:3333/mcp, for trying the MCP app b
 npm run docs    # docs site preview at http://localhost:3000
 ```
 
-The library (`dsl/js/`), the playground (`playground/src/`), the MCP server (`mcp/src/`) and the Vercel functions (`api/`) are TypeScript; `vocab.ts` holds every word the language knows. Inside this repository everything runs the source: the playground and the tests resolve `composer-nb/*` to `dsl/js/` and `composer-nb-mcp/*` to `mcp/src/` through the `composer-nb-source` export condition, Node (22.18 or later) runs it with `--conditions=composer-nb-source`, and `npm run typecheck` checks it the same way. What's deployed runs the build instead, which `tsc` compiles: the Vercel functions run `dsl/lib/` and `mcp/lib/` (`npm run build:lib -w dsl`, then `-w mcp`). `dsl/tests/js/corpus/` holds what every real cell (docs examples, grooves, skill examples) plays: a change to the engine that changes it fails `npm test`, and `npx vitest run -u` in `dsl/` rewrites it for a change that's meant.
+The library (`dsl/src/`), the playground (`playground/src/`), the MCP server (`mcp/src/`) and the Vercel functions (`api/`) are TypeScript; `vocab.ts` holds every word the language knows. Inside this repository everything runs the source: the playground and the tests resolve `composer-nb/*` to `dsl/src/` and `composer-nb-mcp/*` to `mcp/src/` through the `composer-nb-source` export condition, Node (22.18 or later) runs it with `--conditions=composer-nb-source`, and `npm run typecheck` checks it the same way. What's deployed runs the build instead, which `tsc` compiles: the Vercel functions run `dsl/lib/` and `mcp/lib/` (`npm run build:lib -w dsl`, then `-w mcp`). `dsl/tests/corpus/` holds what every real cell (docs examples, grooves, skill examples) plays: a change to the engine that changes it fails `npm test`, and `npx vitest run -u` in `dsl/` rewrites it for a change that's meant.
 
 ## Releasing the docs
 
@@ -135,7 +135,7 @@ The docs site is built by [Mintlify](https://mintlify.com) from the [`docs/`](do
 
 Mintlify publishes every `.md` and `.mdx` file in `docs/`, whether or not it is in the navigation. Folders that aren't pages are listed in [`docs/.mintignore`](docs/.mintignore).
 
-The `composer-nb` examples in the pages are parsed by `npm test` ([`dsl/tests/js/docs.test.ts`](dsl/tests/js/docs.test.ts)), so a page that falls behind the language fails CI.
+The `composer-nb` examples in the pages are parsed by `npm test` ([`dsl/tests/docs.test.ts`](dsl/tests/docs.test.ts)), so a page that falls behind the language fails CI.
 
 ## Releasing the playground
 

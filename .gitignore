@@ -31,7 +31,7 @@ dist-ssr
 supabase/.branches/
 supabase/.temp/
 
-# The engine compiled from dsl/js by tsc (npm run build:lib -w dsl)
+# The engine compiled from dsl/src by tsc (npm run build:lib -w dsl)
 dsl/lib
 # The MCP server compiled from mcp/src (npm run build:lib -w mcp)
 mcp/lib

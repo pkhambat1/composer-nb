@@ -20,6 +20,6 @@ npm run build -w dsl     # compiles js/ into lib/, which the Vercel functions ru
 ```
 
 Everything else in the repository reads `js/` directly, through the `composer-nb-source`
-export condition. `tests/js/corpus/` holds what every real cell (the docs examples, the
+export condition. `tests/corpus/` holds what every real cell (the docs examples, the
 grooves, the plugin's skill examples) plays: a change to the engine that changes it fails
 `npm test`, and `npx vitest run -u` in `dsl/` rewrites it for a change that's meant.

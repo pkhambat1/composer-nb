@@ -99,7 +99,7 @@ const config: Linter.Config[] = [
     // functions, which run in Node. tsc checks their types (npm run typecheck); this checks
     // the rest, as for the JavaScript beside them.
     files: [
-      "dsl/js/**/*.ts",
+      "dsl/src/**/*.ts",
       "mcp/src/**/*.ts",
       "mcp/scripts/**/*.ts",
       "api/**/*.ts",

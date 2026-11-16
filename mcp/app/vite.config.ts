@@ -45,7 +45,7 @@ export default defineConfig(({ mode }) => ({
       "/widget": process.env.COMPOSER_NB_DEV_API || "http://127.0.0.1:4179",
     },
   },
-  // The engine's source (dsl/js), not its build in dsl/lib
+  // The engine's source (dsl/src), not its build in dsl/lib
   resolve: {
     conditions: ["composer-nb-source", ...defaultClientConditions],
     // A sandbox cannot start a Worker on the renderer's different origin.
