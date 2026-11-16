@@ -156,7 +156,7 @@ describe("step words and finite repeats", () => {
     ]) {
       expect(errors(`play block { kick: ${value} }`), value).not.toBe("")
     }
-    clean("play block { piano: notes 8*_ C4--- ..._ } for 1 bars")
+    clean("play block { piano: notes 8*_ C4 7*- ..._ } for 1 bars")
     clean("play block { piano: chords C G }")
   })
 })
@@ -164,7 +164,8 @@ describe("step words and finite repeats", () => {
 describe("pace and placement", () => {
   it("accepts beats only and rejects an unchanged step length", () => {
     expect(hits("play every 1/2 beats { kick: x- }")).toEqual([0])
-    for (const value of ["2 steps", "1 bars", "1/4 beats"]) {
+    clean("play every 1/4 beats { piano: notes 1 2 3 }")
+    for (const value of ["2 steps", "1 bars"]) {
       expect(errors(`play every ${value} { kick: x- }`)).not.toBe("")
     }
     expect(errors("play every 1/2 beats { every 1/2 beats { kick: x- } }")).toMatch(
@@ -235,7 +236,7 @@ describe("highlighting the redesigned syntax", () => {
   })
 
   it("retains note repeats, rests, function commas, and relative note chains", () => {
-    expect(red("play block { piano: notes 8*_ C4--- ..._, guitar: chords Am F }")).toEqual([])
+    expect(red("play block { piano: notes 8*_ C4 7*- ..._, guitar: chords Am F }")).toEqual([])
     expect(red("play piano: notes fifth(C3, 2)---")).toEqual([])
   })
 })

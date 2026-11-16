@@ -91,6 +91,7 @@ function applyTheme(context: { theme?: string } | undefined) {
   const next = context?.theme
   if (next !== "dark" && next !== "light") return
   theme = next
+  document.documentElement.dataset.theme = theme
   if (shown || notebook) render()
 }
 

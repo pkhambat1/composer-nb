@@ -4,8 +4,8 @@
 import React from "react"
 import type { App } from "@modelcontextprotocol/ext-apps"
 import Sidebar from "../../playground/src/components/Sidebar.tsx"
+import NotebookTitle from "../../playground/src/components/NotebookTitle.tsx"
 import type { Theme } from "../../playground/src/notebook/index.ts"
-// The website's mark at the size the sidebar draws it, small enough to travel in the bundle
 import logo from "./composer-mark.png"
 import {
   notebookListSchema,
@@ -35,6 +35,8 @@ export function NotebookBrowser({
   const [open, setOpen] = React.useState<NotebookDocument | null>(null)
   const [list, setList] = React.useState<NotebookList>({ notebooks: [] })
   const [error, setError] = React.useState("")
+  const [busy, setBusy] = React.useState(false)
+  const working = React.useRef(false)
   // Leaving a notebook saves it first; NotebookApp hands over how
   const leave = React.useRef<(() => Promise<boolean>) | null>(null)
 
@@ -53,8 +55,16 @@ export function NotebookBrowser({
     [app],
   )
   const run = React.useCallback((work: () => Promise<void>) => {
+    if (working.current) return
+    working.current = true
+    setBusy(true)
     setError("")
-    work().catch((e: unknown) => setError(e instanceof Error ? e.message : String(e)))
+    void work()
+      .catch((e: unknown) => setError(e instanceof Error ? e.message : String(e)))
+      .finally(() => {
+        working.current = false
+        setBusy(false)
+      })
   }, [])
   const loadList = React.useCallback(
     async (offset = 0) => {
@@ -98,17 +108,31 @@ export function NotebookBrowser({
       .catch(() => {})
   }, [app, open])
 
+  const createNotebook = () =>
+    run(async () => {
+      await show("create_notebook", { title: "Untitled" })
+      await loadList()
+    })
+  const openNotebook = (id: string) => {
+    if (id !== open?.id) run(() => show("open_notebook", { notebookId: id }))
+  }
+  const moreNotebooks =
+    list.nextOffset === undefined ? undefined : () => run(() => loadList(list.nextOffset))
+
   return (
-    <div className="app-shell" data-theme={theme}>
+    <div
+      className={`app-shell notebook-browser${open ? "" : " notebook-browser-library"}`}
+      data-theme={theme}
+    >
       <Sidebar
         logo={logo}
         notebooks={{ list: listed(list, open), current: open }}
-        onOpenNotebook={(id) => {
-          if (id !== open?.id) run(() => show("open_notebook", { notebookId: id }))
-        }}
-        onNewNotebook={() =>
+        onOpenNotebook={openNotebook}
+        onNewNotebook={createNotebook}
+        onHome={() =>
           run(async () => {
-            await show("create_notebook", { title: "Untitled" })
+            if (leave.current && !(await leave.current())) return
+            setOpen(null)
             await loadList()
           })
         }
@@ -123,9 +147,7 @@ export function NotebookBrowser({
             setOpen((old) => old && retitle(old))
           })
         }
-        onMoreNotebooks={
-          list.nextOffset === undefined ? undefined : () => run(() => loadList(list.nextOffset))
-        }
+        onMoreNotebooks={moreNotebooks}
       />
       <div className="app-main">
         {error && (
@@ -136,13 +158,130 @@ export function NotebookBrowser({
         {open ? (
           <NotebookApp key={open.id} app={app} initial={open} theme={theme} leave={leave} />
         ) : (
-          <p className="notebook-notice">
-            {list.notebooks.length
-              ? "Open a notebook from the list, or ask your assistant to write something."
-              : "No notebooks yet. Add one with +, or ask your assistant to write something."}
-          </p>
+          <div className="notebook-root notebook-library" aria-busy={busy}>
+            <div className="nb-sticky-header">
+              <NotebookTitle title="Your notebooks" subtitle="" menu={null} />
+              <div className="panel-header toolbar">
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  onClick={createNotebook}
+                  disabled={busy}
+                >
+                  <svg
+                    width="12"
+                    height="12"
+                    viewBox="0 0 12 12"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    aria-hidden="true"
+                  >
+                    <path d="M6 1.5v9M1.5 6h9" />
+                  </svg>
+                  New notebook
+                </button>
+                <span className="notebook-library-count" role="status">
+                  {busy
+                    ? "Loading…"
+                    : `${list.notebooks.length}${list.nextOffset === undefined ? "" : "+"} notebook${list.notebooks.length === 1 ? "" : "s"}`}
+                </span>
+              </div>
+            </div>
+            <main className="notebook-library-main">
+              {list.notebooks.length ? (
+                <>
+                  <p className="notebook-library-intro">Pick up an idea, or start something new.</p>
+                  <ul className="notebook-library-list" aria-label="Your notebooks">
+                    {list.notebooks.map((notebook) => (
+                      <li key={notebook.id}>
+                        <button
+                          type="button"
+                          className="notebook-library-item"
+                          onClick={() => openNotebook(notebook.id)}
+                          disabled={busy}
+                        >
+                          <span className="notebook-library-icon">
+                            <NotebookIcon />
+                          </span>
+                          <span className="notebook-library-name">{notebook.title}</span>
+                          <svg
+                            className="notebook-library-arrow"
+                            width="16"
+                            height="16"
+                            viewBox="0 0 16 16"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="1.25"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            aria-hidden="true"
+                          >
+                            <path d="M3 8h10M9 4l4 4-4 4" />
+                          </svg>
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                  {moreNotebooks && (
+                    <button
+                      type="button"
+                      className="btn btn-secondary notebook-library-more"
+                      onClick={moreNotebooks}
+                      disabled={busy}
+                    >
+                      More notebooks
+                    </button>
+                  )}
+                  <p className="notebook-library-hint">
+                    Open a notebook, select a cell, and make music with your assistant.
+                  </p>
+                </>
+              ) : (
+                <div className="notebook-library-empty">
+                  <span className="notebook-library-icon">
+                    <NotebookIcon />
+                  </span>
+                  <h2>A little space for your next idea.</h2>
+                  <p>
+                    Grooves, melodies, and chord progressions.
+                    <br />
+                    Start a notebook and make something you can hear.
+                  </p>
+                  <button
+                    type="button"
+                    className="btn btn-primary"
+                    onClick={createNotebook}
+                    disabled={busy}
+                  >
+                    Create your first notebook
+                  </button>
+                </div>
+              )}
+            </main>
+          </div>
         )}
       </div>
     </div>
+  )
+}
+
+function NotebookIcon() {
+  return (
+    <svg
+      width="18"
+      height="18"
+      viewBox="0 0 18 18"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <rect x="3.5" y="2.5" width="11" height="13" rx="1.5" />
+      <path d="M6.5 2.5v13M9 6h3M9 9h3" />
+    </svg>
   )
 }

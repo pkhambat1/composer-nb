@@ -24,6 +24,7 @@ const { version: VERSION } = z
 // What a server is made with: the playground its links open
 export type Options = {
   site?: string
+  assetOrigin?: string
   notebook?: NotebookRepository
   workspace?: NotebookWorkspace
 }
@@ -59,7 +60,12 @@ function playLine(o: Output, i: number): string {
   )
 }
 
-export function createServer({ site = SITE, notebook, workspace }: Options = {}): McpServer {
+export function createServer({
+  site = SITE,
+  assetOrigin,
+  notebook,
+  workspace,
+}: Options = {}): McpServer {
   const securitySchemes = workspace?.cloud ? [{ type: "oauth2", scopes: [] }] : [{ type: "noauth" }]
   const server = new McpServer(
     { name: "composer-nb", version: VERSION },
@@ -229,7 +235,7 @@ export function createServer({ site = SITE, notebook, workspace }: Options = {})
     },
   )
 
-  registerCellApp(server)
+  registerCellApp(server, assetOrigin)
 
   for (const page of REFERENCE) {
     server.registerResource(

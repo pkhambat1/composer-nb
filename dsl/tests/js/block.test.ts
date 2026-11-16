@@ -72,7 +72,7 @@ describe("typed braces", () => {
     const cut = clean("play pattern {\n  kick: x--\n} for 1 bars")
     expect(lane(cut, "kick")).toHaveLength(6)
     expect(cut.totalSec).toBe(2)
-    const held = clean("play pattern {\n  piano: notes C4--D4--E4--\n} for 1 bars")
+    const held = clean("play pattern {\n  every 1/4 beats piano: notes C4--D4--E4--\n} for 1 bars")
     expect(held.events.map((e) => e.secStart + (e.secDur ?? 0)).pop()).toBe(2)
   })
   it("says how long a play pattern is when its lines don't meet", () => {
@@ -165,7 +165,7 @@ describe("typed braces", () => {
     expect(
       clean("play block {\n  with octave 2 { bass: notes i---v--- },\n  kick: x---\n} for 2 bars")
         .events,
-    ).toHaveLength(8)
+    ).toHaveLength(4)
     expect(
       lane(
         clean("play block {\n  kick: x---,\n  block { crash: x } on bar 2\n} for 2 bars"),

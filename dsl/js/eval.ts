@@ -123,7 +123,13 @@ export function blockClip(
     // What's after every is a pattern of its own, where a step lasts that long.
     const ticks = paceTicks(l, l.st!, err)
     if (!ticks) return null
-    const clip = blockClip([l.line], { ...l.st!, stepTicks: ticks }, err, paceCtx(l.ln), stack)
+    const clip = blockClip(
+      [l.line],
+      { ...l.st!, stepTicks: ticks, noteStepTicks: ticks },
+      err,
+      paceCtx(l.ln),
+      stack,
+    )
     if (!clip) return null
     repeated.push({ clip, what: "This pattern", ln: l.ln })
   }
@@ -224,7 +230,7 @@ export function checkSection(
     } else if (l.kind === "paced") {
       // ...and so is what plays at its own pace, where a step lasts that long
       const ticks = paceTicks(l, l.st!, err)
-      const inner = ticks ? { ...l.st!, stepTicks: ticks } : l.st!
+      const inner = ticks ? { ...l.st!, stepTicks: ticks, noteStepTicks: ticks } : l.st!
       checkSection({ anon: true, ln: l.ln, lines: [l.line], bars: 0 }, inner, err, owner)
     }
   }

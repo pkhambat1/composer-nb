@@ -174,7 +174,7 @@ export function readPace(parts: Piece[], ln: number, err: Report): Paced | null 
 export function paceTicks(l: Paced, st: State, err: Report): number | null {
   const ticks = l.n * TPQ
   if (l.n > 0 && nearWhole(ticks) && ticks >= 8) {
-    if (Math.round(ticks) === st.stepTicks) {
+    if (Math.round(ticks) === st.stepTicks && st.noteStepTicks === st.stepTicks) {
       err(l.ln, `${l.shown} repeats the current step length. Leave out this every`)
       return null
     }

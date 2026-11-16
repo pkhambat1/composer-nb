@@ -7,7 +7,8 @@ const clean = (source: string) => {
   expect(parsed.errors, source).toEqual([])
   return parsed
 }
-const notes = (value: string) => clean(`play piano: notes ${value}`).notes
+const notes = (value: string) =>
+  clean(`play every 1/4 beats { block { piano: notes ${value} } }`).notes
 const timing = (value: string) => notes(value).map((e) => [e.note.midi, e.tick, e.ticks])
 const errors = (source: string) => {
   const parsed = parseCell(source)
@@ -26,13 +27,13 @@ describe("note step repeats", () => {
       [48, 0, 96],
       [52, 192, 192],
     ])
-    expect(clean("notes silence = 8*_\nplay piano: notes silence").totalSec).toBe(1)
+    expect(clean("notes silence = 8*_\nplay piano: notes silence").totalSec).toBe(2)
   })
 
   it("expands names and nested groups with negative degrees and articulation", () => {
     const source = `notes motif = ^-1 3*- ~3- 2*_
 notes phrase = 2*(motif 2*(5- -2-))
-play piano: notes phrase`
+play every 1/4 beats { block { piano: notes phrase } }`
     const p = clean(source)
     expect(p.notes.map((e) => e.note.midi)).toEqual([
       47, 52, 55, 45, 55, 45, 47, 52, 55, 45, 55, 45,
@@ -45,7 +46,7 @@ play piano: notes phrase`
   it("composes repeats with scale functions, their counts and relative notes", () => {
     const p = clean(`set mode minor
 notes phrase = 2*(1 7*- 3 7*-)
-play piano: notes fifth(phrase, 2)`)
+play every 1/4 beats { block { piano: notes fifth(phrase, 2) } }`)
     expect(p.notes.map((e) => [e.note.midi, e.tick, e.ticks])).toEqual([
       [62, 0, 192],
       [65, 192, 192],
@@ -85,21 +86,27 @@ play piano: notes fifth(phrase, 2)`)
     ])
     expect(p.totalSec).toBe(2)
     clean("play piano: notes 2*(1 7*- 3 7*- |)")
-    expect(errors("play piano: notes 2*(1 3*- |)")).toMatch(/isn't at the end of a bar/)
+    expect(errors("play every 1/4 beats { block { piano: notes 2*(1 3*- |) } }")).toMatch(
+      /isn't at the end of a bar/,
+    )
   })
 
   it("allows finite repetition but asks pattern lines for their repeating figure once", () => {
     for (const value of ["1---1---", "2*1---", "2*(1---)"]) {
       clean(`play piano: notes ${value}`)
       clean(`play block { piano: notes ${value}, }`)
-      clean(`notes phrase = ${value}\nplay piano: notes phrase`)
-      expect(errors(`play pattern { piano: notes ${value}, }`)).toMatch(/pattern repeats it/)
+      clean(`notes phrase = ${value}\nplay every 1/4 beats { block { piano: notes phrase } }`)
+      clean(`play pattern { piano: notes ${value}, }`)
+      expect(errors(`play every 1/4 beats { piano: notes ${value}, }`)).toMatch(
+        /pattern repeats it/,
+      )
     }
     clean("play pattern { piano: notes 1 7*- 3 7*-, }")
   })
 
   it("fills with a new note, sustain or silence after a finite prefix", () => {
-    const fill = (value: string) => clean(`play block { piano: notes ${value}, hat: 16*x, }`).notes
+    const fill = (value: string) =>
+      clean(`play every 1/4 beats { block { piano: notes ${value}, hat: 16*x, } }`).notes
     expect(fill("1 3*- ...-").map((e) => [e.tick, e.ticks])).toEqual([[0, 384]])
     expect(fill("1 3*- ..._").map((e) => [e.tick, e.ticks])).toEqual([[0, 96]])
     expect(fill("1 3*- ...3").map((e) => [e.note.midi, e.tick, e.ticks])).toEqual([
