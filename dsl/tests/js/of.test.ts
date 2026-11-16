@@ -19,7 +19,7 @@ describe("retired of operator", () => {
     "play (verse of chorus)",
   ])("rejects %s with interval-function guidance", (source) => {
     const parsed = parseCell(source)
-    expect(parsed.errors).toHaveLength(1)
+    expect(parsed.errors).toHaveLength([...source.matchAll(/\bof\b/g)].length)
     expect(parsed.errors[0].msg).toMatch(/of.*no longer supported.*fifth\(5\)/)
     expect(parsed.outputs).toEqual([])
     expect(parsed.prints).toEqual([])
@@ -39,10 +39,11 @@ describe("retired of operator", () => {
     expect(parsed.prints).toHaveLength(2)
   })
 
-  it("marks the retired operator as an error and removes it from keywords", () => {
+  it("reports the retired operator through the engine and removes it from keywords", () => {
     for (const source of ["notes 5 of 5", "chords 5 of 5", "print(chords fifth(5 of 5))"]) {
       const parts = highlightMusic(source).flat()
-      expect(parts.some((part) => part.c === "tk-error" && part.s === "of")).toBe(true)
+      expect(parts.some((part) => part.c === "tk-error")).toBe(false)
+      expect(parseCell(source).errors.length).toBeGreaterThan(0)
       expect(parts.map((part) => part.s).join("")).toBe(source)
     }
     expect(KEYWORDS).not.toContain("of")

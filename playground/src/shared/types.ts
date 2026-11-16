@@ -14,11 +14,17 @@ export type SavedCell = { id?: string; type: CellType; source: string }
 // What a music cell shows under it once it has run: its errors, a note that nothing
 // plays, the parse while the audio renders, then the audio
 export type CellOutput =
-  | { kind: "error"; error: string; lines?: number[]; source?: string }
+  | { kind: "error"; error: string }
   | { kind: "info"; message: string }
   | { kind: "printed"; parsed: Parsed }
   | { kind: "rendering"; parsed: Parsed; duration: number }
   | { kind: "rendered"; parsed: Parsed; buffer: ToneAudioBuffer; duration: number }
+
+// A mistake in a cell: its message and the span of the source it's about
+export type Diagnostic = Parsed["errors"][number]
+// What's wrong with a music cell's source as it stands, and the source that was read: the
+// editor marks these spans while its text is still that source
+export type Checked = { source: string; errors: Diagnostic[] }
 
 // Where a cell is in being run: waiting its turn, being read, its audio being rendered
 export type CellStatus = "idle" | "waiting" | "running" | "rendering"

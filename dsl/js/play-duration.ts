@@ -2,6 +2,8 @@
    syntax; this modifier controls the whole output, including truncation or silence. */
 import type { Block, Text } from "./syntax.ts"
 import { lengthPrefix, type Report } from "./time.ts"
+import { SourceText } from "./source.ts"
+import type { Span } from "./syntax.ts"
 
 export function playDuration(
   parts: (Text | Block)[],
@@ -11,6 +13,7 @@ export function playDuration(
   parts: (Text | Block)[]
   bars: number
   has: boolean
+  at?: Span
 } | null {
   let depth = 0
   for (let index = 0; index < parts.length; index++) {
@@ -28,7 +31,12 @@ export function playDuration(
         continue
       const duration = lengthPrefix(part.text.slice(column + 3).trim())
       if (index !== parts.length - 1 || !duration.has || duration.rest.trim()) {
-        error(line, "A play's duration follows its music: play groove for 2 bars")
+        // The duration as written, from for to the end of its text
+        error(
+          line,
+          "A play's duration follows its music: play groove for 2 bars",
+          part.text.slice(column),
+        )
         return null
       }
       const before = part.text.slice(0, column).trimEnd()
@@ -36,6 +44,7 @@ export function playDuration(
         parts: [...parts.slice(0, index), ...(before ? [{ ...part, text: before }] : [])],
         bars: duration.bars,
         has: true,
+        at: SourceText.from(part.text, part.span).slice(column).span,
       }
     }
   }

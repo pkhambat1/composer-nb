@@ -2,6 +2,7 @@
    drums' and the pitched instruments', and spans that say what bar grid is over them.
    layer plays a block's lines, and the clips already made from its patterns, together:
    whatever repeats fits, the lower line wins a moment, and swing moves the sound. */
+import type { At } from "./diagnostics.ts"
 import type { PartLine, Played } from "./lines.ts"
 import { readPart } from "./lines.ts"
 import type { State } from "./state.ts"
@@ -44,11 +45,14 @@ export type Clip = {
   ln?: number // the line it was played from
   until?: number // put in a bar: the last bar it's in
 }
-// A clip that repeats to fill what it's in, what to call it, and its line
-export type Repeated = { clip: Clip; what: string; ln: number }
-// Where something is played from, for its length and its messages
+// A clip that repeats to fill what it's in, what to call it, its line, and what in that
+// line plays it, as written
+export type Repeated = { clip: Clip; what: string; ln: number; at: At }
+// Where something is played from, for its length and its messages. `at` is what in its
+// line plays it, as written: a mistake in how long it is is said there.
 export type Ctx = {
   ln?: number
+  at: At
   repeats: boolean // in a pattern, everything repeats until it ends
   where: string
   what: string
@@ -60,13 +64,15 @@ export type Ctx = {
 // a play, lines play once and only patterns repeat.
 export const blockCtx = (name: string, ln: number): Ctx => ({
   ln,
+  at: name,
   repeats: true,
   where: `in ${name}`,
   what: name,
   sized: `pattern ${name} = 4 bars {`,
 })
-export const playCtx = (ln: number): Ctx => ({
+export const playCtx = (ln: number, at: At = "play"): Ctx => ({
   ln,
+  at,
   repeats: false,
   where: "in this play",
   what: "This play",
@@ -75,8 +81,9 @@ export const playCtx = (ln: number): Ctx => ({
 // A play's own length is how long its output is: what's in it is cut there, so it doesn't
 // have to fit.
 export const outputCtx = (ln: number): Ctx => ({ ...playCtx(ln), cuts: true })
-export const anonCtx = (ln: number): Ctx => ({
+export const anonCtx = (ln: number, at: At = "pattern"): Ctx => ({
   ln,
+  at,
   repeats: true,
   where: "in this pattern",
   what: "This pattern",
@@ -84,7 +91,7 @@ export const anonCtx = (ln: number): Ctx => ({
 })
 // A block without a name plays once, as a named one does.
 export const onceCtx = (ln: number): Ctx => ({
-  ...anonCtx(ln),
+  ...anonCtx(ln, "block"),
   repeats: false,
   where: "in this block",
   what: "This block",
@@ -93,6 +100,7 @@ export const onceCtx = (ln: number): Ctx => ({
 // play pattern { ... }: a play whose lines repeat, and which stops at its own length.
 export const patternPlayCtx = (ln: number): Ctx => ({
   ...outputCtx(ln),
+  at: "pattern",
   repeats: true,
   where: "in this pattern",
   what: "This pattern",
@@ -100,23 +108,28 @@ export const patternPlayCtx = (ln: number): Ctx => ({
 })
 // A with's block is a pattern of its own, played with the with's settings.
 export const withCtx = (ln: number, shown: string): Ctx => ({
-  ...anonCtx(ln),
+  ...anonCtx(ln, shown),
   where: "in this with",
   what: "This with",
   sized: `4 bars ${shown} { ... }`,
 })
 // What plays at its own pace is a pattern of its own, whose length comes from its lines
-// or from a length in front of its braces.
-export const paceCtx = (ln: number): Ctx => ({
-  ...anonCtx(ln),
+// or from a length in front of its braces. `shown` is its every, as written.
+export const paceCtx = (ln: number, shown: string): Ctx => ({
+  ...anonCtx(ln, shown),
   where: "at this pace",
   sized: "every 3/4 beats 4 bars { ... }",
 })
+// What's put in a bar, where it's written: fill on bar 2
+const PLACED = "on bar"
 // What plays in a bar is a pattern that lasts that bar.
 export const placeCtx = (l: { ln: number; from: number; to: number }): Ctx => {
   const bars = l.from === l.to ? `bar ${l.from}` : `bar ${l.from} to ${l.to}`
-  return { ln: l.ln, repeats: true, where: `in ${bars}`, what: `What's in ${bars}` }
+  return { ln: l.ln, at: PLACED, repeats: true, where: `in ${bars}`, what: `What's in ${bars}` }
 }
+
+// An instrument's line, where it's written: kick:
+const lineHead = (part: PartLine) => `${part.name}:`
 
 // `clip` played end to end until `durSec`. The last time through may be cut short.
 function tile(clip: Clip, durSec: number): Clip {
@@ -171,7 +184,7 @@ export function layer(
   // inside a group, plays at its own pace, so it can only sound on its own.
   if (read.length + once.length + repeated.length > 1) {
     const paced: Repeated[] = [
-      ...once.map((c) => ({ clip: c, what: "What's in this bar", ln: c.ln! })),
+      ...once.map((c) => ({ clip: c, what: "What's in this bar", ln: c.ln!, at: PLACED })),
       ...repeated,
     ]
     for (const r of paced) {
@@ -184,6 +197,7 @@ export function layer(
         r.ln,
         `${r.what} changes the ${which}, so it can't sound together with other lines. ` +
           `Play it on its own, or put the with around the whole play: with ${which} ${which === "time" ? own.time : which === "tempo" ? own.tempo : own.swing ? "on" : "off"} { play ... }`,
+        r.at,
       )
       return null
     }
@@ -191,7 +205,12 @@ export function layer(
   const fixed = read.filter((p) => !("open" in p && p.open))
   const loops = [
     ...(ctx.repeats
-      ? fixed.map((p) => ({ what: `The ${p.part.name} line`, ticks: p.ticks, ln: p.part.ln }))
+      ? fixed.map((p) => ({
+          what: `The ${p.part.name} line`,
+          ticks: p.ticks,
+          ln: p.part.ln,
+          at: lineHead(p.part),
+        }))
       : []),
     ...repeated.map((r) => ({ ...r, ticks: r.clip.durSec / secPerTick })),
   ]
@@ -205,6 +224,7 @@ export function layer(
     err(
       ctx.ln ?? read[0].part.ln,
       `Every line ${ctx.where} ends in ..., so nothing says how long it is. Say so: ${ctx.sized}`,
+      ctx.at,
     )
     return null
   }
@@ -214,7 +234,11 @@ export function layer(
     // A length too short for a single tick would be a clip of no length, which nothing
     // can be filled with.
     if (totalTicks < 1) {
-      err(ctx.ln!, `${fmt(bars)} bars is shorter than the shortest note, so nothing fits in it`)
+      err(
+        ctx.ln!,
+        `${fmt(bars)} bars is shorter than the shortest note, so nothing fits in it`,
+        ctx.at,
+      )
       return null
     }
   } else if (ctx.repeats) {
@@ -228,6 +252,7 @@ export function layer(
         ctx.ln ?? loops[0].ln,
         `What's ${ctx.where} only lines up again after more than ${MAX_BARS} bars. ` +
           `Say how long it is: ${ctx.sized}`,
+        ctx.at,
       )
       return null
     }
@@ -236,6 +261,7 @@ export function layer(
     err(
       placed.ln!,
       `${ctx.what} is ${sayTicks(totalTicks, st, barTicks)} long, so it has no bar ${placed.until}`,
+      PLACED,
     )
     return null
   }
@@ -246,6 +272,7 @@ export function layer(
         p.part.ln,
         `${ctx.what} is ${sayTicks(totalTicks, st, barTicks)} long, and the ${p.part.name} ` +
           `line's hits run ${sayTicks(p.ticks, st, barTicks)} before its ...`,
+        lineHead(p.part),
       )
       return null
     }

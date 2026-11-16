@@ -8,7 +8,19 @@ import { blockBeside } from "./eval.ts"
 import { readSequence, type Item } from "./sequence.ts"
 import { closest, unknownInstrument } from "./resolve.ts"
 import { keyOf, readSetting } from "./settings.ts"
-import { bracesIn, headOf, lengthIn, onlyBraces, textOf, withHead } from "./parts.ts"
+import {
+  bracesIn,
+  headOf,
+  lengthIn,
+  onlyBraces,
+  textOf,
+  withHead,
+  sourceOf,
+  located,
+  sourcesOf,
+} from "./parts.ts"
+import { reportIn } from "./diagnostics.ts"
+import type { SourceText } from "./source.ts"
 import type { Line, Piece, State } from "./state.ts"
 import {
   evalNumber,
@@ -43,6 +55,7 @@ export type DeclLine =
   | { kind: "word"; ln: number; type: Type; name: string; value: Piece[] }
   | { kind: "blockdef"; ln: number; type: "pattern" | "block"; name: string; value: Piece[] }
 export type PartLine = {
+  source?: SourceText
   kind: "part"
   ln: number
   st?: State // the state where it plays
@@ -61,6 +74,7 @@ export type Placed = {
   st?: State
 }
 export type Paced = {
+  source?: SourceText
   kind: "paced"
   ln: number
   n: number
@@ -70,7 +84,9 @@ export type Paced = {
   st?: State
 }
 export type SequenceLine = { kind: "sequence"; ln: number; items: Item[]; st?: State }
-export type ReadLine = SettingLine | DeclLine | PartLine | Placed | Paced | SequenceLine
+export type ReadLine = (SettingLine | DeclLine | PartLine | Placed | Paced | SequenceLine) & {
+  source?: SourceText
+}
 // An instrument's line, read as what it plays
 export type Played = (DrumClip | PitchedClip | ChartClip) & { part: PartLine }
 
@@ -95,15 +111,20 @@ export const LINE_SHAPES =
 // named block and an inline block behave identically, including playing only once.
 export function readPlace(parts: Piece[], ln: number, err: Report): Placed | null {
   const lastPart = parts[parts.length - 1]
+  // The placement as written, up to any block after it: on bar 2
+  const placement = () => /\bon\s+bar\b[^{]*/.exec(textOf(parts))![0]
   if (typeof lastPart !== "string") {
-    err(ln, "Placement follows its value: block { crash: x } on bar 2")
+    err(ln, "Placement follows its value: block { crash: x } on bar 2", placement())
     return null
   }
   const suffix = /\bon\s+bar(?=\s|$)/.exec(lastPart)
   if (!suffix) {
-    err(ln, "Placement follows its value: block { crash: x } on bar 2")
+    err(ln, "Placement follows its value: block { crash: x } on bar 2", placement())
     return null
   }
+  // The placement as written, on bar and its bars: what a mistake in the bars marks, since
+  // a bar number alone may also be written earlier on the line
+  const written = lastPart.slice(suffix.index).trim()
   const before = lastPart.slice(0, suffix.index).trim()
   const value = [...parts.slice(0, -1), ...(before ? [before] : [])]
   const text = lastPart
@@ -115,24 +136,24 @@ export function readPlace(parts: Piece[], ln: number, err: Report): Placed | nul
   const to = first && /^\s+to(?![A-Za-z0-9])\s*/.exec(text.slice(first.end))
   const last = to ? nums.sumAt(first.end + to[0].length) : first
   if (!first || !last) {
-    err(ln, "on bar takes a bar number or range: fill on bar 2, or fill on bar 3 to 4")
+    err(ln, "on bar takes a bar number or range: fill on bar 2, or fill on bar 3 to 4", written)
     return null
   }
   const [from, until] = [first.e.value, last.e.value]
   if (!Number.isInteger(from) || !Number.isInteger(until) || from < 1 || until > MAX_BARS) {
-    err(ln, `Bars are counted from 1, up to ${MAX_BARS}: bar 1, bar 2`)
+    err(ln, `Bars are counted from 1, up to ${MAX_BARS}: bar 1, bar 2`, written)
     return null
   }
   if (until < from) {
-    err(ln, `bar ${from} to ${until} runs backwards. The first bar comes first`)
+    err(ln, `bar ${from} to ${until} runs backwards. The first bar comes first`, written)
     return null
   }
   if (text.slice(last.end).trim()) {
-    err(ln, "Placement ends the value: fill on bar 2, or fill on bar 3 to 4")
+    err(ln, "Placement ends the value: fill on bar 2, or fill on bar 3 to 4", written)
     return null
   }
   if (!value.length) {
-    err(ln, "Put what plays before on bar: block { crash: x } on bar 2")
+    err(ln, "Put what plays before on bar: block { crash: x } on bar 2", suffix[0])
     return null
   }
   return { kind: "placed", ln, from, to: until, lines: [{ ln, parts: value }] }
@@ -144,17 +165,23 @@ export function readPlace(parts: Piece[], ln: number, err: Report): Placed | nul
 export function readPace(parts: Piece[], ln: number, err: Report): Paced | null {
   const len = lengthAt(headOf(parts).slice(5).trim())
   if (!len || len.unit !== "beats") {
-    err(ln, "every sets a step's length in beats: every 1/2 beats { kick: x }")
+    err(
+      ln,
+      "every sets a step's length in beats: every 1/2 beats { kick: x }",
+      len?.shown ?? "every",
+    )
     return null
   }
   const shown = `every ${len.shown}`
   const thing = withHead(parts, len.thing)
   if (!thing.length) {
-    err(ln, `${shown} needs what plays at that pace: ${shown} { ... }`)
+    err(ln, `${shown} needs what plays at that pace: ${shown} { ... }`, headOf(parts))
     return null
   }
   if (TYPED_BRACES_RE.test(lengthPrefix(textOf(thing)).rest)) {
-    err(ln, `What plays at a pace is a pattern, so its braces take no type: ${shown} { ... }`)
+    // The type in front of its braces
+    const type = /^\S+/.exec(lengthPrefix(headOf(thing)).rest)![0]
+    err(ln, `What plays at a pace is a pattern, so its braces take no type: ${shown} { ... }`, type)
     return null
   }
   // every 3/4 beats { ... }, every 3/4 beats 4 bars { ... }: its braces are a pattern
@@ -165,22 +192,33 @@ export function readPace(parts: Piece[], ln: number, err: Report): Paced | null 
     n: len.n,
     unit: len.unit,
     shown,
-    line: { ln, parts: thing.map((p) => (p === only ? { ...only, type: "pattern" } : p)) },
+    line: {
+      ln,
+      parts: located(
+        thing.map((p) => (p === only ? { ...only, type: "pattern" } : p)),
+        sourcesOf(thing),
+      ),
+    },
   }
 }
 
 // How long a step lasts inside every, in ticks, or null after saying it can't last that.
 // Beats always measure quarter notes, independently of the surrounding pace.
 export function paceTicks(l: Paced, st: State, err: Report): number | null {
+  err = reportIn(err, l.source)
   const ticks = l.n * TPQ
   if (l.n > 0 && nearWhole(ticks) && ticks >= 8) {
     if (Math.round(ticks) === st.stepTicks && st.noteStepTicks === st.stepTicks) {
-      err(l.ln, `${l.shown} repeats the current step length. Leave out this every`)
+      err(l.ln, `${l.shown} repeats the current step length. Leave out this every`, l.shown)
       return null
     }
     return Math.round(ticks)
   }
-  err(l.ln, `A step can't last ${l.shown.slice(6)}. Try every 1/2 beats or every 1/3 beats`)
+  err(
+    l.ln,
+    `A step can't last ${l.shown.slice(6)}. Try every 1/2 beats or every 1/3 beats`,
+    l.shown.slice(6),
+  )
   return null
 }
 
@@ -196,7 +234,7 @@ export function classify({ ln, parts }: Line, err: Report, st: State): ReadLine 
   const decl = readDecl(parts)
   if (decl) return classifyDecl(decl, ln, err, st)
   if (/^bar(?:\s|$)/.test(text)) {
-    err(ln, "Placement follows its value: block { crash: x } on bar 2")
+    err(ln, "Placement follows its value: block { crash: x } on bar 2", "bar")
     return null
   }
   if (PLACE_RE.test(text)) return readPlace(parts, ln, err)
@@ -205,6 +243,7 @@ export function classify({ ln, parts }: Line, err: Report, st: State): ReadLine 
     err(
       ln,
       "bars is a length, and goes after a number: 6 bars groove. Placement follows its value: fill on bar 3 to 4",
+      "bars",
     )
     return null
   }
@@ -233,75 +272,86 @@ export function classify({ ln, parts }: Line, err: Report, st: State): ReadLine 
       err(
         ln,
         "A line that starts with | continues the line above it, and there's no line above to continue",
+        "|",
       )
     } else if (noEquals && !(noEquals[1] === "chords" && buildChord(noEquals[2], keyOf(st)!))) {
       const [, type, name, value] = noEquals
-      err(ln, `${type} ${name} needs = before what it holds: ${type} ${name} = ${value}`)
+      err(ln, `${type} ${name} needs = before what it holds: ${type} ${name} = ${value}`, name)
     } else if (/^pattern(\s|$)/.test(text)) {
-      err(ln, patternHint(text))
+      err(ln, patternHint(text), headOf(parts))
     } else if (among(PITCHED, first.toLowerCase()) && /^[a-z]+$/.test(after) && !st.words[after]) {
       // guitar.electric muted is a setting, so it starts with set
       const name = first.toLowerCase()
       if (name in SOUNDS) {
-        err(ln, `${name} ${after} is a setting, so it starts with set: set ${name} ${after}`)
+        err(ln, `${name} ${after} is a setting, so it starts with set: set ${name} ${after}`, first)
         return null
       }
       const choice = Object.entries(SOUNDS).map(([i, s]) => `${i} (${s.join(", ")})`)
-      err(ln, `${name} has one sound. Instruments with more: ${choice.join(", ")}`)
+      err(ln, `${name} has one sound. Instruments with more: ${choice.join(", ")}`, after)
     } else if (among(PARTS, first.toLowerCase()) && after) {
-      err(ln, `Put a colon after ${first}: ${first}: ${after}`)
+      err(ln, `Put a colon after ${first}: ${first}: ${after}`, first)
     } else if (first === "chords" && after) {
-      err(ln, `Chords go on an instrument's line: ${"piano"}: ${text}`)
+      err(ln, `Chords go on an instrument's line: ${"piano"}: ${text}`, first)
     } else if (first === "notes" && after) {
-      err(ln, `Notes go on an instrument's line: guitar: notes ${spaceNotes(after)}`)
+      err(ln, `Notes go on an instrument's line: guitar: notes ${spaceNotes(after)}`, first)
     } else if (among(SETTINGS, first.toLowerCase())) {
       // tempo 90 is a setting, so it starts with set
       const name = first.toLowerCase()
       const value = text.slice(first.length).trim() || SETTING_EXAMPLE[name as Setting]
-      err(ln, `${name} is a setting, so it starts with set: set ${name} ${value}`)
+      err(ln, `${name} is a setting, so it starts with set: set ${name} ${value}`, first)
     } else if (after && evalNumber(after) && closest(first.toLowerCase(), SETTINGS)[1] <= 2) {
       err(
         ln,
         `"${first}" isn't a setting. Did you mean set ${closest(first.toLowerCase(), SETTINGS)[0]}?`,
+        first,
       )
     } else if (
       !sections[first.replace(/^\(+/, "").split("*")[0]] &&
       !/^\d/.test(first) &&
       buildChord(first, parseKey("C"))
     ) {
-      err(ln, `Chords go on an instrument's line, e.g. ${"piano"}: chords ${text}`)
+      err(ln, `Chords go on an instrument's line, e.g. ${"piano"}: chords ${text}`, headOf(parts))
     } else if (!tokens.some((t) => sections[t]) && tokens.some(drawsNotes)) {
-      err(ln, `Notes go on an instrument's line, e.g. guitar: notes ${spaceNotes(text)}`)
+      err(
+        ln,
+        `Notes go on an instrument's line, e.g. guitar: notes ${spaceNotes(text)}`,
+        headOf(parts),
+      )
     } else if (/^[A-Za-z(*\d{]/.test(first)) {
       // intro verse verse: patterns to play, one after another
       const items = readSequence(parts, ln, err, st)
       return items && { kind: "sequence", ln, items }
-    } else err(ln, LINE_SHAPES)
+    } else err(ln, LINE_SHAPES, headOf(parts))
     return null
   }
   const name = m[1].toLowerCase()
   const value = withHead(parts, m[2])
   if (name === "bars" || name === "bar") {
-    err(ln, "Write the length like this: pattern groove = 3 bars {, or play groove for 3 bars")
+    err(
+      ln,
+      "Write the length like this: pattern groove = 3 bars {, or play groove for 3 bars",
+      m[1],
+    )
     return null
   }
   if (among(SETTINGS, name)) {
     err(
       ln,
       `${name} is a setting, not an instrument, so it takes no colon: set ${name} ${textOf(value)}`,
+      m[1],
     )
     return null
   }
   if (among(PARTS, name)) {
     if (!value.length) {
-      err(ln, `${name}: needs something after the colon`)
+      err(ln, `${name}: needs something after the colon`, headOf(parts))
       return null
     }
     if (among(PITCHED, name)) return { kind: "part", ln, name, value, pitched: true }
     const [drum, art = "hit"] = name.split(".")
     return { kind: "part", ln, name, value, drum, art }
   }
-  err(ln, unknownInstrument(name))
+  err(ln, unknownInstrument(name), m[1])
   return null
 }
 
@@ -318,6 +368,7 @@ export function readPart(
   err: Report,
   repeats = true,
 ): Played | null {
+  err = reportIn(err, sourceOf(part.value) ?? part.source)
   if (part.pitched) {
     const pattern = pitchedPattern(part, st, barTicks, err, repeats)
     return pattern && { ...pattern, part }
@@ -330,6 +381,8 @@ export function readPart(
       err(
         part.ln,
         blockBeside(`${part.name} plays`, (fig: string) => `${part.name}: x--- ${fig}`),
+        // What's written beside the block
+        part.value.find((p): p is string => typeof p === "string" && !!p.trim())!,
       )
       return null
     }

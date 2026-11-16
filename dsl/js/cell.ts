@@ -22,9 +22,11 @@ import { applySetting, readWithHeader, setInBlock, WITH_HELP, withState } from "
 import { Parser } from "./parser.ts"
 import { bareValue, isBareValue, printValue, type PrintOutput } from "./print.ts"
 import { cloneState, describe, initialState, type Line, type Piece, type State } from "./state.ts"
-import { bracesIn, isBraces, plain } from "./parts.ts"
-import type { Block, Statement, Text } from "./syntax.ts"
-import { fmt, lengthPrefix, MAX_SECONDS, singularLength, TPQ } from "./time.ts"
+import { bracesIn, isBraces, located, plain, sourceOf } from "./parts.ts"
+import type { Block, Span as SourceSpan, Statement, Text } from "./syntax.ts"
+import { locator, overlaps, reportIn, type Diagnostic } from "./diagnostics.ts"
+import { SourceText } from "./source.ts"
+import { fmt, lengthPrefix, MAX_SECONDS, singularLength, TPQ, type Report } from "./time.ts"
 import { SETTINGS, TYPED_BRACES_RE } from "./vocab.ts"
 
 // The braces after play say their type, as any others do
@@ -125,9 +127,28 @@ function gridBlocks(
 export type Parsed = ReturnType<typeof parseCell> & { warnings?: string[] }
 
 export function parseCell(src: unknown, inherited: State = initialState()) {
-  const errors: { line: number; msg: string }[] = []
-  const err = (line: number, msg: string) => {
-    if (!errors.some((e) => e.line === line && e.msg === msg)) errors.push({ line, msg })
+  // What's wrong, each with the one span it's about. A mistake over code already said to be
+  // wrong is left out: it follows from that one, and each mark an editor draws has one
+  // message.
+  const errors: Diagnostic[] = []
+  const cellId = Symbol("cell source")
+  const source = String(src || "")
+  const locate = locator(source)
+  // The statement being read, where a mistake on its line is looked for first
+  let within: SourceSpan | null = null
+  let err: Report = (line, msg, at) => {
+    const span = locate(line, msg, at, within)
+    if (errors.some((e) => overlaps(e, span))) return
+    errors.push({ ...span, msg })
+  }
+  const report = err
+  report.cell = cellId
+  // The mistakes in how the cell's braces and commas are put together
+  const syntax = new Set<Diagnostic>()
+  const syntaxErr: Report = (line, msg, at) => {
+    const n = errors.length
+    err(line, msg, at)
+    if (errors.length > n) syntax.add(errors[n])
   }
   const state = Scope.forCell(inherited, cloneState)
   const setHere = new Map() // setting name → the line in this cell that set it
@@ -135,30 +156,59 @@ export function parseCell(src: unknown, inherited: State = initialState()) {
   const prints: PrintOutput[] = []
   let transposeLine: number | null = null
 
-  const raws = String(src || "").split("\n")
+  const raws = source.split("\n")
   const tree = Parser.parse(raws.join("\n"))
   // A } that closes nothing is said where it is; a { that isn't closed, by what opened it
   for (const e of tree.errors)
     if (e.code === "syntax.retiredOf")
-      err(e.span.line, '"of" expressions are no longer supported. Use interval functions such as fifth(5) or third(1); they follow the active scale')
-    else if (e.code === "brace.stray") err(e.span.line, "This } doesn't close anything")
+      syntaxErr(
+        e.span.line,
+        '"of" expressions are no longer supported. Use interval functions such as fifth(5) or third(1); they follow the active scale',
+        e.span,
+      )
+    else if (e.code === "brace.stray")
+      syntaxErr(e.span.line, "This } doesn't close anything", e.span)
     else if (e.code === "separator.semicolon")
-      err(
+      syntaxErr(
         e.span.line,
         "Use commas between entries in braces instead of semicolons; a trailing comma is allowed",
+        e.span,
       )
     else if (e.code === "separator.empty")
-      err(e.span.line, "A comma needs an entry before it; only the final comma may go before }")
+      syntaxErr(
+        e.span.line,
+        "A comma needs an entry before it; only the final comma may go before }",
+        e.span,
+      )
     else if (e.code === "separator.top")
-      err(e.span.line, "Outside braces, put each statement on its own line")
+      syntaxErr(e.span.line, "Outside braces, put each statement on its own line", e.span)
     else if (e.code === "separator.missing")
-      err(e.span.line, "Put a comma between entries in braces")
+      syntaxErr(e.span.line, "Put a comma between entries in braces", e.span)
   const at = (b: Block) => `${b.span.line}:${b.span.col}`
   const unclosed = new Set(
     tree.errors
       .filter((e) => e.code === "brace.unclosed")
       .map((e) => at({ span: e.span } as Block)),
   )
+  // The { a block opens with: what's marked when it isn't closed, or has no type
+  const opening = (b: Block): SourceSpan => ({
+    line: b.span.line,
+    col: b.span.col,
+    endLine: b.span.line,
+    endCol: b.span.col + 1,
+  })
+  // Where parts of a statement were written, from the first to the end of the last. A text
+  // ends where its words do, since a reader may have cut some off the end.
+  const spanOver = (parts: (Text | Block)[]): SourceSpan => {
+    const first = parts[0].span
+    const last = parts[parts.length - 1]
+    if (last.kind === "block")
+      return { ...first, endLine: last.span.endLine, endCol: last.span.endCol }
+    const rows = last.text.split("\n")
+    const endLine = last.span.line + rows.length - 1
+    const endCol = (rows.length > 1 ? 0 : last.span.col) + rows[rows.length - 1].length
+    return { line: first.line, col: first.col, endLine, endCol }
+  }
   // A line as written, without its comment: what messages quote
   const lineAt = (span: Statement["span"]) =>
     raws[span.line - 1]
@@ -201,43 +251,73 @@ export function parseCell(src: unknown, inherited: State = initialState()) {
     layout = false,
   ): { line: Line; dropped: boolean } => {
     let out: Piece[] = []
+    let sources: SourceText[] = []
     let dropped = false
     let last = 0 // the line the part before ended on
     // A part goes on a line of its own when it starts on a later line than the one before
-    const add = (more: Piece, from: { line: number; endLine: number }) => {
+    const add = (more: Piece, from: SourceSpan, written: SourceText) => {
       const gap = out.length && from.line > last && !layout ? "\n" : out.length ? " " : ""
       const before = out[out.length - 1]
-      if (typeof more === "string" && typeof before === "string") out[out.length - 1] += gap + more
-      else if (typeof more === "string") out.push(gap + more)
-      else {
-        if (gap === "\n") out.push("\n")
+      if (typeof more === "string" && typeof before === "string") {
+        out[out.length - 1] += gap + more
+        sources[sources.length - 1] = SourceText.join([sources[sources.length - 1], written], gap)
+      } else if (typeof more === "string") {
+        out.push(gap + more)
+        sources.push(SourceText.join([SourceText.writtenAs(gap, from), written]))
+      } else {
+        if (gap === "\n") {
+          out.push("\n")
+          sources.push(SourceText.writtenAs(gap, from))
+        }
         out.push(more)
+        sources.push(written)
       }
       last = from.endLine
     }
     for (const p of parts) {
       if (p.kind === "text") {
-        add(layout ? tidy(p.text).replace(/\n/g, " ") : tidy(p.text), p.span)
+        const written = SourceText.from(p.text, p.span, cellId).tidy(layout)
+        add(written.text, p.span, written)
         continue
       }
-      if (unclosed.has(at(p))) err(p.span.line, `${what} needs a } to close it`)
+      if (unclosed.has(at(p))) syntaxErr(p.span.line, `${what} needs a } to close it`, opening(p))
       const inner = blockLines(p.statements)
       dropped ||= inner.dropped
       if (!inner.body.length) {
         // Unless what was in them was a mistake, already said
-        if (!inner.dropped) err(ln, "These braces have nothing in them")
+        if (!inner.dropped) err(ln, "These braces have nothing in them", p.span)
         dropped = true
         out = []
+        sources = []
         continue
       }
-      add({ kind: "braces", ln: p.span.line, lines: inner.body }, p.span)
+      add(
+        { kind: "braces", ln: p.span.line, lines: inner.body },
+        p.span,
+        SourceText.block(p.span, cellId),
+      )
     }
     // A line has no space at its ends. Line breaks inside it stay: in a group in brackets, a
     // line of its own ends at one.
-    if (typeof out[0] === "string") out[0] = out[0].trimStart()
+    if (typeof out[0] === "string") {
+      sources[0] = sources[0].slice(out[0].length - out[0].trimStart().length)
+      out[0] = out[0].trimStart()
+    }
     const end = out[out.length - 1]
-    if (typeof end === "string") out[out.length - 1] = end.trimEnd()
-    return { line: { ln, parts: out.filter((p) => isBraces(p) || p) }, dropped }
+    if (typeof end === "string") {
+      sources[out.length - 1] = sources[out.length - 1].slice(0, end.trimEnd().length)
+      out[out.length - 1] = end.trimEnd()
+    }
+    return {
+      line: {
+        ln,
+        parts: located(
+          out.filter((p) => isBraces(p) || p),
+          sources.filter((_, i) => isBraces(out[i]) || out[i]),
+        ),
+      },
+      dropped,
+    }
   }
 
   // A block's statements as its lines. play goes at the top, and a pattern takes =, so
@@ -245,10 +325,24 @@ export function parseCell(src: unknown, inherited: State = initialState()) {
   const blockLines = (statements: Statement[]): { body: Line[]; dropped: boolean } => {
     const body: Line[] = []
     let dropped = false
+    const outer = within
+    const outerReport = err
     for (const s of statements) {
       const ln = s.span.line
+      within = s.span
+      err = reportIn(
+        report,
+        SourceText.join(
+          s.parts.map((p) =>
+            p.kind === "text"
+              ? SourceText.from(p.text, p.span, cellId)
+              : SourceText.block(p.span, cellId),
+          ),
+          " ",
+        ),
+      )
       if (s.kind === "play" || s.kind === "print") {
-        err(ln, `${s.kind} goes at the top, not inside braces`)
+        err(ln, `${s.kind} goes at the top, not inside braces`, s.kind)
         dropped = true
         continue
       }
@@ -256,7 +350,8 @@ export function parseCell(src: unknown, inherited: State = initialState()) {
       const head = first?.kind === "text" ? tidy(first.text) : ""
       const braced = s.parts.some((p) => p.kind === "block")
       if (braced && /^pattern\s/.test(head) && !TYPED_RE.test(head)) {
-        err(ln, patternHint(head))
+        // What's before its braces: the pattern that needs a name and =
+        err(ln, patternHint(head), first.span)
         dropped = true
         continue
       }
@@ -264,14 +359,23 @@ export function parseCell(src: unknown, inherited: State = initialState()) {
       dropped ||= read.dropped
       if (read.line.parts.length) body.push(read.line)
     }
+    within = outer
+    err = outerReport
     return { body, dropped }
   }
 
-  // Nothing follows a closing brace. `front(n)` is the right way to write a length there.
-  const checkTail = (tail: string, ln: number, front: (n: string) => string) => {
+  // Nothing follows a closing brace. `front(n)` is the right way to write a length there,
+  // and `written` is the parts the tail was read from.
+  const checkTail = (
+    tail: string,
+    ln: number,
+    front: (n: string) => string,
+    written: (Text | Block)[],
+  ) => {
     if (!tail) return true
     const after = /^(\S+)\s+bars$/.exec(tail)
-    err(ln, after ? `Write the length like this: ${front(after[1])}` : "Nothing can follow a }")
+    const msg = after ? `Write the length like this: ${front(after[1])}` : "Nothing can follow a }"
+    err(ln, msg, spanOver(written))
     return false
   }
 
@@ -280,6 +384,18 @@ export function parseCell(src: unknown, inherited: State = initialState()) {
   const run = (statements: Statement[], state: State, inWith: boolean): void => {
     for (const s of statements) {
       const ln = s.span.line
+      within = s.span
+      err = reportIn(
+        report,
+        SourceText.join(
+          s.parts.map((p) =>
+            p.kind === "text"
+              ? SourceText.from(p.text, p.span, cellId)
+              : SourceText.block(p.span, cellId),
+          ),
+          " ",
+        ),
+      )
       // The statement's first line, as messages quote it
       const text = lineAt(s.span)
       const braces = s.parts.filter((p): p is Block => p.kind === "block")
@@ -287,7 +403,7 @@ export function parseCell(src: unknown, inherited: State = initialState()) {
       if (singularLength(text, ln, err)) continue
       // pattern groove {: a pattern without its =
       if (/^pattern(\s+[A-Za-z][A-Za-z0-9]*)?\s*(=.*)?$/.test(text) && !TYPED_RE.test(text)) {
-        err(ln, patternHint(text))
+        err(ln, patternHint(text), s.parts[0]?.kind === "text" ? s.parts[0].span : text)
         continue
       }
 
@@ -297,6 +413,7 @@ export function parseCell(src: unknown, inherited: State = initialState()) {
           /^play\s*=/.test(text)
             ? "play is a keyword, not a name, so it takes no =: play groove"
             : "play is a keyword, not an instrument, so it takes no colon: play groove",
+          "play",
         )
         continue
       }
@@ -306,18 +423,18 @@ export function parseCell(src: unknown, inherited: State = initialState()) {
       if (s.kind === "with") {
         const block = braces[0]
         if (!block) {
-          err(ln, WITH_HELP)
+          err(ln, WITH_HELP, "with")
           continue
         }
         const head = s.settings.parts.map((p) => (p.kind === "text" ? tidy(p.text) : "")).join(" ")
         const settings = readWithHeader(head, ln, err)
         if (unclosed.has(at(block))) {
-          err(ln, "This with needs a } to close it")
+          syntaxErr(ln, "This with needs a } to close it", opening(block))
           break
         }
         const after = s.parts.slice(s.parts.indexOf(block) + 1)
-        if (after.length) err(block.span.endLine, "Nothing can follow a }")
-        if (!block.statements.length) err(ln, "These braces have nothing in them")
+        if (after.length) err(block.span.endLine, "Nothing can follow a }", spanOver(after))
+        if (!block.statements.length) err(ln, "These braces have nothing in them", block.span)
         const inner = settings && withState(settings, state, ln, err)
         if (inner?.transpose && inner.transpose !== state.transpose) transposeLine ??= ln
         // A mistake in the header still has its block read, for the mistakes in that
@@ -326,7 +443,7 @@ export function parseCell(src: unknown, inherited: State = initialState()) {
       }
 
       if (s.kind === "print") {
-        if (braces.length) err(ln, "print takes musical values, without braces")
+        if (braces.length) err(ln, "print takes musical values, without braces", braces[0].span)
         else {
           const value = s.value.parts.map((p) => (p.kind === "text" ? p.text : "")).join(" ")
           const printed = printValue(value, state, ln, err)
@@ -342,7 +459,7 @@ export function parseCell(src: unknown, inherited: State = initialState()) {
         const duration = playDuration(s.value.parts, ln, err)
         if (!duration) continue
         if (duration.parts[0]?.kind === "block") {
-          err(ln, UNTYPED_PLAY)
+          err(ln, UNTYPED_PLAY, opening(duration.parts[0]))
           continue
         }
         const head = duration.parts[0]?.kind === "text" ? tidy(duration.parts[0].text) : ""
@@ -353,10 +470,13 @@ export function parseCell(src: unknown, inherited: State = initialState()) {
         const repeats = typed && head === "pattern"
         const parts = typed ? duration.parts.slice(1) : duration.parts
         const bars = duration.bars
-        let ok = !duration.has || checkBars(bars, ln, err)
+        let ok = !duration.has || checkBars(bars, ln, err, duration.at!)
         const lead = parts[0]?.kind === "text" ? lengthPrefix(tidy(parts[0].text)) : null
         if (lead?.has) {
-          err(ln, "A play's duration follows its music: play groove for 2 bars")
+          // The length as written, in front of the music
+          const written = (parts[0] as Text).text
+          const shown = written.slice(0, written.length - lengthPrefix(written).rest.length)
+          err(ln, "A play's duration follows its music: play groove for 2 bars", shown)
           continue
         }
         if (!parts.length) {
@@ -365,6 +485,7 @@ export function parseCell(src: unknown, inherited: State = initialState()) {
             bars
               ? "play needs music before for: play groove for 2 bars"
               : "play needs something after it: play groove, or play block { ... }",
+            "play",
           )
           continue
         }
@@ -374,13 +495,14 @@ export function parseCell(src: unknown, inherited: State = initialState()) {
         const firstPart = parts[0]
         if (firstPart.kind === "block") {
           const block = firstPart
-          if (unclosed.has(at(block))) err(block.span.line, "play needs a } to close it")
+          if (unclosed.has(at(block)))
+            syntaxErr(block.span.line, "play needs a } to close it", opening(block))
           const read = blockLines(block.statements)
           if (block.span.endLine > ln)
             label = text.replace(/\{.*$/, "{ … }") + (duration.has ? ` for ${fmt(bars)} bars` : "")
           if (!read.body.length) {
             // Unless what was in them was a mistake, already said
-            if (!read.dropped) err(ln, "This play has nothing in its braces")
+            if (!read.dropped) err(ln, "This play has nothing in its braces", block.span)
             ok = false
           }
           const kind = repeats ? "pattern" : "block"
@@ -393,10 +515,16 @@ export function parseCell(src: unknown, inherited: State = initialState()) {
             err(
               block.span.endLine,
               `What plays in order goes in brackets: play (${kind} { ... } ${tail})`,
+              spanOver(parts.slice(1)),
             )
             ok = false
           } else if (
-            !checkTail(tail, block.span.endLine, (n) => `play ${kind} { ... } for ${n} bars`)
+            !checkTail(
+              tail,
+              block.span.endLine,
+              (n) => `play ${kind} { ... } for ${n} bars`,
+              parts.slice(1),
+            )
           ) {
             ok = false
           }
@@ -418,7 +546,7 @@ export function parseCell(src: unknown, inherited: State = initialState()) {
         const ctx = repeats ? patternPlayCtx(ln) : outputCtx(ln)
         const out = ok ? blockClip(arg, state, err, ctx, [], bars) : null
         if (out && out.durSec > MAX_SECONDS) {
-          err(ln, "This plays for over 10 minutes. Use a shorter length")
+          err(ln, "This plays for over 10 minutes. Use a shorter length", text)
         } else if (
           out &&
           !errors.some((error) => error.line >= s.span.line && error.line <= s.span.endLine)
@@ -452,13 +580,15 @@ export function parseCell(src: unknown, inherited: State = initialState()) {
           noEquals[1] === "pattern"
             ? patternHint(text)
             : `A block gets its name with =: block ${noEquals[2]} = { ... }`,
+          // What's before its braces: the type and name that need an = after them
+          s.parts[0]?.kind === "text" ? s.parts[0].span : text,
         )
         continue
       }
       if (decl) {
         const read = lineOf(decl.parts, ln, decl.name, inWith)
         const value = read.line.parts
-        if (!value.length) continue // its braces were a mistake, already said
+        if (!value.length && read.dropped) continue // its braces were a mistake, already said
         noteTranspose([read.line])
         // pattern groove = { ... } 4 bars: the length after the braces
         const tail = isBraces(value[0]) && value.length === 2 ? value[1] : null
@@ -467,12 +597,14 @@ export function parseCell(src: unknown, inherited: State = initialState()) {
           err(
             ln,
             `A length goes in front of what it measures: pattern ${decl.name} = ${after[1]} bars {`,
+            spanOver(decl.parts.slice(-1)),
           )
           continue
         }
         const l = classifyDecl({ type: decl.type, name: decl.name, value }, ln, err, state)
         if (!l) continue
-        if (l.kind === "word") defineWord(l.type, l.name, l.value, ln, state, err)
+        if (l.kind === "word")
+          defineWord(l.type, l.name, l.value, ln, state, reportIn(err, sourceOf(l.value)))
         else {
           const sec = defineBlock(l, state, err)
           if (sec) checkSection(sec, state, err)
@@ -484,19 +616,23 @@ export function parseCell(src: unknown, inherited: State = initialState()) {
       if (alone.rest.startsWith("{") || TYPED_BRACES_RE.test(alone.rest)) {
         const size = alone.has ? ` for ${fmt(alone.bars)} bars` : ""
         const kind = alone.rest.startsWith("pattern") ? "pattern" : "block"
-        err(ln, `Nothing plays this. Write play ${kind} { ... }${size}`)
+        err(ln, `Nothing plays this. Write play ${kind} { ... }${size}`, text)
         lineOf(s.parts, ln, "This {")
         continue
       }
       const bare = /^([A-Za-z][A-Za-z0-9]*)\s*\{/.exec(text)
       if (bare) {
-        err(ln, `${bare[1]} needs a type and = to name its braces: pattern ${bare[1]} = {`)
+        err(ln, `${bare[1]} needs a type and = to name its braces: pattern ${bare[1]} = {`, bare[1])
         continue
       }
       // every 3/4 beats { ... } on its own: nothing plays it
       if (EVERY_RE.test(text)) {
         const shown = text.replace(/\{.*$/, "{ ... }")
-        err(ln, `Nothing plays this. Put play in front, or give it a name: pattern slow = ${shown}`)
+        err(
+          ln,
+          `Nothing plays this. Put play in front, or give it a name: pattern slow = ${shown}`,
+          text,
+        )
         lineOf(s.parts, ln, "This {")
         continue
       }
@@ -505,6 +641,7 @@ export function parseCell(src: unknown, inherited: State = initialState()) {
         err(
           ln,
           `${text.replace(/\{.*$/, "{ ... }")} goes inside a pattern or a play, to say where in it`,
+          text,
         )
         lineOf(s.parts, ln, "This {")
         continue
@@ -525,7 +662,7 @@ export function parseCell(src: unknown, inherited: State = initialState()) {
       const line = braces.length ? plain(ln, text) : lineOf(s.parts, ln, "This {").line
       const l = classify(line, err, state)
       if (!l) continue
-      if (l.kind === "setting" && inWith) err(ln, setInBlock(l))
+      if (l.kind === "setting" && inWith) err(ln, setInBlock(l), text)
       else if (l.kind === "setting") {
         if (applySetting(l.name, l.value, ln, state, err)) {
           setHere.set(l.name, ln)
@@ -533,12 +670,17 @@ export function parseCell(src: unknown, inherited: State = initialState()) {
         }
       } else if (l.kind === "part") {
         // Nothing floats at the top: what plays is inside a pattern or a play.
-        err(ln, `An instrument's line goes inside braces: in a pattern, or play block { ${text} }`)
-      } else err(ln, `Nothing plays this line. Write play ${text}`)
+        err(
+          ln,
+          `An instrument's line goes inside braces: in a pattern, or play block { ${text} }`,
+          text,
+        )
+      } else err(ln, `Nothing plays this line. Write play ${text}`, text)
     }
   }
   if (!tree.errors.some((error) => error.code === "syntax.retiredOf"))
     run(tree.statements, state, false)
+  within = null
 
   // transpose only moves what has pitch, so one in a cell where only drums play is a
   // mistake. One inherited from a cell above is fine.
@@ -547,6 +689,7 @@ export function parseCell(src: unknown, inherited: State = initialState()) {
     err(
       transposeLine,
       "transpose moves notes and chords, and only drums play here. Give an instrument some: piano: chords C G",
+      "transpose",
     )
   }
 
@@ -585,7 +728,25 @@ export function parseCell(src: unknown, inherited: State = initialState()) {
     t += o.durSec
   }
 
-  errors.sort((a, b) => a.line - b.line)
+  // A malformed statement can cause secondary errors. Keep its syntax diagnostics, while
+  // preserving independent mistakes in the cell's other statements.
+  if (syntax.size) {
+    const broken = tree.statements.filter((s) =>
+      [...syntax].some(
+        (e) =>
+          overlaps(s.span, e) ||
+          (s.span.endLine === e.line &&
+            s.span.endCol <= e.col &&
+            !raws[e.line - 1].slice(s.span.endCol, e.col).trim()),
+      ),
+    )
+    errors.splice(
+      0,
+      errors.length,
+      ...errors.filter((e) => syntax.has(e) || !broken.some((s) => overlaps(s.span, e))),
+    )
+  }
+  errors.sort((a, b) => a.line - b.line || a.col - b.col)
   return {
     kind: "music",
     outputs,

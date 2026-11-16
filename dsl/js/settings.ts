@@ -3,10 +3,11 @@
    instrument's sound. A set applies from its line to the end of the cell; a with's settings
    apply to its block. */
 import { parseKey } from "./chords.ts"
-import { message } from "./diagnostics.ts"
+import { atOffset, message, reportIn } from "./diagnostics.ts"
 import { closest } from "./resolve.ts"
 import { cloneState, type State } from "./state.ts"
 import { evalNumber, nearWhole, sumTerms, type Report } from "./time.ts"
+import type { SourceText } from "./source.ts"
 import {
   among,
   KITS,
@@ -25,7 +26,7 @@ type Verb = "set" | "with"
 // An instrument with more than one sound
 type Sounding = keyof typeof SOUNDS
 // A setting's name and its value, as written
-export type SettingWords = { name: string; value: string }
+export type SettingWords = { name: string; value: string; source?: SourceText }
 
 // The key a state is in, as the chords and the sheet read it.
 export const keyOf = (st: State) => parseKey(st.key, st.mode)
@@ -44,7 +45,8 @@ function keyProblem(value: string, verb: Verb): string {
 export const withInLayers = (name: string) => message("with.inLayers", { name })
 
 // Applies a setting to `state`. `verb` is how it was written, set or with, for messages.
-// Returns whether it was one.
+// Returns whether it was one. A value that isn't right is the mistake, so that's what's
+// reported.
 export function applySetting(
   name: string,
   value: string,
@@ -53,6 +55,7 @@ export function applySetting(
   err: Report,
   verb: Verb = "set",
 ): boolean {
+  err = reportIn(err, err.source?.select(value))
   const num = evalNumber(value)
   const whole = (lo: number, hi: number) =>
     num && nearWhole(num.value) && num.value >= lo && num.value <= hi ? Math.round(num.value) : null
@@ -75,20 +78,21 @@ export function applySetting(
               unit: divided[2],
             })
           : message("time.shape", { verb }),
+        value,
       )
       return false
     }
     const groups = sumTerms(count)
     if (!groups) {
-      err(ln, message("time.count"))
+      err(ln, message("time.count"), atOffset(err, 0, m[1].length, m[1]))
       return false
     }
     if (![1, 2, 4, 8, 16].includes(unit.value)) {
-      err(ln, message("time.unit"))
+      err(ln, message("time.unit"), atOffset(err, value.length - m[2].length, value.length, m[2]))
       return false
     }
     if (count.value / unit.value > 8) {
-      err(ln, message("time.tooLong"))
+      err(ln, message("time.tooLong"), value)
       return false
     }
     state.groups = groups
@@ -97,7 +101,7 @@ export function applySetting(
   }
   if (name === "tempo") {
     if (!num || !(num.value >= 20 && num.value <= 400)) {
-      err(ln, message("tempo.range"))
+      err(ln, message("tempo.range"), value)
       return false
     }
     state.tempo = num.value
@@ -105,7 +109,7 @@ export function applySetting(
   }
   if (name === "swing") {
     if (!among(SWING, value)) {
-      err(ln, message("swing.onOff", { verb }))
+      err(ln, message("swing.onOff", { verb }), value)
       return false
     }
     state.swing = value === "on"
@@ -115,7 +119,7 @@ export function applySetting(
     // The root that degrees and numerals count from. The mode is its own setting, so
     // setting one keeps the other.
     if (!parseKey(value)) {
-      err(ln, keyProblem(value.trim(), verb))
+      err(ln, keyProblem(value.trim(), verb), value)
       return false
     }
     state.key = value.trim()
@@ -127,7 +131,11 @@ export function applySetting(
     const mode = modeNamed(value)
     if (!mode) {
       const found = MODES.find((m) => m.toLowerCase() === value.toLowerCase())
-      err(ln, found ? message("mode.camelCase", { verb, mode: found }) : message("mode.unknown"))
+      err(
+        ln,
+        found ? message("mode.camelCase", { verb, mode: found }) : message("mode.unknown"),
+        value,
+      )
       return false
     }
     state.mode = mode
@@ -139,7 +147,7 @@ export function applySetting(
     // at the 4th fret. Drums have no pitch, so it leaves them alone.
     const n = whole(-12, 12)
     if (n == null) {
-      err(ln, message("transpose.range", { verb }))
+      err(ln, message("transpose.range", { verb }), value)
       return false
     }
     state.transpose = n
@@ -148,7 +156,7 @@ export function applySetting(
   if (name === "octave") {
     const n = whole(1, 6)
     if (n == null) {
-      err(ln, message("octave.range"))
+      err(ln, message("octave.range"), value)
       return false
     }
     state.octave = n
@@ -156,7 +164,7 @@ export function applySetting(
   }
   if (name === "kit") {
     if (!among(KITS, value)) {
-      err(ln, message("kit.unknown"))
+      err(ln, message("kit.unknown"), value)
       return false
     }
     state.kit = value
@@ -164,7 +172,7 @@ export function applySetting(
   }
   if (soundsOf(name)) {
     if (!soundsOf(name)!.includes(value)) {
-      err(ln, message("sound.unknown", { name: name as Sounding }))
+      err(ln, message("sound.unknown", { name: name as Sounding }), value)
       return false
     }
     if (value === soundsOf(name)![0]) delete state.sounds[name]
@@ -185,7 +193,7 @@ export function readSetting(
 ): { kind: "setting"; ln: number; name: string; value: string } | null {
   const raw = tokens[1] || ""
   if (!raw) {
-    err(ln, message("set.empty"))
+    err(ln, message("set.empty"), "set")
     return null
   }
   const s = settingWords(
@@ -202,7 +210,8 @@ export function readSetting(
 }
 
 // A setting's name and its value, as written after `verb`: set, or with in a with's header.
-// Returns { name, value }, or null after saying what's wrong.
+// Returns { name, value }, or null after saying what's wrong, which is about the name as
+// written.
 function settingWords(
   raw: string,
   value: string,
@@ -213,16 +222,16 @@ function settingWords(
   const name = raw.toLowerCase()
   if (among(SETTINGS, name)) {
     if (value) return { name, value }
-    err(ln, message("set.needsValue", { verb, name: name as Setting }))
+    err(ln, message("set.needsValue", { verb, name: name as Setting }), raw)
     return null
   }
   if (soundsOf(name)) {
     if (value) return { name, value }
-    err(ln, message("set.needsSound", { verb, name: name as Sounding }))
+    err(ln, message("set.needsSound", { verb, name: name as Sounding }), raw)
     return null
   }
   if (among(PITCHED, name)) {
-    err(ln, message("set.oneSound", { name }))
+    err(ln, message("set.oneSound", { name }), raw)
     return null
   }
   const [best, far] = closest(name, [...SETTINGS, ...Object.keys(SOUNDS)])
@@ -231,30 +240,46 @@ function settingWords(
     far <= 2
       ? message("set.unknownNear", { raw, verb, best })
       : message("set.unknown", { raw, verb }),
+    raw,
   )
   return null
 }
 
 // The settings in a with's header (key E, mode minor), each a setting and its value, with
-// commas between them. Returns [{ name, value }], or null after saying what's wrong.
+// commas between them. Returns [{ name, value }], or null after saying what's wrong, which
+// is about the one setting or comma that's wrong.
 export const WITH_HELP =
   "with takes the settings its block plays with, then the block: with octave 2 { ... }"
 export function readWithHeader(head: string, ln: number, err: Report): SettingWords[] | null {
+  const header = err.source?.select(head)
+  const outerReport = err
   if (!head.trim()) {
-    err(ln, WITH_HELP)
+    err(ln, WITH_HELP, "with")
     return null
   }
   const pieces = head.split(",").map((p) => p.trim())
+  const commas = [...head.matchAll(/,/g)].map((m) => m.index)
   const out: SettingWords[] = []
   for (const [k, piece] of pieces.entries()) {
+    const source = header?.slice(k ? commas[k - 1] + 1 : 0, commas[k] ?? head.length).trim()
+    err = reportIn(outerReport, source)
     if (!piece) {
-      err(ln, "A comma goes between two settings: with key E, mode minor { ... }")
+      // The comma that has no setting on one side: the first one, the two with nothing
+      // between them, or the last one. A last comma after others is written with the
+      // setting before it, so it's that comma that's found.
+      const comma =
+        k === 0 || (k === 1 && pieces.length === 2)
+          ? ","
+          : k < pieces.length - 1
+            ? head.slice(commas[k - 1], commas[k] + 1)
+            : head.slice(commas[k - 2] + 1, commas[k - 1] + 1).trim()
+      err(ln, "A comma goes between two settings: with key E, mode minor { ... }", comma)
       return null
     }
     const words = piece.split(/\s+/)
     if (words[0] === "set") {
       const fixed = pieces.map((p) => p.replace(/^set\s+/, "")).join(", ")
-      err(ln, `A with's settings have no set in front: with ${fixed} { ... }`)
+      err(ln, `A with's settings have no set in front: with ${fixed} { ... }`, "set")
       return null
     }
     // with key E mode minor: two settings, without the comma between them
@@ -265,16 +290,22 @@ export function readWithHeader(head: string, ln: number, err: Report): SettingWo
         words.slice(0, next).join(" ") + ", " + words.slice(next).join(" "),
         ...pieces.slice(k + 1),
       ]
-      err(ln, `Settings in a with are separated by commas: with ${fixed.join(", ")} { ... }`)
+      // It's the setting without a comma before it that's wrong
+      err(
+        ln,
+        `Settings in a with are separated by commas: with ${fixed.join(", ")} { ... }`,
+        words.slice(next).join(" "),
+      )
       return null
     }
     const s = settingWords(words[0], piece.slice(words[0].length).trim(), ln, err, "with")
     if (!s) return null
     if (out.some((o) => o.name === s.name)) {
-      err(ln, `${s.name} is in this with twice. A with sets each setting once`)
+      // The second one is the one that's wrong
+      err(ln, `${s.name} is in this with twice. A with sets each setting once`, piece)
       return null
     }
-    out.push(s)
+    out.push({ ...s, source })
   }
   return out
 }
@@ -288,7 +319,8 @@ export function withState(
   err: Report,
 ): State | null {
   const st = cloneState(state)
-  for (const s of settings) if (!applySetting(s.name, s.value, ln, st, err, "with")) return null
+  for (const s of settings)
+    if (!applySetting(s.name, s.value, ln, st, reportIn(err, s.source), "with")) return null
   return st
 }
 

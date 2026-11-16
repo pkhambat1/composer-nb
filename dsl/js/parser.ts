@@ -4,6 +4,7 @@
    its }. A statement's kind comes from how it starts. What comes after its head stays
    text, which the line readers read (lines.ts, sequence.ts, values/). */
 import { Lexer } from "./lexer.ts"
+import { SourceText } from "./source.ts"
 import type {
   Block,
   Cell,
@@ -92,15 +93,28 @@ export class Parser {
         const statements = this.#statements(t)
         const close = this.#tokens[this.#at]
         if (close) this.#at++
-        parts.push({ kind: "block", statements, span: join(t.span, (close ?? t).span) })
-      } else if (t.kind !== "comment") {
-        if (t.kind === "text" && /\bof\b/.test(t.text))
-          this.#errors.push({ code: "syntax.retiredOf", span: t.span })
+        parts.push({
+          kind: "block",
+          statements,
+          span: join(t.span, (close ?? this.#tokens.at(-1) ?? t).span),
+        })
+      } else {
+        if (t.kind === "text")
+          for (const m of t.text.matchAll(/\bof\b/g))
+            this.#errors.push({
+              code: "syntax.retiredOf",
+              span: SourceText.from(t.text, t.span).slice(m.index!, m.index! + 2).span,
+            })
         const last = parts[parts.length - 1]
         if (last?.kind === "text") {
-          last.text += t.text
+          last.text += t.kind === "comment" ? t.text.replace(/[^\r\n]/g, " ") : t.text
           last.span = join(last.span, t.span)
-        } else parts.push({ kind: "text", text: t.text, span: t.span })
+        } else
+          parts.push({
+            kind: "text",
+            text: t.kind === "comment" ? t.text.replace(/[^\r\n]/g, " ") : t.text,
+            span: t.span,
+          })
       }
     }
     const value = trimmed(parts)
@@ -113,8 +127,7 @@ export class Parser {
 function classify(value: Value, span: Span): Node {
   const first = value.parts[0]
   const text = first?.kind === "text" ? first.text : ""
-  if (/^print(?=\s|\(|$)/.test(text))
-    return { kind: "print", span, value: after(value, "print") }
+  if (/^print(?=\s|\(|$)/.test(text)) return { kind: "print", span, value: after(value, "print") }
   const word = /^[a-z]+(?=\s|$)/.exec(text)?.[0] as keyof typeof HEADS | undefined
   const head = word && HEADS[word]
   if (head === "set") {

@@ -227,12 +227,13 @@ describe("highlighting the redesigned syntax", () => {
     ).toEqual(["kick", "snare"])
   })
 
-  it("marks removed kit syntax and invalid repeat groups", () => {
+  it("leaves errors in removed kit syntax and repeat groups to the engine", () => {
     for (const value of ["rest", "2 4", "2 beats x-", "x-, --", "...rest", "1*x-", "(x- --^)"]) {
-      expect(red(`play block { kick: ${value} }`), value).not.toEqual([])
+      expect(parseCell(`play block { kick: ${value} }`).errors.length, value).toBeGreaterThan(0)
+      expect(red(`play block { kick: ${value} }`), value).toEqual([])
     }
-    expect(red("play block { bar 2 { kick: x } }")).toContain("bar")
-    expect(red("play every 2 steps { kick: x }")).toContain("steps")
+    expect(parseCell("play block { bar 2 { kick: x } }").errors.length).toBeGreaterThan(0)
+    expect(parseCell("play every 2 steps { kick: x }").errors.length).toBeGreaterThan(0)
   })
 
   it("retains note repeats, rests, function commas, and relative note chains", () => {

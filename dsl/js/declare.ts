@@ -3,6 +3,8 @@
    pattern, kept as lines to play where it's played. A value that isn't the type it says,
    or a missing type, is said here. */
 import { buildChord, isDegreeChord } from "./chords.ts"
+import { reportIn, type At } from "./diagnostics.ts"
+import { tokenSources } from "./source.ts"
 import { blockBeside } from "./eval.ts"
 import { DEF_RE, EVERY_RE, PLACE_RE, TRACK_RE, TYPED_RE, type DeclLine } from "./lines.ts"
 import { closest, NAME_LIKE, nameProblem, Scope } from "./resolve.ts"
@@ -82,9 +84,10 @@ function namedBlock(name: string, value: Piece[], ln: number, type: "pattern" | 
   return { type, name, ln, lines: [{ ln, parts: value }], bars: 0, has: false }
 }
 
-export function checkBars(bars: number, ln: number, err: Report): boolean {
+// Whether a length is one a pattern can have, or says why not. `at` is the length as written.
+export function checkBars(bars: number, ln: number, err: Report, at: At): boolean {
   if (bars > 0 && bars <= MAX_BARS) return true
-  err(ln, `A length is a number of bars up to ${MAX_BARS}, e.g. 3 bars`)
+  err(ln, `A length is a number of bars up to ${MAX_BARS}, e.g. 3 bars`, at)
   return false
 }
 
@@ -102,34 +105,38 @@ export function defineWord(
   const value = textOf(parts)
   const braces = bracesIn(parts)
   const problem = new Scope(state).problem(type, name, value)
-  if (problem) return err(ln, problem)
+  if (problem) return err(ln, problem, name)
   if (type === "notes") {
     // notes riff = E---F# E-E--: one line of notes, with bounded repeats expanded.
-    if (braces.length) return err(ln, NOTES_BLOCK)
+    if (braces.length) return err(ln, NOTES_BLOCK, "{")
     const notes = noteParts(value, state, err, ln, null, 0, false)
     if (!notes) return
     if (notes.open) {
       return err(
         ln,
         `A name's notes have a length of their own. ... is the rest of a block, so it goes on the instrument's line: piano: notes ${name} ..._`,
+        "...",
       )
     }
     const tokens: string[] = []
-    for (const t of notes.tokens) {
+    const outer = err
+    for (const [i, t] of notes.tokens.entries()) {
+      err = reportIn(outer, tokenSources(notes.tokens)?.[i])
       const w = state.words[t]
       if (w && w.type !== "notes") {
-        return err(ln, `${t} is ${w.type}, so it can't go in notes`)
+        return err(ln, `${t} is ${w.type}, so it can't go in notes`, t)
       } else if (w) tokens.push(...w.tokens)
-      else if (noteSteps(t) && spacedNotes(t)) return err(ln, notesTouch(t, spacedNotes(t)!))
+      else if (noteSteps(t) && spacedNotes(t)) return err(ln, notesTouch(t, spacedNotes(t)!), t)
       else if (t === "|" || noteSteps(t)) tokens.push(t)
       else if (isStepRun(t)) {
         return err(
           ln,
           `"${t}" is steps, and ${name} is notes. For steps, write steps ${name} = ${value}`,
+          t,
         )
-      } else return err(ln, notNotes(t, state, "guitar", `chords ${name} = ${value}`))
+      } else return err(ln, notNotes(t, state, "guitar", `chords ${name} = ${value}`), t)
     }
-    if (!tokens.length) return err(ln, `notes ${name} = needs something after the =`)
+    if (!tokens.length) return err(ln, `notes ${name} = needs something after the =`, "=")
     new Scope(state).defineWord(name, { type, tokens, line: ln })
     return
   }
@@ -137,13 +144,16 @@ export function defineWord(
   let written: string[]
   if (braces.length) {
     // steps ghosts = { ... }: a block of steps is steps. Chords are never in a block.
-    if (type !== "steps") return err(ln, CHORDS_BLOCK)
+    if (type !== "steps") return err(ln, CHORDS_BLOCK, "{")
     const only = onlyBraces(parts)
     if (!only) {
       const fig = name === "fig" ? "part" : "fig"
+      // What's beside the block, as written
+      const beside = parts.find((p): p is string => typeof p === "string" && !!p.trim())
       return err(
         ln,
         blockBeside(`${name} holds`, (f: string) => `steps ${name} = x--- ${f}`, fig),
+        beside ? beside.trim().split(/\s+/)[0] : "{",
       )
     }
     const run = stepBlock(only, state, err)
@@ -158,28 +168,31 @@ export function defineWord(
       return err(
         ln,
         `A name's steps have a length of their own. ... is the rest of a block, so it goes on the drum's line: snare: ${name} ...-`,
+        "...",
       )
     }
     written = steps.tokens
   } else {
-    const expanded = expandChordTokens(tokenize(value), state, err, ln, 0, true)
+    const expanded = expandChordTokens(tokenize(value, err.source), state, err, ln, 0, true)
     if (!expanded) return
     written = expanded
   }
   const key = keyOf(state)!
   const tokens: string[] = []
-  for (const t of written) {
+  const outer = err
+  for (const [i, t] of written.entries()) {
+    err = reportIn(outer, tokenSources(written)?.[i])
     const w = state.words[t]
-    if (w && w.type !== type) return err(ln, `${t} is ${w.type}, so it can't go in ${type}`)
+    if (w && w.type !== type) return err(ln, `${t} is ${w.type}, so it can't go in ${type}`, t)
     else if (w) tokens.push(...w.tokens)
     else if (state.sections[t]) {
-      return err(ln, `${t} is a ${state.sections[t].type}, so it can't go in ${type}`)
+      return err(ln, `${t} is a ${state.sections[t].type}, so it can't go in ${type}`, t)
     } else if (
       type === "steps" ? isStepRun(t) || t === "|" : CHORD_MARKS.includes(t) || buildChord(t, key)
     ) {
       tokens.push(t)
     } else if (NAME_LIKE.test(t) && !isDegreeChord(t) && !/^[-xd]+$/.test(t)) {
-      return err(ln, `"${t}" isn't defined above. Name it first: ${type} ${t} = ...`)
+      return err(ln, `"${t}" isn't defined above. Name it first: ${type} ${t} = ...`, t)
     } else if (type === "chords" && isIntervalCall(t)) {
       if (!validChordToken(t, state, err, ln)) return
       tokens.push(t)
@@ -187,6 +200,7 @@ export function defineWord(
       return err(
         ln,
         `"${t}" is notes, and ${name} is ${type}. For notes, write notes ${name} = ${spaceNotes(value)}`,
+        t,
       )
     } else if (type === "steps") {
       return err(
@@ -194,6 +208,7 @@ export function defineWord(
         buildChord(t, key)
           ? `"${t}" is a chord, and ${name} is steps. For chords, write chords ${name} = ${value}`
           : `"${t}" isn't a step. ${STEP_HELP}`,
+        t,
       )
     } else {
       return err(
@@ -201,15 +216,17 @@ export function defineWord(
         isStepRun(t)
           ? `"${t}" is steps, and ${name} is chords. For steps, write steps ${name} = ${value}`
           : dimMarkProblem(t) || `"${t}" isn't a chord I know`,
+        t,
       )
     }
   }
-  if (!tokens.length) return err(ln, `${type} ${name} = needs something after the =`)
+  if (!tokens.length) return err(ln, `${type} ${name} = needs something after the =`, "=")
   const again = type === "chords" && chartRepeat(tokens)
   if (again) {
     return err(
       ln,
       `${name} repeats ${again}. Write chords ${name} = ${again}: a pattern repeats it`,
+      value,
     )
   }
   new Scope(state).defineWord(name, { type, tokens, line: ln })
@@ -302,11 +319,14 @@ export function defineBlock(
 ): Section | null {
   const problem = new Scope(st).problem(l.type, l.name, "{")
   if (problem) {
-    err(l.ln, problem)
+    err(l.ln, problem, l.name)
     return null
   }
   const sec = namedBlock(l.name, l.value, l.ln, l.type)
-  if (sec.has && !checkBars(sec.bars, l.ln, err)) return null
+  // The length in front of its value, as written
+  const head = headOf(l.value)
+  const length = head.slice(0, head.length - lengthPrefix(head).rest.length).trim()
+  if (sec.has && !checkBars(sec.bars, l.ln, err, length)) return null
   new Scope(st).defineSection(sec)
   return sec
 }
@@ -328,21 +348,28 @@ export function classifyDecl(
     err(
       ln,
       `${lower} needs a name after it: ${lower} ${lower === "pattern" ? "groove" : "riff"} = ...`,
+      name,
     )
     return null
   }
   if (!value) {
-    err(ln, `${type ? type + " " : ""}${name} = needs something after the =`)
+    err(ln, `${type ? type + " " : ""}${name} = needs something after the =`, "=")
     return null
   }
   if (type && type !== "pattern" && type !== "block" && /^with(\s|\{|$)/.test(value)) {
     // chords verse = with key E { ... }: a with holds what plays, which a value doesn't
-    err(ln, `A with's block plays, so it goes around a line or a play, not after ${type} ${name} =`)
+    err(
+      ln,
+      `A with's block plays, so it goes around a line or a play, not after ${type} ${name} =`,
+      "with",
+    )
     return null
   }
   if ((type === "pattern" || type === "block") && TYPED_BRACES_RE.test(lengthPrefix(value).rest)) {
-    // pattern groove = pattern { ... }: the declaration already says it
-    err(ln, `${name} is a ${type}, so its braces take no type: ${type} ${name} = { ... }`)
+    // pattern groove = pattern { ... }: the declaration already says it. The type in front
+    // of the braces is said with them, since the same word starts the declaration.
+    const typed = TYPED_BRACES_RE.exec(lengthPrefix(value).rest)![1]
+    err(ln, `${name} is a ${type}, so its braces take no type: ${type} ${name} = { ... }`, `${typed} {`)
     return null
   }
   const shape = shapeOf(parts, st)
@@ -352,7 +379,7 @@ export function classifyDecl(
   if (!type) {
     if (!patternText(parts)) {
       if (among(SETTINGS, lower)) {
-        err(ln, `${lower} is a setting, not a name, so it takes no =: set ${lower} ${value}`)
+        err(ln, `${lower} is a setting, not a name, so it takes no =: set ${lower} ${value}`, name)
         return null
       }
       if (evalNumber(value)) {
@@ -363,16 +390,17 @@ export function classifyDecl(
           best[1] <= 2
             ? `"${name}" isn't a setting. Did you mean set ${best[0]}?`
             : `"${name}" isn't a setting. Settings: ${SETTINGS.join(", ")}`,
+          name,
         )
         return null
       }
     }
     const problem = nameProblem(name, value)
     if (problem) {
-      err(ln, problem)
+      err(ln, problem, name)
       return null
     }
-    err(ln, `Say what ${name} is. Put its type in front: ${shape} ${name} = ${shown}`)
+    err(ln, `Say what ${name} is. Put its type in front: ${shape} ${name} = ${shown}`, name)
     return null
   } else if ((type === "pattern" || type === "block") && shape !== "pattern") {
     const prefixes = { steps: "kick: ", notes: "guitar: notes ", chords: "piano: chords " }
@@ -381,6 +409,7 @@ export function classifyDecl(
       ln,
       `${shown} is ${shape}, not a pattern. Write ${shape} ${name} = ${shown}, ` +
         `or give them an instrument: pattern ${name} = ${line}${shown}`,
+      `${type} ${name}`,
     )
     return null
   } else if (
@@ -390,7 +419,7 @@ export function classifyDecl(
     braces.every((b) => !b.lines.some((l) => TRACK_RE.test(headOf(l.parts))))
   ) {
     // chords verse = { ... } holding chords, not instruments' lines
-    err(ln, type === "chords" ? CHORDS_BLOCK : NOTES_BLOCK)
+    err(ln, type === "chords" ? CHORDS_BLOCK : NOTES_BLOCK, "{")
     return null
   } else if (
     type !== "block" &&
@@ -404,7 +433,7 @@ export function classifyDecl(
   ) {
     // Anything else that isn't the declared type is said more exactly by defineWord.
     // Notes can use repeat groups, so parentheses alone don't indicate a pattern.
-    err(ln, `That's a pattern, not ${type}. Write pattern ${name} = ...`)
+    err(ln, `That's a pattern, not ${type}. Write pattern ${name} = ...`, `${type} ${name}`)
     return null
   }
   const declaredType = TYPES.find((item) => item === type)
