@@ -31,6 +31,9 @@ export const notebookChangeSchema = z.object({
   cellId: z.string().optional(),
   cellNumber: z.number().int().positive().optional(),
   change: z.string().optional(),
+  // What parse would say of the written cell. Hosts that hand the model structuredContent
+  // alone (Claude Code does) drop the text content, so the report travels here too.
+  report: z.string().optional(),
 })
 export type NotebookChange = z.infer<typeof notebookChangeSchema>
 export const notebookRevisionSchema = notebookChangeSchema.pick({

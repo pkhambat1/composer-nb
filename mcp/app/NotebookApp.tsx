@@ -20,6 +20,7 @@ import {
   type DocumentCell,
   type NotebookDocument,
 } from "../src/notebook-document.ts"
+import { contextText } from "./context.ts"
 import { mergeCells } from "./merge.ts"
 
 const SAVE_AFTER_MS = 600
@@ -32,25 +33,6 @@ const sameCells = (a: DocumentCell[], b: DocumentCell[]) =>
   a.length === b.length &&
   a.every((c, i) => c.id === b[i].id && c.type === b[i].type && c.source === b[i].source)
 const messageOf = (error: unknown) => (error instanceof Error ? error.message : String(error))
-
-// What the assistant is told of the editor: where the user is and the cell they are on.
-// The rest of the notebook is a get_notebook away.
-function contextText(doc: NotebookDocument, snapshot: NotebookSnapshot): string {
-  const index = snapshot.cells.findIndex((cell) => cell.id === snapshot.selectedId)
-  const cell = snapshot.cells[index]
-  const where = !cell
-    ? "No cell selected"
-    : snapshot.selection?.selectedText
-      ? `Selected text in cell ${index + 1}: ${snapshot.selection.selectedText}`
-      : `Cell ${index + 1} selected`
-  return (
-    `The composer-nb notebook "${doc.title}" is open. Notebook ID: ${doc.id}, revision ${doc.revision}, ${snapshot.cells.length} cells. ${where}.` +
-    (cell
-      ? ` Its cell ID is ${cell.id} and it reads:\n\`\`\`composer-nb\n${cell.source}\n\`\`\``
-      : "") +
-    "\nPass this notebookId to the notebook tools. Read get_notebook for the other cells."
-  )
-}
 
 export function NotebookApp({
   app,

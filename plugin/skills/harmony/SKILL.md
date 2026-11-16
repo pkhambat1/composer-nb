@@ -1,24 +1,29 @@
 ---
 name: harmony
-description: Write a chord progression, a piano or keys part, a bass line under chords or a melody over them as composer-nb cells, built from music theory with the language's functions. Use when the user asks for a progression, chords, a piano, organ or guitar part, comping, a bass line, a melody or a reharmonisation, or for something "interesting", "jazzy", "sad", "modal" and the like on a pitched instrument.
+description: Write a chord progression, a piano or keys part, a bass line under chords or a melody over them as composer-nb cells, derived from a small seed with the language's interval functions instead of typed out chord by chord. Use when the user asks for a progression, chords, a piano, organ or guitar part, comping, a bass line, a melody or a reharmonisation, or for something "interesting", "jazzy", "sad", "modal" and the like on a pitched instrument.
 ---
 
 # Harmony
 
-Build the part from an idea and the language's functions. Don't list chords or notes from memory: a chart typed out as `1 5 6 4` or `Am F C G` is what this skill is here to avoid, unless that progression is what the user asked for.
+Build the part from an idea and the language's functions. A chart typed chord by chord, from memory or not, is the shortcut this skill exists to stop, unless the user named the exact chords.
 
-1. Say the idea in a line, in theory terms: the key and mode, and what the harmony does. A cycle of fifths that falls home; a motif answered a third higher; a pedal bass under moving chords; the same chart borrowed from the parallel minor.
-2. Call `library` with the idea's words (`fifth`, `dorian`, `ii–V–I`) for a cell to start from, and read `reference` (topics `chords`, `notes`, `intervals`) for anything you haven't written.
-3. Write a seed and derive the rest:
-   - **The seed is small and named**: one or two chords, or a motif of a few notes, by degree. `chords pair = 1m7 fourth(1m7)`, `notes motif = 1 3 5 3`.
-   - **Sequence it** with an interval function: `second(pair, -1)` is the same two chords a step lower, `third(motif)` the motif a third up. Every tone moves through the scale, so the qualities come out right for the key.
-   - **Let the mode choose the chords.** A plain degree is the chord the scale has there; write a quality only to depart from it (`5dom7` for a dominant in minor, `4m` borrowed in major). Change the colour with `set mode` or a `with`, not with accidentals.
-   - **Give the bass a line of its own**: the roots as a named line sequenced the same way, or a slash bass that walks (`1 1/3|4 5/7`), in `with octave 2`.
-   - **Extend with suffixes**: `maj7`, `m7`, `dom7`, `sus4`, `add9`, `M6/9`, where the style wants them.
-4. Save it as the `write-cells` skill says and read the chords the save reports against the idea. `print(second(pair, -1))` as a cell's last line shows what a function gives before you build on it.
+1. Say the idea in a line, in theory terms: the key and mode, and what the harmony does. A cycle of fifths that falls home; a two-bar pattern answered a third higher; the same chart in three keys; a progression borrowed from the parallel minor.
+2. For a familiar interval move or chart reuse, work from the language guide and examples below. Use `library` with the idea's words (`fifth`, `dorian`, `ii–V–I`) when you need a starting example, and `reference` (topics `chords`, `intervals`) for unfamiliar syntax.
+3. Write a seed and derive the rest. Before saving, check the cell against these rules; a cell that breaks one is not done:
+   - **Type few chords.** Name a seed of one or two chords by degree (`chords one = 1m7`, `chords pair = 1m7 fourth(1m7)`), and write every other chord as a function of a name: `fourth(one)`, `fifth(pair, -1)`, `second(pair, -2)`. Count the chord roots you typed: at most half of the chords that sound. A cadence chord the mode doesn't have (`5dom7` in minor) is the one root worth typing.
+   - **Use an interval function** (`second` to `fifteenth`, with a count to repeat or a minus to go down), or play one named chart under two keys or modes (`with key F { … }`, `with mode minor { … }`). A name played twice in one key derives nothing.
+   - **Degrees, never letters.** `1m7`, not `Am7`, so `set key` and `set mode` move every chord.
+   - **Chords are chords.** Write them on a `chords` line. Never stack `notes` layers to sound a chord; a bass line or a tune over the chords is fine.
+   - **Let the mode choose the qualities.** A plain degree is the chord the scale has there; write a quality only to depart from it (`5dom7` in minor, `4m` borrowed in major), or a suffix the style wants (`maj7`, `m7`, `dom7`, `sus4`, `add9`, `M6/9`).
+     Interval functions move every tone through the scale; they do not guarantee the same chord quality or a fixed semitone shift. When the user requires dominant sevenths or particular roots, check the returned chord tones and roots. Use explicit qualities or reuse a named chart under different keys to preserve the required quality. Required roots, qualities, length and instrument order take precedence over minimizing typed roots.
+   - **Count bars, not chord symbols.** `chords seed = 1m7|fourth(1m7)` is two bars; `seed|third(seed)|seed` is six. With a space instead of `|`, two chords share one bar. Twelve-bar blues needs twelve bars, not twelve chord slots in three bars.
+   - **No stock loops**: not 1 5 6 4, 1 6 4 5 or 6 4 1 5, unless asked for.
+   - **A bass, if any, follows the same seed**: the roots as a named line sequenced the same way, or a slash bass (`1/3`), in `with octave 2`.
+     Notes divide each bar evenly: `3 6` or `4 b7` gives two half-bar notes. Use `|` between bars; explicit `every` selects fixed steps instead. Spell keys and accidentals with `b` and `#`, as in `Bb`.
+4. Save it as the `write-cells` skill says. Check the reported bar count, roots, qualities and instrument order against the request, and correct that same cell if any differ. The task is not complete with an unsaved code block. `print(fifth(pair, -1))` as a cell's last line shows what a function gives before you build on it.
 5. Say what the user will hear in a line or two, in the terms of step 1.
 
-Each part gets its own register (`with octave 4` for the right hand, `with octave 2` for the bass), and a piano playing chords and a tune together is a block of layers.
+Each part gets its own register (`with octave 4` for the chords, `with octave 2` for the bass), and a piano playing chords and a tune together is a block of layers.
 
 ## Examples
 
@@ -51,11 +56,13 @@ set mode dorian
 
 notes motif = 1 3 5 3
 notes tune = motif|second(motif)|third(motif)|second(motif, -1)
-chords under = 1m7|second(1m7)|third(1m7)|second(1m7, -1)
+chords home = 1m7
+chords under = home|second(home)|third(home)|second(home, -1)
+notes pedal = 1 5
 
 play block {
   with octave 4 { piano: notes tune, },
   organ: chords under,
-  with octave 2 { bass: notes 1 - 5 -|second(1 - 5 -)|third(1 - 5 -)|second(1 - 5 -, -1), },
+  with octave 2 { bass: notes pedal|second(pedal)|third(pedal)|second(pedal, -1), },
 }
 ```

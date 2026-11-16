@@ -19,6 +19,7 @@
     "format:check": "prettier --check .",
     "docs": "cd docs && npx mint dev",
     "mcp": "node --conditions=composer-nb-source mcp/src/dev.ts",
+    "eval": "node --conditions=composer-nb-source mcp/evals/run.ts",
     "seed:local": "node --conditions=composer-nb-source scripts/seed-local-data.mjs",
     "seed:local:check": "node --conditions=composer-nb-source scripts/seed-local-data.mjs --check",
     "verify:local-auth": "node --conditions=composer-nb-source scripts/verify-local-auth.mjs"

@@ -123,6 +123,7 @@ function changed(
     cellCount: notebook.cells.length,
     ...(index >= 0 ? { cellId, cellNumber: index + 1 } : {}),
     change,
+    ...(report ? { report } : {}),
   }
   return {
     content: [
