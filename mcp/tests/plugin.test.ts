@@ -54,3 +54,33 @@ it("the marketplace lists the plugin under its own name, and the plugin connects
     url: "https://composer-nb.vercel.app/mcp",
   })
 })
+
+it("the portable plugin provides starter prompts within the directory limits", () => {
+  const manifest = z
+    .object({
+      version: z.string(),
+      extensions: z.object({
+        "com.openai": z.object({
+          interface: z.object({
+            shortDescription: z.string().min(1).max(30),
+            defaultPrompt: z
+              .array(
+                z
+                  .string()
+                  .min(1)
+                  .max(128)
+                  .refine((text) => !/[\r\n\t]/.test(text)),
+              )
+              .min(1)
+              .max(3),
+          }),
+        }),
+      }),
+    })
+    .parse(json("plugin/plugin.json"))
+  const prompts = manifest.extensions["com.openai"].interface.defaultPrompt
+  expect(new Set(prompts).size).toBe(prompts.length)
+  expect(
+    z.object({ version: z.string() }).parse(json("plugin/.claude-plugin/plugin.json")).version,
+  ).toBe(manifest.version)
+})

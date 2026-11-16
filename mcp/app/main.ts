@@ -11,7 +11,8 @@ import { NotebookEditor, type SavedCell, type Theme } from "../../playground/src
 import playgroundCss from "../../playground/src/styles/app.css?inline"
 import themeCss from "./theme.css?inline"
 import { NotebookBrowser, type NotebookView } from "./NotebookBrowser.tsx"
-import { notebookChangeSchema, notebookListSchema, notebookOf } from "../src/notebook-document.ts"
+import { notebookListSchema } from "../src/notebook-document.ts"
+import { notebookFromResult } from "./notebook-result.ts"
 
 // The package's version, which Vite writes in (app/vite.config.ts)
 declare const __VERSION__: string
@@ -95,7 +96,7 @@ function applyTheme(context: { theme?: string } | undefined) {
   if (shown || notebook) render()
 }
 
-function showResult(result: CallToolResult) {
+async function showResult(result: CallToolResult) {
   if (result.isError) {
     status(
       result.content
@@ -105,7 +106,16 @@ function showResult(result: CallToolResult) {
     )
     return
   }
-  const opened = notebookOf(result)
+  let opened
+  try {
+    opened = await notebookFromResult(result, (notebookId) => {
+      if (!app) throw new Error("The player isn't connected to its host.")
+      return app.callServerTool({ name: "get_notebook", arguments: { notebookId } })
+    })
+  } catch (err) {
+    status(err instanceof Error ? err.message : String(err))
+    return
+  }
   if (opened) {
     notebook = opened
     render()
@@ -115,15 +125,6 @@ function showResult(result: CallToolResult) {
   if (list.success) {
     notebook = list.data
     render()
-    return
-  }
-  // A host that kept the result's _meta from the app: read the notebook it names
-  const change = notebookChangeSchema.safeParse(result.structuredContent)
-  if (change.success && app) {
-    void app
-      .callServerTool({ name: "get_notebook", arguments: { notebookId: change.data.notebookId } })
-      .then(showResult)
-      .catch((err: unknown) => status(err instanceof Error ? err.message : String(err)))
     return
   }
   if (shown === null) status("The cell wasn't passed to the player. Parse it again.")

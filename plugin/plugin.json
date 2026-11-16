@@ -1,7 +1,7 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "composer-nb",
-  "version": "0.5.1",
+  "version": "0.5.4",
   "description": "Write, play and edit music in your own Composer.nb notebooks from ChatGPT or another MCP host.",
   "author": {
     "name": "Pezanne Khambatta",
@@ -15,10 +15,11 @@
     "com.openai": {
       "interface": {
         "displayName": "Composer.nb",
-        "shortDescription": "Your music notebooks, inside your assistant",
+        "shortDescription": "Make music you can play",
         "defaultPrompt": [
-          "Open my composer-nb notebooks",
-          "Write an interesting piano progression in my notebook"
+          "Write a Dorian vamp and melody that highlight the major sixth.",
+          "Build a major ii-V-I, then move the same chart through three keys.",
+          "Demonstrate modal interchange with playable examples from parallel major and minor."
         ]
       }
     }

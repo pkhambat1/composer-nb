@@ -1,7 +1,7 @@
 /* Colours for the engine's syntax tree. The parser decides statement and block boundaries;
    the lexer supplies comments and punctuation. This module only assigns colours. Errors
    come exclusively from parseCell's diagnostics, including while the source is incomplete. */
-import { chordParts } from "./chords.ts"
+import { chordParts, isDegreeChord } from "./chords.ts"
 import { intervalCall, splitOutside } from "./intervals.ts"
 import { Lexer } from "./lexer.ts"
 import { Parser } from "./parser.ts"
@@ -16,6 +16,8 @@ const NOTE =
 
 // A chord's written parts, without asking whether that chord is supported.
 function chord(token: string): Part[] {
+  // Names such as iiVI, intro and verse are not Roman-numeral chord literals.
+  if (/^[a-z]/.test(token) && !isDegreeChord(token)) return [part("tk-word", token)]
   const [main, ...bass] = chordParts(token)
   const root = /^(-?[#b]?(?:VII|VI|IV|V|III|II|I|vii|vi|iv|v|iii|ii|i|[1-9]\d*)|[A-G][#b]?)/.exec(
     main,

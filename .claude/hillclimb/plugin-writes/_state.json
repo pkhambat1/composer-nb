@@ -1,0 +1,72 @@
+{
+  "metrics": [
+    {
+      "id": "pass",
+      "label": "pass",
+      "kind": "binary"
+    },
+    {
+      "id": "saved",
+      "label": "saved",
+      "kind": "binary"
+    },
+    {
+      "id": "fits",
+      "label": "fits",
+      "kind": "binary"
+    },
+    {
+      "id": "harmony",
+      "label": "harmony",
+      "kind": "binary"
+    },
+    {
+      "id": "first_try",
+      "label": "first try",
+      "kind": "binary"
+    },
+    {
+      "id": "typed_ratio",
+      "label": "typed ratio",
+      "kind": "float",
+      "scale": 1,
+      "better": "lower"
+    }
+  ],
+  "perf_fields": [
+    {
+      "id": "tool_calls",
+      "label": "tool calls"
+    },
+    {
+      "id": "failed_writes",
+      "label": "failed writes"
+    },
+    {
+      "id": "dsl_errors",
+      "label": "DSL errors"
+    },
+    {
+      "id": "redundant_calls",
+      "label": "redundant"
+    },
+    {
+      "id": "lookups",
+      "label": "lookups"
+    },
+    {
+      "id": "tool_errors",
+      "label": "tool errors"
+    },
+    {
+      "id": "latency_s",
+      "label": "latency",
+      "unit": "s"
+    },
+    {
+      "id": "cost_usd",
+      "label": "cost",
+      "unit": "$"
+    }
+  ]
+}

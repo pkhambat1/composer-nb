@@ -35,3 +35,6 @@ supabase/.temp/
 dsl/lib
 # The MCP server compiled from mcp/src (npm run build:lib -w mcp)
 mcp/lib
+
+# Eval transcripts (rerun to regenerate)
+.claude/hillclimb/**/traces/

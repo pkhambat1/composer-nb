@@ -6,5 +6,5 @@
     "noImplicitAny": true,
     "allowImportingTsExtensions": true
   },
-  "include": ["../src", "."]
+  "include": ["../src", "../evals", "."]
 }
