@@ -5,9 +5,9 @@ description: Write a chord progression, a piano or keys part, a bass line under 
 
 # Harmony
 
-Build the part from an idea and the language's functions. A chart typed chord by chord, from memory or not, is the shortcut this skill exists to stop, unless the user named the exact chords.
+Build the part from an idea and the language's functions. A chart typed chord by chord, from memory or not, is the shortcut this skill exists to stop, unless the user named the exact chords. Naming a fully enumerated chart does not make it derived: the sounding parts must use the seed's interval transformations or reuse it under different keys or modes.
 
-1. Say the idea in a line, in theory terms: the key and mode, and what the harmony does. A cycle of fifths that falls home; a two-bar pattern answered a third higher; the same chart in three keys; a progression borrowed from the parallel minor.
+1. Choose an idea for the request and notebook context, including a key and mode when omitted; do not apply one fixed key or progression to every request. Say the idea in a line and proceed to writing: a cycle of fifths that falls home; a two-bar pattern answered a third higher; the same chart in three keys; a progression borrowed from the parallel minor. Routine creative choices need no clarification or approval.
 2. For a familiar interval move or chart reuse, work from the language guide and examples below. Use `library` with the idea's words (`fifth`, `dorian`, `ii–V–I`) when you need a starting example, and `reference` (topics `chords`, `intervals`) for unfamiliar syntax.
 3. Write a seed and derive the rest. Before saving, check the cell against these rules; a cell that breaks one is not done:
    - **Type few chords.** Name a seed of one or two chords by degree (`chords one = 1m7`, `chords pair = 1m7 fourth(1m7)`), and write every other chord as a function of a name: `fourth(one)`, `fifth(pair, -1)`, `second(pair, -2)`. Count the chord roots you typed: at most half of the chords that sound. A cadence chord the mode doesn't have (`5dom7` in minor) is the one root worth typing.
@@ -27,7 +27,7 @@ Each part gets its own register (`with octave 4` for the chords, `with octave 2`
 
 ## Examples
 
-"An interesting piano progression in A minor." The idea: descending fifths. A two-chord seed, a fifth apart, sequenced down a step twice, then the dominant to turn it round. The bass does the same with the roots.
+"Make me something moody." One possible choice: four bars of piano and bass in A minor at 84 BPM, with descending fifths. A two-chord seed, a fifth apart, sequenced down a step twice, then the dominant to turn it round. The bass does the same with the roots.
 
 ```composer-nb
 set tempo 84

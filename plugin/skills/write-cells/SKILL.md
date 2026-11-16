@@ -1,11 +1,13 @@
 ---
 name: write-cells
-description: Write music as composer-nb cells that parse clean and play. Use whenever the user wants drums, a riff, a bass line, a melody, a chord chart, a scale or an exercise they can hear, read as sheet music or take into a DAW as MIDI, or asks to write, fix or change a composer-nb cell, or wants an empty cell to write in themselves.
+description: Write music as composer-nb cells that parse clean and play. Use for music requests stated only as a mood or style, or whenever the user wants drums, a riff, a bass line, a melody, a chord chart, a scale or an exercise they can hear, read as sheet music or take into a DAW as MIDI, or asks to write, fix or change a composer-nb cell, or wants an empty cell to write in themselves.
 ---
 
 # Write cells
 
 A request to make music means saving a playable cell with the notebook tools. Returning a code block alone does not complete it. Respect an explicit preview-only or no-save request.
+
+Treat omitted musical details as creative choices. Use the user's mood, style and relevant notebook context to choose a key, mode, tempo, meter, instruments and a useful length. State the idea briefly, then make and save it without asking the user to choose or approve routine settings. When extending a piece, keep its established settings unless the request calls for a change. Ask only when the available context cannot resolve a blocker, such as which existing cell to edit.
 
 The connector supplies the language guide; `reference` has the full rules. Read the relevant page for unfamiliar syntax.
 
