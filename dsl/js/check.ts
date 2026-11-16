@@ -66,3 +66,15 @@ export function misplaced(name: string, type: Type, use: Use): string | null {
       return unhandled(use)
   }
 }
+
+export const CHORDS_BLOCK =
+  "Chords play one at a time, so they can't be layered in a block. Put them on one line: piano: chords Am F|C G"
+export const NOTES_BLOCK =
+  "A name holds one line of notes. Notes that play together go in a block on the instrument's line: piano: { ... }"
+
+// A block of steps is the whole of what it's written on: a kit piece's line, a layer, or
+// the steps a name holds. That way two blocks never sit in a row, where a newline between
+// them would be all that told together from in order. Steps go in a row with a block by name.
+export const blockBeside = (what: string, written: (fig: string) => string, fig = "fig") =>
+  `A block is everything ${what}, so nothing goes beside it. ` +
+  `To put steps in a row with a block, name it: steps ${fig} = { ... } and ${written(fig)}`

@@ -10,6 +10,7 @@ import {
   parseKey,
   pastScale,
   pastScaleMessage,
+  keyOf,
 } from "../chords.ts"
 import { ChordType, Note } from "tonal"
 import {
@@ -18,17 +19,17 @@ import {
   moveInScale,
   wrapInterval,
   OCTAVE_HELP,
+  tokenize,
+  splitBars,
 } from "../intervals.ts"
 import { misplaced } from "../check.ts"
-import { keyOf } from "../settings.ts"
-import { NAME_LIKE } from "../resolve.ts"
 import { textOf } from "../parts.ts"
 import type { Piece, State } from "../state.ts"
 import { callAt, drawsNotes, spaceNotes } from "./notes.ts"
-import { splitBars, tokenize } from "./steps.ts"
-import { barSlotTicks, timeLabel, type Report } from "../time.ts"
-import { reportIn } from "../diagnostics.ts"
+import { barSlotTicks, timeLabel } from "../time.ts"
+import { reportIn, type Report } from "../diagnostics.ts"
 import { locatedTokens, SourceText, tokenSources } from "../source.ts"
+import { NAME_LIKE } from "../vocab.ts"
 
 export type Key = NonNullable<ReturnType<typeof parseKey>>
 export type Chord = NonNullable<ReturnType<typeof buildChord>>

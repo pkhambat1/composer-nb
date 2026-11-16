@@ -158,7 +158,11 @@ play every 1/4 beats { block { piano: notes fifth(phrase, 2) } }`)
     for (const value of ["2 beats 1", "rest", "1, 3", "(1 3)", "-2*1", "2.5*1", "foo*1"]) {
       const source = `play piano: notes ${value}`
       expect(parseCell(source).errors.length).toBeGreaterThan(0)
-      expect(highlightMusic(source).flat().some((p) => p.c === "tk-error")).toBe(false)
+      expect(
+        highlightMusic(source)
+          .flat()
+          .some((p) => p.c === "tk-error"),
+      ).toBe(false)
     }
   })
 })

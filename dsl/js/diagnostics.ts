@@ -6,7 +6,6 @@
    name twice, and time fitting. The rest of the engine's messages are still written where
    they're reported. */
 import type { Span } from "./syntax.ts"
-import type { Report } from "./time.ts"
 import type { SourceText } from "./source.ts"
 import { KITS, MODES, PITCHED, SETTINGS, SETTING_EXAMPLE, SOUNDS } from "./vocab.ts"
 
@@ -121,6 +120,12 @@ export type Diagnostic = Span & { msg: string }
 // step that isn't one), or a span it already has. What's missing is said where it's
 // missing from: set tempo with no value is about tempo.
 export type At = string | Span
+
+// Reports a mistake on a line of the cell, and what in it the mistake is about (see At)
+export type Report = ((line: number, msg: string, at: At) => void) & {
+  source?: SourceText
+  cell?: symbol
+}
 
 // A reader reports relative to the text it actually received. The source map survives
 // whitespace changes and nested readers; an explicit span always keeps its identity.
@@ -238,3 +243,24 @@ export function locator(src: string) {
 export const overlaps = (a: Span, b: Span) =>
   (a.line < b.endLine || (a.line === b.endLine && a.col < b.endCol)) &&
   (b.line < a.endLine || (b.line === a.endLine && b.col < a.endCol))
+
+export function editDistance(a: string, b: string): number {
+  const d = Array.from({ length: a.length + 1 }, (_, i) => [i])
+  for (let j = 1; j <= b.length; j++) d[0][j] = j
+  for (let i = 1; i <= a.length; i++) {
+    for (let j = 1; j <= b.length; j++) {
+      d[i][j] = Math.min(
+        d[i - 1][j] + 1,
+        d[i][j - 1] + 1,
+        d[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1),
+      )
+    }
+  }
+  return d[a.length][b.length]
+}
+
+export const closest = (name: string, names: readonly string[]): [string, number] =>
+  names.map((n): [string, number] => [n, editDistance(name, n)]).sort((a, b) => a[1] - b[1])[0]
+
+// A with in an instrument's block, among its layers: it goes around the line instead.
+export const withInLayers = (name: string) => message("with.inLayers", { name })

@@ -2,7 +2,7 @@
    repeats fits, and swing. The one place time arithmetic lives. A time is counted in ticks,
    TPQ to a quarter note; seconds come from the tempo only at the end. */
 
-import { message, type At } from "./diagnostics.ts"
+import { message, type At, type Report } from "./diagnostics.ts"
 
 export const TPQ = 96 // ticks per quarter note: fine enough for 1/32 notes and triplets
 // Notes and chords divide each bar into equal slots on the sixteenth-note grid.
@@ -24,12 +24,6 @@ export type Timing = {
   stepTicks: number // how long a step is
   key: string
   mode: string
-}
-
-// Reports a mistake on a line of the cell, and what in it the mistake is about (see At)
-export type Report = ((line: number, msg: string, at: At) => void) & {
-  source?: import("./source.ts").SourceText
-  cell?: symbol
 }
 
 // A time the way it's written: 7 over 8, or 3+4 over 4.

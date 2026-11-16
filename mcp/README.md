@@ -188,8 +188,8 @@ control where an app appears and whether native context attachments are shown.
 The protocol and UI bridge are standard MCP Apps; an ordinary MCP client can still
 use the tools without displaying the app. ChatGPT and Claude have both been exercised
 directly in Chrome, including native selection, saved model edits, notation and
-advancing audio playback. See `VERIFICATION.md` for the exact checks and remaining
-host launch/retry limitations.
+advancing audio playback. One host limitation remains: ChatGPT's direct app route can
+report "App unavailable" or time out before the notebook loads, and a retry opens it.
 
 | Tool                | Purpose                                                   |
 | ------------------- | --------------------------------------------------------- |

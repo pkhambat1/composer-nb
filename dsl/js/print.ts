@@ -9,12 +9,11 @@ import {
   pastScale,
   pastScaleMessage,
   type Voiced,
+  keyOf,
 } from "./chords.ts"
-import { intervalCall, intervalSteps, splitOutside } from "./intervals.ts"
-import { keyOf } from "./settings.ts"
+import { intervalCall, intervalSteps, splitOutside, tokenize, splitBars } from "./intervals.ts"
 import type { State } from "./state.ts"
-import type { Report } from "./time.ts"
-import { atOffset, reportIn } from "./diagnostics.ts"
+import { atOffset, reportIn, type Report } from "./diagnostics.ts"
 import { type SourceText, tokenSources } from "./source.ts"
 import { chordSlot, expandChordTokens } from "./values/chart.ts"
 import {
@@ -25,7 +24,7 @@ import {
   spacedNotes,
   notesTouch,
 } from "./values/notes.ts"
-import { isStepRun, splitBars, stepParts, tokenize } from "./values/steps.ts"
+import { isStepRun, stepParts } from "./values/steps.ts"
 
 export type PrintedItem = {
   text: string

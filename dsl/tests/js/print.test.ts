@@ -124,9 +124,7 @@ print(melody, fifth(harmony), rhythm)`)
       "steps x",
     ])
     expect(rows("print(Cm7)")[0]).toBe("chords Cm7(C3 Eb3 G3 Bb3)")
-    expect(rows("print(fifth(2*(^1 3*- ~3 3*_)))")).toEqual([
-      "notes ^5(G3) ~7(B3) ^5(G3) ~7(B3)",
-    ])
+    expect(rows("print(fifth(2*(^1 3*- ~3 3*_)))")).toEqual(["notes ^5(G3) ~7(B3) ^5(G3) ~7(B3)"])
     expect(rows("set transpose 2\nprint(1, chords 1)")).toEqual([
       "notes 1(D3)",
       "chords 1(D(D3 F#3 A3))",
@@ -146,27 +144,23 @@ print(melody, fifth(harmony), rhythm)`)
     expect(rows("set key A\nset octave 2\nprint(notes 1-------5-------|)")).toEqual([
       "notes 1(A2) 5(E3)",
     ])
-    expect(rows("print(notes C3---__D3|--E3_)")).toEqual([
-      "notes C3 D3 E3",
-    ])
-    expect(rows("set transpose 2\nprint(notes 1---)")).toEqual([
-      "notes 1(D3)",
-    ])
+    expect(rows("print(notes C3---__D3|--E3_)")).toEqual(["notes C3 D3 E3"])
+    expect(rows("set transpose 2\nprint(notes 1---)")).toEqual(["notes 1(D3)"])
   })
 
   it("evaluates single-chord names and functions without chart separators", () => {
     const source = "chords tonic = 1\nchords circle = tonic fifth(tonic)|fifth(tonic, 2)\ncircle"
-    expect(rows(source)).toEqual([
-      "chords 1(C(C3 E3 G3)) 5(G(G3 B3 D4)) 9(Dm(D4 F4 A4))",
-    ])
+    expect(rows(source)).toEqual(["chords 1(C(C3 E3 G3)) 5(G(G3 B3 D4)) 9(Dm(D4 F4 A4))"])
     expect(clean(source).prints[0].text).toBe("1 5 9")
   })
 
   it("preserves chord degrees through interval functions and aliases", () => {
-    expect(rows("chords tonic = 1\nchords dominant = fifth(tonic)\nprint(tonic, dominant)")).toEqual([
-      "chords 1(C(C3 E3 G3)), 5(G(G3 B3 D4))",
-    ])
-    expect(rows("print(chords fifth(3) fifth(7) fifth(fifth(1)) fifth(1, -1) octave(1, -1))")).toEqual([
+    expect(
+      rows("chords tonic = 1\nchords dominant = fifth(tonic)\nprint(tonic, dominant)"),
+    ).toEqual(["chords 1(C(C3 E3 G3)), 5(G(G3 B3 D4))"])
+    expect(
+      rows("print(chords fifth(3) fifth(7) fifth(fifth(1)) fifth(1, -1) octave(1, -1))"),
+    ).toEqual([
       "chords 7(Bdim(B3 D4 F4)) 11(F(F4 A4 C5)) 9(Dm(D4 F4 A4)) -4(F(F2 A2 C3)) -7(C(C2 E2 G2))",
     ])
     expect(rows("set mode wholeTone\nprint(chords octave(1))")).toEqual([
@@ -197,7 +191,9 @@ print(melody, fifth(harmony), rhythm)`)
 
   it("shows an empty evaluation for silence without breaking mixed arguments", () => {
     expect(rows("print(notes ----, notes 1---, chords _ _|_, steps ----)")).toEqual([
-      "notes [], 1(C3)", "chords []", "steps []",
+      "notes [], 1(C3)",
+      "chords []",
+      "steps []",
     ])
   })
 

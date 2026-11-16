@@ -4,8 +4,7 @@
    what follows the head it matched (afterHead). */
 import type { Braces, Line, Piece } from "./state.ts"
 import { lengthPrefix } from "./time.ts"
-import { tokenize } from "./values/steps.ts"
-import { splitOutside } from "./intervals.ts"
+import { splitOutside, tokenize } from "./intervals.ts"
 import { SourceText } from "./source.ts"
 
 // Each piece keeps the text the parser read, even when a reader strips its head. The

@@ -2,21 +2,11 @@
    drums' and the pitched instruments', and spans that say what bar grid is over them.
    layer plays a block's lines, and the clips already made from its patterns, together:
    whatever repeats fits, the lower line wins a moment, and swing moves the sound. */
-import type { At } from "./diagnostics.ts"
+import type { At, Report } from "./diagnostics.ts"
 import type { PartLine, Played } from "./lines.ts"
 import { readPart } from "./lines.ts"
 import type { State } from "./state.ts"
-import {
-  checkLoops,
-  fmt,
-  lcm,
-  MAX_BARS,
-  meterOf,
-  nearWhole,
-  sayTicks,
-  swingWarp,
-  type Report,
-} from "./time.ts"
+import { checkLoops, fmt, lcm, MAX_BARS, meterOf, nearWhole, sayTicks, swingWarp } from "./time.ts"
 import type { ChordEvent } from "./values/chart.ts"
 import type { NoteEvent } from "./values/notes.ts"
 import type { DrumHit } from "./values/steps.ts"

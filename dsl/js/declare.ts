@@ -2,13 +2,10 @@
    the type it says (steps, notes, chords) and defined in its scope, or, for a
    pattern, kept as lines to play where it's played. A value that isn't the type it says,
    or a missing type, is said here. */
-import { buildChord, isDegreeChord } from "./chords.ts"
-import { reportIn, type At } from "./diagnostics.ts"
+import { buildChord, isDegreeChord, keyOf } from "./chords.ts"
+import { reportIn, type At, type Report, closest } from "./diagnostics.ts"
 import { tokenSources } from "./source.ts"
-import { blockBeside } from "./eval.ts"
-import { DEF_RE, EVERY_RE, PLACE_RE, TRACK_RE, TYPED_RE, type DeclLine } from "./lines.ts"
-import { closest, NAME_LIKE, nameProblem, Scope } from "./resolve.ts"
-import { keyOf } from "./settings.ts"
+import { nameProblem, Scope } from "./resolve.ts"
 import {
   bracesIn,
   commaGroups,
@@ -21,7 +18,7 @@ import {
   withHead,
 } from "./parts.ts"
 import type { Braces, Piece, Section, State } from "./state.ts"
-import { evalNumber, fmt, lengthAt, lengthPrefix, MAX_BARS, type Report } from "./time.ts"
+import { evalNumber, fmt, lengthAt, lengthPrefix, MAX_BARS } from "./time.ts"
 import {
   CHORD_MARKS,
   chartRepeat,
@@ -29,7 +26,7 @@ import {
   expandChordTokens,
   validChordToken,
 } from "./values/chart.ts"
-import { isIntervalCall } from "./intervals.ts"
+import { isIntervalCall, tokenize } from "./intervals.ts"
 import {
   drawsNotes,
   noteParts,
@@ -46,18 +43,30 @@ import {
   STEP_HELP,
   stepBlock,
   stepParts,
-  tokenize,
   withoutCalls,
 } from "./values/steps.ts"
-import { among, SETTINGS, TYPED_BRACES_RE, TYPES, type Type } from "./vocab.ts"
+import {
+  among,
+  SETTINGS,
+  TYPED_BRACES_RE,
+  TYPES,
+  type Type,
+  NAME_LIKE,
+  DEF_RE,
+  EVERY_RE,
+  PLACE_RE,
+  TRACK_RE,
+  TYPED_RE,
+} from "./vocab.ts"
+import { blockBeside, CHORDS_BLOCK, NOTES_BLOCK } from "./check.ts"
+
+// What a declaration is, read
+export type DeclLine =
+  | { kind: "word"; ln: number; type: Type; name: string; value: Piece[] }
+  | { kind: "blockdef"; ln: number; type: "pattern" | "block"; name: string; value: Piece[] }
 
 // What a value reads as, from how it's written
 type Shape = "steps" | "notes" | "chords" | "pattern"
-
-export const CHORDS_BLOCK =
-  "Chords play one at a time, so they can't be layered in a block. Put them on one line: piano: chords Am F|C G"
-export const NOTES_BLOCK =
-  "A name holds one line of notes. Notes that play together go in a block on the instrument's line: piano: { ... }"
 
 // pattern groove 3 bars {: a pattern without its =. pattern 3 bars {: a length behind its type.
 export function patternHint(text: string): string {
@@ -247,7 +256,12 @@ export function readDecl(
 export function patternText(parts: Piece[]): boolean {
   const value = textOf(parts)
   const len = lengthPrefix(value)
-  if (len.has || /[{(]/.test(withoutCalls(len.rest)) || PLACE_RE.test(value) || EVERY_RE.test(value))
+  if (
+    len.has ||
+    /[{(]/.test(withoutCalls(len.rest)) ||
+    PLACE_RE.test(value) ||
+    EVERY_RE.test(value)
+  )
     return true
   const track = TRACK_RE.exec(value)
   return !!track && !/\s/.test(track[1])
@@ -369,7 +383,11 @@ export function classifyDecl(
     // pattern groove = pattern { ... }: the declaration already says it. The type in front
     // of the braces is said with them, since the same word starts the declaration.
     const typed = TYPED_BRACES_RE.exec(lengthPrefix(value).rest)![1]
-    err(ln, `${name} is a ${type}, so its braces take no type: ${type} ${name} = { ... }`, `${typed} {`)
+    err(
+      ln,
+      `${name} is a ${type}, so its braces take no type: ${type} ${name} = { ... }`,
+      `${typed} {`,
+    )
     return null
   }
   const shape = shapeOf(parts, st)

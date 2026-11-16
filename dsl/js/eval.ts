@@ -21,8 +21,8 @@ import { Scope, undefinedName } from "./resolve.ts"
 import { itemAt, type Item, type Playable } from "./sequence.ts"
 import { pacing, setInBlock, withState } from "./settings.ts"
 import { cloneState, type Line, type Section, type State } from "./state.ts"
-import { meterOf, type Report } from "./time.ts"
-import { reportIn } from "./diagnostics.ts"
+import { meterOf } from "./time.ts"
+import { reportIn, type Report } from "./diagnostics.ts"
 import { sourceOf } from "./parts.ts"
 import { SourceText } from "./source.ts"
 
@@ -76,13 +76,6 @@ function readLines(
 // What something that repeats is called when it doesn't fit.
 export const loopName = (it: Item) =>
   it.name || (it.items ? "This group" : it.with ? "This with" : "This pattern")
-
-// A block of steps is the whole of what it's written on: a kit piece's line, a layer, or
-// the steps a name holds. That way two blocks never sit in a row, where a newline between
-// them would be all that told together from in order. Steps go in a row with a block by name.
-export const blockBeside = (what: string, written: (fig: string) => string, fig = "fig") =>
-  `A block is everything ${what}, so nothing goes beside it. ` +
-  `To put steps in a row with a block, name it: steps ${fig} = { ... } and ${written(fig)}`
 
 // Each instrument has one line in a block. Its layers go in a block on that line.
 const secondLine = (name: string, where: string) =>

@@ -15,7 +15,7 @@ import {
 } from "./clips.ts"
 import { checkBars, classifyDecl, defineBlock, defineWord, patternHint } from "./declare.ts"
 import { blockClip, checkSection } from "./eval.ts"
-import { classify, EVERY_RE, PLACE_RE, TYPED_RE } from "./lines.ts"
+import { classify } from "./lines.ts"
 import { playDuration } from "./play-duration.ts"
 import { Scope } from "./resolve.ts"
 import { applySetting, readWithHeader, setInBlock, WITH_HELP, withState } from "./settings.ts"
@@ -24,10 +24,10 @@ import { bareValue, isBareValue, printValue, type PrintOutput } from "./print.ts
 import { cloneState, describe, initialState, type Line, type Piece, type State } from "./state.ts"
 import { bracesIn, isBraces, located, plain, sourceOf } from "./parts.ts"
 import type { Block, Span as SourceSpan, Statement, Text } from "./syntax.ts"
-import { locator, overlaps, reportIn, type Diagnostic } from "./diagnostics.ts"
+import { locator, overlaps, reportIn, type Diagnostic, type Report } from "./diagnostics.ts"
 import { SourceText } from "./source.ts"
-import { fmt, lengthPrefix, MAX_SECONDS, singularLength, TPQ, type Report } from "./time.ts"
-import { SETTINGS, TYPED_BRACES_RE } from "./vocab.ts"
+import { fmt, lengthPrefix, MAX_SECONDS, singularLength, TPQ } from "./time.ts"
+import { SETTINGS, TYPED_BRACES_RE, EVERY_RE, PLACE_RE, TYPED_RE } from "./vocab.ts"
 
 // The braces after play say their type, as any others do
 const UNTYPED_PLAY =

@@ -10,6 +10,21 @@ export const TYPES = ["steps", "notes", "chords", "pattern", "block"] as const
 export const TYPED_BRACES_RE = /^(pattern|block)\s*\{/
 export type Type = (typeof TYPES)[number]
 
+// A token that reads as a name: a lowercase letter, then letters and digits (riff, partA)
+export const NAME_LIKE = /^[a-z][A-Za-z0-9]+$/
+
+export const DEF_RE = /^([A-Za-z][A-Za-z0-9]*)\s*=\s*(.*)$/
+// A type, a name and what it holds: steps pair = ^-x-
+const TYPE_WORDS = TYPES.join("|")
+export const TYPED_RE = new RegExp(`^(${TYPE_WORDS})\\s+([A-Za-z][A-Za-z0-9]*)\\s*=\\s*(.*)$`)
+// The same with the = left out: steps pair ^-x-
+export const NO_EQUALS_RE = new RegExp(`^(${TYPE_WORDS})\\s+([A-Za-z][A-Za-z0-9]*)\\s+([^=].*)$`)
+export const TRACK_RE = /^([A-Za-z][A-Za-z0-9]*(?:\.[A-Za-z0-9]+)?)\s*:\s*(.*)$/
+// value on bar 2, value on bar 3 to 4: placement follows the value.
+export const PLACE_RE = /\bon\s+bar(?:\s|$)/
+// every 1/2 beats ...: how long a step lasts, in front of what plays at that pace
+export const EVERY_RE = /^every(\s|$)/
+
 // Ordinal intervals count through the active scale. Compound intervals start over
 // after the octave, including in scales with fewer than seven notes. eighth is octave.
 export const INTERVALS = {

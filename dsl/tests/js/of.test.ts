@@ -34,7 +34,9 @@ describe("retired of operator", () => {
   })
 
   it("allows comments and names containing those letters", () => {
-    const parsed = parseCell("// fifth of a fifth\nnotes offbeat = fifth(1, 2)---\nprint(offbeat)\noffbeat")
+    const parsed = parseCell(
+      "// fifth of a fifth\nnotes offbeat = fifth(1, 2)---\nprint(offbeat)\noffbeat",
+    )
     expect(parsed.errors).toEqual([])
     expect(parsed.prints).toHaveLength(2)
   })

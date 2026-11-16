@@ -7,14 +7,12 @@
    played.) */
 import { buildChord, parseKey } from "./chords.ts"
 import { misplaced } from "./check.ts"
-import { message } from "./diagnostics.ts"
+import { closest, editDistance, message } from "./diagnostics.ts"
 import type { Section, State, Word } from "./state.ts"
 import { noteSteps } from "./values/notes.ts"
-import { tokenize } from "./values/steps.ts"
 import { among, DRUMS, KEYWORDS, LANES, PARTS, PITCHED, SETTINGS, SPLIT } from "./vocab.ts"
+import { tokenize } from "./intervals.ts"
 
-// A token that reads as a name: a lowercase letter, then letters and digits (riff, partA)
-export const NAME_LIKE = /^[a-z][A-Za-z0-9]+$/
 const ROMAN = ["i", "ii", "iii", "iv", "v", "vi", "vii"]
 // Words that already mean something
 const TAKEN = new Set<string>([...SETTINGS, ...DRUMS, ...PARTS, ...KEYWORDS])
@@ -76,24 +74,6 @@ export class Scope {
     }
   }
 }
-
-function editDistance(a: string, b: string): number {
-  const d = Array.from({ length: a.length + 1 }, (_, i) => [i])
-  for (let j = 1; j <= b.length; j++) d[0][j] = j
-  for (let i = 1; i <= a.length; i++) {
-    for (let j = 1; j <= b.length; j++) {
-      d[i][j] = Math.min(
-        d[i - 1][j] + 1,
-        d[i][j - 1] + 1,
-        d[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1),
-      )
-    }
-  }
-  return d[a.length][b.length]
-}
-
-export const closest = (name: string, names: readonly string[]): [string, number] =>
-  names.map((n): [string, number] => [n, editDistance(name, n)]).sort((a, b) => a[1] - b[1])[0]
 
 // For `name: value` where name isn't an instrument.
 export function unknownInstrument(name: string): string {

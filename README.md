@@ -101,19 +101,18 @@ composer-nb is an [MCP](https://modelcontextprotocol.io) server too, so Claude, 
 
 The editable notebook MCP App in this checkout shares the website's cells, bricks,
 sheet music, chords and playback. It uses the host's own chat composer and an explicit
-saved notebook file. See [MCP development setup](mcp/README.md) and the
-[verification checklist](mcp/VERIFICATION.md); this development integration has not
-yet been deployed through the published connector above.
+saved notebook file. See [MCP development setup](mcp/README.md); this development
+integration has not yet been deployed through the published connector above.
 
 ## What's here
 
-| Folder        | What it is                                                                                                                                                                                                                                                                                             |
-| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `dsl/`        | The language: the parser, chord builder and audio renderer in `dsl/js/`, which the playground and the MCP server both run. Not published. |
-| `playground/` | A notebook-style web app for writing the language and hearing it. It uses `dsl/` as a package, so both always run the same parser.                                                                                                                                                                     |
-| `mcp/`        | The [MCP server](mcp/README.md): the language for assistants, and the notebook app they open. `api/` serves it on Vercel at `/mcp`, with the sheet and MIDI of a cell at `/api/sheet` and `/api/midi`.                                                                                                |
-| `plugin/`     | The [Claude plugin](plugin/README.md): that server as its connector, and skills. `.claude-plugin/marketplace.json` lists it, so this repository is its marketplace.                                                                                                                                    |
-| `docs/`       | The [docs site](https://pkhambat.mintlify.site): `.mdx` pages and `docs.json`, built by [Mintlify](https://mintlify.com). Also the images in these READMEs.                                                                                                                                            |
+| Folder        | What it is                                                                                                                                                                                             |
+| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `dsl/`        | The language: the parser, chord builder and audio renderer in `dsl/js/`, which the playground and the MCP server both run. Not published.                                                              |
+| `playground/` | A notebook-style web app for writing the language and hearing it. It uses `dsl/` as a package, so both always run the same parser.                                                                     |
+| `mcp/`        | The [MCP server](mcp/README.md): the language for assistants, and the notebook app they open. `api/` serves it on Vercel at `/mcp`, with the sheet and MIDI of a cell at `/api/sheet` and `/api/midi`. |
+| `plugin/`     | The [Claude plugin](plugin/README.md): that server as its connector, and skills. `.claude-plugin/marketplace.json` lists it, so this repository is its marketplace.                                    |
+| `docs/`       | The [docs site](https://pkhambat.mintlify.site): `.mdx` pages and `docs.json`, built by [Mintlify](https://mintlify.com). Also the images in these READMEs.                                            |
 
 ## Working on it
 

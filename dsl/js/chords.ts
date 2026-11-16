@@ -1,6 +1,7 @@
 /* Chord names and Roman numerals → voiced chords. Pure (no audio), so the parser, the
    renderer and the tests can all share it. */
 import { Chord, Note, Interval } from "tonal"
+import type { State } from "./state.ts"
 import { MODE_TABLE, type ModeInfo } from "./vocab.ts"
 
 const modeInfo = (mode: string): ModeInfo | undefined =>
@@ -405,3 +406,6 @@ export function applyTranspose(chord: Voiced, semis: number): Voiced {
   chord.bassName = midiToName(chord.bassMidi)
   return chord
 }
+
+// The key a state is in, as the chords and the sheet read it.
+export const keyOf = (st: State) => parseKey(st.key, st.mode)

@@ -1,9 +1,10 @@
 /* A play's duration follows its music. Intrinsic value/line lengths keep their own
    syntax; this modifier controls the whole output, including truncation or silence. */
 import type { Block, Text } from "./syntax.ts"
-import { lengthPrefix, type Report } from "./time.ts"
 import { SourceText } from "./source.ts"
 import type { Span } from "./syntax.ts"
+import { lengthPrefix } from "./time.ts"
+import type { Report } from "./diagnostics.ts"
 
 export function playDuration(
   parts: (Text | Block)[],

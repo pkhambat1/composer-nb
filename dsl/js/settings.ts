@@ -3,10 +3,9 @@
    instrument's sound. A set applies from its line to the end of the cell; a with's settings
    apply to its block. */
 import { parseKey } from "./chords.ts"
-import { atOffset, message, reportIn } from "./diagnostics.ts"
-import { closest } from "./resolve.ts"
+import { atOffset, message, reportIn, type Report, closest } from "./diagnostics.ts"
 import { cloneState, type State } from "./state.ts"
-import { evalNumber, nearWhole, sumTerms, type Report } from "./time.ts"
+import { evalNumber, nearWhole, sumTerms } from "./time.ts"
 import type { SourceText } from "./source.ts"
 import {
   among,
@@ -28,9 +27,6 @@ type Sounding = keyof typeof SOUNDS
 // A setting's name and its value, as written
 export type SettingWords = { name: string; value: string; source?: SourceText }
 
-// The key a state is in, as the chords and the sheet read it.
-export const keyOf = (st: State) => parseKey(st.key, st.mode)
-
 // A key is a note, and the mode a setting of its own. Why `value` isn't a key, as the line
 // to write after `verb` (set, or with in a with's header).
 function keyProblem(value: string, verb: Verb): string {
@@ -40,9 +36,6 @@ function keyProblem(value: string, verb: Verb): string {
   if (both) return message("key.notAMode", { verb, root: both[1] })
   return message("key.notANote", { verb })
 }
-
-// A with in an instrument's block, among its layers: it goes around the line instead.
-export const withInLayers = (name: string) => message("with.inLayers", { name })
 
 // Applies a setting to `state`. `verb` is how it was written, set or with, for messages.
 // Returns whether it was one. A value that isn't right is the mistake, so that's what's

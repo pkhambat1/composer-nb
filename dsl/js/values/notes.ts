@@ -13,6 +13,7 @@ import {
   midiToName,
   pastScale,
   pastScaleMessage,
+  keyOf,
 } from "../chords.ts"
 import {
   intervalCall,
@@ -22,18 +23,15 @@ import {
   callSegments,
   OCTAVE_HELP,
   type IntervalCall,
+  tokenize,
 } from "../intervals.ts"
-import { misplaced } from "../check.ts"
-import { CHORDS_BLOCK } from "../declare.ts"
+import { misplaced, CHORDS_BLOCK } from "../check.ts"
 import { bracesIn, headOf, onlyBraces, textOf, withHead, sourceOf } from "../parts.ts"
-import { atCursor, reportIn } from "../diagnostics.ts"
+import { atCursor, reportIn, type Report, withInLayers } from "../diagnostics.ts"
 import { SourceText, locatedTokens, tokenSources, repeatTokens } from "../source.ts"
-import { TRACK_RE } from "../lines.ts"
-import { keyOf, withInLayers } from "../settings.ts"
-import { NAME_LIKE } from "../resolve.ts"
-import type { Line, Piece, State } from "../state.ts"
-import { barSlotTicks, lcm, MAX_BARS, meterOf, sayTicks, timeLabel, type Report } from "../time.ts"
-import { INTERVALS } from "../vocab.ts"
+import { type Line, type Piece, type State, barLineProblem } from "../state.ts"
+import { barSlotTicks, lcm, MAX_BARS, meterOf, sayTicks, timeLabel } from "../time.ts"
+import { INTERVALS, NAME_LIKE, TRACK_RE } from "../vocab.ts"
 import {
   CHORD_MARKS,
   chordPattern,
@@ -43,7 +41,6 @@ import {
   type Key,
   type Part,
 } from "./chart.ts"
-import { barLineProblem, tokenize } from "./steps.ts"
 
 // One step of a line of notes: null for -, { cut } for _, or a note. A note by name has
 // `name` and `octave`; a degree has `degree` and `acc` (b or #).

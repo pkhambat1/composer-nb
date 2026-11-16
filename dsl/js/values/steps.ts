@@ -2,29 +2,16 @@
    ~ ghost, d double, - nothing). Spaces join words, n* repeats a word or parenthesized
    sequence, and a final ...word fills the containing block. Layers in braces play
    together until they line up. */
-import { buildChord } from "../chords.ts"
-import { misplaced } from "../check.ts"
-import { blockBeside } from "../eval.ts"
-import { TRACK_RE } from "../lines.ts"
-import { keyOf, withInLayers } from "../settings.ts"
-import { NAME_LIKE } from "../resolve.ts"
-import { isIntervalCall, callSegments } from "../intervals.ts"
+import { buildChord, keyOf } from "../chords.ts"
+import { misplaced, blockBeside } from "../check.ts"
+import { isIntervalCall, tokenize } from "../intervals.ts"
 import { bracesIn, headOf, onlyBraces, textOf, sourceOf } from "../parts.ts"
-import { atCursor, reportIn, type At } from "../diagnostics.ts"
+import { atCursor, reportIn, type At, type Report, withInLayers } from "../diagnostics.ts"
 import { SourceText, locatedTokens, tokenSources, repeatTokens } from "../source.ts"
-import type { Braces, Line, Piece, State } from "../state.ts"
-import {
-  barQuarters,
-  count,
-  lastCount,
-  lcm,
-  MAX_BARS,
-  meterOf,
-  timeLabel,
-  TPQ,
-  type Report,
-} from "../time.ts"
+import { barLineProblem, type Braces, type Line, type Piece, type State } from "../state.ts"
+import { barQuarters, count, lastCount, lcm, MAX_BARS, meterOf, timeLabel, TPQ } from "../time.ts"
 import { grouped, noteSteps, period, spaceNotes } from "./notes.ts"
+import { NAME_LIKE, TRACK_RE } from "../vocab.ts"
 
 // How a drum is hit
 export type Mods = { accent?: boolean; ghost?: boolean; double?: boolean }
@@ -75,62 +62,11 @@ export const STEPS: Record<string, Mods> = {
   d: { double: true },
 }
 
-export function tokenize(value: string, source?: SourceText): string[] {
-  const words: string[] = []
-  let word = ""
-  let afterCall = false
-  const flush = () => {
-    if (word) words.push(word)
-    word = ""
-  }
-  for (const segment of callSegments(value)) {
-    if (segment.call) {
-      flush()
-      word = segment.text
-      afterCall = true
-      continue
-    }
-    for (const c of segment.text) {
-      if (afterCall && /[-_]/.test(c)) flush()
-      afterCall = false
-      if (/[\s,|]/.test(c)) {
-        flush()
-        if (c === "|") words.push(c)
-      } else word += c
-    }
-  }
-  flush()
-  let offset = 0
-  return locatedTokens(
-    words,
-    source &&
-      words.map((word) => {
-        const start = value.indexOf(word, offset)
-        offset = start + word.length
-        return source.slice(start, offset)
-      }),
-  )
-}
-
 // Remove interval calls before looking for sequence groups.
 export const withoutCalls = (text: string) =>
   tokenize(text)
     .filter((token) => !isIntervalCall(token))
     .join(" ")
-
-// Split tokens on bar lines; empty bars (e.g. from a leading |) are dropped.
-export function splitBars(tokens: string[]): string[][] {
-  const sources = tokenSources(tokens)
-  const bars: string[][] = [locatedTokens([], sources && [])]
-  for (const [i, t] of tokens.entries()) {
-    if (t === "|") bars.push(locatedTokens([], sources && []))
-    else {
-      bars[bars.length - 1].push(t)
-      if (sources) tokenSources(bars[bars.length - 1])!.push(sources[i])
-    }
-  }
-  return bars.filter((b) => b.length)
-}
 
 export const isStep = (c: string) => c === "-" || !!STEPS[c]
 // Steps are typed without spaces (x--x---), but spaces between them are fine too.
@@ -564,16 +500,6 @@ export function stepParts(
     }
   }
   return { tokens: out, toEnd, fill }
-}
-
-// Why a | in steps is in the wrong place, after `n` steps, or null if a bar ends there.
-export function barLineProblem(n: number, st: State): string | null {
-  const { barTicks } = meterOf(st)
-  if ((n * st.stepTicks) % barTicks === 0) return null
-  return (
-    `This | isn't at the end of a bar: it's after ${count(n, "step")}, ` +
-    `and a ${timeLabel(st)} bar is ${count(barTicks / st.stepTicks, "step")}`
-  )
 }
 
 // Where to mark a mistake in the steps after ... in `text`: the step itself when the steps

@@ -1,14 +1,14 @@
 /* Sequences: what one line of a block plays, as items. A pattern's name, a block, a with
    and its block, or a group in brackets that plays what's in it in order, each with the
    length in front of it, if any. */
-import { atOffset, reportIn, type At } from "./diagnostics.ts"
+import { atOffset, reportIn, type At, type Report } from "./diagnostics.ts"
 import { undefinedName } from "./resolve.ts"
 import { readWithHeader, WITH_HELP, type SettingWords } from "./settings.ts"
 import { isBraces, textOf, sourcesOf, located } from "./parts.ts"
 import { SourceText } from "./source.ts"
 import type { Span } from "./syntax.ts"
 import type { Braces, Line, Piece, Section, State } from "./state.ts"
-import { lengthPrefix, MAX_BARS, type Report } from "./time.ts"
+import { lengthPrefix, MAX_BARS } from "./time.ts"
 
 // Something a block plays as a pattern: a named one, a block without a name, or a with's
 export type Playable = Partial<Section> & {

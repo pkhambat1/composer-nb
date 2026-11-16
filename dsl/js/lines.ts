@@ -2,12 +2,11 @@
    a declaration (steps pair = ^-x-), an instrument's line (kick: x--x), what plays in a bar
    (fill on bar 2) or at its own pace (every 3/4 beats { ... }), or patterns to play (intro
    verse). An instrument's line is then read as what it plays. */
-import { buildChord, parseKey } from "./chords.ts"
-import { classifyDecl, patternHint, readDecl } from "./declare.ts"
-import { blockBeside } from "./eval.ts"
+import { buildChord, parseKey, keyOf } from "./chords.ts"
+import { classifyDecl, patternHint, readDecl, type DeclLine } from "./declare.ts"
 import { readSequence, type Item } from "./sequence.ts"
-import { closest, unknownInstrument } from "./resolve.ts"
-import { keyOf, readSetting } from "./settings.ts"
+import { unknownInstrument } from "./resolve.ts"
+import { readSetting } from "./settings.ts"
 import {
   bracesIn,
   headOf,
@@ -19,7 +18,7 @@ import {
   located,
   sourcesOf,
 } from "./parts.ts"
-import { reportIn, type At } from "./diagnostics.ts"
+import { reportIn, type At, type Report, closest } from "./diagnostics.ts"
 import type { SourceText } from "./source.ts"
 import type { Line, Piece, State } from "./state.ts"
 import {
@@ -31,29 +30,29 @@ import {
   numbers,
   singularLength,
   TPQ,
-  type Report,
 } from "./time.ts"
 import type { ChartClip } from "./values/chart.ts"
 import { drawsNotes, pitchedPattern, spaceNotes, type PitchedClip } from "./values/notes.ts"
-import { stepParts, stepBlock, stepPattern, tokenize, type DrumClip } from "./values/steps.ts"
+import { stepParts, stepBlock, stepPattern, type DrumClip } from "./values/steps.ts"
 import {
   among,
+  EVERY_RE,
+  NO_EQUALS_RE,
   PARTS,
+  PLACE_RE,
   PITCHED,
   SETTING_EXAMPLE,
   SETTINGS,
   SOUNDS,
+  TRACK_RE,
   TYPED_BRACES_RE,
-  TYPES,
   type Setting,
-  type Type,
 } from "./vocab.ts"
+import { blockBeside } from "./check.ts"
+import { tokenize } from "./intervals.ts"
 
 // What a line is, read
 export type SettingLine = { kind: "setting"; ln: number; name: string; value: string }
-export type DeclLine =
-  | { kind: "word"; ln: number; type: Type; name: string; value: Piece[] }
-  | { kind: "blockdef"; ln: number; type: "pattern" | "block"; name: string; value: Piece[] }
 export type PartLine = {
   source?: SourceText
   kind: "part"
@@ -89,18 +88,6 @@ export type ReadLine = (SettingLine | DeclLine | PartLine | Placed | Paced | Seq
 }
 // An instrument's line, read as what it plays
 export type Played = (DrumClip | PitchedClip | ChartClip) & { part: PartLine }
-
-export const DEF_RE = /^([A-Za-z][A-Za-z0-9]*)\s*=\s*(.*)$/
-// A type, a name and what it holds: steps pair = ^-x-
-const TYPE_WORDS = TYPES.join("|")
-export const TYPED_RE = new RegExp(`^(${TYPE_WORDS})\\s+([A-Za-z][A-Za-z0-9]*)\\s*=\\s*(.*)$`)
-// The same with the = left out: steps pair ^-x-
-export const NO_EQUALS_RE = new RegExp(`^(${TYPE_WORDS})\\s+([A-Za-z][A-Za-z0-9]*)\\s+([^=].*)$`)
-export const TRACK_RE = /^([A-Za-z][A-Za-z0-9]*(?:\.[A-Za-z0-9]+)?)\s*:\s*(.*)$/
-// value on bar 2, value on bar 3 to 4: placement follows the value.
-export const PLACE_RE = /\bon\s+bar(?:\s|$)/
-// every 1/2 beats ...: how long a step lasts, in front of what plays at that pace
-export const EVERY_RE = /^every(\s|$)/
 
 export const LINE_SHAPES =
   "Each line is a setting (set tempo 90), a name with its type (chords verse = Am F, " +

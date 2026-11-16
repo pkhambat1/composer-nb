@@ -1,6 +1,7 @@
 /* Scale-relative interval calls. Parsing keeps the argument symbolic: a named
    phrase is evaluated in the key and mode where it plays, not where it was named. */
 import { letterStep, midiToName, type Key } from "./chords.ts"
+import { locatedTokens, tokenSources, type SourceText } from "./source.ts"
 import { INTERVALS } from "./vocab.ts"
 
 export type IntervalCall = {
@@ -137,4 +138,55 @@ export function moveInScale(midi: number, spelling: string, key: Key, steps: num
   const acc = moved - ((octave + 1) * 12 + NATURAL[index])
   const name = LETTERS[index] + (acc > 0 ? "#".repeat(acc) : "b".repeat(-acc)) + octave
   return { midi: moved, name, spell: { letter: LETTERS[index], alter: acc } }
+}
+
+export function tokenize(value: string, source?: SourceText): string[] {
+  const words: string[] = []
+  let word = ""
+  let afterCall = false
+  const flush = () => {
+    if (word) words.push(word)
+    word = ""
+  }
+  for (const segment of callSegments(value)) {
+    if (segment.call) {
+      flush()
+      word = segment.text
+      afterCall = true
+      continue
+    }
+    for (const c of segment.text) {
+      if (afterCall && /[-_]/.test(c)) flush()
+      afterCall = false
+      if (/[\s,|]/.test(c)) {
+        flush()
+        if (c === "|") words.push(c)
+      } else word += c
+    }
+  }
+  flush()
+  let offset = 0
+  return locatedTokens(
+    words,
+    source &&
+      words.map((word) => {
+        const start = value.indexOf(word, offset)
+        offset = start + word.length
+        return source.slice(start, offset)
+      }),
+  )
+}
+
+// Split tokens on bar lines; empty bars (e.g. from a leading |) are dropped.
+export function splitBars(tokens: string[]): string[][] {
+  const sources = tokenSources(tokens)
+  const bars: string[][] = [locatedTokens([], sources && [])]
+  for (const [i, t] of tokens.entries()) {
+    if (t === "|") bars.push(locatedTokens([], sources && []))
+    else {
+      bars[bars.length - 1].push(t)
+      if (sources) tokenSources(bars[bars.length - 1])!.push(sources[i])
+    }
+  }
+  return bars.filter((b) => b.length)
 }
