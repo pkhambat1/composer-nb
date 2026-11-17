@@ -29,7 +29,7 @@ import { atCursor, message, reportIn, type Report } from "../diagnostics.ts"
 import { SourceText, locatedTokens, tokenSources, repeatTokens } from "../source.ts"
 import { type Line, type Piece, type State, barLineProblem } from "../state.ts"
 import { barSlotTicks, lcm, MAX_BARS, meterOf, sayTicks, timeLabel } from "../time.ts"
-import { INTERVALS, NAME_LIKE, TRACK_RE } from "../vocab.ts"
+import { FUNCTIONS, NAME_LIKE, TRACK_RE } from "../vocab.ts"
 import {
   CHORD_MARKS,
   chordPattern,
@@ -243,7 +243,7 @@ export const spaceNotes = (text: string) => text.replace(/[^\s|,{}]+/g, (w) => s
 export function callAt(text: string): string {
   const head = /^[\^~]?([a-z][A-Za-z0-9]*)\s*\(/.exec(text)
   if (!head) return text
-  if (!Object.hasOwn(INTERVALS, head[1])) return head[1]
+  if (!FUNCTIONS.includes(head[1])) return head[1]
   let depth = 1
   let end = head[0].length
   for (; end < text.length && depth; end++) {

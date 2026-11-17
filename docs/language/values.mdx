@@ -11,7 +11,7 @@ Every value has exactly one type, and the type is always written: before a decla
 | --- | --- | --- | --- |
 | [steps](/drums/steps) | What one kit piece plays: hits on the step grid. | `step_seq` or `step_layers` | A kit-piece line, a `steps` declaration, `print`. |
 | [notes](/pitched/notes) | One voice of single notes in bars. | `note_seq` | An instrument line after `notes`, a `notes` declaration, an interval function, `print`. |
-| [chords](/pitched/chords) | A chart of chords in bars. | `chart` | An instrument line after `chords`, a `chords` declaration, an interval function, `print`. |
+| [chords](/pitched/chords) | A chart of chords in bars. | `chart` | An instrument line after `chords`, a `chords` declaration, an interval function, `extend`, `print`. |
 | [pattern](/language/patterns#pattern) | Parts that sound together, whose lines repeat. | `{ }` body or a single part | `play`, a body entry, a group, `every`, `on bar`. |
 | [block](/language/patterns#block) | Parts that sound together, whose lines play once. | `{ }` body or a single part | `play`, a body entry, a group, `on bar`. |
 
@@ -47,7 +47,7 @@ declaration ::= "steps" name "=" (step_seq | step_layers)
 | `name` | `name` | A new name; see [Names](/language/values#names). |
 | `step_seq`, `step_layers` | `steps` | Step words, `steps` names, repeats and Euclidean rhythms, or layers of them; see [steps](/drums/steps). |
 | `note_seq` | `notes` | Note words, `notes` names, repeats and interval calls; see [notes](/pitched/notes). |
-| `chart` | `chords` | Chord symbols, degrees, `chords` names and interval calls in bars; see [chords](/pitched/chords). |
+| `chart` | `chords` | Chord symbols, degrees, `chords` names, interval calls and `extend` calls in bars; see [chords](/pitched/chords). |
 | `body` | `pattern` or `block` | `{ entry, ... }`; see [Bodies](/language/patterns#bodies). |
 | `part` | `pattern` or `block` | One line, name, group, `with`, `every` or placed part; see [Parts](/language/patterns#parts). |
 
@@ -99,7 +99,7 @@ Names are case-sensitive, and two names that differ only in capitals cannot both
 A name cannot be any of these:
 
 - A keyword: `steps`, `notes`, `chords`, `pattern`, `block`, `set`, `with`, `play`, `print`, `for`, `every`, `on`, `bar`, `to`, `bars`, `beats`, `in`, `over`, `rest`.
-- A setting name, an interval function, a kit piece or an instrument.
+- A setting name, a built-in function, a kit piece or an instrument.
 - A Roman numeral `i` to `vii`, or a spelling that reads as a chord degree, such as `b3`.
 - `x` followed by digits, or `d` followed by digits and an optional `e` or `a`.
 

@@ -92,7 +92,7 @@ export const NOTE_MESSAGES = {
     `A layer's notes run ${hits} before its ..., and the block is only ${length} long`,
 
   // Interval functions
-  "interval.nested": () => "Interval functions can nest at most 32 levels",
+  "interval.nested": () => "Music functions can nest at most 32 levels",
   "interval.unknown": ({ name }: { name: string }) =>
     `"${name}" isn't an interval function. Use second(...), third(...), fourth(...), fifth(...), or octave(...)`,
   "interval.unclosed": ({ name }: { name: string }) => `${name}(...) is missing its closing )`,

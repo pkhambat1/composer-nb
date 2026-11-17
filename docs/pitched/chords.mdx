@@ -11,6 +11,7 @@ chord ::= root [suffix] ["/" bass]
 root  ::= letter ("#" | "b")* | degree | numeral
 bass  ::= letter ["#" | "b"] | degree
 call  ::= interval "(" chart ["," integer] ")"
+        | "extend" "(" chart "," suffix ")"
 ```
 
 A `chords` value is a chord chart: bars separated by `|`, each bar divided equally among its slots. It names no instrument: the [instrument line](/pitched/instruments#instrument-lines) it is written on decides what plays it.
@@ -21,7 +22,7 @@ A `chords` value is a chord chart: bars separated by `|`, each bar divided equal
 | --- | --- | --- |
 | On an instrument line | `instrument ":" "chords" chart` | The `chords` keyword is required, before a name as well. |
 | In a declaration | `"chords" name "=" chart` |  |
-| As a function argument | `interval "(" chart ")"` |  |
+| As a function argument | `interval "(" chart ")"`, `"extend" "(" chart "," suffix ")"` |  |
 | In `print`, or as a last expression | `"chords" chart`, or a `chords` name |  |
 
 ## What a chart is made of
@@ -34,6 +35,7 @@ A `chords` value is a chord chart: bars separated by `|`, each bar divided equal
 | Rest | `_` | The chord sounding stops. The slot is silent. |
 | Name | `home` | A declared `chords` name, in place. |
 | Interval call | `fourth(home)` | The argument, moved through the scale; see [Interval functions](/functions/intervals). |
+| Extension call | `extend(home, add9)` | One suffix applied to every chord; see [extend](/functions/extend). |
 | Bar line | `\\|` | Ends a bar. Optional before the first bar and after the last. |
 | Repeat bar | `%` | A whole bar: the bar before it, again. |
 
@@ -132,8 +134,8 @@ A suffix found in the [Chord symbol catalog](/pitched/chord-symbols) means exact
 
 | Modifier | Effect |
 | --- | --- |
-| `sus2` | Replaces the third with a major second. |
-| `sus4`, `sus` | Replaces the third with a perfect fourth. |
+| `sus2` | Removes any existing second, third and fourth, then adds a major second. Other intervals stay unchanged. |
+| `sus4`, `sus` | Removes any existing second, third and fourth, then adds a perfect fourth. Other intervals stay unchanged. |
 | `add n` | Adds interval `n` and nothing between. |
 | `add#n`, `addbn` | Adds interval `n`, raised or lowered. |
 | `#n`, `bn` | Raises or lowers interval `n`, adding it if absent. |
@@ -187,6 +189,15 @@ print(chords home fourth(home) fifth(home) octave(home, -1))
 
 ```text Output
 chords 1(C(C3 E3 G3)) 4(F(F3 A3 C4)) 5(G(G3 B3 D4)) -7(C(C2 E2 G2))
+```
+
+## Applying a suffix to a chart
+
+Use [extend](/functions/extend) to apply a quality or modifier to every chord without repeating it on each literal. A quality such as `maj7` replaces the existing quality; an addition such as `add9` preserves it. The function accepts chords only and keeps the chart's rhythm and bass notes.
+
+```composer-nb Example
+chords changes = 2m7 5dom7 | 1maj7 -
+play piano: chords extend(changes, add9)
 ```
 
 ## Errors

@@ -65,7 +65,7 @@ A `length` may stand in these positions:
 | Lines of different lengths in a pattern | Must realign within 64 bars, or the pattern needs an explicit length. |
 | One `play` | At most 600 seconds. |
 | Timing resolution | 96 ticks per beat. A step lasts a whole number of ticks, at least 8 (1/12 beat). |
-| Pitch | MIDI 0 to 127, after interval functions and `transpose`. |
+| Pitch | MIDI 0 to 127, after value functions and `transpose`. |
 | Scale degree | -128 to 128, not 0. |
 | Interval multiplier | -64 to 64. |
-| Nesting | Step repeat groups 64 deep; note repeat groups and interval calls 32 deep. |
+| Nesting | Step repeat groups 64 deep; note repeat groups and value function calls 32 deep. |

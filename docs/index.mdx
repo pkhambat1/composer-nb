@@ -14,7 +14,7 @@ composer-nb is a typed language for writing music as text. A notebook cell holds
 | Settings | [Settings](/language/settings), [Key and mode](/pitched/key) |
 | Value types | [steps](/drums/steps), [notes](/pitched/notes), [chords](/pitched/chords), [Chord symbol catalog](/pitched/chord-symbols) |
 | Composition | [Parts and composition](/language/patterns), [play](/language/play) |
-| Functions | [Interval functions](/functions/intervals), [print](/functions/print) |
+| Functions | [Interval functions](/functions/intervals), [extend](/functions/extend), [print](/functions/print) |
 | Kit and instruments | [Drum kit](/drums/kit), [Pitched instruments](/pitched/instruments) |
 | Guides | [Using the notebook](/for-musicians), [MCP integration](/assistants) |
 
@@ -98,5 +98,6 @@ Functions are given as signatures: `name(parameter: type = default) -> result ty
 | Change tempo, key or another setting | [set](/language/scope#set), [Settings](/language/settings) |
 | Give one part its own settings | [with](/language/scope#with) |
 | Move notes or chords up or down the scale | [Interval functions](/functions/intervals) |
+| Apply a quality or modifier to a chord chart | [extend](/functions/extend) |
 | Move everything by semitones | [transpose](/language/settings#transpose) |
 | See what a note or chord resolves to | [print](/functions/print) |

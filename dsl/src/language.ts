@@ -10,6 +10,7 @@
    downward from the tonic, skipping zero. Interval functions move every note/chord tone
    through that scale. Signed degrees and octave(...) replace apostrophe notation.
    Chord suffixes compose after the entire numeric root: 15sus2add11#5/4.
+   extend(chart, modifier) applies one suffix to each chord, preserving its chart.
    Pure (no audio). Public exports for the engine, notebook, tools and editors. */
 
 export { parseCell, type GridBlock, type Output, type Parsed } from "./cell.ts"
@@ -30,6 +31,7 @@ export { initialState, type State } from "./state.ts"
 export { TPQ, barQuarters, lastCount, timeLabel } from "./time.ts"
 export {
   DRUMS,
+  FUNCTIONS,
   INTERVALS,
   KEYWORDS,
   KITS,

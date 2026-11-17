@@ -4,6 +4,7 @@
 import {
   applyTranspose,
   buildChord,
+  extendChord,
   chordParts,
   degreeNumber,
   isDegreeChord,
@@ -20,6 +21,7 @@ import {
   tokenize,
   splitBars,
 } from "../intervals.ts"
+import { extensionCall, wrapExtension } from "../extensions.ts"
 import { misplaced } from "../check.ts"
 import { textOf } from "../parts.ts"
 import type { Piece, State } from "../state.ts"
@@ -93,7 +95,7 @@ export function chordSlot(
     err(part.ln, message("chord.percentAlone"), at)
     return null
   }
-  const fn = intervalCall(tok)
+  const fn = extensionCall(tok) ?? intervalCall(tok)
   if (fn) {
     if (fn.error) {
       err(part.ln, fn.error, at === tok ? callAt(tok) : at)
@@ -115,7 +117,14 @@ export function chordSlot(
       at === tok ? call.body : at,
     )
     if (!inner?.chord) return inner
-    const chord = moveChord(inner.chord, key, intervalSteps(call, key))
+    const chord =
+      call.name === "extend"
+        ? extendChord(inner.chord, call.modifier)
+        : moveChord(inner.chord, key, intervalSteps(call, key))
+    if (!chord) {
+      err(part.ln, message("note.outsideMidi", { tok }), at)
+      return null
+    }
     chord.input = tok
     applyTranspose(chord, st.transpose)
     if (![chord.bassMidi, ...chord.notesMidi].every((m) => m >= 0 && m <= 127)) {
@@ -241,7 +250,7 @@ export function expandChordTokens(
     }
     if (st.sections[token])
       return fail(misplaced(token, st.sections[token].type, { line: "chart" })!, token)
-    const fn = intervalCall(token)
+    const fn = extensionCall(token) ?? intervalCall(token)
     if (!fn) {
       push(token)
       continue
@@ -265,7 +274,15 @@ export function expandChordTokens(
     if (inner[0] === "|") push("|")
     bars.forEach((bar, b) => {
       if (b) push("|")
-      push(...bar.map((t) => (CHORD_MARKS.includes(t) ? t : wrapInterval(call, t))))
+      push(
+        ...bar.map((t) =>
+          CHORD_MARKS.includes(t)
+            ? t
+            : call.name === "extend"
+              ? wrapExtension(call, t)
+              : wrapInterval(call, t),
+        ),
+      )
     })
     if (inner.at(-1) === "|") push("|")
   }

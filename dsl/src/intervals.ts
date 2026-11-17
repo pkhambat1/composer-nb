@@ -3,7 +3,7 @@
 import { letterStep, midiToName, type Key } from "./chords.ts"
 import { message } from "./diagnostics.ts"
 import { locatedTokens, tokenSources, type SourceText } from "./source.ts"
-import { INTERVALS } from "./vocab.ts"
+import { FUNCTIONS, INTERVALS } from "./vocab.ts"
 
 export type IntervalCall = {
   name: keyof typeof INTERVALS
@@ -43,7 +43,7 @@ export function callSegments(text: string): { text: string; call: boolean }[] {
     const head =
       (i === 0 || /[\s,|_*(-]/.test(text[i - 1]) || text.slice(i - 3, i) === "...") &&
       /^[\^~]?([a-z][A-Za-z0-9]*)(\s*)\(/.exec(text.slice(i))
-    if (!head || (head[2] && !Object.hasOwn(INTERVALS, head[1]))) {
+    if (!head || (head[2] && !FUNCTIONS.includes(head[1]))) {
       i++
       continue
     }
@@ -64,6 +64,7 @@ export function callSegments(text: string): { text: string; call: boolean }[] {
 export function intervalCall(text: string): CallResult | null {
   const head = /^([\^~]?)([a-z][A-Za-z0-9]*)\s*\(/.exec(text)
   if (!head) return null
+  if (head[2] === "extend") return { error: message("extension.chordsOnly") }
   const name = head[2] as keyof typeof INTERVALS
   if (!Object.hasOwn(INTERVALS, name)) return { error: message("interval.unknown", { name }) }
   let depth = 1
