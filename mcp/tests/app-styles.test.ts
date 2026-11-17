@@ -92,6 +92,29 @@ it.each([
   },
 )
 
+it("serves the current notebook app to hosts with a cached v8 tool resource", async () => {
+  vi.stubEnv("COMPOSER_NB_APP_ORIGIN", "https://composer.example")
+  const { registerCellApp, NOTEBOOK_UI } = await import("../src/app.ts")
+  const server = new McpServer({ name: "cached-resource-test", version: "0" })
+  registerCellApp(server)
+  const client = new Client({ name: "cached-resource-test", version: "0" })
+  const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair()
+  await server.connect(serverTransport)
+  await client.connect(clientTransport)
+  try {
+    const current = await client.readResource({ uri: NOTEBOOK_UI })
+    const cachedUri = "ui://composer-nb/notebook/v8"
+    const cached = await client.readResource({ uri: cachedUri })
+    expect(cached.contents).toEqual([{ ...current.contents[0], uri: cachedUri }])
+    expect(cached.contents[0]._meta).toMatchObject({
+      "openai/ui": { availableDisplayModes: ["fullscreen"] },
+    })
+  } finally {
+    await client.close()
+    await server.close()
+  }
+})
+
 it("keeps emitted assets compact and never requests a worker from the host sandbox", async () => {
   const renderer = await readFile(new URL("../app/dist/app.js", import.meta.url))
   const bootstrap = await readFile(new URL("../app/dist/bootstrap.js", import.meta.url))

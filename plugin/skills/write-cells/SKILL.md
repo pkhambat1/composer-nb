@@ -11,6 +11,13 @@ Treat omitted musical details as creative choices. Use the user's mood, style an
 
 The connector supplies the language guide; `reference` has the full rules. Read the relevant page for unfamiliar syntax.
 
+Use this plugin's saved-notebook Composer connection. If several Composer
+integrations are available, choose the one with `list_notebooks` and
+`create_notebook`; keep its reference, save and open calls on that same
+connection. The separately installed **Composer Notebook Dev** connection is
+only for an explicit development-server test, not a fallback or a first probe
+for ordinary music requests.
+
 If the `parse` tool isn't there, the connector isn't connected: in claude.ai or Claude Desktop, open the plugin from Customize > Plugins and connect it on its Connectors tab. Don't hand over a cell that hasn't been checked, by a save or by `parse`.
 
 ## Saved notebook workflow
@@ -43,8 +50,12 @@ host display its OAuth flow; never ask for passwords or tokens in chat.
    sketches**.” Finish only after a successful save whose report matches the
    request. If a tool blocks completion, state that it remains unsaved.
 
-A save shows the notebook to the user, so don't call `open_notebook` after one;
-don't call `parse` before one, which only writes the cell twice; and don't call
+A save requests the notebook UI in hosts that support it, so don't routinely call
+`open_notebook` after one. A successful save alone does not prove that the viewer
+loaded. If the user reports missing UI, call `open_notebook` once with the saved
+notebook ID; if it still fails, distinguish saved music from a failed display.
+Do not recreate the notebook or retry its writes to repair a display failure.
+Don't call `parse` before a save, which only writes the cell twice; and don't call
 `get_notebook` before appending unless the cell builds on names you don't have.
 Several cells are several saves, in order. `parse` is for an explicit no-save
 preview, and `render` for sheet music or MIDI when the user asks. A read-only
