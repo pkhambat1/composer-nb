@@ -108,6 +108,7 @@ bass        ::= letter ["#" | "b"] | degree
 suffix      ::= quality modifier*
 modifier    ::= "sus2" | "sus4" | "sus" | "add" ["#" | "b"] digit+ | ("#" | "b") digit+
 chord_call  ::= interval "(" chart ["," integer] ")"
+              | "extend" "(" chart "," suffix ")"
 ```
 
 ## Pitches, functions and numbers

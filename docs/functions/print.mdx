@@ -9,7 +9,7 @@ print(value: steps | notes | chords, ...)
 
 | Parameter | Type | May be |
 | --- | --- | --- |
-| `value` | `steps`, `notes` or `chords` | One or more arguments, separated by commas. Each is a typed value, a name, an interval call, or a bare value. Must be finite. Not a pattern, block or line. |
+| `value` | `steps`, `notes` or `chords` | One or more arguments, separated by commas. Each is a typed value, a name, a value function call, or a bare value. Must be finite. Not a pattern, block or line. |
 
 Displays each argument as written, with what it resolves to under the settings in effect. `print` produces no sound and takes no musical time. It is a statement, not a function: it returns nothing and cannot be nested. It stands at the top level of a cell or inside a top-level `with`, and nothing may follow its closing parenthesis on the line.
 
@@ -20,7 +20,8 @@ Displays each argument as written, with what it resolves to under the settings i
 | `steps step_seq`, `notes note_seq`, `chords chart` | The type written. |
 | A name | Its declared type. |
 | An interval call on a name | The type of the name. |
-| A bare degree or note letter, `1`, `C`, or a call on one | `notes`. |
+| An `extend` call | `chords`. |
+| A bare degree or note letter, `1`, `C`, or an interval call on one | `notes`. |
 | A bare value that can only be one type, `Cmaj7`, `x-x-` | That type. |
 
 Each argument has one type. The type keyword goes at the start of the argument, not inside a call.

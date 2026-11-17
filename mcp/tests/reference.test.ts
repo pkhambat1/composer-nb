@@ -23,6 +23,7 @@ it("exposes the complete reference with stable legacy topics and dedicated funct
       "values",
       "expressions",
       "intervals",
+      "extend",
       "print",
       "chord-symbols",
     ]),

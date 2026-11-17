@@ -128,6 +128,60 @@ block startSec=0 durSec=2 bars=1 time=4 over 4 tempo=120 key=C unit=4 barTicks=3
 notes:
   0 tick=0 ticks=384 note={"midi":60,"name":"C4","spell":{"letter":"C","alter":0}} label=C4 instrument=piano voice=0 vel=0.7 line=1 secDur=2
 
+## functions/extend.mdx:17
+errors: none
+names: vamp chords line 3, richer chords line 4
+from above: none
+length: 4 s
+block startSec=0 durSec=4 bars=2 time=4 over 4 tempo=120 key=D unit=4 barTicks=384 res=1
+chords:
+  0 tick=0 ticks=384 chord={"input":"extend(1, add9)","label":"Dmadd9","rootPc":2,"bassMidi":38,"notesMidi":[50,53,57,64],"noteNames":["D3","F3","A3","E4"],"bassName":"D2"} label=Dmadd9 instrument=piano transpose=0 line=5 secDur=2
+  2 tick=384 ticks=384 chord={"input":"extend(4, add9)","label":"Gadd9","rootPc":7,"bassMidi":43,"notesMidi":[55,59,62,69],"noteNames":["G3","B3","D4","A4"],"bassName":"G2"} label=Gadd9 instrument=piano transpose=0 line=5 secDur=2
+
+## functions/extend.mdx:31
+errors: none
+names: roots chords line 1
+from above: none
+length: 0 s
+print line 2: 1maj7 2maj7 5maj7 1maj7
+  key=C mode=major octave=3 transpose=0
+  chords: 1maj7 2maj7 5maj7 1maj7
+    1maj7 → Cmaj7 (C3 E3 G3 B3)
+    2maj7 → Dmaj7 (D3 F#3 A3 C#4)
+    5maj7 → Gmaj7 (G3 B3 D4 F#4)
+    1maj7 → Cmaj7 (C3 E3 G3 B3)
+print line 3: Cmaj7 Dmaj7 Gmaj7 Cmaj7
+  key=C mode=major octave=3 transpose=0
+  chords: Cmaj7 Dmaj7 Gmaj7 Cmaj7
+    Cmaj7 → Cmaj7 (C3 E3 G3 B3)
+    Dmaj7 → Dmaj7 (D3 F#3 A3 C#4)
+    Gmaj7 → Gmaj7 (G3 B3 D4 F#4)
+    Cmaj7 → Cmaj7 (C3 E3 G3 B3)
+
+## functions/extend.mdx:58
+errors: none
+names: vamp chords line 1
+from above: none
+length: 4 s
+block startSec=0 durSec=4 bars=2 time=4 over 4 tempo=120 key=C unit=4 barTicks=384 res=1
+chords:
+  0 tick=0 ticks=384 chord={"input":"extend(extend(1m7, add9), #11)","label":"Cm7add9#11","rootPc":0,"bassMidi":36,"notesMidi":[48,51,55,58,62,66],"noteNames":["C3","Eb3","G3","Bb3","D4","F#4"],"bassName":"C2"} label=Cm7add9#11 instrument=piano transpose=0 line=2 secDur=2
+  2 tick=384 ticks=384 chord={"input":"extend(extend(4dom7, add9), #11)","label":"F7add9#11","rootPc":5,"bassMidi":41,"notesMidi":[53,57,60,63,67,71],"noteNames":["F3","A3","C4","Eb4","G4","B4"],"bassName":"F2"} label=F7add9#11 instrument=piano transpose=0 line=2 secDur=2
+
+## functions/extend.mdx:65
+errors: none
+names: none
+from above: none
+length: 0 s
+print line 1: 2m7
+  key=C mode=major octave=3 transpose=0
+  chords: 2m7
+    2m7 → Dm7 (D3 F3 A3 C4)
+print line 2: 2maj7
+  key=C mode=major octave=3 transpose=0
+  chords: 2maj7
+    2maj7 → Dmaj7 (D3 F#3 A3 C#4)
+
 ## functions/intervals.mdx:47
 errors: none
 names: none
@@ -187,7 +241,7 @@ print line 2: -4
   chords: -4
     -4 → F (F2 A2 C3)
 
-## functions/print.mdx:41
+## functions/print.mdx:42
 errors: none
 names: accents steps line 1
 from above: none
@@ -206,7 +260,7 @@ print line 2: x ^, 1 3 5, 1 4 5dom7, C/E
   chords: C/E
     C/E → C/E (C3 E3 G3; bass E2)
 
-## functions/print.mdx:60
+## functions/print.mdx:61
 errors: none
 names: riff notes line 1
 from above: none
@@ -678,7 +732,7 @@ names: pulse steps line 1, riff notes line 2, changes chords line 3, groove patt
 from above: none
 length: 0 s
 
-## pitched/chords.mdx:52
+## pitched/chords.mdx:54
 errors: none
 names: none
 from above: none
@@ -693,7 +747,7 @@ chords:
   5 tick=960 ticks=192 chord={"input":"F","label":"F","rootPc":5,"bassMidi":41,"notesMidi":[53,57,60],"noteNames":["F3","A3","C4"],"bassName":"F2"} label=F instrument=piano transpose=0 line=1 secDur=1
   6 tick=1152 ticks=384 chord={"input":"G","label":"G","rootPc":7,"bassMidi":43,"notesMidi":[55,59,62],"noteNames":["G3","B3","D4"],"bassName":"G2"} label=G instrument=piano transpose=0 line=1 secDur=2
 
-## pitched/chords.mdx:70
+## pitched/chords.mdx:72
 errors: none
 names: home chords line 1, turn chords line 2
 from above: none
@@ -706,7 +760,7 @@ chords:
   3 tick=576 ticks=192 chord={"input":"5","label":"G","rootPc":7,"bassMidi":43,"notesMidi":[55,59,62],"noteNames":["G3","B3","D4"],"bassName":"G2"} label=G instrument=piano transpose=0 line=3 secDur=1
   4 tick=768 ticks=384 chord={"input":"1","label":"C","rootPc":0,"bassMidi":36,"notesMidi":[48,52,55],"noteNames":["C3","E3","G3"],"bassName":"C2"} label=C instrument=piano transpose=0 line=3 secDur=2
 
-## pitched/chords.mdx:91
+## pitched/chords.mdx:93
 errors: none
 names: none
 from above: none
@@ -721,7 +775,7 @@ print line 1: C Dm7 G7 Fmaj7 Bb/D C6/9
     Bb/D → Bb/D (Bb3 D4 F4; bass D2)
     C6/9 → C6/9 (C3 E3 G3 A3 D4)
 
-## pitched/chords.mdx:114
+## pitched/chords.mdx:116
 errors: none
 names: none
 from above: none
@@ -736,7 +790,7 @@ print line 1: 1 2 5dom7 b7 1maj7 5sus4
     1maj7 → Cmaj7 (C3 E3 G3 B3)
     5sus4 → Gsus4 (G3 C4 D4)
 
-## pitched/chords.mdx:143
+## pitched/chords.mdx:145
 errors: none
 names: none
 from above: none
@@ -750,7 +804,7 @@ print line 1: Csus2add11, C7#5b9, 1sus2add11#5/4
   chords: 1sus2add11#5/4
     1sus2add11#5/4 → Csus2add11#5/F (C3 D3 G#3 F4; bass F2)
 
-## pitched/chords.mdx:161
+## pitched/chords.mdx:163
 errors: none
 names: none
 from above: none
@@ -764,7 +818,7 @@ print line 1: C/E, 1/3, Am/G
   chords: Am/G
     Am/G → Am/G (A3 C4 E4; bass G2)
 
-## pitched/chords.mdx:183
+## pitched/chords.mdx:185
 errors: none
 names: home chords line 1
 from above: none
@@ -776,6 +830,17 @@ print line 2: 1 4 5 -7
     4 → F (F3 A3 C4)
     5 → G (G3 B3 D4)
     -7 → C (C2 E2 G2)
+
+## pitched/chords.mdx:198
+errors: none
+names: changes chords line 1
+from above: none
+length: 4 s
+block startSec=0 durSec=4 bars=2 time=4 over 4 tempo=120 key=C unit=4 barTicks=384 res=1
+chords:
+  0 tick=0 ticks=192 chord={"input":"extend(2m7, add9)","label":"Dm7add9","rootPc":2,"bassMidi":38,"notesMidi":[50,53,57,60,64],"noteNames":["D3","F3","A3","C4","E4"],"bassName":"D2"} label=Dm7add9 instrument=piano transpose=0 line=2 secDur=1
+  1 tick=192 ticks=192 chord={"input":"extend(5dom7, add9)","label":"G7add9","rootPc":7,"bassMidi":43,"notesMidi":[55,59,62,65,69],"noteNames":["G3","B3","D4","F4","A4"],"bassName":"G2"} label=G7add9 instrument=piano transpose=0 line=2 secDur=1
+  2 tick=384 ticks=384 chord={"input":"extend(1maj7, add9)","label":"Cmaj7add9","rootPc":0,"bassMidi":36,"notesMidi":[48,52,55,59,62],"noteNames":["C3","E3","G3","B3","D4"],"bassName":"C2"} label=Cmaj7add9 instrument=piano transpose=0 line=2 secDur=2
 
 ## pitched/instruments.mdx:24
 errors: none

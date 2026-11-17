@@ -1,6 +1,6 @@
 /* Chord names and Roman numerals → voiced chords. Pure (no audio), so the parser, the
    renderer and the tests can all share it. */
-import { Chord, Note, Interval } from "tonal"
+import { Chord, ChordType, Note, Interval } from "tonal"
 import type { State } from "./state.ts"
 import { MODE_TABLE, type ModeInfo } from "./vocab.ts"
 
@@ -247,6 +247,40 @@ function degreeToSymbol(main: string, key: Key): string | null {
 // Keep the established chord vocabulary, then compose modifiers when a full
 // symbol isn't in the dictionary. add supplies a tone without implying a seventh;
 // an alteration replaces that numbered tone, and sus replaces the third.
+function chordModifiers(suffix: string): string[] | null {
+  const modifier = /^(sus[24]?|add[#b]?(?:1[0-3]|[2-9])|[#b](?:1[0-3]|[2-9]))/
+  const tokens: string[] = []
+  let rest = suffix
+  while (rest) {
+    const token = modifier.exec(rest)?.[0]
+    if (!token) return null
+    tokens.push(token)
+    rest = rest.slice(token.length)
+  }
+  return tokens
+}
+
+function modifiedIntervals(intervals: string[], suffix: string): string[] | null {
+  const modifiers = chordModifiers(suffix)
+  if (!modifiers) return null
+  let result = [...intervals]
+  for (const token of modifiers) {
+    if (token.startsWith("sus")) {
+      result = result.filter((iv) => ![2, 3, 4].includes(Interval.num(iv)))
+      result.push(token === "sus2" ? "2M" : "4P")
+    } else {
+      const match = /^(?:add)?([#b]?)(\d+)$/.exec(token)!
+      const n = Number(match[2])
+      const semis = degreeSemitones(((n - 1) % 7) + 1, match[1]) + 12 * Math.floor((n - 1) / 7)
+      const quality = [1, 4, 5].includes(((n - 1) % 7) + 1) ? "P" : "M"
+      const alt = semis - Interval.semitones(`${n}${quality}`)
+      result = result.filter((iv) => Interval.num(iv) !== n)
+      result.push(`${n}${alt === 0 ? quality : alt > 0 ? "A" : quality === "P" ? "d" : "m"}`)
+    }
+  }
+  return result.sort((a, b) => Interval.num(a) - Interval.num(b))
+}
+
 export function readChordSymbol(
   symbol: string,
 ): { tonic: string; symbol: string; intervals: string[] } | null {
@@ -256,40 +290,91 @@ export function readChordSymbol(
   const root = /^[A-G][#b]*/.exec(symbol)?.[0]
   if (!root) return null
   const suffix = symbol.slice(root.length)
-  const modifier = /^(sus[24]?|add[#b]?(?:1[0-3]|[2-9])|[#b](?:1[0-3]|[2-9]))/
   for (let cut = suffix.length - 1; cut >= 0; cut--) {
     const base = Chord.get(tonalName(root + suffix.slice(0, cut)))
     if (base.empty || !base.tonic) continue
-    const intervals = new Map(base.intervals.map((iv) => [Interval.num(iv), iv]))
-    let rest = suffix.slice(cut)
-    while (rest) {
-      const token = modifier.exec(rest)?.[0]
-      if (!token) break
-      if (token.startsWith("sus")) {
-        intervals.delete(3)
-        intervals.delete(2)
-        intervals.delete(4)
-        const n = token === "sus2" ? 2 : 4
-        intervals.set(n, n === 2 ? "2M" : "4P")
-      } else {
-        const match = /^(?:add)?([#b]?)(\d+)$/.exec(token)!
-        const n = Number(match[2])
-        const semis = degreeSemitones(((n - 1) % 7) + 1, match[1]) + 12 * Math.floor((n - 1) / 7)
-        const quality = [1, 4, 5].includes(((n - 1) % 7) + 1) ? "P" : "M"
-        const natural = Interval.semitones(`${n}${quality}`)
-        const alt = semis - natural
-        intervals.set(n, `${n}${alt === 0 ? quality : alt > 0 ? "A" : quality === "P" ? "d" : "m"}`)
-      }
-      rest = rest.slice(token.length)
-    }
-    if (!rest)
-      return {
-        tonic: root,
-        symbol,
-        intervals: [...intervals].sort(([a], [b]) => a - b).map(([, iv]) => iv),
-      }
+    const intervals = modifiedIntervals(base.intervals, suffix.slice(cut))
+    if (intervals) return { tonic: root, symbol, intervals }
   }
   return null
+}
+
+// One suffix is an argument, never a chord, bass, name or list. A complete quality
+// replaces the harmony; additions, alterations and suspensions retain other tones.
+function chordExtension(modifier: string): { suffix: string; additive: boolean } | null {
+  if (!modifier || !/^[A-Za-z0-9+#/]+$/.test(modifier)) return null
+  const suffix = modifier
+    .replace(/^dom(?=\d)/, "")
+    .replace(/^mmaj/, "mMaj")
+    .replace(/^M6\/9$/, "6/9")
+  const additive = /^(sus|add|[#b])/.test(suffix)
+  if (additive) return modifiedIntervals(["1P", "3M", "5P"], suffix) ? { suffix, additive } : null
+  // buildChord also enforces the language's 6/9 spelling and rejects slash basses
+  // below. Its root's octave is irrelevant here: this is only suffix validation.
+  if (suffix.includes("/") && !/^m?6\/9$/.test(suffix)) return null
+  return buildChord(`C${suffix}`) ? { suffix, additive } : null
+}
+
+export const isChordExtension = (modifier: string): boolean => !!chordExtension(modifier)
+
+export function extendChord(chord: Voiced, modifier: string): Voiced | null {
+  const extension = chordExtension(modifier)
+  if (!extension || !chord.notesMidi.length) return null
+  const rootNote = chord.noteNames[0]
+  const rootMidi = chord.notesMidi[0]
+  if (!rootNote || Note.midi(rootNote) !== rootMidi) return null
+  const root = rootNote.replace(/-?\d+$/, "")
+  const current = chord.noteNames.map((name) => Note.distance(rootNote, name))
+  const full = extension.additive ? null : readChordSymbol(root + extension.suffix)
+  const intervals = extension.additive
+    ? modifiedIntervals(current, extension.suffix)
+    : full?.intervals
+  if (!intervals?.length) return null
+  const notesMidi = intervals.map((iv) => rootMidi + Interval.semitones(iv))
+  if (![chord.bassMidi, ...notesMidi].every((m) => Number.isFinite(m) && m >= 0 && m <= 127))
+    return null
+  const noteNames = intervals.map((iv) => Note.transpose(rootNote, iv))
+  if (noteNames.some((name, i) => Note.midi(name) !== notesMidi[i])) return null
+
+  // The original label may describe an unusual interval-transformed tone set.
+  // Reuse a composable symbol only if it describes the actual result exactly.
+  const ordered = (values: readonly string[]) =>
+    [...values].sort((a, b) => Interval.num(a) - Interval.num(b) || a.localeCompare(b))
+  const resultIntervals = ordered(intervals)
+  const matches = (candidate: readonly string[]) =>
+    candidate.length === resultIntervals.length &&
+    ordered(candidate).every((iv, i) => iv === resultIntervals[i])
+  const candidates = [full]
+  if (extension.additive) {
+    const base = chordParts(chord.label)[0]
+    candidates.push(readChordSymbol(base + extension.suffix))
+    // Some dictionary aliases lower compound tones: add13add9 is read as 6/9.
+    // Try a conventional modifier order, accepting it only if all spelled and
+    // compound intervals still match. Reordering must never change the harmony.
+    const modifiers = chordModifiers(extension.suffix)!
+    const number = (token: string) => Number(/\d+$/.exec(token)?.[0] ?? 4)
+    const suffix = [...modifiers].sort((a, b) => number(a) - number(b)).join("")
+    if (suffix !== extension.suffix) candidates.push(readChordSymbol(base + suffix))
+  }
+  const known = candidates.find(
+    (candidate) => candidate?.tonic === root && matches(candidate.intervals),
+  )
+  const type = known ? null : ChordType.all().find((type) => matches(type.intervals))
+  const suffix = type?.name === "major" ? "" : type?.aliases[0]
+  const label = known
+    ? /^m?6\/9$/.test(extension.suffix)
+      ? root + extension.suffix
+      : known.symbol
+    : suffix !== undefined
+      ? root + suffix
+      : `[${noteNames.map((name) => name.replace(/-?\d+$/, "")).join(" ")}]`
+  return {
+    ...chord,
+    input: `extend(${chord.input}, ${modifier})`,
+    label: label + (chord.overBass ? "/" + chord.bassName.replace(/-?\d+$/, "") : ""),
+    notesMidi,
+    noteNames,
+  }
 }
 
 // A chord token ("Cmaj7", "C/E", "ii7", "bvii") → voicing, or null if it isn't a chord.

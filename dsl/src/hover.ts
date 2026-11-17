@@ -65,9 +65,15 @@ const keywords: Record<string, Documentation> = {
   ),
   chords: doc(
     "chords name = chart",
-    "A chart of chord symbols, scale degrees or interval calls. Chords split each bar evenly; | starts the next bar, - holds, _ rests and % repeats the preceding bar.",
+    "A chart of chord symbols, scale degrees or calls. Chords split each bar evenly; | starts the next bar, - holds, _ rests and % repeats the preceding bar.",
     "play piano: chords 1 4 | 5 1",
     "pitched/chords",
+  ),
+  extend: doc(
+    "extend(chart: chords, modifier: suffix) → chords",
+    "Applies one suffix to every chord, preserving rhythm, roots and slash basses. A quality such as maj7 replaces the existing quality; add9, sus4 and alterations modify the existing tones. Accepts chords only; nest calls for successive changes.",
+    "print(extend(1 2 | 5 1, add9))",
+    "functions/extend",
   ),
   pattern: doc(
     "pattern name = [length] { ... }",

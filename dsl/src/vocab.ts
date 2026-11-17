@@ -46,10 +46,13 @@ export const INTERVALS = {
   fifteenth: 15,
 } as const
 
+// Value functions share call syntax, but keep their own argument types.
+export const FUNCTIONS: readonly string[] = [...Object.keys(INTERVALS), "extend"]
+
 // Words with a meaning of their own, which can't be names
 export const KEYWORDS: readonly string[] = [
   ...TYPES,
-  ...Object.keys(INTERVALS),
+  ...FUNCTIONS,
   "play",
   "print",
   "for",

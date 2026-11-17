@@ -1,0 +1,83 @@
+---
+title: "extend"
+description: "Apply one chord quality or modifier to every chord in a chart."
+---
+
+```text Syntax
+extend(chart: chords, modifier: suffix) -> chords
+```
+
+| Parameter | Type | May be |
+| --- | --- | --- |
+| `chart` | `chords` | A chord, an inline chart, a `chords` name, or another chord call. |
+| `modifier` | `suffix` | One unquoted chord suffix, such as `maj7`, `m7`, `dom7`, `add9`, `sus4` or `#11`. A composed suffix such as `maj7add9` is also accepted. |
+
+The first argument is always the music; the second is always the suffix. The suffix applies to every chord. There is no list of modifiers and no pairing of two lists. `extend` returns a new `chords` value without changing its input or playing audio.
+
+```composer-nb Example
+set key D
+set mode dorian
+chords vamp = 1 | 4
+chords richer = extend(vamp, add9)
+play piano: chords richer
+```
+
+This keeps the D minor and G major triads and adds E and A respectively, giving Dm(add9) and G(add9).
+
+## Chords only
+
+`extend` accepts and returns `chords`. It does not convert a `notes` list. Bare roots in its first argument are read as chords, including when `print` supplies no type:
+
+```composer-nb Example
+chords roots = 1 2 | 5 1
+print(extend(roots, maj7))
+print(extend(C D | G C, maj7))
+```
+
+Both examples produce Cmaj7–Dmaj7–Gmaj7–Cmaj7 in the default key. To extend a sequence of roots, declare it as `chords` from the start.
+
+## Quality versus modifier
+
+| Suffix | Effect |
+| --- | --- |
+| `maj7`, `m7`, `dom7`, or another [catalog quality](/pitched/chord-symbols) | Replaces the existing quality, keeping the root and slash bass. `extend(2m7, maj7)` is Dmaj7 in C major. |
+| `add9`, `add#11`, `b9`, `#5`, or another addition or alteration | Modifies the existing chord tones. `extend(2m7, add9)` keeps the minor third and seventh and adds the ninth. |
+| `sus2`, `sus4`, `sus` | Removes any existing second, third and fourth, then adds a major second (`sus2`) or perfect fourth (`sus4`, `sus`). Other intervals stay unchanged, including compound intervals such as the ninth and eleventh. |
+| `maj7add9`, `sus4add9`, or another composed suffix | Applies the quality, if present, then the modifiers from left to right. |
+
+Additions and alterations count major or perfect intervals from each chord's root, independently of the key. They do not imply intermediate extensions: `add9` adds a ninth without adding a seventh. A later modifier of the same interval replaces an earlier one.
+
+## Timing, settings and nesting
+
+Bar lines, holds, rests and each chord's slot remain in place. `%` repeats the preceding bar inside the argument. Root registers and explicit slash basses stay unchanged. Named charts keep their existing bar boundaries, just as they do in an interval call.
+
+Degrees remain symbolic and resolve in the key, mode and octave where the result is used. An explicit quality such as `maj7` overrides the mode's triad; `add9` preserves it. Every resulting tone and bass must fit MIDI 0 to 127. Playback `transpose` applies after the function.
+
+Nest calls to apply successive changes:
+
+```composer-nb Example
+chords vamp = 1m7 | 4dom7
+play piano: chords extend(extend(vamp, add9), #11)
+```
+
+Calls apply from the inside out, up to 32 levels. Order matters when combining `extend` with an [interval function](/functions/intervals): the interval moves every tone through the scale, while an explicit quality sets the tones above the resulting root.
+
+```composer-nb Example
+print(second(extend(1, maj7)))
+print(extend(second(1), maj7))
+```
+
+In C major the first result is Dm7, and the second is Dmaj7. Functions cannot be declared or passed as values.
+
+## Errors
+
+```composer-nb Invalid
+notes melody = C4 D4 G4 C5
+print(extend(melody, maj7))
+```
+
+```composer-nb Invalid
+print(extend(1 4, maj7, add9))
+```
+
+Use the single suffix `maj7add9`, or nest calls, instead of passing extra arguments.

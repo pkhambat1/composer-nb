@@ -25,8 +25,15 @@ export const CHORD_MESSAGES = {
   "chord.percentAlone": () =>
     "% stands for a whole bar, so it goes between bar lines on its own: Am F|%",
   "chord.percentInCall": () =>
-    "% inside an interval function needs a preceding bar inside that function",
-  "chord.callEnds": () => "A chord interval call ends at its closing ): fifth(1)",
+    "% inside a chord function needs a preceding bar inside that function",
+  "chord.callEnds": () =>
+    "A chord function call ends at its closing ): fifth(1) or extend(1, maj7)",
+  "extension.arguments": () =>
+    "extend takes a chord chart and one suffix: extend(chart, add9). Nest calls to apply more than one suffix",
+  "extension.modifier": ({ modifier }: { modifier: string }) =>
+    `"${modifier}" isn't a chord suffix. Use one quality or modifier such as maj7, m7, dom7, add9, sus4, or #11: extend(chart, add9)`,
+  "extension.chordsOnly": () =>
+    "extend takes and returns chords, not notes or drum steps: play piano: chords extend(1 2 5 1, maj7)",
   "chord.splitEvenly": ({ time, slots }: { time: string; slots: number }) =>
     `A ${time} bar can't be split evenly into ${slots}. ` +
     "Use - to hold a chord for another slot, e.g. Am - F G",

@@ -2,6 +2,7 @@
    the lexer supplies comments and punctuation. This module only assigns colours. Errors
    come exclusively from parseCell's diagnostics, including while the source is incomplete. */
 import { chordParts, isDegreeChord } from "./chords.ts"
+import { extensionCall } from "./extensions.ts"
 import { intervalCall, splitOutside } from "./intervals.ts"
 import { Lexer } from "./lexer.ts"
 import { Parser } from "./parser.ts"
@@ -9,10 +10,21 @@ import type { Block, Statement, Text } from "./syntax.ts"
 import { KEYWORDS, PITCHED, SETTINGS } from "./vocab.ts"
 
 export type Part = { c: string | null; s: string }
-type Kind = "names" | "drum" | "notes" | "chords" | "setting"
+type Kind = "names" | "drum" | "notes" | "chords" | "setting" | "extension"
 const part = (c: string | null, s: string): Part => ({ c, s })
 const NOTE =
   /(?:^-[#b]?[1-9]\d*|[\^~]-[#b]?[1-9]\d*|[\^~]?(?:[A-G][#b]?[0-8]?|[#b]?(?:vii|vi|iv|v|iii|ii|i|[1-9]\d*)))|-|_/g
+
+// A suffix has the same colours on a literal and in extend's second argument.
+function chordSuffix(suffix: string): Part[] {
+  return [
+    ...suffix.matchAll(
+      /maj|min|sus2|sus4|sus|dim|dom|aug|alt|m|M|\+|add[#b]?(?:1[0-3]|[2-9])|6\/9|[#b](?:1[0-3]|[2-9])|13|11|9|7|6|5|2|4|./g,
+    ),
+  ].map((m) =>
+    part(/^(?:maj|min|sus|dim|dom|aug|alt|m|M|\+)/.test(m[0]) ? "tk-quality" : "tk-ext", m[0]),
+  )
+}
 
 // A chord's written parts, without asking whether that chord is supported.
 function chord(token: string): Part[] {
@@ -23,14 +35,7 @@ function chord(token: string): Part[] {
     main,
   )
   if (!root) return [part("tk-word", token)]
-  const out = [part("tk-root tk-root-abs", root[0])]
-  const suffix = main.slice(root[0].length)
-  for (const m of suffix.matchAll(
-    /maj|min|sus2|sus4|sus|dim|dom|aug|alt|m|M|\+|add[#b]?(?:1[0-3]|[2-9])|6\/9|[#b](?:1[0-3]|[2-9])|13|11|9|7|6|5|2|4|./g,
-  ))
-    out.push(
-      part(/^(?:maj|min|sus|dim|dom|aug|alt|m|M|\+)/.test(m[0]) ? "tk-quality" : "tk-ext", m[0]),
-    )
+  const out = [part("tk-root tk-root-abs", root[0]), ...chordSuffix(main.slice(root[0].length))]
   for (const name of bass) out.push(part("tk-slash", "/"), part("tk-bass", name))
   return out
 }
@@ -39,6 +44,7 @@ function value(token: string, kind: Kind): Part[] {
   if (/^\s+$/.test(token)) return [part(null, token)]
   if (token === "|" || token === "%") return [part("tk-bar", token)]
   if (/^[-_]+$/.test(token)) return [part("tk-rest", token)]
+  if (kind === "extension") return chordSuffix(token)
   if (kind === "drum") {
     if (/^[-x^~d]+$/.test(token))
       return token
@@ -68,7 +74,7 @@ function value(token: string, kind: Kind): Part[] {
 }
 
 // Colour a text node's words. Its grammatical role comes from the parser; value readers
-// share the engine's interval-call parser so nested calls keep their own arguments.
+// share the engine's call parsers so nested calls keep their own arguments.
 function words(text: string, initial: Kind): { parts: Part[]; kind: Kind } {
   const out: Part[] = []
   let kind = initial
@@ -88,7 +94,7 @@ function words(text: string, initial: Kind): { parts: Part[]; kind: Kind } {
       at += track[0].length
       continue
     }
-    const fn = intervalCall(rest)
+    const fn = extensionCall(rest) ?? intervalCall(rest)
     if (fn?.call) {
       const call = fn.call
       const head = /^([\^~]?)([a-z][A-Za-z0-9]*)(\s*)\(/.exec(rest)!
@@ -97,7 +103,17 @@ function words(text: string, initial: Kind): { parts: Part[]; kind: Kind } {
       out.push(part("tk-directive-key", head[2]), part(null, head[3]), part("tk-punct", "("))
       args.forEach((arg, i) => {
         if (i) out.push(part("tk-punct", ","))
-        out.push(...words(arg, i ? "setting" : kind === "names" ? "notes" : kind).parts)
+        const argumentKind =
+          call.name === "extend"
+            ? i
+              ? "extension"
+              : "chords"
+            : i
+              ? "setting"
+              : kind === "names"
+                ? "notes"
+                : kind
+        out.push(...words(arg, argumentKind).parts)
       })
       out.push(part("tk-punct", ")"))
       at += call.end

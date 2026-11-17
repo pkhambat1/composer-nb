@@ -11,6 +11,7 @@ import {
   keyOf,
 } from "./chords.ts"
 import { intervalCall, intervalSteps, splitOutside, tokenize, splitBars } from "./intervals.ts"
+import { extensionCall } from "./extensions.ts"
 import type { State } from "./state.ts"
 import { atOffset, message, reportIn, type Report } from "./diagnostics.ts"
 import { type SourceText, tokenSources } from "./source.ts"
@@ -66,6 +67,12 @@ function inferredTypes(value: string, st: State, depth = 0): Set<string> {
       types.add(named.type)
       continue
     }
+    // extend is unambiguously a chord operation, including an inline degree
+    // chart. Its evaluator reports malformed calls and non-chord arguments.
+    if (extensionCall(token)) {
+      types.add("chords")
+      continue
+    }
     const fn = intervalCall(token)
     if (fn?.call) {
       for (const type of inferredTypes(fn.call.body, st, depth + 1)) types.add(type)
@@ -95,13 +102,21 @@ function printedChordText(token: string, chord: Voiced, st: State): string {
   const key = keyOf(st)!
   let source = token
   let steps = 0
-  let call = intervalCall(source)?.call
-  if (!call) return token
-  while (call) {
-    steps += intervalSteps(call, key)
-    source = call.body
-    call = intervalCall(source)?.call
+  let transformed = false
+  while (true) {
+    const extension = extensionCall(source)?.call
+    if (extension) {
+      source = extension.body
+      transformed = true
+      continue
+    }
+    const interval = intervalCall(source)?.call
+    if (!interval) break
+    steps += intervalSteps(interval, key)
+    source = interval.body
+    transformed = true
   }
+  if (!transformed) return token
   const [main, bass] = chordParts(source)
   const degree = /^(-?)([#b]?)(vii|vi|iv|v|iii|ii|i|[1-9]\d*)(.*)$/.exec(main)
   if (!degree) return chord.label
@@ -119,12 +134,15 @@ function printedChordText(token: string, chord: Voiced, st: State): string {
   let suffix = chordParts(chord.label)[0].replace(/^[A-G][#b]*/, "")
   if (/^6/.test(suffix)) suffix = "M" + suffix
   else if (/^\d/.test(suffix)) suffix = "dom" + suffix
+  // A composed symbol can enumerate the same voiced pitches in another order.
+  // Compare pitch multisets without changing either chord's playback ordering.
+  const sounding = [...chord.notesMidi].sort((a, b) => a - b)
   for (const text of [root + degree[4] + over, root + over, root + suffix + over]) {
     const candidate = buildChord(text, key, st.octave)
     if (
       candidate &&
       candidate.notesMidi.length === chord.notesMidi.length &&
-      candidate.notesMidi.every((m, i) => m === chord.notesMidi[i]) &&
+      [...candidate.notesMidi].sort((a, b) => a - b).every((m, i) => m === sounding[i]) &&
       (!chord.overBass || candidate.bassMidi === chord.bassMidi)
     )
       return text
@@ -374,7 +392,8 @@ const PRINTABLE = ["notes", "chords", "steps"]
 
 // Whether a line of its own is a value to evaluate, as in a notebook: a value that says
 // its type (chords 1 4 5), or names and interval functions of names (melody,
-// fifth(harmony)). A literal without its type isn't one: 1 2 3 could be notes or chords.
+// fifth(harmony)). extend always yields chords, so its inline form is also a value.
+// A literal without its type isn't one: 1 2 3 could be notes or chords.
 export function isBareValue(text: string, st: State, depth = 0): boolean {
   text = text.trim()
   if (!depth && /^(notes|chords|steps)\s+\S/.test(text)) {
@@ -393,6 +412,7 @@ export function isBareValue(text: string, st: State, depth = 0): boolean {
   return tokens.every((token) => {
     const named = st.words[token]
     if (named) return PRINTABLE.includes(named.type)
+    if (extensionCall(token)) return true
     const fn = intervalCall(token)
     return !!fn?.call && isBareValue(fn.call.body, st, depth + 1)
   })

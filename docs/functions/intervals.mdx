@@ -19,7 +19,7 @@ interval ::= "unison" | "second" | "third" | "fourth" | "fifth" | "sixth" | "sev
 
 Returns a new value of the same type as `value`, with every pitch moved by the function's interval, `intervalMultiplier` times. A negative multiplier moves down; `0` moves nothing. Rhythm is unchanged: holds, rests, bar lines and accents stay where they were. Nothing is played, and `value` itself is not changed.
 
-Arguments are positional. All sixteen functions share this signature; they differ only in how far they move. These are the only functions in the language: functions cannot be declared, named or passed as values.
+Arguments are positional. All sixteen interval functions share this signature; they differ only in how far they move. [extend](/functions/extend) separately applies a chord suffix to a chart. Functions cannot be declared, named or passed as values.
 
 ## Function index
 

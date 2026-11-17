@@ -10,6 +10,7 @@ import { join } from "node:path"
 import { ChordType } from "tonal"
 import {
   initialState,
+  FUNCTIONS,
   INTERVALS,
   KEYWORDS,
   KITS,
@@ -84,7 +85,7 @@ describe("docs names", () => {
     expect(sounds.filter((name) => !inlineNames("pitched/instruments.mdx").has(name))).toEqual([])
   })
 
-  it("gives every setting and interval function a searchable heading", () => {
+  it("gives every setting and value function a searchable heading or index entry", () => {
     const namedHeadings = (page: string) =>
       new Set([...read(page).matchAll(/^#{2,4} `?([A-Za-z.]+)`?\s*$/gm)].map((m) => m[1]))
     const settings = namedHeadings("language/settings.mdx")
@@ -92,8 +93,12 @@ describe("docs names", () => {
     const functions = new Set(
       [...read("functions/intervals.mdx").matchAll(/^\| `([a-z]+)` \|/gm)].map((m) => m[1]),
     )
+    for (const page of pages.filter((page) => page.startsWith("functions/"))) {
+      const title = /^title: "([a-z]+)"$/m.exec(read(page))?.[1]
+      if (title) functions.add(title)
+    }
     expect([...SETTINGS, ...Object.keys(SOUNDS)].filter((name) => !settings.has(name))).toEqual([])
-    expect(Object.keys(INTERVALS).filter((name) => !functions.has(name))).toEqual([])
+    expect(FUNCTIONS.filter((name) => !functions.has(name))).toEqual([])
   })
 
   it("lists every accepted dictionary chord suffix, including minor 6/9", () => {
