@@ -11,6 +11,13 @@ Treat omitted musical details as creative choices. Use the user's mood, style an
 
 The connector supplies the language guide; `reference` has the full rules. Read the relevant page for unfamiliar syntax.
 
+Use this plugin's saved-notebook Composer connection. If several Composer
+integrations are available, choose the one with `list_notebooks` and
+`create_notebook`; keep its reference, save and open calls on that same
+connection. The separately installed **Composer Notebook Dev** connection is
+only for an explicit development-server test, not a fallback or a first probe
+for ordinary music requests.
+
 If the `parse` tool isn't there, the connector isn't connected: in claude.ai or Claude Desktop, open the plugin from Customize > Plugins and connect it on its Connectors tab. Don't hand over a cell that hasn't been checked, by a save or by `parse`.
 
 ## Saved notebook workflow

@@ -10,6 +10,9 @@ import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 // Hosts cache resources by URI. These versions load hosted assets from static storage.
 export const CELL_UI = "ui://composer-nb/cell/v5"
 export const NOTEBOOK_UI = "ui://composer-nb/notebook/v9"
+// Connected hosts can retain an older tools/list after a deployment. Keep its
+// resource URI readable so cached notebook tools still open the current app.
+const NOTEBOOK_UI_ALIASES = ["ui://composer-nb/notebook/v8"]
 
 // Where the player fetches its sounds: the drum kit, the sampled instruments.
 export const SOUND_HOSTS = [
@@ -111,7 +114,7 @@ ${scriptTag}
 // Registers the page as the resource parse names in its _meta.ui.resourceUri.
 export function registerCellApp(server: McpServer, assetOrigin?: string): void {
   const origin = assetOriginOf(assetOrigin)
-  for (const resourceUri of [CELL_UI, NOTEBOOK_UI]) {
+  for (const resourceUri of [CELL_UI, NOTEBOOK_UI, ...NOTEBOOK_UI_ALIASES]) {
     registerAppResource(
       server,
       "The cell, played",
@@ -132,7 +135,7 @@ export function registerCellApp(server: McpServer, assetOrigin?: string): void {
               _meta: {
                 "openai/ui": {
                   availableDisplayModes:
-                    resourceUri === NOTEBOOK_UI ? ["fullscreen"] : ["inline", "fullscreen"],
+                    resourceUri === CELL_UI ? ["inline", "fullscreen"] : ["fullscreen"],
                 },
                 ui: {
                   csp: {
