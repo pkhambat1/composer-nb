@@ -50,8 +50,12 @@ host display its OAuth flow; never ask for passwords or tokens in chat.
    sketches**.” Finish only after a successful save whose report matches the
    request. If a tool blocks completion, state that it remains unsaved.
 
-A save shows the notebook to the user, so don't call `open_notebook` after one;
-don't call `parse` before one, which only writes the cell twice; and don't call
+A save requests the notebook UI in hosts that support it, so don't routinely call
+`open_notebook` after one. A successful save alone does not prove that the viewer
+loaded. If the user reports missing UI, call `open_notebook` once with the saved
+notebook ID; if it still fails, distinguish saved music from a failed display.
+Do not recreate the notebook or retry its writes to repair a display failure.
+Don't call `parse` before a save, which only writes the cell twice; and don't call
 `get_notebook` before appending unless the cell builds on names you don't have.
 Several cells are several saves, in order. `parse` is for an explicit no-save
 preview, and `render` for sheet music or MIDI when the user asks. A read-only
