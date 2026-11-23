@@ -124,9 +124,11 @@ describe("what each symbol is for", () => {
   it("names a pattern the same way: its type, its name, =", () => {
     expect(sound("pattern hit = { crash: x 15*- }\nplay hit")).toEqual(sound("play crash: x 15*-"))
     expect(sound("pattern groove = {\n  kick: x,\n  snare: x\n}\nplay groove")).toEqual(
-      sound("play block {\n  kick: x,\n  snare: x\n}"),
+      sound("play pattern {\n  kick: x,\n  snare: x\n}"),
     )
-    expect(sound("pattern fill = snare: x-xx\nplay fill")).toEqual(sound("play snare: x-xx"))
+    expect(sound("pattern fill = snare: x-xx\nplay fill")).toEqual(
+      sound("play pattern { snare: x-xx }"),
+    )
     expect(sound("pattern gg = 3 bars {\n  kick: x-\n}\nplay gg")).toEqual(
       sound("pattern gg = { kick: x- }\nplay gg for 3 bars"),
     )

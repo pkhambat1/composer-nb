@@ -92,7 +92,7 @@ describe("every", () => {
       durations(
         "pattern feet = every 3/4 beats { kick: ^-^^-^--, hat.pedal: -x--x-xx }\nplay feet",
       ),
-    ).toEqual([4])
+    ).toEqual([3])
   })
   it("rejects old units, redundant pace, and invalid lengths", () => {
     for (const source of [

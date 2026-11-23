@@ -198,7 +198,7 @@ export function readSequence(
     const block = units[i]
     if (isBraces(block)) {
       i++
-      return { block: playable(block, block.type ?? "block"), bars }
+      return { block: playable(block, block.paced ? undefined : "block"), bars }
     }
     // piano: C4---D4---, in a group: a line of its own, which runs to the end of its line
     // or to the group's ), and plays as a block of one line

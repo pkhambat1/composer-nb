@@ -67,7 +67,9 @@ describe("tools", () => {
     expect(t).toContain("pattern groove")
     expect(t).toContain("Play 1 (line 16)")
     expect(t).toContain("2 bars")
-    expect(t).toMatch(/kick\s+x - - x - - - - - - - - - -/)
+    expect(t).toMatch(/kick\s+x - - x - - - x - - x - - -/)
+    expect(t).toMatch(/hat\s+\^ - x - \^ - x - \^ - x - \^ -/)
+    expect(t).toMatch(/hat\s+x - \^ - x - \^ - x - - - x -/)
     expect(t).toMatch(/hat\.open\s+- - - - - - - - - - - - - -\n/)
   })
 

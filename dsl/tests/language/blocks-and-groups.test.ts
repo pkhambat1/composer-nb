@@ -52,7 +52,7 @@ play (cc aa) for 2 bars`),
 
   it("play together with the other lines in their braces", () => {
     expect(sound("play block {\n  pattern { kick: x--- },\n  snare: --x-\n}")).toEqual(
-      sound("play block {\n  kick: x---,\n  snare: --x-\n}"),
+      sound("play block {\n  kick: 4*x---,\n  snare: --x-\n}"),
     )
   })
 
@@ -115,17 +115,19 @@ describe("groups: what plays in order", () => {
     expect(sound(G + "pattern pp = (pattern {\n  gg\n} gg)\nplay pp")).toBe(
       sound(G + "play (gg gg)"),
     )
-    expect(sound(G + "play (\n  kick: x---\n  snare: x---\n)")).toBe(sound(G + S + "play (gg ss)"))
+    expect(sound(G + "play (\n  kick: x---\n  snare: x---\n)")).toBe(
+      sound("play ({ kick: x--- } { snare: x--- })"),
+    )
   })
 
   it("read a newline in them as a space, and take a length on what's in them", () => {
     expect(sound(G + "play (gg\n  gg)")).toBe(sound(G + "play (gg gg)"))
-    expect(durations(G + "play (gg 2 bars (gg gg) gg)")).toEqual([8])
+    expect(durations(G + "play (gg 2 bars (gg gg) gg)")).toEqual([5])
   })
 
   it("leave blocks on lines of their own playing together", () => {
     const together = sound(G + `play block {\n${TWO},\n  pattern {\n    gg\n  }\n}`)
-    expect(together).toBe(sound(G + "play block {\n  snare: x---,\n  gg\n}"))
+    expect(together).toBe(sound(G + "play block {\n  snare: 4*x---,\n  gg\n}"))
     expect(together).not.toBe(
       sound(G + `play (pattern {\n    snare: x---\n  } pattern {\n    gg\n  })`),
     )

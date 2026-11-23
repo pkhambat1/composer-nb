@@ -141,6 +141,6 @@ integer     ::= ["+" | "-"] digit+
 
 `quality` is any suffix in the [Chord symbol catalog](/pitched/chord-symbols).
 
-Bare part bodies are blocks. `pattern({ ... })` repeats completed bars; `block({ ... })` is the explicit block constructor. The older `play part`, `pattern { ... }` and `block { ... }` spellings remain accepted.
+Bare part bodies are blocks. Each field in `pattern({ ... })` repeats independently. Use `block({ ... })` for the explicit block constructor. The older `play part`, `pattern { ... }` and `block { ... }` spellings remain accepted.
 
-Finite drum lines and fixed-step note lines pad unfinished bars with silence. Drum rest-to-end `...-` and note rest-to-end `..._` are not accepted. A drum fill must contain a hit; a note fill may sound a note or sustain the preceding note. Notes and chords otherwise divide each bar into equal slots at the clock's 96 ticks per quarter note.
+Drum lines and fixed-step note lines repeat at their written length in patterns. A written bar line fills the rest of that field’s bar with silence. A block also pads the final bar of each direct line. Drum rest-to-end `...-` and note rest-to-end `..._` are not accepted. A drum fill must contain a hit; a note fill may sound a note or sustain the preceding note. Notes and chords otherwise divide each bar into equal slots at the clock's 96 ticks per quarter note.

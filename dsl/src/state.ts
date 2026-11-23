@@ -20,7 +20,7 @@ export type Word = {
 
 // A block written in a line: its own lines. { kick: x--- } in play block { kick: x--- }. `type` is
 // the type its place gives it, where that's the only reading: every 3 steps { ... }
-export type Braces = { kind: "braces"; ln: number; lines: Line[]; type?: "pattern" }
+export type Braces = { kind: "braces"; ln: number; lines: Line[]; paced?: boolean }
 // What a line holds, in order: text as it was written, and the blocks written in it
 export type Piece = string | Braces
 

@@ -2,13 +2,16 @@
 errors: none
 names: none
 from above: none
-length: 2 s
-block startSec=0 durSec=2 bars=1 time=4 over 4 tempo=120 key=C unit=4 barTicks=384 res=4
+length: 1 s
+block startSec=0 durSec=1 bars=1 time=4 over 4 tempo=120 key=C unit=4 barTicks=384 res=4
 drums:
   0 inst=hat art=hit lane=hat kit=rock tick=0 vel=0.7 line=5
   0 inst=kick art=hit lane=kick kit=rock tick=0 vel=0.7 line=2
   0.125 inst=snare art=ghost lane=snare.ghost kit=rock tick=24 vel=0.3 ghost=true line=4
+  0.25 inst=hat art=hit lane=hat kit=rock tick=48 vel=0.7 line=5
+  0.5 inst=hat art=hit lane=hat kit=rock tick=96 vel=0.7 line=5
   0.5 inst=snare art=hit lane=snare kit=rock tick=96 vel=0.7 line=3
+  0.75 inst=hat art=hit lane=hat kit=rock tick=144 vel=0.7 line=5
   0.75 inst=kick art=hit lane=kick kit=rock tick=144 vel=0.7 line=2
   0.875 inst=snare art=ghost lane=snare.ghost kit=rock tick=168 vel=0.3 ghost=true line=4
 
@@ -40,12 +43,15 @@ drums:
 errors: none
 names: none
 from above: none
-length: 2 s
-block startSec=0 durSec=2 bars=1 time=4 over 4 tempo=120 key=C unit=4 barTicks=384 res=4
+length: 1 s
+block startSec=0 durSec=1 bars=1 time=4 over 4 tempo=120 key=C unit=4 barTicks=384 res=4
 drums:
   0 inst=hat art=hit lane=hat kit=rock tick=0 vel=0.7 line=1
   0 inst=kick art=hit lane=kick kit=rock tick=0 vel=0.7 line=1
+  0.25 inst=hat art=hit lane=hat kit=rock tick=48 vel=0.7 line=1
   0.375 inst=kick art=hit lane=kick kit=rock tick=72 vel=0.7 line=1
+  0.5 inst=hat art=hit lane=hat kit=rock tick=96 vel=0.7 line=1
+  0.75 inst=hat art=hit lane=hat kit=rock tick=144 vel=0.7 line=1
   0.75 inst=kick art=hit lane=kick kit=rock tick=144 vel=0.7 line=1
 
 ## drums/steps.mdx:122
@@ -86,15 +92,18 @@ drums:
 errors: none
 names: backbeat steps line 1
 from above: none
-length: 2 s
+length: 1 s
 print line 2: x ^
   key=C mode=major octave=3 transpose=0
   steps: x ^
-block startSec=0 durSec=2 bars=1 time=4 over 4 tempo=120 key=C unit=4 barTicks=384 res=1
+block startSec=0 durSec=1 bars=1 time=4 over 4 tempo=120 key=C unit=4 barTicks=384 res=2
 drums:
   0 inst=hat art=hit lane=hat kit=rock tick=0 vel=0.7 line=3
   0 inst=snare art=hit lane=snare kit=rock tick=0 vel=0.7 line=3
+  0.25 inst=hat art=hit lane=hat kit=rock tick=48 vel=0.7 line=3
+  0.5 inst=hat art=hit lane=hat kit=rock tick=96 vel=0.7 line=3
   0.5 inst=snare art=hit lane=snare kit=rock tick=96 vel=1 accent=true line=3
+  0.75 inst=hat art=hit lane=hat kit=rock tick=144 vel=0.7 line=3
 
 ## drums/steps.mdx:172
 errors: none
@@ -287,8 +296,18 @@ block startSec=0 durSec=2.5 bars=1 time=4 over 4 tempo=96 key=C unit=4 barTicks=
 drums:
   0 inst=hat art=hit lane=hat kit=rock tick=0 vel=0.7 line=5
   0 inst=kick art=hit lane=kick kit=rock tick=0 vel=0.7 line=4
+  0.3125 inst=hat art=hit lane=hat kit=rock tick=48 vel=0.7 line=5
   0.4688 inst=kick art=hit lane=kick kit=rock tick=72 vel=0.7 line=4
+  0.625 inst=hat art=hit lane=hat kit=rock tick=96 vel=0.7 line=5
+  0.9375 inst=hat art=hit lane=hat kit=rock tick=144 vel=0.7 line=5
   0.9375 inst=kick art=hit lane=kick kit=rock tick=144 vel=0.7 line=4
+  1.25 inst=hat art=hit lane=hat kit=rock tick=192 vel=0.7 line=5
+  1.25 inst=kick art=hit lane=kick kit=rock tick=192 vel=0.7 line=4
+  1.5625 inst=hat art=hit lane=hat kit=rock tick=240 vel=0.7 line=5
+  1.7188 inst=kick art=hit lane=kick kit=rock tick=264 vel=0.7 line=4
+  1.875 inst=hat art=hit lane=hat kit=rock tick=288 vel=0.7 line=5
+  2.1875 inst=hat art=hit lane=hat kit=rock tick=336 vel=0.7 line=5
+  2.1875 inst=kick art=hit lane=kick kit=rock tick=336 vel=0.7 line=4
 chords:
   0 tick=0 ticks=192 chord={"input":"C","label":"C","rootPc":0,"bassMidi":36,"notesMidi":[48,52,55],"noteNames":["C3","E3","G3"],"bassName":"C2"} label=C instrument=piano transpose=0 line=6 secDur=1.25
   1.25 tick=192 ticks=192 chord={"input":"G","label":"G","rootPc":7,"bassMidi":43,"notesMidi":[55,59,62],"noteNames":["G3","B3","D4"],"bassName":"G2"} label=G instrument=piano transpose=0 line=6 secDur=1.25
@@ -320,8 +339,18 @@ block startSec=0 durSec=2 bars=1 time=4 over 4 tempo=120 key=C unit=4 barTicks=3
 drums:
   0 inst=hat art=hit lane=hat kit=rock tick=0 vel=0.7 line=5
   0 inst=kick art=hit lane=kick kit=rock tick=0 vel=0.7 line=4
+  0.25 inst=hat art=hit lane=hat kit=rock tick=48 vel=0.7 line=5
   0.375 inst=kick art=hit lane=kick kit=rock tick=72 vel=0.7 line=4
+  0.5 inst=hat art=hit lane=hat kit=rock tick=96 vel=0.7 line=5
+  0.75 inst=hat art=hit lane=hat kit=rock tick=144 vel=0.7 line=5
   0.75 inst=kick art=hit lane=kick kit=rock tick=144 vel=0.7 line=4
+  1 inst=hat art=hit lane=hat kit=rock tick=192 vel=0.7 line=5
+  1 inst=kick art=hit lane=kick kit=rock tick=192 vel=0.7 line=4
+  1.25 inst=hat art=hit lane=hat kit=rock tick=240 vel=0.7 line=5
+  1.375 inst=kick art=hit lane=kick kit=rock tick=264 vel=0.7 line=4
+  1.5 inst=hat art=hit lane=hat kit=rock tick=288 vel=0.7 line=5
+  1.75 inst=hat art=hit lane=hat kit=rock tick=336 vel=0.7 line=5
+  1.75 inst=kick art=hit lane=kick kit=rock tick=336 vel=0.7 line=4
 notes:
   0 tick=0 ticks=96 note={"midi":48,"name":"C3","spell":{"letter":"C","alter":0}} label=1 instrument=bass voice=0 vel=0.7 line=6 secDur=0.5
   0.5 tick=96 ticks=96 note={"midi":52,"name":"E3","spell":{"letter":"E","alter":0}} label=3 instrument=bass voice=0 vel=0.7 line=6 secDur=0.5
@@ -335,17 +364,35 @@ chords:
 errors: none
 names: groove pattern line 1
 from above: none
-length: 4 s
-block startSec=0 durSec=4 bars=2 time=4 over 4 tempo=120 key=C unit=4 barTicks=384 res=2
+length: 3.5 s
+block startSec=0 durSec=3.5 bars=2 time=7 over 8 tempo=120 key=C unit=8 barTicks=336 res=4
 drums:
-  0 inst=hat art=hit lane=hat kit=rock tick=0 vel=0.7 line=4
+  0 inst=hat art=hit lane=hat kit=rock tick=0 vel=1 accent=true line=4
   0 inst=kick art=hit lane=kick kit=rock tick=0 vel=0.7 line=2
-  0.5 inst=snare art=hit lane=snare kit=rock tick=96 vel=0.7 line=3
-  0.75 inst=kick art=hit lane=kick kit=rock tick=144 vel=0.7 line=2
-  2 inst=hat art=hit lane=hat kit=rock tick=384 vel=0.7 line=4
-  2 inst=kick art=hit lane=kick kit=rock tick=384 vel=0.7 line=2
-  2.5 inst=snare art=hit lane=snare kit=rock tick=480 vel=0.7 line=3
-  2.75 inst=kick art=hit lane=kick kit=rock tick=528 vel=0.7 line=2
+  0.25 inst=hat art=hit lane=hat kit=rock tick=48 vel=0.7 line=4
+  0.375 inst=kick art=hit lane=kick kit=rock tick=72 vel=0.7 line=2
+  0.5 inst=hat art=hit lane=hat kit=rock tick=96 vel=1 accent=true line=4
+  0.625 inst=snare art=hit lane=snare kit=rock tick=120 vel=0.7 line=3
+  0.75 inst=hat art=hit lane=hat kit=rock tick=144 vel=0.7 line=4
+  0.875 inst=kick art=hit lane=kick kit=rock tick=168 vel=0.7 line=2
+  1 inst=hat art=hit lane=hat kit=rock tick=192 vel=1 accent=true line=4
+  1.25 inst=hat art=hit lane=hat kit=rock tick=240 vel=0.7 line=4
+  1.25 inst=kick art=hit lane=kick kit=rock tick=240 vel=0.7 line=2
+  1.5 inst=hat art=hit lane=hat kit=rock tick=288 vel=1 accent=true line=4
+  1.5 inst=snare art=hit lane=snare kit=rock tick=288 vel=0.7 line=3
+  1.75 inst=hat art=hit lane=hat kit=rock tick=336 vel=0.7 line=4
+  1.75 inst=kick art=hit lane=kick kit=rock tick=336 vel=0.7 line=2
+  2 inst=hat art=hit lane=hat kit=rock tick=384 vel=1 accent=true line=4
+  2.125 inst=kick art=hit lane=kick kit=rock tick=408 vel=0.7 line=2
+  2.25 inst=hat art=hit lane=hat kit=rock tick=432 vel=0.7 line=4
+  2.375 inst=snare art=hit lane=snare kit=rock tick=456 vel=0.7 line=3
+  2.5 inst=hat art=hit lane=hat kit=rock tick=480 vel=1 accent=true line=4
+  2.625 inst=kick art=hit lane=kick kit=rock tick=504 vel=0.7 line=2
+  2.75 inst=hat art=hit lane=hat kit=rock tick=528 vel=0.7 line=4
+  3 inst=hat art=hit lane=hat kit=rock tick=576 vel=1 accent=true line=4
+  3 inst=kick art=hit lane=kick kit=rock tick=576 vel=0.7 line=2
+  3.25 inst=hat art=hit lane=hat kit=rock tick=624 vel=0.7 line=4
+  3.25 inst=snare art=hit lane=snare kit=rock tick=624 vel=0.7 line=3
 
 ## language/patterns.mdx:182
 errors: none
@@ -368,13 +415,40 @@ block startSec=0 durSec=8 bars=4 time=4 over 4 tempo=120 key=C unit=4 barTicks=3
 drums:
   0 inst=hat art=hit lane=hat kit=rock tick=0 vel=0.7 line=1
   0 inst=kick art=hit lane=kick kit=rock tick=0 vel=0.7 line=1
+  0.25 inst=hat art=hit lane=hat kit=rock tick=48 vel=0.7 line=1
+  0.5 inst=hat art=hit lane=hat kit=rock tick=96 vel=0.7 line=1
+  0.75 inst=hat art=hit lane=hat kit=rock tick=144 vel=0.7 line=1
   0.75 inst=kick art=hit lane=kick kit=rock tick=144 vel=0.7 line=1
+  1 inst=hat art=hit lane=hat kit=rock tick=192 vel=0.7 line=1
+  1 inst=kick art=hit lane=kick kit=rock tick=192 vel=0.7 line=1
+  1.25 inst=hat art=hit lane=hat kit=rock tick=240 vel=0.7 line=1
+  1.5 inst=hat art=hit lane=hat kit=rock tick=288 vel=0.7 line=1
+  1.75 inst=hat art=hit lane=hat kit=rock tick=336 vel=0.7 line=1
+  1.75 inst=kick art=hit lane=kick kit=rock tick=336 vel=0.7 line=1
   2 inst=hat art=hit lane=hat kit=rock tick=384 vel=0.7 line=1
   2 inst=kick art=hit lane=kick kit=rock tick=384 vel=0.7 line=1
+  2.25 inst=hat art=hit lane=hat kit=rock tick=432 vel=0.7 line=1
+  2.5 inst=hat art=hit lane=hat kit=rock tick=480 vel=0.7 line=1
+  2.75 inst=hat art=hit lane=hat kit=rock tick=528 vel=0.7 line=1
   2.75 inst=kick art=hit lane=kick kit=rock tick=528 vel=0.7 line=1
+  3 inst=hat art=hit lane=hat kit=rock tick=576 vel=0.7 line=1
+  3 inst=kick art=hit lane=kick kit=rock tick=576 vel=0.7 line=1
+  3.25 inst=hat art=hit lane=hat kit=rock tick=624 vel=0.7 line=1
+  3.5 inst=hat art=hit lane=hat kit=rock tick=672 vel=0.7 line=1
+  3.75 inst=hat art=hit lane=hat kit=rock tick=720 vel=0.7 line=1
+  3.75 inst=kick art=hit lane=kick kit=rock tick=720 vel=0.7 line=1
   4 inst=hat art=hit lane=hat kit=rock tick=768 vel=0.7 line=1
   4 inst=kick art=hit lane=kick kit=rock tick=768 vel=0.7 line=1
+  4.25 inst=hat art=hit lane=hat kit=rock tick=816 vel=0.7 line=1
+  4.5 inst=hat art=hit lane=hat kit=rock tick=864 vel=0.7 line=1
+  4.75 inst=hat art=hit lane=hat kit=rock tick=912 vel=0.7 line=1
   4.75 inst=kick art=hit lane=kick kit=rock tick=912 vel=0.7 line=1
+  5 inst=hat art=hit lane=hat kit=rock tick=960 vel=0.7 line=1
+  5 inst=kick art=hit lane=kick kit=rock tick=960 vel=0.7 line=1
+  5.25 inst=hat art=hit lane=hat kit=rock tick=1008 vel=0.7 line=1
+  5.5 inst=hat art=hit lane=hat kit=rock tick=1056 vel=0.7 line=1
+  5.75 inst=hat art=hit lane=hat kit=rock tick=1104 vel=0.7 line=1
+  5.75 inst=kick art=hit lane=kick kit=rock tick=1104 vel=0.7 line=1
   6 inst=snare art=hit lane=snare kit=rock tick=1152 vel=0.7 line=2 oneShot=true
   6.125 inst=snare art=hit lane=snare kit=rock tick=1176 vel=0.7 line=2 oneShot=true
   6.25 inst=snare art=hit lane=snare kit=rock tick=1200 vel=0.7 line=2 oneShot=true
@@ -396,13 +470,15 @@ drums:
 errors: none
 names: none
 from above: none
-length: 2 s
-block startSec=0 durSec=2 bars=1 time=4 over 4 tempo=120 key=C unit=4 barTicks=384 res=6
+length: 1 s
+block startSec=0 durSec=1 bars=1 time=4 over 4 tempo=120 key=C unit=4 barTicks=384 res=6
 drums:
   0 inst=hat art=hit lane=hat kit=rock tick=0 vel=0.7 line=3
   0 inst=kick art=hit lane=kick kit=rock tick=0 vel=0.7 line=2
   0.3333 inst=hat art=hit lane=hat kit=rock tick=64 vel=0.7 line=3
+  0.5 inst=hat art=hit lane=hat kit=rock tick=96 vel=0.7 line=3
   0.75 inst=kick art=hit lane=kick kit=rock tick=144 vel=0.7 line=2
+  0.8333 inst=hat art=hit lane=hat kit=rock tick=160 vel=0.7 line=3
 notes:
   0 tick=0 ticks=96 note={"midi":48,"name":"C3","spell":{"letter":"C","alter":0}} label=1 instrument=bass voice=0 vel=0.7 line=4 secDur=0.5
   0.5 tick=96 ticks=96 note={"midi":55,"name":"G3","spell":{"letter":"G","alter":0}} label=5 instrument=bass voice=0 vel=0.7 line=4 secDur=0.5
@@ -417,30 +493,81 @@ drums:
   0 inst=crash art=hit lane=crash kit=rock tick=0 vel=0.7 line=6
   0 inst=hat art=hit lane=hat kit=rock tick=0 vel=0.7 line=4
   0 inst=kick art=hit lane=kick kit=rock tick=0 vel=0.7 line=3
+  0.125 inst=crash art=hit lane=crash kit=rock tick=24 vel=0.7 line=6
+  0.25 inst=crash art=hit lane=crash kit=rock tick=48 vel=0.7 line=6
+  0.25 inst=hat art=hit lane=hat kit=rock tick=48 vel=0.7 line=4
+  0.375 inst=crash art=hit lane=crash kit=rock tick=72 vel=0.7 line=6
+  0.5 inst=crash art=hit lane=crash kit=rock tick=96 vel=0.7 line=6
+  0.5 inst=hat art=hit lane=hat kit=rock tick=96 vel=0.7 line=4
+  0.625 inst=crash art=hit lane=crash kit=rock tick=120 vel=0.7 line=6
+  0.75 inst=crash art=hit lane=crash kit=rock tick=144 vel=0.7 line=6
+  0.75 inst=hat art=hit lane=hat kit=rock tick=144 vel=0.7 line=4
   0.75 inst=kick art=hit lane=kick kit=rock tick=144 vel=0.7 line=3
+  0.875 inst=crash art=hit lane=crash kit=rock tick=168 vel=0.7 line=6
+  1 inst=crash art=hit lane=crash kit=rock tick=192 vel=0.7 line=6
+  1 inst=hat art=hit lane=hat kit=rock tick=192 vel=0.7 line=4
+  1 inst=kick art=hit lane=kick kit=rock tick=192 vel=0.7 line=3
+  1.125 inst=crash art=hit lane=crash kit=rock tick=216 vel=0.7 line=6
+  1.25 inst=crash art=hit lane=crash kit=rock tick=240 vel=0.7 line=6
+  1.25 inst=hat art=hit lane=hat kit=rock tick=240 vel=0.7 line=4
+  1.375 inst=crash art=hit lane=crash kit=rock tick=264 vel=0.7 line=6
+  1.5 inst=crash art=hit lane=crash kit=rock tick=288 vel=0.7 line=6
+  1.5 inst=hat art=hit lane=hat kit=rock tick=288 vel=0.7 line=4
+  1.625 inst=crash art=hit lane=crash kit=rock tick=312 vel=0.7 line=6
+  1.75 inst=crash art=hit lane=crash kit=rock tick=336 vel=0.7 line=6
+  1.75 inst=hat art=hit lane=hat kit=rock tick=336 vel=0.7 line=4
+  1.75 inst=kick art=hit lane=kick kit=rock tick=336 vel=0.7 line=3
+  1.875 inst=crash art=hit lane=crash kit=rock tick=360 vel=0.7 line=6
   2 inst=hat art=hit lane=hat kit=rock tick=384 vel=0.7 line=4
   2 inst=kick art=hit lane=kick kit=rock tick=384 vel=0.7 line=3
+  2.25 inst=hat art=hit lane=hat kit=rock tick=432 vel=0.7 line=4
+  2.5 inst=hat art=hit lane=hat kit=rock tick=480 vel=0.7 line=4
+  2.75 inst=hat art=hit lane=hat kit=rock tick=528 vel=0.7 line=4
   2.75 inst=kick art=hit lane=kick kit=rock tick=528 vel=0.7 line=3
+  3 inst=hat art=hit lane=hat kit=rock tick=576 vel=0.7 line=4
+  3 inst=kick art=hit lane=kick kit=rock tick=576 vel=0.7 line=3
+  3.25 inst=hat art=hit lane=hat kit=rock tick=624 vel=0.7 line=4
+  3.5 inst=hat art=hit lane=hat kit=rock tick=672 vel=0.7 line=4
+  3.75 inst=hat art=hit lane=hat kit=rock tick=720 vel=0.7 line=4
+  3.75 inst=kick art=hit lane=kick kit=rock tick=720 vel=0.7 line=3
   4 inst=hat art=hit lane=hat kit=rock tick=768 vel=0.7 line=4
   4 inst=kick art=hit lane=kick kit=rock tick=768 vel=0.7 line=3
+  4.25 inst=hat art=hit lane=hat kit=rock tick=816 vel=0.7 line=4
+  4.5 inst=hat art=hit lane=hat kit=rock tick=864 vel=0.7 line=4
+  4.75 inst=hat art=hit lane=hat kit=rock tick=912 vel=0.7 line=4
   4.75 inst=kick art=hit lane=kick kit=rock tick=912 vel=0.7 line=3
+  5 inst=hat art=hit lane=hat kit=rock tick=960 vel=0.7 line=4
+  5 inst=kick art=hit lane=kick kit=rock tick=960 vel=0.7 line=3
+  5.25 inst=hat art=hit lane=hat kit=rock tick=1008 vel=0.7 line=4
+  5.5 inst=hat art=hit lane=hat kit=rock tick=1056 vel=0.7 line=4
+  5.75 inst=hat art=hit lane=hat kit=rock tick=1104 vel=0.7 line=4
+  5.75 inst=kick art=hit lane=kick kit=rock tick=1104 vel=0.7 line=3
   6 inst=hat art=hit lane=hat kit=rock tick=1152 vel=0.7 line=4
   6 inst=kick art=hit lane=kick kit=rock tick=1152 vel=0.7 line=3
   6 inst=snare art=hit lane=snare kit=rock tick=1152 vel=0.7 line=1 oneShot=true
   6.125 inst=snare art=hit lane=snare kit=rock tick=1176 vel=0.7 line=1 oneShot=true
+  6.25 inst=hat art=hit lane=hat kit=rock tick=1200 vel=0.7 line=4
   6.25 inst=snare art=hit lane=snare kit=rock tick=1200 vel=0.7 line=1 oneShot=true
   6.375 inst=snare art=hit lane=snare kit=rock tick=1224 vel=0.7 line=1 oneShot=true
+  6.5 inst=hat art=hit lane=hat kit=rock tick=1248 vel=0.7 line=4
   6.5 inst=snare art=hit lane=snare kit=rock tick=1248 vel=0.7 line=1 oneShot=true
   6.625 inst=snare art=hit lane=snare kit=rock tick=1272 vel=0.7 line=1 oneShot=true
+  6.75 inst=hat art=hit lane=hat kit=rock tick=1296 vel=0.7 line=4
   6.75 inst=kick art=hit lane=kick kit=rock tick=1296 vel=0.7 line=3
   6.75 inst=snare art=hit lane=snare kit=rock tick=1296 vel=0.7 line=1 oneShot=true
   6.875 inst=snare art=hit lane=snare kit=rock tick=1320 vel=0.7 line=1 oneShot=true
+  7 inst=hat art=hit lane=hat kit=rock tick=1344 vel=0.7 line=4
+  7 inst=kick art=hit lane=kick kit=rock tick=1344 vel=0.7 line=3
   7 inst=snare art=hit lane=snare kit=rock tick=1344 vel=0.7 line=1 oneShot=true
   7.125 inst=snare art=hit lane=snare kit=rock tick=1368 vel=0.7 line=1 oneShot=true
+  7.25 inst=hat art=hit lane=hat kit=rock tick=1392 vel=0.7 line=4
   7.25 inst=snare art=hit lane=snare kit=rock tick=1392 vel=0.7 line=1 oneShot=true
   7.375 inst=snare art=hit lane=snare kit=rock tick=1416 vel=0.7 line=1 oneShot=true
+  7.5 inst=hat art=hit lane=hat kit=rock tick=1440 vel=0.7 line=4
   7.5 inst=snare art=hit lane=snare kit=rock tick=1440 vel=0.7 line=1 oneShot=true
   7.625 inst=snare art=hit lane=snare kit=rock tick=1464 vel=0.7 line=1 oneShot=true
+  7.75 inst=hat art=hit lane=hat kit=rock tick=1488 vel=0.7 line=4
+  7.75 inst=kick art=hit lane=kick kit=rock tick=1488 vel=0.7 line=3
   7.75 inst=snare art=hit lane=snare kit=rock tick=1488 vel=0.7 line=1 oneShot=true
   7.875 inst=snare art=hit lane=snare kit=rock tick=1512 vel=0.7 line=1 oneShot=true
 
@@ -448,30 +575,105 @@ drums:
 errors: none
 names: groove pattern line 1
 from above: none
-length: 14 s
-block startSec=0 durSec=2 bars=1 time=4 over 4 tempo=120 key=C unit=4 barTicks=384 res=2
-block startSec=2 durSec=8 bars=4 time=4 over 4 tempo=120 key=C unit=4 barTicks=384 res=2
-block startSec=10 durSec=4 bars=2 time=4 over 4 tempo=120 key=C unit=4 barTicks=384 res=1
+length: 13 s
+block startSec=0 durSec=1 bars=1 time=4 over 4 tempo=120 key=C unit=4 barTicks=384 res=2
+block startSec=1 durSec=8 bars=4 time=4 over 4 tempo=120 key=C unit=4 barTicks=384 res=2
+block startSec=9 durSec=4 bars=2 time=4 over 4 tempo=120 key=C unit=4 barTicks=384 res=4
 drums:
   0 inst=hat art=hit lane=hat kit=rock tick=0 vel=0.7 line=1
   0 inst=kick art=hit lane=kick kit=rock tick=0 vel=0.7 line=1
+  0.25 inst=hat art=hit lane=hat kit=rock tick=48 vel=0.7 line=1
+  0.5 inst=hat art=hit lane=hat kit=rock tick=96 vel=0.7 line=1
+  0.75 inst=hat art=hit lane=hat kit=rock tick=144 vel=0.7 line=1
   0.75 inst=kick art=hit lane=kick kit=rock tick=144 vel=0.7 line=1
-  2 inst=hat art=hit lane=hat kit=rock tick=0 vel=0.7 line=1
-  2 inst=kick art=hit lane=kick kit=rock tick=0 vel=0.7 line=1
-  2.75 inst=kick art=hit lane=kick kit=rock tick=144 vel=0.7 line=1
-  4 inst=hat art=hit lane=hat kit=rock tick=384 vel=0.7 line=1
-  4 inst=kick art=hit lane=kick kit=rock tick=384 vel=0.7 line=1
-  4.75 inst=kick art=hit lane=kick kit=rock tick=528 vel=0.7 line=1
-  6 inst=hat art=hit lane=hat kit=rock tick=768 vel=0.7 line=1
-  6 inst=kick art=hit lane=kick kit=rock tick=768 vel=0.7 line=1
-  6.75 inst=kick art=hit lane=kick kit=rock tick=912 vel=0.7 line=1
-  8 inst=hat art=hit lane=hat kit=rock tick=1152 vel=0.7 line=1
-  8 inst=kick art=hit lane=kick kit=rock tick=1152 vel=0.7 line=1
-  8.75 inst=kick art=hit lane=kick kit=rock tick=1296 vel=0.7 line=1
-  10 inst=crash art=hit lane=crash kit=rock tick=0 vel=0.7 line=4
-  10 inst=kick art=hit lane=kick kit=rock tick=0 vel=0.7 line=4
-  12 inst=crash art=hit lane=crash kit=rock tick=384 vel=0.7 line=4
-  12 inst=kick art=hit lane=kick kit=rock tick=384 vel=0.7 line=4
+  1 inst=hat art=hit lane=hat kit=rock tick=0 vel=0.7 line=1
+  1 inst=kick art=hit lane=kick kit=rock tick=0 vel=0.7 line=1
+  1.25 inst=hat art=hit lane=hat kit=rock tick=48 vel=0.7 line=1
+  1.5 inst=hat art=hit lane=hat kit=rock tick=96 vel=0.7 line=1
+  1.75 inst=hat art=hit lane=hat kit=rock tick=144 vel=0.7 line=1
+  1.75 inst=kick art=hit lane=kick kit=rock tick=144 vel=0.7 line=1
+  2 inst=hat art=hit lane=hat kit=rock tick=192 vel=0.7 line=1
+  2 inst=kick art=hit lane=kick kit=rock tick=192 vel=0.7 line=1
+  2.25 inst=hat art=hit lane=hat kit=rock tick=240 vel=0.7 line=1
+  2.5 inst=hat art=hit lane=hat kit=rock tick=288 vel=0.7 line=1
+  2.75 inst=hat art=hit lane=hat kit=rock tick=336 vel=0.7 line=1
+  2.75 inst=kick art=hit lane=kick kit=rock tick=336 vel=0.7 line=1
+  3 inst=hat art=hit lane=hat kit=rock tick=384 vel=0.7 line=1
+  3 inst=kick art=hit lane=kick kit=rock tick=384 vel=0.7 line=1
+  3.25 inst=hat art=hit lane=hat kit=rock tick=432 vel=0.7 line=1
+  3.5 inst=hat art=hit lane=hat kit=rock tick=480 vel=0.7 line=1
+  3.75 inst=hat art=hit lane=hat kit=rock tick=528 vel=0.7 line=1
+  3.75 inst=kick art=hit lane=kick kit=rock tick=528 vel=0.7 line=1
+  4 inst=hat art=hit lane=hat kit=rock tick=576 vel=0.7 line=1
+  4 inst=kick art=hit lane=kick kit=rock tick=576 vel=0.7 line=1
+  4.25 inst=hat art=hit lane=hat kit=rock tick=624 vel=0.7 line=1
+  4.5 inst=hat art=hit lane=hat kit=rock tick=672 vel=0.7 line=1
+  4.75 inst=hat art=hit lane=hat kit=rock tick=720 vel=0.7 line=1
+  4.75 inst=kick art=hit lane=kick kit=rock tick=720 vel=0.7 line=1
+  5 inst=hat art=hit lane=hat kit=rock tick=768 vel=0.7 line=1
+  5 inst=kick art=hit lane=kick kit=rock tick=768 vel=0.7 line=1
+  5.25 inst=hat art=hit lane=hat kit=rock tick=816 vel=0.7 line=1
+  5.5 inst=hat art=hit lane=hat kit=rock tick=864 vel=0.7 line=1
+  5.75 inst=hat art=hit lane=hat kit=rock tick=912 vel=0.7 line=1
+  5.75 inst=kick art=hit lane=kick kit=rock tick=912 vel=0.7 line=1
+  6 inst=hat art=hit lane=hat kit=rock tick=960 vel=0.7 line=1
+  6 inst=kick art=hit lane=kick kit=rock tick=960 vel=0.7 line=1
+  6.25 inst=hat art=hit lane=hat kit=rock tick=1008 vel=0.7 line=1
+  6.5 inst=hat art=hit lane=hat kit=rock tick=1056 vel=0.7 line=1
+  6.75 inst=hat art=hit lane=hat kit=rock tick=1104 vel=0.7 line=1
+  6.75 inst=kick art=hit lane=kick kit=rock tick=1104 vel=0.7 line=1
+  7 inst=hat art=hit lane=hat kit=rock tick=1152 vel=0.7 line=1
+  7 inst=kick art=hit lane=kick kit=rock tick=1152 vel=0.7 line=1
+  7.25 inst=hat art=hit lane=hat kit=rock tick=1200 vel=0.7 line=1
+  7.5 inst=hat art=hit lane=hat kit=rock tick=1248 vel=0.7 line=1
+  7.75 inst=hat art=hit lane=hat kit=rock tick=1296 vel=0.7 line=1
+  7.75 inst=kick art=hit lane=kick kit=rock tick=1296 vel=0.7 line=1
+  8 inst=hat art=hit lane=hat kit=rock tick=1344 vel=0.7 line=1
+  8 inst=kick art=hit lane=kick kit=rock tick=1344 vel=0.7 line=1
+  8.25 inst=hat art=hit lane=hat kit=rock tick=1392 vel=0.7 line=1
+  8.5 inst=hat art=hit lane=hat kit=rock tick=1440 vel=0.7 line=1
+  8.75 inst=hat art=hit lane=hat kit=rock tick=1488 vel=0.7 line=1
+  8.75 inst=kick art=hit lane=kick kit=rock tick=1488 vel=0.7 line=1
+  9 inst=crash art=hit lane=crash kit=rock tick=0 vel=0.7 line=4
+  9 inst=kick art=hit lane=kick kit=rock tick=0 vel=0.7 line=4
+  9.125 inst=crash art=hit lane=crash kit=rock tick=24 vel=0.7 line=4
+  9.25 inst=crash art=hit lane=crash kit=rock tick=48 vel=0.7 line=4
+  9.375 inst=crash art=hit lane=crash kit=rock tick=72 vel=0.7 line=4
+  9.5 inst=crash art=hit lane=crash kit=rock tick=96 vel=0.7 line=4
+  9.5 inst=kick art=hit lane=kick kit=rock tick=96 vel=0.7 line=4
+  9.625 inst=crash art=hit lane=crash kit=rock tick=120 vel=0.7 line=4
+  9.75 inst=crash art=hit lane=crash kit=rock tick=144 vel=0.7 line=4
+  9.875 inst=crash art=hit lane=crash kit=rock tick=168 vel=0.7 line=4
+  10 inst=crash art=hit lane=crash kit=rock tick=192 vel=0.7 line=4
+  10 inst=kick art=hit lane=kick kit=rock tick=192 vel=0.7 line=4
+  10.125 inst=crash art=hit lane=crash kit=rock tick=216 vel=0.7 line=4
+  10.25 inst=crash art=hit lane=crash kit=rock tick=240 vel=0.7 line=4
+  10.375 inst=crash art=hit lane=crash kit=rock tick=264 vel=0.7 line=4
+  10.5 inst=crash art=hit lane=crash kit=rock tick=288 vel=0.7 line=4
+  10.5 inst=kick art=hit lane=kick kit=rock tick=288 vel=0.7 line=4
+  10.625 inst=crash art=hit lane=crash kit=rock tick=312 vel=0.7 line=4
+  10.75 inst=crash art=hit lane=crash kit=rock tick=336 vel=0.7 line=4
+  10.875 inst=crash art=hit lane=crash kit=rock tick=360 vel=0.7 line=4
+  11 inst=crash art=hit lane=crash kit=rock tick=384 vel=0.7 line=4
+  11 inst=kick art=hit lane=kick kit=rock tick=384 vel=0.7 line=4
+  11.125 inst=crash art=hit lane=crash kit=rock tick=408 vel=0.7 line=4
+  11.25 inst=crash art=hit lane=crash kit=rock tick=432 vel=0.7 line=4
+  11.375 inst=crash art=hit lane=crash kit=rock tick=456 vel=0.7 line=4
+  11.5 inst=crash art=hit lane=crash kit=rock tick=480 vel=0.7 line=4
+  11.5 inst=kick art=hit lane=kick kit=rock tick=480 vel=0.7 line=4
+  11.625 inst=crash art=hit lane=crash kit=rock tick=504 vel=0.7 line=4
+  11.75 inst=crash art=hit lane=crash kit=rock tick=528 vel=0.7 line=4
+  11.875 inst=crash art=hit lane=crash kit=rock tick=552 vel=0.7 line=4
+  12 inst=crash art=hit lane=crash kit=rock tick=576 vel=0.7 line=4
+  12 inst=kick art=hit lane=kick kit=rock tick=576 vel=0.7 line=4
+  12.125 inst=crash art=hit lane=crash kit=rock tick=600 vel=0.7 line=4
+  12.25 inst=crash art=hit lane=crash kit=rock tick=624 vel=0.7 line=4
+  12.375 inst=crash art=hit lane=crash kit=rock tick=648 vel=0.7 line=4
+  12.5 inst=crash art=hit lane=crash kit=rock tick=672 vel=0.7 line=4
+  12.5 inst=kick art=hit lane=kick kit=rock tick=672 vel=0.7 line=4
+  12.625 inst=crash art=hit lane=crash kit=rock tick=696 vel=0.7 line=4
+  12.75 inst=crash art=hit lane=crash kit=rock tick=720 vel=0.7 line=4
+  12.875 inst=crash art=hit lane=crash kit=rock tick=744 vel=0.7 line=4
 
 ## language/scope.mdx:30
 errors: none
@@ -506,6 +708,9 @@ length: 2 s
 block startSec=0 durSec=2 bars=1 time=4 over 4 tempo=120 key=C unit=4 barTicks=384 res=1
 drums:
   0 inst=kick art=hit lane=kick kit=rock tick=0 vel=0.7 line=2
+  0.5 inst=kick art=hit lane=kick kit=rock tick=96 vel=0.7 line=2
+  1 inst=kick art=hit lane=kick kit=rock tick=192 vel=0.7 line=2
+  1.5 inst=kick art=hit lane=kick kit=rock tick=288 vel=0.7 line=2
 notes:
   0 tick=0 ticks=192 note={"midi":36,"name":"C2","spell":{"letter":"C","alter":0}} label=1 instrument=bass voice=0 vel=0.7 line=3 secDur=1
   1 tick=192 ticks=192 note={"midi":43,"name":"G2","spell":{"letter":"G","alter":0}} label=5 instrument=bass voice=0 vel=0.7 line=3 secDur=1
@@ -517,12 +722,12 @@ chords:
 errors: none
 names: none
 from above: none
-length: 4.381 s
-block startSec=0 durSec=2.6667 bars=1 time=4 over 4 tempo=90 key=C unit=4 barTicks=384 res=1
-block startSec=2.6667 durSec=1.7143 bars=1 time=4 over 4 tempo=140 key=C unit=4 barTicks=384 res=1
+length: 1.0952 s
+block startSec=0 durSec=0.6667 bars=1 time=4 over 4 tempo=90 key=C unit=4 barTicks=384 res=1
+block startSec=0.6667 durSec=0.4286 bars=1 time=4 over 4 tempo=140 key=C unit=4 barTicks=384 res=1
 drums:
   0 inst=kick art=hit lane=kick kit=rock tick=0 vel=0.7 line=2
-  2.6667 inst=kick art=hit lane=kick kit=rock tick=0 vel=0.7 line=3
+  0.6667 inst=kick art=hit lane=kick kit=rock tick=0 vel=0.7 line=3
 
 ## language/scope.mdx:124
 errors: none

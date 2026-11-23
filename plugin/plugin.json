@@ -1,7 +1,7 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "composer-nb",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Write, play and edit music in your own Composer.nb notebooks from ChatGPT or another MCP host.",
   "author": {
     "name": "Pezanne Khambatta",

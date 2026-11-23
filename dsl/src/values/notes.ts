@@ -655,6 +655,7 @@ function notePattern(
   { bars, sources, endBar = false, open = false, fill = null }: Voice,
   st: State,
   err: Report,
+  repeats: boolean,
 ): PitchedClip | null {
   const barTicks = meterOf(st).barTicks
   const steps: { step: Step; tick: number }[] = []
@@ -674,7 +675,11 @@ function notePattern(
       steps.push({ step, tick: ticks })
       ticks += slot
     }
-    if (st.noteStepTicks && (!open || endBar || index < bars.length - 1) && ticks % barTicks) {
+    if (
+      st.noteStepTicks &&
+      ((!repeats && !open) || endBar || index < bars.length - 1) &&
+      ticks % barTicks
+    ) {
       steps.push({ step: { cut: true }, tick: ticks })
       ticks = Math.ceil(ticks / barTicks) * barTicks
     }
@@ -783,7 +788,7 @@ function pitchedLayer(
     }
     if (type === "chords") return chordPattern(here, tokens, st, barTicks, err)
     const voice = noteVoice(line, part, st, err, repeats)
-    return voice && notePattern(here, voice, st, err)
+    return voice && notePattern(here, voice, st, err, repeats)
   }
   if (tokens[0] === "chords") {
     const chart = locatedTokens(tokens.slice(1), tokenSources(tokens)?.slice(1))
@@ -814,7 +819,7 @@ function pitchedLayer(
       return null
     }
     const voice = noteVoice(line, part, st, err, repeats)
-    return voice && notePattern(here, voice, st, err)
+    return voice && notePattern(here, voice, st, err, repeats)
   }
   // notes, then what the line plays: the word is dropped and the rest is read as notes
   const bare: Line = {
@@ -822,7 +827,7 @@ function pitchedLayer(
     parts: withHead(line.parts, headOf(line.parts).replace(/^\s*notes\s*/, "")),
   }
   const voice = noteVoice(bare, part, st, err, repeats)
-  return voice && notePattern(here, voice, st, err)
+  return voice && notePattern(here, voice, st, err, repeats)
 }
 
 // A pitched instrument's line: guitar: notes E---F# E-E--, or piano: chords Am F|C G. A block

@@ -13,7 +13,7 @@ describe("kit step words", () => {
     expect(sound("play snare: 8*- dd 6*-")).toBe(sound("play snare: --------dd------"))
     expect(sound("steps pair = x-\nplay hat: 4*pair dd--")).toBe(sound("play hat: x-x-x-x-dd--"))
     expect(sound("play hat: 2*(x- --^) -")).toBe(sound("play hat: x---^x---^-"))
-    expect(sound("play snare: { x---, 8*- ^--- 4*- }")).toBe(sound("play snare: x-------^-------"))
+    expect(sound("play snare: { x---, 8*- ^--- 4*- }")).toBe(sound("play snare: x---x---^---x---"))
   })
   it("rejects kit lengths, beats, rest and commas", () => {
     for (const value of ["2 beats rest, dd", "2 4", "rest", "x-, --^", "1 bars x-"]) {
@@ -138,7 +138,7 @@ describe("drums", () => {
     // the same when the open hit comes from another pattern played alongside
     const two = "pattern hats = { hat: ^-x- }\npattern lift = { hat.open: ----^--- }\n"
     const p = parseSource(two + play("hats", "lift")).outputs[0]
-    expect(hits(p, "hat").map((e) => e.secStart / 0.125)).toEqual([0, 2])
+    expect(hits(p, "hat").map((e) => e.secStart / 0.125)).toEqual([0, 2, 6, 8, 10, 14])
   })
 
   it("play the snare's ghost notes and rimshots on lines of their own", () => {
@@ -233,8 +233,8 @@ describe("one instrument per line", () => {
     const o = parseSource(
       "set time 7 over 8\npattern gg = 3 bars {\n  kick: x--x---,\n  ride.bell: x--\n}\nplay gg",
     ).outputs[0]
-    expect(hits(o, "kick")).toHaveLength(6)
-    expect(hits(o, "ride.bell")).toHaveLength(3)
+    expect(hits(o, "kick")).toHaveLength(12)
+    expect(hits(o, "ride.bell")).toHaveLength(14)
   })
 
   it("layers a drum in a block of steps, each layer repeating until they line up", () => {
@@ -242,7 +242,7 @@ describe("one instrument per line", () => {
       "pattern gg = {\n  snare.ghost: {\n    --x-,\n    ------------dd--\n  }\n}\nplay gg",
     ).outputs[0]
     expect(o.durSec).toBe(2)
-    expect(hits(o, "snare.ghost").map((e) => e.secStart / 0.125)).toEqual([2, 12, 13])
+    expect(hits(o, "snare.ghost").map((e) => e.secStart / 0.125)).toEqual([2, 6, 10, 12, 13, 14])
   })
 
   it("lets a lower layer win where two hit the same step, and never a rest", () => {
@@ -254,16 +254,16 @@ describe("one instrument per line", () => {
   })
 
   it("makes a block of steps steps, to name, put in a row or nest", () => {
-    const want = sound("play snare.ghost: --x---------dd--")
+    const want = sound("play snare.ghost: --x---x---x-ddx-")
     expect(sound("play snare.ghost: {\n  --x-,\n  ------------dd--\n}")).toBe(want)
     expect(
       sound("steps ghosts = {\n  --x-,\n  ------------dd--\n}\nplay snare.ghost: ghosts"),
     ).toBe(want)
     expect(sound("steps fig = {\n  x-,\n  -x\n}\nplay hat: x--- fig")).toBe(
-      sound("play hat: x---xx 14*-"),
+      sound("play hat: x---xx"),
     )
     expect(sound("steps pair = x-\nplay hat: {\n  {\n    pair,\n    -x\n  },\n  ----\n}")).toBe(
-      sound("play hat: xx"),
+      sound("play hat: xxxx"),
     )
   })
 
@@ -285,12 +285,18 @@ describe("one instrument per line", () => {
       [0, false],
       [2, false],
       [3, false],
+      [4, true],
+      [8, true],
+      [12, true],
     ])
     const above = parseSource(play("snare: x-xx", "pattern { snare: ^--- }")).outputs[0]
     expect(hits(above, "snare").map((e) => [e.secStart / 0.125, e.accent])).toEqual([
       [0, true],
       [2, false],
       [3, false],
+      [4, true],
+      [8, true],
+      [12, true],
     ])
   })
 
@@ -316,7 +322,9 @@ describe("one instrument per line", () => {
       /Put its type in front: steps ghosts = \{ \.\.\. \}/,
     )
     expect(firstError("pattern gg = {\n  --x-\n}")).toMatch(/\{ \.\.\. \} is steps, not a pattern/)
-    expect(durations("play kick: { x------, x--------, x----------, x------------ }")).toEqual([2])
+    expect(firstError("play kick: { x------, x--------, x----------, x------------ }")).toMatch(
+      /layers only line up again after more than 64 bars/,
+    )
   })
 })
 

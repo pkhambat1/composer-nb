@@ -14,7 +14,7 @@ play_stmt ::= "play" "(" part ")" ["for" length]
 
 The older `play part` spelling remains accepted. New examples use `play(part)`.
 
-Bare braces construct a block. Finite lines are padded with silence to complete bars. A pattern repeats those padded bars; a block plays its lines once.
+Bare braces construct a block. A block plays its direct lines once and fills the remaining bar space with silence. A pattern loops each field at its own written length, including across bar boundaries.
 
 Evaluates `part` under the settings in effect and produces one output. `play` is a statement: it stands at the top level of a cell or inside a top-level `with`, never inside a body.
 

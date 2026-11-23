@@ -97,6 +97,7 @@ export function blockClip(
 ): Clip | null {
   const st = cloneState(state)
   const read = readLines(lines, st, err)
+  const cycleFields = ctx.cycleFields ?? ctx.repeats
   if (read.length !== lines.length) return null
   // The block's time, tempo and swing, which all of its lines share
   const head = st
@@ -113,7 +114,7 @@ export function blockClip(
   const repeated: Repeated[] = []
   for (const l of read) {
     if (l.kind !== "sequence") continue
-    const clip = sequenceClip(l.items, l.st!, err, l.ln, stack)
+    const clip = sequenceClip(l.items, l.st!, err, l.ln, stack, cycleFields)
     if (!clip) return null
     // A pattern or a group on a line of its own repeats until what it's in ends.
     const item = l.items[0]
@@ -130,7 +131,7 @@ export function blockClip(
       [l.line],
       { ...l.st!, stepTicks: ticks, noteStepTicks: ticks },
       err,
-      paceCtx(l.ln, l.shown),
+      { ...paceCtx(l.ln, l.shown), cycleFields },
       stack,
     )
     if (!clip) return null
@@ -171,13 +172,22 @@ export function sectionClip(
   err: Report,
   ln: number,
   stack: string[],
+  cycleFields: boolean,
 ): Clip | null {
   if (sec.shown)
-    return blockClip(sec.lines, state, err, withCtx(sec.ln, sec.shown), stack, sec.bars)
+    return blockClip(
+      sec.lines,
+      state,
+      err,
+      { ...withCtx(sec.ln, sec.shown), cycleFields },
+      stack,
+      sec.bars,
+    )
   if (sec.anon && sec.type === "block")
     return oneShot(blockClip(sec.lines, state, err, onceCtx(sec.ln), stack, sec.bars))
   if (sec.anon) {
     const ctx = anonCtx(sec.ln, sec.type ?? "(")
+    if (!sec.type) ctx.cycleFields = cycleFields
     return blockClip(sec.lines, state, err, ctx, stack, sec.bars)
   }
   if (stack.includes(sec.name!)) {
@@ -261,6 +271,7 @@ export function sequenceClip(
   err: Report,
   ln: number,
   stack: string[] = [],
+  cycleFields = false,
 ): Clip | null {
   let t = 0
   const out: Omit<Clip, "durSec"> = { events: [], drumEvents: [], spans: [] }
@@ -282,7 +293,7 @@ export function sequenceClip(
     // it is the block's own length, which is the same thing when the block has one, and
     // the only thing when its lines end in ... and it has none.
     let clip: Clip | null = it.items
-      ? sequenceClip(it.items, state, err, ln, stack)
+      ? sequenceClip(it.items, state, err, ln, stack, cycleFields)
       : it.block
         ? sectionClip(
             { ...sec!, bars: it.bars || sec!.bars, shown: it.shown },
@@ -290,8 +301,9 @@ export function sequenceClip(
             err,
             ln,
             stack,
+            cycleFields,
           )
-        : sectionClip(sec!, state, itemReport, ln, stack)
+        : sectionClip(sec!, state, itemReport, ln, stack, cycleFields)
     if (!clip) return null
     if (it.bars && !it.block && sec?.type === "block") {
       err(ln, message("block.playsOnce", { name: sec.name! }), itemAt(it))

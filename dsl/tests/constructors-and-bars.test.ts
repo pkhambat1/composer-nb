@@ -67,12 +67,12 @@ describe("constructed musical values", () => {
 
 describe("padded bars and inline parts", () => {
   it("pads layered drums at exact bar boundaries even with dotted step lengths", () => {
-    const p = clean("play(every 3/4 beats { kick: { x | x, ---x } })")
+    const p = clean("play(every 3/4 beats { kick: { x | x |, ---x | } })")
     expect(p.totalSec).toBe(4)
     expect(p.drumEvents.map((e) => e.tick)).toEqual([0, 216, 384, 600])
-    const named = clean("steps pickup = x | x\nplay({ kick: { pickup, --x } })")
+    const named = clean("steps pickup = x | x |\nplay({ kick: { pickup, --x | } })")
     expect(named.drumEvents.map((e) => e.tick)).toEqual([0, 48, 384, 432])
-    const copied = clean("steps layers = {x, --x}\nsteps copy = layers\nplay({kick: 2*copy})")
+    const copied = clean("steps layers = {x |, --x |}\nsteps copy = layers\nplay({kick: 2*copy})")
     expect(copied.drumEvents.map((e) => e.tick)).toEqual([0, 48, 384, 432])
   })
   it("allows repeated chord charts", () => {
@@ -87,11 +87,28 @@ describe("padded bars and inline parts", () => {
       expect(p.drumEvents.map((e) => e.secStart)).toEqual([0])
     }
   })
-  it("pads each pattern line before repeating it", () => {
-    const p = clean("play(pattern({ kick: x---, hat: x- })) for 2 bars")
-    expect(p.drumEvents.filter((e) => e.lane === "kick").map((e) => e.secStart)).toEqual([0, 2])
-    expect(p.drumEvents.filter((e) => e.lane === "hat").map((e) => e.secStart)).toEqual([0, 2])
-    expect(clean("play(pattern({ kick: 4*x--- }))").drumEvents).toHaveLength(4)
+  it("cycles each field on its own clock across 7/8 barlines", () => {
+    const body =
+      "{ kick: x--x---, snare.rim: ----x--, ride.bell: x--, every 1/4 beats guitar.electric: note(D---E D-D--) }"
+    const named = clean(`set time 7 over 8\npattern groove = ${body}\nplay(groove) for 3 bars`)
+    const inline = clean(`set time 7 over 8\nplay(pattern(${body})) for 3 bars`)
+    for (const p of [named, inline]) {
+      const steps = (lane: string) =>
+        p.drumEvents.filter((e) => e.lane === lane).map((e) => e.tick / 24)
+      expect(steps("kick")).toEqual([0, 3, 7, 10, 14, 17, 21, 24, 28, 31, 35, 38])
+      expect(steps("snare.rim")).toEqual([4, 11, 18, 25, 32, 39])
+      expect(steps("ride.bell")).toEqual(Array.from({ length: 14 }, (_, i) => i * 3))
+      expect(p.notes.map((e) => e.tick / 24)).toEqual([
+        0, 4, 5, 7, 10, 14, 15, 17, 20, 24, 25, 27, 30, 34, 35, 37, 40,
+      ])
+    }
+  })
+  it("pads only the field with a written barline", () => {
+    const p = clean("play(pattern({kick: x |, hat: x--})) for 2 bars")
+    expect(p.drumEvents.filter((e) => e.lane === "kick").map((e) => e.tick)).toEqual([0, 384])
+    expect(p.drumEvents.filter((e) => e.lane === "hat").map((e) => e.tick)).toEqual(
+      Array.from({ length: 11 }, (_, i) => i * 72),
+    )
   })
   it("pads explicit and implicit bar endings with silence without stretching steps", () => {
     const p = clean("play({ kick: x--- | x--- })")
@@ -121,7 +138,7 @@ describe("padded bars and inline parts", () => {
   })
   it("does not require an integer number of nested repetitions", () => {
     const p = clean(
-      "pattern phrase = { kick: x | x | x }\nblock music = 4 bars { phrase }\nplay(music)",
+      "pattern phrase = { kick: x | x | x | }\nblock music = 4 bars { phrase }\nplay(music)",
     )
     expect(p.totalSec).toBe(8)
     expect(p.drumEvents.map((e) => e.secStart)).toEqual([0, 2, 4, 6])
