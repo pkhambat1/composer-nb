@@ -64,7 +64,7 @@ Applies its settings to everything inside its braces, then restores the environm
 | Where | Form | Braces hold | Result |
 | --- | --- | --- | --- |
 | Cell top level, or inside another top-level `with` | `with_stmt` | Statements, separated by commas. | The statements run under the local settings. |
-| Wherever a part may stand: after `play`, in a body, in a group, as the value of a `pattern` or `block` declaration | `with_scope` | Entries, separated by commas. | A part. Its entries sound together and its lines repeat, as in a pattern. |
+| Wherever a part may stand: after `play`, in a body, in a group, as the value of a `pattern` or `block` declaration | `with_scope` | Entries, separated by commas. | A part. Its entries sound together. Within a pattern, each scoped line keeps its own loop length. |
 
 ```composer-nb Example
 with key D, octave 2 {

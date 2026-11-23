@@ -41,9 +41,9 @@ function walk(w: {
     link: null,
     source: `pattern walk = {
   piano: chords ${chart},
-  hat: 8*x-,
-  snare.cross: 2*(4*- x 3*-),
-  kick: 2*(x 7*-)
+  hat: x-,
+  snare.cross: 4*- x 3*-,
+  kick: x 7*-
 }
 
 with key D, mode ${w.mode}, tempo ${w.tempo} { play walk }`,
@@ -55,38 +55,35 @@ export const GROOVES: Groove[] = [
     section: "Transcriptions",
     title: "The Sound of Muzak",
     byline: "**Porcupine Tree** · *In Absentia* (2002) · drums by Gavin Harrison",
-    body: "A groove in seven. The kick, snare and hi-hat repeat in every bar, and `on bar 2` adds the lift at the end of every second bar: a burst of ghost notes, an open hi-hat, and the foot closing it.",
+    body: "A groove in seven. The kick and snare cycle every seven steps. The hi-hat cycles every four, so its accents shift in the second bar. A burst of ghost notes, an open hi-hat and the foot closing it lift the end of that bar.",
     link: "https://www.youtube.com/watch?v=4ulgVOBpNWA",
     source: `pattern groove = {
-  kick: 2*x--x---,
-  snare: 2*(5*- x-),
-  snare.ghost: 2*--x----,
-  hat: 7*^-x-,
-  pattern {
-    snare.ghost: 8*- dd 4*-,
-    hat.open: 10*- ^ 3*-,
-    hat.pedal: 12*- x-
-  } on bar 2
+  kick: x--x---,
+  snare: 5*- x-,
+  snare.ghost: --x----,
+  hat: ^-x-,
+  pattern({
+    snare.ghost: 8*- dd |,
+    hat.open: 10*- ^ |,
+    hat.pedal: 12*- x |,
+  }) on bar 2,
 }
 
 with time 7 over 8, tempo 90 {
-  play block {
-    crash: x 13*-,
-    groove
-  }
+  play({ crash: x, groove })
 }`,
   },
   {
     section: "Transcriptions",
     title: "Circle of Manias",
     byline: "**Porcupine Tree** · *The Incident* (2009) · drums by Gavin Harrison",
-    body: "Nine eighths to the bar. The hi-hat alternates open and closed on every eighth, while the kick plays a figure of eighteen sixteenths and the snare one of nine, so they only line up again every two bars. The repeats spell out the full two-bar cycle; the ghost notes sound only at its start.",
+    body: "Nine eighths to the bar. The hi-hat alternates open and closed on every eighth, while the kick plays a figure of eighteen sixteenths and the snare one of nine, so they only line up again every two bars. The ghost notes sound only at the start of the two-bar cycle.",
     link: "https://www.youtube.com/results?search_query=Porcupine+Tree+Circle+of+Manias",
     source: `pattern manias = {
-  hat.open: 9*x---,
-  hat: 9*--x-,
-  kick: 2*x--x-x---x--x-xx--,
-  snare: 4*-------x-,
+  hat.open: x---,
+  hat: --x-,
+  kick: x--x-x---x--x-xx--,
+  snare: -------x-,
   snare.ghost: -xx 33*-
 }
 
@@ -96,23 +93,20 @@ with time 9 over 8, tempo 100 { play manias for 4 bars }`,
     section: "Transcriptions",
     title: "What Happens Now?",
     byline: "**Porcupine Tree** · *Nil Recurring* (2007) · drums by Gavin Harrison",
-    body: "Lines of different lengths in one pattern. The kick and snare repeat every 7 steps, the ride bell every 3 and the guitar riff every 10, so they drift against each other and only all meet again on a bar line after 15 bars. The play opens with an accented rim hit followed by silence for the rest of its bar, and the groove starts after it: the block and the pattern are in brackets, so they play one after the other. The crash plays once, in the groove's first bar, and `for 3 bars` stops it after three bars, the opening bar included. `octave 2` in the with puts the riff right at the bottom of the guitar's range.",
+    body: "Lines of different lengths in one pattern. The kick and snare repeat every 7 steps, the ride bell every 3 and the guitar riff every 10, so they drift against each other and only all meet again on a bar line after 15 bars. The play opens with a two-step rim pickup before the groove. The crash plays once, in the groove's first bar, and `for 3 bars` stops it after three bars, including the pickup. `octave 2` in the with puts the riff right at the bottom of the guitar's range.",
     link: "https://www.youtube.com/watch?v=v0Iv4SYJW-k",
     source: `pattern groove = {
-  kick: 30*x--x---,
-  snare.rim: 30*----x--,
-  ride.bell: 70*x--,
-  every 1/4 beats guitar.electric: notes 21*(D---E D-D--)
+  kick: x--x---,
+  snare.rim: ----x--,
+  ride.bell: x--,
+  every 1/4 beats guitar.electric: note(D---E D-D--),
 }
 
 with time 7 over 8, tempo 110, octave 2, guitar.electric muted {
-  play (
-    block { snare.rim: ^- }
-    pattern {
-      pattern { crash: x 13*- } on bar 1,
-      groove
-    }
-  ) for 3 bars
+  play((
+    1/7 bars { snare.rim: ^ }
+    pattern({ pattern({ crash: x | }) on bar 1, groove })
+  )) for 3 bars
 }`,
   },
   {
@@ -125,8 +119,8 @@ with time 7 over 8, tempo 110, octave 2, guitar.electric muted {
 steps radiddle = -xxx
 
 pattern hands = {
-  snare: 3*pa,
-  snare.ghost: 3*radiddle
+  snare: pa,
+  snare.ghost: radiddle
 }
 
 pattern feet = every 3/4 beats {
@@ -149,9 +143,9 @@ with time 3 over 4, tempo 100 {
     link: "https://www.youtube.com/watch?v=YZPtPMCDEs4",
     source: `pattern groove = {
   ride.bell: x-x-x-xx-x-x,
-  snare: 2*---x--,
-  snare.ghost: 6*-x,
-  kick: 2*x-x--x
+  snare: ---x--,
+  snare.ghost: -x,
+  kick: x-x--x
 }
 
 with time 3 over 4, tempo 82.5 { play groove for 2 bars }`,
@@ -163,9 +157,9 @@ with time 3 over 4, tempo 82.5 { play groove for 2 bars }`,
     body: "Three lines of different lengths in one pattern. The floor tom hits every 3/4 beats, the kick every 4 steps and the snare every 5. They drift apart, and only land together again after 60 steps: three bars of 5 over 4, which is where the pattern ends.",
     link: null,
     source: `pattern groove = {
-  kick: 15*x---,
-  snare: 12*x----,
-  tom.floor: 20*x--
+  kick: x---,
+  snare: x----,
+  tom.floor: x--
 }
 
 with time 5 over 4 { play groove }`,
@@ -244,8 +238,8 @@ with time 5 over 4 { play groove }`,
     link: null,
     source: `pattern fifths = {
   piano: notes 1--- fifth(1)--- fifth(1, 2)--- fifth(1, 3)---,
-  hat: 8*x-,
-  kick: 2*(x 7*-)
+  hat: x-,
+  kick: x 7*-
 }
 
 with tempo 76 { play fifths for 2 bars }`,
@@ -258,9 +252,9 @@ with tempo 76 { play fifths for 2 bars }`,
     link: null,
     source: `pattern pulls = {
   piano: chords octave(fifth(1, 3), -1)|octave(fifth(1, 2), -1)|fifth(1)|1,
-  hat: 8*x-,
-  snare: 2*(4*- x 3*-),
-  kick: 2*(x 7*-)
+  hat: x-,
+  snare: 4*- x 3*-,
+  kick: x 7*-
 }
 
 with tempo 84 { play pulls for 4 bars }`,
@@ -273,8 +267,8 @@ with tempo 84 { play pulls for 4 bars }`,
     link: null,
     source: `pattern fourths = {
   piano: chords 1|fourth(1)|fourth(1, 2)|octave(fourth(1, 3), -1),
-  hat: 8*x-,
-  kick: 2*(x 7*-)
+  hat: x-,
+  kick: x 7*-
 }
 
 with tempo 76 { play fourths for 4 bars }`,
@@ -287,8 +281,8 @@ with tempo 76 { play fourths for 4 bars }`,
     link: null,
     source: `pattern fifths = {
   piano: chords 1|fifth(1)|octave(fifth(1, 2), -1)|octave(fifth(1, 3), -1),
-  hat: 8*x-,
-  kick: 2*(x 7*-)
+  hat: x-,
+  kick: x 7*-
 }
 
 with tempo 80 { play fifths for 4 bars }`,
@@ -320,7 +314,7 @@ play (
       bass: notes walk
     },
     with octave 4 { piano: chords i v|vi iv },
-    hat: 8*x-,
+    hat: x-,
     kick: x 7*- x 7*-
   }
 }`,
@@ -337,9 +331,9 @@ play (
     bass: notes ii---iv---v---vii---|octave(i)---octave(iii)---octave(v)---octave(vi)---
       |octave(ii)---octave(iv)---v---iv---|iii---v---vi---vii---
   },
-  ride: 8*x-,
-  hat.pedal: 2*(4*- x 3*-),
-  kick: 2*(x 7*-)
+  ride: x-,
+  hat.pedal: 4*- x 3*-,
+  kick: x 7*-
 }
 
 with tempo 132, swing on, octave 4 { play turnaround }`,

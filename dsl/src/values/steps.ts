@@ -9,16 +9,7 @@ import { bracesIn, headOf, onlyBraces, textOf, sourceOf } from "../parts.ts"
 import { atCursor, message, reportIn, type At, type Report } from "../diagnostics.ts"
 import { SourceText, locatedTokens, tokenSources, repeatTokens } from "../source.ts"
 import type { Braces, Line, Piece, State, StepSequence } from "../state.ts"
-import {
-  barQuarters,
-  count,
-  lastCount,
-  lcm,
-  MAX_BARS,
-  meterOf,
-  timeLabel,
-  TPQ,
-} from "../time.ts"
+import { barQuarters, count, lastCount, lcm, MAX_BARS, meterOf, timeLabel, TPQ } from "../time.ts"
 import { noteSteps, spaceNotes } from "./notes.ts"
 import { NAME_LIKE, TRACK_RE } from "../vocab.ts"
 
@@ -506,6 +497,7 @@ export function stepPattern(
   tokens: string[],
   st: State,
   err: Report,
+  repeats: boolean,
   open = false,
   fill: StepSequence | null = null,
   sequence?: StepSequence,
@@ -602,23 +594,24 @@ export function stepPattern(
     return null
   }
   const stepTicks = st.stepTicks
-  const duration = open ? ticks : Math.ceil(ticks / barTicks) * barTicks
-  if (duration > MAX_BARS * barTicks) {
+  // A pattern cycles from the last written step. A one-shot line fills its final bar.
+  if (!repeats && !open) barLine()
+  if (ticks > MAX_BARS * barTicks) {
     err(part.ln, `A step sequence can be at most ${MAX_BARS} bars long`, textOf(part.value ?? []))
     return null
   }
   return {
     kind: "drum",
-    ticks: duration,
+    ticks,
     open,
     expand(total: number, loop: boolean) {
       const out: DrumHit[] = []
-      for (let start = 0; start < total; start += duration) {
+      for (let start = 0; start < total; start += ticks) {
         steps.forEach((s, i) => {
           const tick = start + positions[i]
           if (s && tick < total) pushHit(out, part, tick, s, stepTicks / 2, st.kit)
         })
-        if (!loop || open || !duration) break
+        if (!loop || open || !ticks) break
       }
       if (filler && fill) {
         const fillTicks = Math.round(fill.length * stepTicks)
@@ -783,11 +776,5 @@ function stepLayerRun(
       return fail(message("step.undefined", { tok }), tok)
     } else return fail(message("step.notAStep", { tok }), notSteps(tok))
   }
-  const run = stepSequence(tokens, st)
-  if (!toEnd && run.length) {
-    const barTicks = meterOf(st).barTicks
-    run.length =
-      (Math.ceil(Math.round(run.length * st.stepTicks) / barTicks) * barTicks) / st.stepTicks
-  }
-  return { run, toEnd, fill }
+  return { run: stepSequence(tokens, st), toEnd, fill }
 }

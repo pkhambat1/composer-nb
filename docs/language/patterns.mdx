@@ -113,7 +113,7 @@ A body is the braces of a pattern, a block, an `every` or a `with`. Its parts st
 - A kit piece or instrument may have one line directly in a body. Several figures for one kit piece are [steps layers](/drums/steps#layers); several voices for one instrument are [layers](/pitched/instruments#layers). A name or nested body may add more events for the same kit piece or instrument.
 - `play`, `print` and `set` are statements, not entries.
 
-Bare braces construct a block. Use `pattern({ ... })` for a repeating inline part and `block({ ... })` for an explicit block. After `=` in a declaration the type is already given; after `every` or `with` the body is a pattern.
+Bare braces construct a block. Use `pattern({ ... })` for a repeating inline part and `block({ ... })` for an explicit block. After `=` in a declaration the type is already given; scopes such as `every` and `with` preserve the surrounding field timing.
 
 ```composer-nb Invalid
 play pattern { kick: x---, kick: --x- }
@@ -142,7 +142,7 @@ A `pattern` is a body whose lines repeat. Every entry starts at the beginning of
 
 | Entry | In a pattern |
 | --- | --- |
-| Line | Pads its final bar, then repeats at that completed length. |
+| Line | Repeats at its own written length, even across bar lines. |
 | Pattern (name or inline), group, `every`, `with` | Repeats to the end of the pattern. |
 | Block (name or inline) | Plays once. |
 | Placed part | Plays in its bars; see [on bar](/language/patterns#on-bar). |
@@ -151,14 +151,14 @@ Lines need not be the same length. Without a `length`, the pattern lasts until i
 
 ```composer-nb Example
 pattern groove = {
-  kick: x--- --x-,
-  snare: ---- x---,
-  hat: x-,
+  kick: x--x---,
+  snare: 5*- x-,
+  hat: ^-x-,
 }
-play(groove) for 2 bars
+with time 7 over 8 { play(groove) for 2 bars }
 ```
 
-Patterns repeat padded bars. Explicit figures within those bars are valid; see [Explicit repetition](/drums/steps#explicit-repetition).
+The kick and snare repeat every seven steps. The hat repeats every four, so its accent falls on steps 1, 5, 9 and 13 of bar 1, then steps 3, 7 and 11 of bar 2. All three restart together after 28 steps, or two bars of 7/8. To finish a field’s current bar with silence before it repeats, end that field with `|`.
 
 ## block
 
@@ -184,7 +184,7 @@ block ending = { crash: x, kick: x, piano: chords C }
 play(ending)
 ```
 
-Both forms pad unfilled bar space with silence. `pattern({ kick: x--- })` repeats the completed bar, with one kick per bar; `block({ kick: x--- })` plays that bar once. Bare braces construct a block.
+In `play({ kick: x--- })` the kick sounds once and the rest of the bar is silent. In `play(pattern({ kick: x--- })) for 1 bars` it sounds every four steps through the bar.
 
 ## Groups
 
@@ -222,7 +222,7 @@ What plays in order goes in brackets: (verse verse)
 | Part | Lasts |
 | --- | --- |
 | Line | The length of its `steps`, `notes` or `chords`. |
-| Pattern without a length | Until its repeating entries realign. Each finite line is first padded through its final bar: lines of 4 and 6 sixteenth-note steps both occupy one 4/4 bar. |
+| Pattern without a length | Until its repeating entries realign. Lines of 4 and 6 sixteenth-note steps realign after 12 steps. |
 | Block without a length | Its longest entry, rounded up to a complete bar. |
 | Group | The sum of its parts. |
 | `length pattern(body)`, `length block(body)` | `length`. |

@@ -181,18 +181,20 @@ describe("pace and placement", () => {
     const inline = "play pattern { kick: x---, block { crash: x } on bar 2 } for 2 bars"
     expect(hits(named, "crash")).toEqual([2])
     expect(hits(inline, "crash")).toEqual(hits(named, "crash"))
-    expect(hits(inline)).toEqual([0, 2])
+    expect(hits(inline)).toEqual([0, 0.5, 1, 1.5, 2, 2.5, 3, 3.5])
     expect(hits("play block { crash: x } on bar 2 for 2 bars", "crash")).toEqual([2])
     expect(hits("play block { block { kick: x } on bar 2 to 3 } for 3 bars")).toEqual([2])
   })
 
   it("places patterns over a range and rejects the old prefix syntax", () => {
-    expect(hits("play block { pattern { kick: x--- } on bar 2 to 3 } for 3 bars")).toEqual([2, 4])
+    expect(hits("play block { pattern { kick: x--- } on bar 2 to 3 } for 3 bars")).toEqual([
+      2, 2.5, 3, 3.5, 4, 4.5, 5, 5.5,
+    ])
     expect(errors("play block { bar 2 { crash: x } }")).toMatch(/Placement follows its value/)
     expect(errors("play block { block { kick: x } on bar 3 to 2 }")).toMatch(/backwards/)
     expect(errors("play block { block { kick: x } on bar 0 }")).toMatch(/counted from 1/)
     expect(errors("play block { block { kick: x } on bar 2 extra }")).toMatch(/Placement ends/)
-    expect(hits("play({ { kick: x } on bar 2 })")).toEqual([2])
+    expect(errors("play block { { kick: x } on bar 2 }")).toBe("")
   })
 })
 

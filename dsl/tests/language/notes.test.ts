@@ -120,11 +120,11 @@ describe("notes", () => {
       "set time 7 over 8\npattern groove = {\n  kick: x--x---,\n  every 1/4 beats guitar.electric: notes F---G F-F--\n}\n"
     // Lines of 7 and 10 steps meet after 70: five bars of 14.
     const o = parseSource(groove + "play groove").outputs[0]
-    expect(o.durSec).toBe(1.75)
-    expect(o.notes).toHaveLength(4)
+    expect(o.durSec).toBe(8.75)
+    expect(o.notes).toHaveLength(28)
     expect(o.notes.every((e) => e.instrument === "guitar.electric")).toBe(true)
-    expect(hits(o, "kick")).toHaveLength(2)
-    expect(o.blocks.map((b) => [b.time, b.bars])).toEqual([["7 over 8", 1]])
+    expect(hits(o, "kick")).toHaveLength(20)
+    expect(o.blocks.map((b) => [b.time, b.bars])).toEqual([["7 over 8", 5]])
   })
 
   it("play once on a play's own line, like a drum's", () => {

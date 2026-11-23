@@ -36,9 +36,9 @@ describe("play", () => {
     const o = p.outputs[0]
     expect(o.durSec).toBe(10.5)
     expect(hits(o, "crash").map((e) => e.secStart)).toEqual([0])
-    expect(hits(o, "ride.bell")).toHaveLength(6)
-    expect(hits(o, "kick")).toHaveLength(12)
-    expect(hits(o, "snare")).toHaveLength(6)
+    expect(hits(o, "ride.bell")).toHaveLength(28)
+    expect(hits(o, "kick")).toHaveLength(24)
+    expect(hits(o, "snare")).toHaveLength(12)
     expect(o.blocks.map((b) => [b.time, b.bars])).toEqual([["7 over 8", 6]])
   })
 
@@ -113,8 +113,8 @@ describe("patterns repeat, and a play's own lines play once", () => {
     const o = parseSource(
       "pattern beat = 2 bars {\n  kick: x---,\n  snare: 4*- x 3*-,\n  piano: chords C\n}\nplay beat",
     ).outputs[0]
-    expect(hits(o, "kick")).toHaveLength(2)
-    expect(hits(o, "snare")).toHaveLength(2)
+    expect(hits(o, "kick")).toHaveLength(8)
+    expect(hits(o, "snare")).toHaveLength(4)
     expect(o.chords.map((e) => e.label)).toEqual(["C", "C"])
   })
 
@@ -134,7 +134,7 @@ describe("patterns repeat, and a play's own lines play once", () => {
     const o = parseSource("pattern beat = { kick: x--- }\n" + play("piano: chords C|G", "beat"))
       .outputs[0]
     expect(o.durSec).toBe(4)
-    expect(hits(o, "kick")).toHaveLength(2)
+    expect(hits(o, "kick")).toHaveLength(8)
     expect(labels(AB + play("pattern { kick: x 15*- } on bar 4", "(aa bb)"))).toEqual([
       "C",
       "G",
@@ -147,7 +147,7 @@ describe("patterns repeat, and a play's own lines play once", () => {
     const o = parseSource("pattern beat = { kick: x--- }\n" + play("crash: x 15*-", "4 bars beat"))
       .outputs[0]
     expect(hits(o, "crash")).toHaveLength(1)
-    expect(hits(o, "kick")).toHaveLength(4)
+    expect(hits(o, "kick")).toHaveLength(16)
   })
 })
 
@@ -158,11 +158,11 @@ describe("events", () => {
     )
     expect(p.drumEvents.map((e) => [e.lane, e.tick])).toEqual([
       ["kick", 0],
-      ["snare", 384],
+      ["snare", 96],
     ])
     expect(p.blocks[0].drumEvents.map((e) => [e.lane, e.tick])).toEqual([
       ["kick", 0],
-      ["snare", 384],
+      ["snare", 96],
     ])
   })
 })

@@ -43,6 +43,7 @@ export type Repeated = { clip: Clip; what: string; ln: number; at: At }
 export type Ctx = {
   ln?: number
   at: At
+  cycleFields?: boolean // every and with inherit the surrounding field timing
   repeats: boolean // in a pattern, everything repeats until it ends
   where: string
   what: string
@@ -163,7 +164,7 @@ export function layer(
   const meter = meterOf(st)
   const { barTicks, secPerTick } = meter
   const read = parts
-    .map((p) => readPart(p, p.st ?? st, barTicks, err, ctx.repeats))
+    .map((p) => readPart(p, p.st ?? st, barTicks, err, ctx.cycleFields ?? ctx.repeats))
     .filter((p): p is Played => p !== null)
   if (read.length < parts.length) return null
   if (!read.length && !once.length && !repeated.length) return null

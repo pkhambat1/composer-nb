@@ -10,19 +10,19 @@
 
 ## Write and play music
 
-A cell contains settings, typed declarations and statements. `play({ ... })` constructs a block by default: its lines play once, with any unfinished bar space filled by silence. Use `pattern({ ... })`, or a named pattern, to repeat completed bars.
+A cell contains settings, typed declarations and statements. `play({ ... })` constructs a block by default: its lines play once, with any unfinished bar space filled by silence. Use `pattern({ ... })`, or a named pattern, to loop each field at its own written length.
 
 ```composer-nb
 set tempo 96
 pattern groove = {
-  kick: 4*x---,
-  snare: 2*(4*- x 3*-),
-  hat: 8*x-,
+  kick: x---,
+  snare: 4*- x 3*-,
+  hat: x-,
 }
 play({ crash: x, groove }) for 4 bars
 ```
 
-`kick: x---` is one hit followed by silence for the rest of its bar. `4*x---` writes four hits in that bar. `|` finishes the current drum bar with silence, and a final unfinished bar is padded even without `|`. A container can end partway through a repeating part.
+In this pattern the kick repeats every four steps, the snare every eight, and the hat every two. To play the kick just once per bar, write `kick: x--- |`. The crash belongs to the outer block and sounds only once.
 
 ## Notes, chords and voicing
 

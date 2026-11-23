@@ -161,7 +161,7 @@ export function readPace(parts: Piece[], ln: number, err: Report): Paced | null 
     err(ln, message("pace.typed", { shown }), type)
     return null
   }
-  // every 3/4 beats { ... }, every 3/4 beats 4 bars { ... }: its braces are a pattern
+  // Mark the body of every so it inherits field timing from the surrounding part.
   const only = onlyBraces(lengthIn(thing).rest)
   return {
     kind: "paced",
@@ -172,7 +172,7 @@ export function readPace(parts: Piece[], ln: number, err: Report): Paced | null 
     line: {
       ln,
       parts: located(
-        thing.map((p) => (p === only ? { ...only, type: "pattern" } : p)),
+        thing.map((p) => (p === only ? { ...only, paced: true } : p)),
         sourcesOf(thing),
       ),
     },
@@ -350,11 +350,11 @@ export function readPart(
       return null
     }
     const run = stepBlock(only, st, err, part, repeats)
-    const pattern = run == null ? null : stepPattern(part, [], st, err, false, null, run)
+    const pattern = run == null ? null : stepPattern(part, [], st, err, repeats, false, null, run)
     return pattern && { ...pattern, part }
   }
   const parts = stepParts(textOf(part.value), st, err, part.ln, part, repeats)
   if (!parts) return null
-  const pattern = stepPattern(part, parts.tokens, st, err, parts.toEnd, parts.fill)
+  const pattern = stepPattern(part, parts.tokens, st, err, repeats, parts.toEnd, parts.fill)
   return pattern && { ...pattern, part }
 }

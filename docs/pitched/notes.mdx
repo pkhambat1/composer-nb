@@ -67,7 +67,7 @@ Each note, hold and rest occupies one slot, however many characters the note tak
 play(piano: notes 1 2 3 4 | 5 6 7 8 | 8 7 6 5 | 4 3 2 1)
 ```
 
-As with chords, slots must occupy whole ticks at 96 ticks per beat. Three equal notes in 4/4 are valid. For a fixed step length, triplets or a riff shorter than a bar, use [every](/language/patterns#every): `play every 1/4 beats piano: notes 1 2 3` plays three sixteenth notes. Inside `every`, `|` fills the rest of the bar with silence; the final incomplete bar is padded too.
+As with chords, slots must occupy whole ticks at 96 ticks per beat. Three equal notes in 4/4 are valid. For a fixed step length, triplets or a riff shorter than a bar, use [every](/language/patterns#every): `play every 1/4 beats piano: notes 1 2 3` plays three sixteenth notes. Inside `every`, a written `|` fills the rest of that bar with silence. A block pads the final incomplete bar too. In a pattern the riff loops immediately after its last step.
 
 | Token | Effect on its slot |
 | --- | --- |
@@ -109,7 +109,7 @@ repeat ::= integer "*" (note_word | name | call | "(" note_item+ ")")
 
 Plays its right-hand side `integer` times in a row. A repeat copies what it is given: `8*1` is eight separate notes, `1 7*-` is one note held for eight steps, and `8*_` is eight silent steps. Parentheses in notes always need a count.
 
-A pattern may repeat attacks within a bar: `4*1` is four notes, not one long note. Explicit repetition is valid in both patterns and blocks. Finite fixed-step lines are padded to complete bars before they repeat; see [Explicit repetition](/drums/steps#explicit-repetition).
+A pattern may repeat attacks within a bar: `4*1` is four notes, not one long note. Explicit repetition is valid in both patterns and blocks. Fixed-step lines each repeat at their written length. Use a trailing `|` to include silence through the end of the bar in that line’s loop.
 
 ```composer-nb Example
 print(notes 2*(1 3) 5 3*-)
