@@ -38,7 +38,7 @@ export const NOTE_MESSAGES = {
   "note.lengthWord": () =>
     "Notes use step words and * repeats: 1 7*- holds degree 1 for eight steps; 8*_ is eight silent steps",
   "note.needsWord": () => "A repeat needs a note word or group: 4*1- or 2*(1--- 3---)",
-  "note.silence": () => "A silent note step is _. Repeat silence with 8*_ or fill with ..._",
+  "note.silence": () => "A silent note step is _. Repeat silence with 8*_; unfinished bars fill with silence",
   "note.spaceAfterCall": ({ call }: { call: string }) =>
     `Put a space after ${call}(...); only note holds and rests can touch its closing )`,
   "note.callOpen": ({ call }: { call: string }) =>
@@ -52,7 +52,7 @@ export const NOTE_MESSAGES = {
   "note.tooLong": ({ max }: { max: number }) => `A note sequence can be at most ${max} bars long`,
   "note.commas": () =>
     "Notes separate words with spaces: 1 7*- 3 7*-. Commas separate brace entries or function arguments",
-  "note.fillOne": () => "... takes one note, - to sustain, or _ for silence: ...1, ...-, ..._",
+  "note.fillOne": () => "... takes one note or - to sustain: ...1, ...-",
   "note.afterFill": () => "... is the rest of the block, so nothing goes after it",
   "note.spaceBetween": () => "Put a space between note words and repeats: 1 7*- 2*(3--- 5---)",
   "note.repeats": ({ head, value, short }: { head: string; value: string; short: string }) =>

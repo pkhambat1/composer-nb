@@ -47,6 +47,15 @@ function events(body: Uint8Array) {
 }
 
 describe("MIDI export", () => {
+  it("exports explicit voicings without the original fifth, including slash bass", () => {
+    const track = chunks(file("play({ piano: voice(Cmaj9/3, { fifth: 1 }) })"))[2]
+    const pitches = events(track.body)
+      .filter((e) => (e[1] & 0xf0) === 0x90)
+      .map((e) => e[2])
+      .sort((a, b) => a - b)
+    expect(pitches).toEqual([40, 48, 52, 59, 62, 67])
+  })
+
   it("writes a format 1 file at 96 ticks a quarter, with a tempo track and the drums on channel 10", () => {
     const bytes = file(
       "set tempo 100\nplay block {\n  kick: x 3*- x 3*- x 3*- x 3*-,\n  hat: x-x-x-x-x-x-x-x-\n}",

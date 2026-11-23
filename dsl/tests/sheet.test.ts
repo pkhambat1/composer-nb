@@ -125,7 +125,7 @@ describe("drum sheet music", () => {
 
   it("writes every bar of the block", () => {
     expect(voices("pattern gg = { kick: x--- }\nplay gg for 2 bars")).toEqual([
-      "[V:F] F4 F4 F4 F4 | F4 F4 F4 F4 |",
+      "[V:F] F4 z4 z4 z4 | F4 z4 z4 z4 |",
     ])
   })
 

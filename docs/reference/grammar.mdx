@@ -1,6 +1,6 @@
 ---
 title: "Grammar"
-description: "All the syntax of the language in one place. The notation is explained in [Notation](@composer-nb language reference>Notation)."
+description: "All the syntax of the language in one place. The notation is explained in [Notation](/#notation)."
 ---
 
 ## Cells and statements
@@ -11,7 +11,7 @@ statement   ::= set_stmt | with_stmt | declaration | play_stmt | print_stmt | va
 
 set_stmt    ::= "set" setting
 with_stmt   ::= "with" settings "{" statement ("," statement)* [","] "}"
-play_stmt   ::= "play" part ["for" length]
+play_stmt   ::= "play" "(" part ")" ["for" length]
 print_stmt  ::= "print" "(" value_expr ("," value_expr)* ")"
 value_expr  ::= "steps" step_seq | "notes" note_seq | "chords" chart | name | call
 
@@ -46,7 +46,8 @@ mode        ::= "major" | "minor" | "dorian" | "phrygian" | "lydian" | "mixolydi
 ```text Syntax
 part        ::= line
               | name
-              | [length] ("pattern" | "block") body
+              | [length] body
+              | [length] ("pattern" | "block") "(" body ")"
               | length name
               | [length] group
               | every
@@ -55,7 +56,8 @@ part        ::= line
 line        ::= kit_piece ":" steps_expr
               | instrument ":" pitched
               | instrument ":" "{" pitched ("," pitched)* [","] "}"
-pitched     ::= "notes" note_seq | "chords" chart
+pitched     ::= "notes" note_seq | "chords" chart | typed_value
+typed_value ::= name | note_call | chord_call
 body        ::= "{" entry ("," entry)* [","] "}"
 entry       ::= part | declaration
 group       ::= "(" part+ ")"
@@ -93,7 +95,8 @@ attack      ::= ["^" | "~"] pitch
 pitch       ::= letter ["#" | "b"] [octave] | degree | numeral
 note_repeat ::= integer "*" (note_word | name | note_call | "(" note_item+ ")")
 note_call   ::= ["^" | "~"] interval "(" note_seq ["," integer] ")"
-note_fill   ::= "..." (pitch | "-" | "_")
+              | "note" "(" note_seq ")"
+note_fill   ::= "..." (pitch | "-")
 ```
 
 ## chords
@@ -108,6 +111,13 @@ bass        ::= letter ["#" | "b"] | degree
 suffix      ::= quality modifier*
 modifier    ::= "sus2" | "sus4" | "sus" | "add" ["#" | "b"] digit+ | ("#" | "b") digit+
 chord_call  ::= interval "(" chart ["," integer] ")"
+              | "chord" "(" chart ")"
+              | "modify" "(" chart "," modifier+ ")"
+              | "voice" "(" chart "," shifts ")"
+shifts      ::= "{" [shift ("," shift)* [","]] "}"
+shift       ::= chord_tone ":" integer
+chord_tone  ::= "root" | "second" | "third" | "fourth" | "fifth" | "sixth"
+              | "seventh" | "ninth" | "eleventh" | "thirteenth"
 ```
 
 ## Pitches, functions and numbers
@@ -130,3 +140,7 @@ integer     ::= ["+" | "-"] digit+
 ```
 
 `quality` is any suffix in the [Chord symbol catalog](/pitched/chord-symbols).
+
+Bare part bodies are blocks. `pattern({ ... })` repeats completed bars; `block({ ... })` is the explicit block constructor. The older `play part`, `pattern { ... }` and `block { ... }` spellings remain accepted.
+
+Finite drum lines and fixed-step note lines pad unfinished bars with silence. Drum rest-to-end `...-` and note rest-to-end `..._` are not accepted. A drum fill must contain a hit; a note fill may sound a note or sustain the preceding note. Notes and chords otherwise divide each bar into equal slots at the clock's 96 ticks per quarter note.

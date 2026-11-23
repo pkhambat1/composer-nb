@@ -67,7 +67,7 @@ play (cc aa) for 2 bars`),
   it("keep a with's settings to themselves", () => {
     const p = parseSource("play (\n  with tempo 60 {\n    kick: x\n  }\n)\nplay kick: x")
     expect(p.errors).toEqual([])
-    expect(p.outputs.map((o) => o.durSec)).toEqual([0.25, 0.125])
+    expect(p.outputs.map((o) => o.durSec)).toEqual([4, 2])
   })
 
   it("explain their mistakes", () => {
@@ -120,7 +120,7 @@ describe("groups: what plays in order", () => {
 
   it("read a newline in them as a space, and take a length on what's in them", () => {
     expect(sound(G + "play (gg\n  gg)")).toBe(sound(G + "play (gg gg)"))
-    expect(durations(G + "play (gg 2 bars (gg gg) gg)")).toEqual([5])
+    expect(durations(G + "play (gg 2 bars (gg gg) gg)")).toEqual([8])
   })
 
   it("leave blocks on lines of their own playing together", () => {
@@ -154,7 +154,7 @@ describe("groups: what plays in order", () => {
       "What plays in order goes in brackets: ((gg gg) (gg))",
     )
     expect(firstError(G + "pattern pp = {\n  gg\n} gg\nplay pp")).toMatch(
-      /These braces need a type/,
+      /What plays in order goes in brackets/,
     )
     // A name that isn't defined is said first
     expect(firstError("play block {\n  groove {\n    kick: x\n  }\n}")).toMatch(

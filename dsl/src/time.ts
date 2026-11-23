@@ -1,14 +1,13 @@
-/* Time: meters, ticks, lengths, the arithmetic a number can be written as, whether what
-   repeats fits, and swing. The one place time arithmetic lives. A time is counted in ticks,
+/* Time: meters, ticks, lengths, the arithmetic a number can be written as, and swing. The one place time arithmetic lives. A time is counted in ticks,
    TPQ to a quarter note; seconds come from the tempo only at the end. */
 
 import { message, type At, type Report } from "./diagnostics.ts"
 
 export const TPQ = 96 // ticks per quarter note: fine enough for 1/32 notes and triplets
-// Notes and chords divide each bar into equal slots on the sixteenth-note grid.
+// Equal bar divisions use the clock resolution, including triplets.
 export function barSlotTicks(barTicks: number, slots: number): number | null {
   const ticks = barTicks / slots
-  return slots > 0 && ticks % (TPQ / 4) === 0 ? ticks : null
+  return slots > 0 && Number.isInteger(ticks) && ticks >= 1 ? ticks : null
 }
 // The longest a length can be, and a block's layers can take to line up again
 export const MAX_BARS = 64
@@ -216,42 +215,6 @@ export function sayTicks(ticks: number, st: Timing, barTicks: number): string {
 // Something that repeats: what it's called in a message, how long it is, its line, and
 // what in that line is it, as written (see At)
 export type Loop = { what: string; ticks: number; ln: number; at: At }
-
-// Anything that repeats has to fit what it's in a whole number of times. Reports each of
-// `loops` that doesn't fit `total` ticks, and where they'd all fit. Returns whether they
-// all do.
-export function checkLoops(
-  loops: Loop[],
-  total: number,
-  st: Timing,
-  barTicks: number,
-  err: Report,
-): boolean {
-  // A pattern that sets its own tempo can come out at no whole number of ticks here.
-  const whole = (l: Loop) => l.ticks > 0 && nearWhole(l.ticks)
-  const bad = loops.filter((l) => !whole(l) || total % Math.round(l.ticks))
-  if (!bad.length) return true
-  const every =
-    loops.filter(whole).reduce((a, l) => lcm(a, Math.round(l.ticks)), barTicks) / barTicks
-  const when = every === 1 ? "every bar" : `every ${fmt(every)} bars`
-  const hint = message("fit.hint", { many: loops.length > 1, when })
-  const length = sayTicks(total, st, barTicks)
-  for (const l of bad) {
-    err(
-      l.ln,
-      whole(l)
-        ? message("fit.whole", {
-            what: l.what,
-            length: sayTicks(Math.round(l.ticks), st, barTicks),
-            total: length,
-            hint,
-          })
-        : message("fit.ownTempo", { what: l.what, total: length }),
-      l.at,
-    )
-  }
-  return false
-}
 
 // Where a swung off-beat eighth falls: two thirds of the way through the beat, as the third
 // note of a triplet

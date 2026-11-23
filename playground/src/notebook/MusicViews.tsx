@@ -112,7 +112,9 @@ export default function MusicViews({
                     range={range}
                   />
                   <span className="chord-notes">
-                    {e.chord.noteNames.map((n) => n.replace(/\d+$/, "")).join(" ")}
+                    {e.chord.noteNames
+                      .map((n) => (e.chord.voicing ? n : n.replace(/\d+$/, "")))
+                      .join(" ")}
                   </span>
                 </NotebookTarget>
               ))}

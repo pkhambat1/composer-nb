@@ -2,12 +2,6 @@
 import type { Case } from "./cases.ts"
 
 export const CASES: Case[] = [
-  // Braces say their type
-  { cell: "play ⟦{⟧ kick: x--- }" },
-  { cell: "play (⟦{⟧ kick: x--- })" },
-  { cell: "play block {\n  ⟦{⟧ kick: x--- }\n}" },
-  { cell: "play block {\n  4 bars ⟦{⟧ kick: x--- }\n}" },
-  { cell: "play (\n  ⟦{⟧ kick: x--- }\n)" },
   // A notes line holds step words and repeats
   { cell: "play piano: notes 2 ⟦beats⟧ 1" },
   { cell: "play piano: notes ⟦rest⟧" },

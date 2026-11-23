@@ -32,8 +32,8 @@ A `steps` value is a row of steps for one kit piece. It has no pitch and names n
 | Name | `pulse` | The steps of a declared `steps` name, in place. |
 | Repeat | `3*x-`, `2*(x- --^-)`, `2*pulse` | The word, name or group, that many times in a row. |
 | Euclidean rhythm | `3 in 8` | That many hits spread evenly over that many steps. |
-| Bar line | `\\|` | Checks that a bar ends here. Takes no time. |
-| Fill | `...-`, `...x-` | Last on the line: repeats its word to the end of the surrounding part. |
+| Bar line | `\\|` | Ends the current bar, padding missing time with silence. |
+| Fill | `...x-` | Last on the line: repeats its word to the end of the surrounding part. |
 | Layers | `{ x---, --^- }` | Several rows merged into one. |
 
 Items are separated by spaces. Spaces take no time and are otherwise ignored between step words, so `x--- x---` and `x---x---` are the same eight steps; group by beat for reading. A name, repeat or Euclidean rhythm must be set off by spaces.
@@ -46,7 +46,7 @@ Items are separated by spaces. Spaces take no time and are otherwise ignored bet
 | `^` | An accented hit. |
 | `~` | A ghost (soft) hit. |
 | `d` | A double stroke: two hits in one step, the second half a step after the first. |
-| `-` | Nothing. The only way to write silence. |
+| `-` | An explicitly written silent step. Unfilled bar space is silent automatically. |
 
 Two kit pieces restrict these. `snare` does not take `~`: the snare's ghost notes are their own kit piece, `snare.ghost`. Every hit on `snare.ghost` is already soft, so it takes `x` and `d` but neither `~` nor `^`.
 
@@ -60,11 +60,11 @@ Each character lasts one step. A step is a sixteenth note (1/4 beat) unless [eve
 | Name | The length of the named value. |
 | `n*item` | `n` times the length of `item`. |
 | `hits in steps` | `steps`. |
-| `\\|` | 0. |
+| `\\|` | Silence through the next bar boundary, if needed. |
 | Fill | None of its own; see [Fills](/drums/steps#fills). |
 | Layers | The shortest length at which all finite layers realign. |
 
-A finite `steps` value may be at most 64 bars long.
+When played, a finite line is padded with silence through its final bar. `kick: x---` is one kick in a full bar, not a one-beat loop. A finite `steps` value may be at most 64 bars long.
 
 ## Repeats
 
@@ -82,7 +82,7 @@ Plays its right-hand side `integer` times in a row. Parentheses in steps always 
 `2*x- 2*(-^ --)` is the twelve steps `x-x- -^-- -^--`.
 
 ```composer-nb Example
-play block { kick: 2*x- 2*(-^ --), hat: 12*x }
+play({ kick: 2*x- 2*(-^ --), hat: 12*x })
 ```
 
 ## Euclidean rhythms
@@ -106,7 +106,7 @@ A row of `steps` steps with `hits` hits spread as evenly as possible, starting o
 | `4 in 16` | `x---x---x---x---` |
 
 ```composer-nb Example
-play pattern { kick: 3 in 8, hat: x- }
+play(pattern({ kick: 3 in 8, hat: x- }))
 ```
 
 ## Fills
@@ -115,16 +115,16 @@ play pattern { kick: 3 in 8, hat: x- }
 step_fill ::= "..." (step_word | name)
 ```
 
-A fill is the last item on a line. The steps before it play once; then its word repeats until the surrounding part ends, cut short if it does not fit. `...-` is silence to the end.
+A fill is the last item on a line. The steps before it play once; then its word repeats until the surrounding part ends, cut short if it does not fit. Rest-to-end fills (`...-`) are removed; simply end the line and the remaining space is silent.
 
 A fill has no length of its own, so something else must say when the part ends: another line that is finite, or an explicit length. A value with a fill cannot be named or printed.
 
 ```composer-nb Example
-play block { kick: x ...-, hat: x-x- x-x- x-x- x-x- }
+play({ kick: x, hat: x-x- x-x- x-x- x-x- })
 ```
 
 ```composer-nb Example
-play block { snare: ---- x--- ...x } for 1 bars
+play({ snare: ---- x--- ...x }) for 1 bars
 ```
 
 ```composer-nb Invalid
@@ -132,7 +132,7 @@ steps intro = x ...-
 ```
 
 ```text Error
-A name's steps have a length of their own. ... is the rest of a block, so it goes on the drum's line: snare: intro ...-
+Bars automatically fill with silence; remove the rest-to-end fill
 ```
 
 ## Layers
@@ -141,7 +141,7 @@ A name's steps have a length of their own. ... is the rest of a block, so it goe
 step_layers ::= "{" steps_expr ("," steps_expr)* [","] "}"
 ```
 
-Merges several rows into one row for the same kit piece. Each finite layer repeats until all of them realign; that point is the length of the result and must come within 64 bars. Where two layers both hit a step, the later layer's hit is kept. Silence never removes a hit.
+Merges several rows into one row for the same kit piece. Each finite layer is padded through its last bar, then repeats until all of them realign; that point is the length of the result and must come within 64 bars. Where two layers both hit a step, the later layer's hit is kept. Silence never removes a hit.
 
 Layers are the whole value: nothing else may stand beside the braces on a kit-piece line. To put layers in a row with other steps, name them first. A layer may itself be layers. On a kit-piece line, a layer may end in a fill, and at least one layer must be finite.
 
@@ -150,7 +150,7 @@ In a `steps` declaration, a layer is a row of step words and names, or nested la
 ```composer-nb Example
 steps backbeat = { x-------, ----^--- }
 print(backbeat)
-play pattern { snare: backbeat, hat: x- }
+play(pattern({ snare: backbeat, hat: x- }))
 ```
 
 ```text Output
@@ -165,23 +165,13 @@ play pattern { kick: { x--- } x }
 A block is everything kick plays, so nothing goes beside it. To put steps in a row with a block, name it: steps fig = { ... } and kick: x--- fig
 ```
 
-## In a pattern, write the figure once
+## Explicit repetition
 
-A line in a [pattern](/language/patterns#pattern) repeats by itself. A line that is one figure written out several times is therefore an error there, however it is written: as characters, with `n*`, or through a name. Write the figure once. Silence is exempt.
-
-A [block](/language/patterns#block) plays its lines once, so there, and on a line directly after `play`, a figure may be written out as many times as needed.
-
-```composer-nb Invalid
-play pattern { kick: x--- x--- }
-```
-
-```text Error
-kick: x--- x--- repeats x---. Write kick: x---: a pattern repeats it. Use a block to play an explicit finite sequence once
-```
+A pattern repeats completed bars. Write every attack you want inside the bar, either explicitly or using a finite repeat. `kick: x---` is one hit per bar; `kick: 4*x---` is four quarter-note hits. Repeated figures are valid in both patterns and blocks.
 
 ```composer-nb Example
-play pattern { kick: x--- }
-play block { kick: x--- x--- x--- x--- }
+play(pattern({ kick: 4*x--- })) for 2 bars
+play({ kick: x--- })
 ```
 
 ## Errors
@@ -202,10 +192,8 @@ play pattern { kick: x--- 2 beats }
 Kit lines use step words, not lengths: repeat with 4*x- or fill the block with ...x-
 ```
 
-```composer-nb Invalid
-play pattern { kick: x--- x- | }
+```composer-nb Example
+play({ kick: x--- x- | })
 ```
 
-```text Error
-This | isn't at the end of a bar: it's after 6 steps, and a 4 over 4 bar is 16 steps
-```
+The remaining ten steps are silent.

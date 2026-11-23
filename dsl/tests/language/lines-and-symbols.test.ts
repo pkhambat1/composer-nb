@@ -55,7 +55,7 @@ describe("lines", () => {
     expect(labels(play("piano: chords Am", "", "|F"))).toEqual(["Am", "F"])
     expect(anyError("|C G")).toMatch(/no line above to continue/)
     // the | is checked as a bar line where it falls
-    expect(anyError(play("kick: x---", "  |x-x-"))).toMatch(/This \| isn't at the end of a bar/)
+    expect(sound(play("kick: x---", "  |x-x-"))).toBe(sound("play kick: x 15*- | x-x-"))
   })
 
   it("gives each instrument one line in a block", () => {

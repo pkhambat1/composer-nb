@@ -3,7 +3,7 @@ title: "Types"
 description: "The five value types, the other categories that appear in signatures, declarations and names."
 ---
 
-Every value has exactly one type, and the type is always written: before a declared name, or after an instrument's colon. There is no conversion between types.
+Every value has exactly one type. Constructors establish a type inside expressions; named values and interval functions retain it. There is no implicit conversion between notes and chords.
 
 ## Value types
 
@@ -16,6 +16,27 @@ Every value has exactly one type, and the type is always written: before a decla
 | [block](/language/patterns#block) | Parts that sound together, whose lines play once. | `{ }` body or a single part | `play`, a body entry, a group, `on bar`. |
 
 `steps`, `notes` and `chords` are material: they say what is played but not by what. `pattern` and `block` are parts: they say what plays it and can be given to `play`. A kit piece cannot play `notes` or `chords`, and an instrument cannot play `steps`.
+
+## Constructors
+
+| Constructor | Meaning | Example |
+| --- | --- | --- |
+| `note(value)` | A note or sequence of notes. | `second(note(1))` |
+| `chord(value)` | A chord or chart. | `second(chord(1))` |
+| `voice(value, shifts)` | [Move selected chord tones by octaves](/functions/voice). | `voice(2m9, { fifth: 1 })` |
+| `modify(value, modifiers)` | Apply chord alterations or suspensions. | `modify(chord(1), sus2)` |
+| `pattern({ ... })` | A repeating part whose finite lines are padded to complete bars. | `play(pattern({ kick: 4*x--- }))` |
+| `block({ ... })` | A part whose lines play once. Bare `{ ... }` is equivalent. | `play({ kick: x--- })` |
+
+Modifiers include `sus2`, `sus4`, `add9`, `b5`, and `#11`, and may be combined. They apply before any surrounding interval function. `voice` and `modify` imply chord interpretation, so `modify(1, sus2)` also works. A constructor cannot turn a typed note into a chord or vice versa.
+
+```composer-nb Example
+print(second(note(1)), second(chord(1)))
+print(second(modify(chord(1), sus2)))
+play({ piano: second(chord(1)), bass: note(1) })
+```
+
+Typed constructors or named values may go directly on pitched instrument lines. The `notes` and `chords` prefixes remain available for whole sequences. Bare degrees in `print` default to notes.
 
 ## Other categories used in signatures
 
@@ -83,7 +104,7 @@ notes lead = 1--- ...-
 ```
 
 ```text Error
-A name's notes have a length of their own. ... is the rest of a block, so it goes on the instrument's line: piano: notes lead ..._
+A name's notes have a length of their own. ... is the rest of a block, so it goes on the instrument's line: piano: notes lead ...5
 ```
 
 ## Names
@@ -98,7 +119,7 @@ Names are case-sensitive, and two names that differ only in capitals cannot both
 
 A name cannot be any of these:
 
-- A keyword: `steps`, `notes`, `chords`, `pattern`, `block`, `set`, `with`, `play`, `print`, `for`, `every`, `on`, `bar`, `to`, `bars`, `beats`, `in`, `over`, `rest`.
+- A keyword: `steps`, `notes`, `chords`, `pattern`, `block`, `set`, `with`, `play`, `print`, `note`, `chord`, `modify`, `voice`, `for`, `every`, `on`, `bar`, `to`, `bars`, `beats`, `in`, `over`, `rest`.
 - A setting name, an interval function, a kit piece or an instrument.
 - A Roman numeral `i` to `vii`, or a spelling that reads as a chord degree, such as `b3`.
 - `x` followed by digits, or `d` followed by digits and an optional `e` or `a`.

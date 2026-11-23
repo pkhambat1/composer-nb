@@ -6,6 +6,34 @@ import type { Span } from "./syntax.ts"
 import { lengthPrefix } from "./time.ts"
 import { message, type Report } from "./diagnostics.ts"
 
+// Remove a call's outer parentheses while preserving the source positions of its body.
+export function unwrapParts(parts: (Text | Block)[], name = ""): (Text | Block)[] | null {
+  const first = parts[0]
+  if (first?.kind !== "text") return null
+  const head = new RegExp(`^${name}\\s*\\(`).exec(first.text)
+  if (!head) return null
+  let depth = 1
+  for (let i = 0; i < parts.length; i++) {
+    const p = parts[i]
+    if (p.kind !== "text") continue
+    for (let at = i === 0 ? head[0].length : 0; at < p.text.length; at++) {
+      if (p.text[at] === "(") depth++
+      if (p.text[at] !== ")") continue
+      depth--
+      if (depth) continue
+      if (i !== parts.length - 1 || p.text.slice(at + 1).trim()) return null
+      return parts.flatMap((piece, index): (Text | Block)[] => {
+        if (piece.kind !== "text") return [piece]
+        const source = SourceText.from(piece.text, piece.span)
+          .slice(index === 0 ? head[0].length : 0, index === i ? at : piece.text.length)
+          .trim()
+        return source.text ? [{ kind: "text", text: source.text, span: source.span }] : []
+      })
+    }
+  }
+  return null
+}
+
 export function playDuration(
   parts: (Text | Block)[],
   line: number,

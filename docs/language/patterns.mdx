@@ -6,7 +6,8 @@ description: "Lines, patterns, blocks and groups: how material is given to kit p
 ```text Syntax
 part    ::= line
           | name
-          | [length] ("pattern" | "block") body
+          | [length] body
+          | [length] ("pattern" | "block") "(" body ")"
           | length name
           | [length] group
           | every
@@ -15,7 +16,7 @@ part    ::= line
 line    ::= kit_piece ":" steps_expr
           | instrument ":" pitched
           | instrument ":" "{" pitched ("," pitched)* [","] "}"
-pitched ::= "notes" note_seq | "chords" chart
+pitched ::= "notes" note_seq | "chords" chart | typed_value | name
 body    ::= "{" entry ("," entry)* [","] "}"
 entry   ::= part | declaration
 group   ::= "(" part+ ")"
@@ -31,8 +32,8 @@ A part is anything that can be played. `steps`, `notes` and `chords` are not par
 | --- | --- | --- |
 | [Line](/language/patterns#lines) | `kick: x---` | One kit piece or instrument, and what it plays. |
 | Name | `groove` | A declared `pattern` or `block`. |
-| [pattern](/language/patterns#pattern) | `pattern { kick: x---, hat: x- }` | Entries that sound together. Its lines repeat. |
-| [block](/language/patterns#block) | `block { crash: x }` | Entries that sound together. Its lines play once. |
+| [pattern](/language/patterns#pattern) | `pattern({ kick: x---, hat: x- })` | Entries that sound together. Its lines repeat. |
+| [block](/language/patterns#block) | `{ crash: x }` | Entries that sound together. Its lines play once. |
 | [Group](/language/patterns#groups) | `(verse chorus)` | Parts played one after another. |
 | [Length prefix](/language/patterns#length-of-a-part) | `4 bars groove` | A pattern name or group repeated for that long, or an inline pattern or block of that length. |
 | [every](/language/patterns#every) | `every 1/2 beats hat: x-` | A part whose steps have another length. |
@@ -56,25 +57,25 @@ A line says what plays and what it plays. The colon joins the two; it is not a t
 | Operand | Type | May be |
 | --- | --- | --- |
 | `kit_piece` | `kit_piece` | `kick`, `snare`, `snare.ghost`, `snare.rim`, `snare.cross`, `hat`, `hat.open`, `hat.pedal`, `ride`, `ride.bell`, `crash`, `tom.high`, `tom.low`, `tom.floor`. See [Kit pieces](/drums/kit#kit-pieces). |
-| `steps_expr` | `steps` | Step words (`x--- --x-`), a `steps` name, repeats (`4*x-`), a Euclidean rhythm (`3 in 8`), a fill (`...-`), or layers (`{ x---, --^- }`). See [steps](/drums/steps). |
+| `steps_expr` | `steps` | Step words (`x--- --x-`), a `steps` name, repeats (`4*x-`), a Euclidean rhythm (`3 in 8`), a musical fill (`...x-`), or layers (`{ x---, --^- }`). See [steps](/drums/steps). |
 | `instrument` | `instrument` | `piano`, `piano.electric`, `organ`, `bass`, `guitar`, `guitar.electric`. See [Instruments](/pitched/instruments#instruments). |
 | `note_seq` | `notes` | Note words (`C4--- 1-3-`), a `notes` name, repeats, interval calls, a fill. See [notes](/pitched/notes). |
 | `chart` | `chords` | Chord symbols and degrees in bars (`C G \\| Am F`), a `chords` name, interval calls. See [chords](/pitched/chords). |
 | `pitched` | `notes` or `chords` | `"notes" note_seq` or `"chords" chart`: one voice of an instrument's [layers](/pitched/instruments#layers). |
 
-A kit piece takes `steps` and nothing else, so its line has no type keyword. An instrument takes `notes` or `chords`, so its line always says which, before a name as well.
+A kit piece takes `steps` and nothing else, so its line has no type keyword. An instrument takes `notes` or `chords`: constructors and named values carry their type; whole sequences may use a type prefix.
 
 A line stands in a body, or directly after `play`. In a group, a line must be on a line of its own.
 
 ```composer-nb Example
 steps pulse = x--x--x-
 notes walk = 1-3-5-3-
-play pattern {
+play(pattern({
   kick: pulse,
   hat: x-,
   bass: notes walk,
   piano: chords C G,
-}
+}))
 ```
 
 ```composer-nb Invalid
@@ -112,7 +113,7 @@ A body is the braces of a pattern, a block, an `every` or a `with`. Its parts st
 - A kit piece or instrument may have one line directly in a body. Several figures for one kit piece are [steps layers](/drums/steps#layers); several voices for one instrument are [layers](/pitched/instruments#layers). A name or nested body may add more events for the same kit piece or instrument.
 - `play`, `print` and `set` are statements, not entries.
 
-Braces written on their own always carry their type: `pattern { ... }` or `block { ... }`. After `=` in a declaration the type is already given, and after `every` or `with` the body is a pattern; in those three places the braces take no keyword.
+Bare braces construct a block. Use `pattern({ ... })` for a repeating inline part and `block({ ... })` for an explicit block. After `=` in a declaration the type is already given; after `every` or `with` the body is a pattern.
 
 ```composer-nb Invalid
 play pattern { kick: x---, kick: --x- }
@@ -134,19 +135,19 @@ Nothing to play in this pattern
 
 ```text Syntax
 "pattern" name "=" ([length] body | part)
-[length] "pattern" body
+[length] "pattern" "(" body ")"
 ```
 
 A `pattern` is a body whose lines repeat. Every entry starts at the beginning of the pattern:
 
 | Entry | In a pattern |
 | --- | --- |
-| Line | Repeats, each at its own length. |
+| Line | Pads its final bar, then repeats at that completed length. |
 | Pattern (name or inline), group, `every`, `with` | Repeats to the end of the pattern. |
 | Block (name or inline) | Plays once. |
 | Placed part | Plays in its bars; see [on bar](/language/patterns#on-bar). |
 
-Lines need not be the same length. Without a `length`, the pattern lasts until its repeating entries realign, and at least as long as its blocks and placed parts. With a `length`, every repeating entry must fit it a whole number of times.
+Lines need not be the same length. Without a `length`, the pattern lasts until its repeating entries realign, and at least as long as its blocks and placed parts. With a `length`, repeating entries stop at that boundary, even partway through their final repetition.
 
 ```composer-nb Example
 pattern groove = {
@@ -154,16 +155,17 @@ pattern groove = {
   snare: ---- x---,
   hat: x-,
 }
-play groove for 2 bars
+play(groove) for 2 bars
 ```
 
-Because a pattern's lines repeat, a line that writes one figure out several times is an error; see [In a pattern, write the figure once](/drums/steps#in-a-pattern-write-the-figure-once).
+Patterns repeat padded bars. Explicit figures within those bars are valid; see [Explicit repetition](/drums/steps#explicit-repetition).
 
 ## block
 
 ```text Syntax
 "block" name "=" ([length] body | part)
-[length] "block" body
+[length] body
+[length] "block" "(" body ")"
 ```
 
 A `block` is a body whose lines play once. Every entry starts at the beginning of the block:
@@ -175,14 +177,14 @@ A `block` is a body whose lines play once. Every entry starts at the beginning o
 | Block (name or inline) | Plays once. |
 | Placed part | Plays in its bars. |
 
-Without a `length`, the block lasts as long as its longest entry, and its repeating entries must fit that a whole number of times. A block is one occurrence wherever it is used: inside a pattern it sounds once and is silent after, and it takes no length prefix.
+Without a `length`, the block lasts as long as its longest entry, rounded up to a complete bar. Repeating entries may finish with a partial repetition. A block is one occurrence wherever it is used: inside a pattern it sounds once and is silent after, and it takes no length prefix.
 
 ```composer-nb Example
 block ending = { crash: x, kick: x, piano: chords C }
-play ending
+play(ending)
 ```
 
-The only difference between the two types is their lines: `pattern { kick: x--- }` plays that bar over and over, and `block { kick: x--- }` plays it once.
+Both forms pad unfilled bar space with silence. `pattern({ kick: x--- })` repeats the completed bar, with one kick per bar; `block({ kick: x--- })` plays that bar once. Bare braces construct a block.
 
 ## Groups
 
@@ -203,7 +205,7 @@ A group is the place to change `time`, `tempo` or `swing` part way through, beca
 ```composer-nb Example
 pattern verse = { kick: x--- --x-, hat: x- }
 block fill = { snare: xxxx xxxx xxxx xxxx }
-play (3 bars verse fill)
+play((3 bars verse fill))
 ```
 
 ```composer-nb Invalid
@@ -220,11 +222,11 @@ What plays in order goes in brackets: (verse verse)
 | Part | Lasts |
 | --- | --- |
 | Line | The length of its `steps`, `notes` or `chords`. |
-| Pattern without a length | Until its repeating entries realign. This may be part of a bar: lines of 4 and 6 steps realign after 12. |
-| Block without a length | As long as its longest entry. |
+| Pattern without a length | Until its repeating entries realign. Each finite line is first padded through its final bar: lines of 4 and 6 sixteenth-note steps both occupy one 4/4 bar. |
+| Block without a length | Its longest entry, rounded up to a complete bar. |
 | Group | The sum of its parts. |
-| `length "pattern" body`, `length "block" body` | `length`. |
-| `length name`, `length group` | `length`. The pattern or group repeats and must fit a whole number of times. Not allowed before a block name. |
+| `length pattern(body)`, `length block(body)` | `length`. |
+| `length name`, `length group` | `length`. The pattern or group repeats, with a partial final repetition when necessary. Not allowed before a block name. |
 | Placed part | From the start of the surrounding part to the end of its last bar. |
 
 A line that ends in a `...` fill has no length and does not count: some other entry, or an explicit length, must set the end. Lines that would not realign within 64 bars need an explicit length.
@@ -256,11 +258,11 @@ Sets how long one step lasts inside its part. Drum steps default to 1/4 beat, a 
 `every` changes `steps` and `notes`. It does not change `chords`, whose slots always divide bars. Lines outside the `every` keep their own timing.
 
 ```composer-nb Example
-play pattern {
+play(pattern({
   kick: x--- --x-,
   every 1/3 beats hat: x-x,
   every 1 beats bass: notes 1 5,
-}
+}))
 ```
 
 ```composer-nb Invalid
@@ -288,12 +290,12 @@ Starts a part at the beginning of bar `first` of the surrounding part, counting 
 
 ```composer-nb Example
 block fill = { snare: xxxx xxxx xxxx xxxx }
-play pattern {
+play(pattern({
   kick: x--- --x-,
   hat: x-,
   fill on bar 4,
   crash: x on bar 1,
-}
+}))
 ```
 
 ```composer-nb Invalid

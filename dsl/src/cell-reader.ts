@@ -13,7 +13,7 @@ import {
 import { checkBars, classifyDecl, defineBlock, defineWord, patternHint } from "./declare.ts"
 import { blockClip, checkSection } from "./eval.ts"
 import { classify } from "./lines.ts"
-import { playDuration } from "./play-duration.ts"
+import { playDuration, unwrapParts } from "./play-duration.ts"
 import { Scope } from "./resolve.ts"
 import { applySetting, readWithHeader, setInBlock, withState } from "./settings.ts"
 import { Parser } from "./parser.ts"
@@ -415,15 +415,16 @@ export class CellReader {
   ): void {
     const duration = playDuration(s.value.parts, ln, this.err)
     if (!duration) return
-    if (duration.parts[0]?.kind === "block") {
-      this.err(ln, message("play.untyped"), opening(duration.parts[0]))
-      return
-    }
+    const unwrapped = unwrapParts(duration.parts)
+    if (unwrapped && /^play\(/.test(text)) duration.parts = unwrapped
+    const pattern = unwrapParts(duration.parts, "pattern")
+    const constructor = pattern ?? unwrapParts(duration.parts, "block")
+    if (constructor) duration.parts = constructor
     const head = duration.parts[0]?.kind === "text" ? tidy(duration.parts[0].text) : ""
     const tailPart = duration.parts[duration.parts.length - 1]
     const placed = tailPart?.kind === "text" && PLACE_RE.test(tailPart.text)
     const typed = duration.parts[1]?.kind === "block" && /^(pattern|block)$/.test(head) && !placed
-    const repeats = typed && head === "pattern"
+    const repeats = !!pattern || (typed && head === "pattern")
     const parts = typed ? duration.parts.slice(1) : duration.parts
     const bars = duration.bars
     const ok = !duration.has || checkBars(bars, ln, this.err, duration.at!)

@@ -8,9 +8,18 @@ import { isIntervalCall, tokenize } from "../intervals.ts"
 import { bracesIn, headOf, onlyBraces, textOf, sourceOf } from "../parts.ts"
 import { atCursor, message, reportIn, type At, type Report } from "../diagnostics.ts"
 import { SourceText, locatedTokens, tokenSources, repeatTokens } from "../source.ts"
-import { barLineProblem, type Braces, type Line, type Piece, type State } from "../state.ts"
-import { barQuarters, count, lastCount, lcm, MAX_BARS, meterOf, timeLabel, TPQ } from "../time.ts"
-import { grouped, noteSteps, period, spaceNotes } from "./notes.ts"
+import type { Braces, Line, Piece, State, StepSequence } from "../state.ts"
+import {
+  barQuarters,
+  count,
+  lastCount,
+  lcm,
+  MAX_BARS,
+  meterOf,
+  timeLabel,
+  TPQ,
+} from "../time.ts"
+import { noteSteps, spaceNotes } from "./notes.ts"
 import { NAME_LIKE, TRACK_RE } from "../vocab.ts"
 
 // How a drum is hit
@@ -50,7 +59,13 @@ export type DrumClip = {
 // A beat of a bar, read
 type Beat = { tick: number; mods: Mods; tok: string }
 // One layer of a block of steps, and its text as it's written
-type Layer = { run: string; toEnd: boolean; fill?: string | null; ln: number; text: string }
+type Layer = {
+  run: StepSequence
+  toEnd: boolean
+  fill?: StepSequence | null
+  ln: number
+  text: string
+}
 
 const SUB: Record<string, number> = { "": 0, e: 0.25, "&": 0.5, a: 0.75 }
 // Steps say how a drum is hit, never which sound (that's the line's name): x hit,
@@ -278,6 +293,32 @@ function bjorklund(hits: number, steps: number): string {
   return main.join("") + rem.join("")
 }
 
+// Resolve finite words into step positions. Keep fractional trailing silence separate
+// from steps: an every 3/4 beats line still ends at exactly four beats in 4/4.
+export function stepSequence(tokens: string[], st: State): StepSequence {
+  const out: StepSequence = { length: 0, steps: [] }
+  const barTicks = meterOf(st).barTicks
+  for (const token of tokens) {
+    if (token === "|") {
+      out.length =
+        (Math.ceil(Math.round(out.length * st.stepTicks) / barTicks) * barTicks) / st.stepTicks
+      continue
+    }
+    const named = st.words[token]
+    const seq =
+      named?.stepSequence ??
+      (named
+        ? stepSequence(named.tokens, st)
+        : {
+            length: token.length,
+            steps: [...token].map((token, at) => ({ at, token })),
+          })
+    out.steps.push(...seq.steps.map((step) => ({ ...step, at: out.length + step.at })))
+    out.length += seq.length
+  }
+  return out
+}
+
 // A drum's line, as finite step words followed optionally by ...word. Bounded
 // repetitions are expanded with a limit before allocating; a bar marker remains in the
 // token stream so its position is checked after all repeats have expanded.
@@ -287,12 +328,12 @@ export function stepParts(
   err: Report,
   ln: number,
   part: DrumPart | null = null,
-  repeats = true,
-): { tokens: string[]; toEnd: boolean; fill: string | null } | null {
+  _repeats = true,
+): { tokens: string[]; toEnd: boolean; fill: StepSequence | null } | null {
   let at = 0
   let failed = false
   let toEnd = false
-  let fill: string | null = null
+  let fill: StepSequence | null = null
   const limit = Math.floor((MAX_BARS * meterOf(st).barTicks) / st.stepTicks)
   // A mistake is marked on `where`, the text of `value` it's about, as it's written
   const fail = (msg: string, where: string, from?: number): null => {
@@ -303,12 +344,11 @@ export function stepParts(
   const ws = () => {
     while (/\s/.test(value[at] ?? "") && at < value.length) at++
   }
-  const knownRun = (word: string): string | null => {
-    if (isStepRun(word)) return word
-    const named = st.words[word]
-    return named?.type === "steps" ? named.tokens.filter((t) => t !== "|").join("") : null
+  const knownRun = (word: string): StepSequence | null => {
+    if (isStepRun(word) || st.words[word]?.type === "steps") return stepSequence([word], st)
+    return null
   }
-  const wordRun = (word: string): string | null => {
+  const wordRun = (word: string): StepSequence | null => {
     const known = knownRun(word)
     if (known != null) return known
     const named = st.words[word]
@@ -415,6 +455,8 @@ export function stepParts(
         if (one == null) return null
         fill = wordRun(one)
         if (fill == null) return null
+        if (fill.steps.every((s) => s.token === "-"))
+          return fail("Bars automatically fill with silence; remove the rest-to-end fill", "...")
         toEnd = true
         ws()
         if (at < value.length) return fail(message("step.afterFill"), value.slice(at))
@@ -445,16 +487,6 @@ export function stepParts(
   if (!out) return null
   if (at < value.length) return fail(message("step.repeatStray"), ")")
   if (!out.length && !toEnd) return fail(message("step.needsWords"), value)
-  if (repeats && !toEnd) {
-    const runs = out.filter((t) => t !== "|").map(knownRun)
-    const run = runs.join("")
-    const p = !runs.includes(null) && !/^-*$/.test(run) ? period(run) : 0
-    if (p) {
-      const short = grouped(run.slice(0, p))
-      const head = part ? `${part.name}: ` : ""
-      return fail(message("step.repeats", { head, value, short }), value)
-    }
-  }
   return { tokens: out, toEnd, fill }
 }
 
@@ -466,7 +498,7 @@ function fillWord(text: string) {
 }
 
 // Steps: kick: x--x--- — one character per step, each one step long. Spaces are for the
-// eye, and so is |, which has to fall where a bar ends. An `open` line ended in ...: its
+// eye; | pads the current bar with silence. An `open` line ended in ...: its
 // hits play once from the start, then `fill` repeats to the end (or nothing does), and it
 // has no length to give the block it's in.
 export function stepPattern(
@@ -475,17 +507,18 @@ export function stepPattern(
   st: State,
   err: Report,
   open = false,
-  fill: string | null = null,
+  fill: StepSequence | null = null,
+  sequence?: StepSequence,
 ): DrumClip | null {
   const outerReport = err
   const steps: (Mods | null)[] = []
+  const positions: number[] = []
+  const barTicks = meterOf(st).barTicks
+  let ticks = 0
   let ok = true
   // A mistake in a name's steps is marked on the name, `viaWord`, which is what's written here
-  const barLine = (viaWord?: string) => {
-    const problem = ok && barLineProblem(steps.length, st)
-    if (!problem) return
-    err(part.ln, problem, viaWord ?? "|")
-    ok = false
+  const barLine = () => {
+    ticks = Math.ceil(ticks / barTicks) * barTicks
   }
   const addRun = (tok: string, viaWord?: string) => {
     const where = viaWord ? ` (in ${viaWord})` : ""
@@ -516,7 +549,11 @@ export function stepPattern(
     for (const c of tok) {
       const s = stepMods(c, part, err, where, viaWord)
       if (s === undefined) ok = false
-      else steps.push(s)
+      else {
+        positions.push(ticks)
+        steps.push(s)
+        ticks += st.stepTicks
+      }
     }
   }
   for (const [index, tok] of tokens.entries()) {
@@ -536,13 +573,27 @@ export function stepPattern(
       ok = false
       continue
     }
-    for (const t of w.tokens) t === "|" ? barLine(tok) : addRun(t, tok)
+    const seq = stepSequence([tok], st)
+    const start = ticks
+    for (const step of seq.steps) {
+      ticks = start + Math.round(step.at * st.stepTicks)
+      addRun(step.token, tok)
+    }
+    ticks = start + Math.round(seq.length * st.stepTicks)
+  }
+  if (sequence) {
+    const start = ticks
+    for (const step of sequence.steps) {
+      ticks = start + Math.round(step.at * st.stepTicks)
+      addRun(step.token)
+    }
+    ticks = start + Math.round(sequence.length * st.stepTicks)
   }
   // ...x-: the steps that repeat to the end, checked as this drum's
   err = outerReport
   const fillAt = fillWord(textOf(part.value ?? []))
   const filler = fill
-    ? [...fill].map((c) => stepMods(c, part, err, " (after ...)", fillAt(c)))
+    ? fill.steps.map(({ token }) => stepMods(token, part, err, " (after ...)", fillAt(token)))
     : null
   if (filler?.includes(undefined)) ok = false
   if (!ok) return null
@@ -551,19 +602,33 @@ export function stepPattern(
     return null
   }
   const stepTicks = st.stepTicks
+  const duration = open ? ticks : Math.ceil(ticks / barTicks) * barTicks
+  if (duration > MAX_BARS * barTicks) {
+    err(part.ln, `A step sequence can be at most ${MAX_BARS} bars long`, textOf(part.value ?? []))
+    return null
+  }
   return {
     kind: "drum",
-    ticks: steps.length * stepTicks,
+    ticks: duration,
     open,
     expand(total: number, loop: boolean) {
       const out: DrumHit[] = []
-      for (let k = 0; k * stepTicks < total; k++) {
-        let s: Mods | null | undefined
-        if (k < steps.length) s = steps[k]
-        else if (filler) s = filler[(k - steps.length) % filler.length]
-        else if (loop && !open) s = steps[k % steps.length]
-        else break
-        if (s) pushHit(out, part, k * stepTicks, s, stepTicks / 2, st.kit)
+      for (let start = 0; start < total; start += duration) {
+        steps.forEach((s, i) => {
+          const tick = start + positions[i]
+          if (s && tick < total) pushHit(out, part, tick, s, stepTicks / 2, st.kit)
+        })
+        if (!loop || open || !duration) break
+      }
+      if (filler && fill) {
+        const fillTicks = Math.round(fill.length * stepTicks)
+        for (let start = ticks; start < total; start += fillTicks) {
+          filler.forEach((mods, i) => {
+            const tick = start + Math.round(fill.steps[i].at * stepTicks)
+            if (mods && tick < total) pushHit(out, part, tick, mods, stepTicks / 2, st.kit)
+          })
+          if (!fillTicks) break
+        }
       }
       return out
     },
@@ -583,7 +648,7 @@ export function stepBlock(
   err: Report,
   part: DrumPart | null = null,
   repeats = false,
-): string | null {
+): StepSequence | null {
   const layers: (Layer | null)[] = []
   for (const line of block.lines) layers.push(stepLayer(line, st, err, part, repeats))
   if (layers.includes(null)) return null
@@ -594,7 +659,8 @@ export function stepBlock(
     err(block.ln, message("block.layersOpen"), "{")
     return null
   }
-  const length = fixed.reduce((a, l) => lcm(a, l.run.length), 1)
+  const lengthTicks = fixed.reduce((a, l) => lcm(a, Math.round(l.run.length * st.stepTicks)), 1)
+  const length = lengthTicks / st.stepTicks
   if (length * st.stepTicks > MAX_BARS * meterOf(st).barTicks) {
     err(block.ln, message("fit.layersTooLong", { max: MAX_BARS }), "{")
     return null
@@ -612,19 +678,33 @@ export function stepBlock(
       return null
     }
   }
-  let run = ""
-  for (let k = 0; k < length; k++) {
-    let step = "-"
-    for (const l of all) {
-      let c: string
-      if (!l.toEnd) c = l.run[k % l.run.length]
-      else if (k < l.run.length) c = l.run[k]
-      else c = l.fill ? l.fill[(k - l.run.length) % l.fill.length] : "-"
-      if (c !== "-") step = c
+  const steps = new Map<number, string>()
+  for (const layer of all) {
+    const runTicks = Math.round(layer.run.length * st.stepTicks)
+    const append = (run: StepSequence, offset: number) => {
+      for (const step of run.steps) {
+        const tick = offset + Math.round(step.at * st.stepTicks)
+        if (step.token !== "-" && tick < lengthTicks) steps.set(tick, step.token)
+      }
     }
-    run += step
+    for (let tick = 0; tick < lengthTicks; tick += runTicks) {
+      append(layer.run, tick)
+      if (layer.toEnd || !runTicks) break
+    }
+    if (layer.toEnd && layer.fill) {
+      const fillTicks = Math.round(layer.fill.length * st.stepTicks)
+      for (let tick = runTicks; tick < lengthTicks; tick += fillTicks) {
+        append(layer.fill, tick)
+        if (!fillTicks) break
+      }
+    }
   }
-  return run
+  return {
+    length,
+    steps: [...steps]
+      .sort(([a], [b]) => a - b)
+      .map(([tick, token]) => ({ at: tick / st.stepTicks, token })),
+  }
 }
 
 // One layer in a block of steps: steps, names of steps or blocks of steps, in a row.
@@ -681,25 +761,20 @@ function stepLayerRun(
   const { tokens, toEnd, fill } = parts
   // Each step of this layer has to be one this drum can play. A mistake is marked on the
   // step, or on `at` for steps written as a name.
-  const check = (run: string, where: string, at: (c: string) => string = (c) => c) => {
+  const check = (run: StepSequence, where: string, at: (c: string) => string = (c) => c) => {
     if (!part) return true
     const here = { ...part, ln: line.ln }
-    return [...run].every((c) => stepMods(c, here, err, where, at(c)) !== undefined)
+    return run.steps.every(
+      ({ token }) => stepMods(token, here, err, where, at(token)) !== undefined,
+    )
   }
   if (fill && !check(fill, " (after ...)", fillWord(text))) return null
-  let run = ""
   for (const tok of tokens) {
     const w = st.words[tok]
-    if (tok === "|") {
-      const problem = barLineProblem(run.length, st)
-      if (problem) return fail(problem, "|")
-    } else if (w?.type === "steps") {
-      const named = w.tokens.filter((t) => t !== "|").join("")
-      if (!check(named, ` (in ${tok})`, () => tok)) return null
-      run += named
-    } else if (isStepRun(tok)) {
-      if (!check(tok, "")) return null
-      run += tok
+    if (tok === "|") continue
+    if (w?.type === "steps" || isStepRun(tok)) {
+      if (!check(stepSequence([tok], st), w ? ` (in ${tok})` : "", w ? () => tok : undefined))
+        return null
     } else if (w) {
       return fail(misplaced(tok, w.type, { line: "drum", layer: true })!, tok)
     } else if (st.sections[tok]) {
@@ -707,6 +782,12 @@ function stepLayerRun(
     } else if (NAME_LIKE.test(tok)) {
       return fail(message("step.undefined", { tok }), tok)
     } else return fail(message("step.notAStep", { tok }), notSteps(tok))
+  }
+  const run = stepSequence(tokens, st)
+  if (!toEnd && run.length) {
+    const barTicks = meterOf(st).barTicks
+    run.length =
+      (Math.ceil(Math.round(run.length * st.stepTicks) / barTicks) * barTicks) / st.stepTicks
   }
   return { run, toEnd, fill }
 }

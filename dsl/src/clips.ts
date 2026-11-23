@@ -6,7 +6,7 @@ import { message, type At, type Report } from "./diagnostics.ts"
 import type { PartLine, Played } from "./lines.ts"
 import { readPart } from "./lines.ts"
 import type { State } from "./state.ts"
-import { checkLoops, fmt, lcm, MAX_BARS, meterOf, nearWhole, sayTicks, swingWarp } from "./time.ts"
+import { fmt, lcm, MAX_BARS, meterOf, nearWhole, sayTicks, swingWarp } from "./time.ts"
 import type { ChordEvent } from "./values/chart.ts"
 import type { NoteEvent } from "./values/notes.ts"
 import type { DrumHit } from "./values/steps.ts"
@@ -193,13 +193,10 @@ export function layer(
   // its own, inside a with time, is measured in its own bars, one after another. A tempo
   // of its own is only a speed, so it's measured in the bars of what it's in.
   if (bars && !read.length && !once.length && repeated.length === 1) {
-    const { clip, what, ln, at } = repeated[0]
+    const { clip, ln } = repeated[0]
     const metered = clip.spans.some((s) => s.time !== meter.time)
     const durSec = metered ? secondsOfBars(clip, bars) : null
     if (durSec !== null) {
-      const loop = [{ what, ln, at, ticks: clip.durSec / secPerTick }]
-      if (!ctx.cuts && !checkLoops(loop, Math.round(durSec / secPerTick), st, barTicks, err))
-        return null
       const tiled = tile(clip, durSec)
       const spans = tiled.spans
         .filter((s) => s.startSec < durSec - 1e-9)
@@ -256,7 +253,7 @@ export function layer(
       )
       return null
     }
-  } else totalTicks = Math.max(...lengths)
+  } else totalTicks = Math.ceil(Math.max(...lengths) / barTicks) * barTicks
   if (named > totalTicks) {
     err(
       placed.ln!,
@@ -269,7 +266,6 @@ export function layer(
     )
     return null
   }
-  if (!(ctx.cuts && bars) && !checkLoops(loops, totalTicks, st, barTicks, err)) return null
   for (const p of read) {
     if ("open" in p && p.open && p.ticks > totalTicks && !(ctx.cuts && bars)) {
       err(

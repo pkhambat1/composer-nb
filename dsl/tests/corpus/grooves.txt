@@ -133,56 +133,42 @@ length: 5.7273 s
 block startSec=0 durSec=5.7273 bars=3 time=7 over 8 tempo=110 key=C unit=8 barTicks=336 res=4
 drums:
   0 inst=snare art=rim lane=snare.rim kit=rock tick=0 vel=1 accent=true line=10 oneShot=true
-  0.2727 inst=crash art=hit lane=crash kit=rock tick=48 vel=0.7 line=12
-  0.2727 inst=kick art=hit lane=kick kit=rock tick=48 vel=0.7 line=2
-  0.2727 inst=ride art=bell lane=ride.bell kit=rock tick=48 vel=0.7 line=4
-  0.6818 inst=kick art=hit lane=kick kit=rock tick=120 vel=0.7 line=2
-  0.6818 inst=ride art=bell lane=ride.bell kit=rock tick=120 vel=0.7 line=4
-  0.8182 inst=snare art=rim lane=snare.rim kit=rock tick=144 vel=0.7 line=3
-  1.0909 inst=ride art=bell lane=ride.bell kit=rock tick=192 vel=0.7 line=4
-  1.2273 inst=kick art=hit lane=kick kit=rock tick=216 vel=0.7 line=2
-  1.5 inst=ride art=bell lane=ride.bell kit=rock tick=264 vel=0.7 line=4
-  1.6364 inst=kick art=hit lane=kick kit=rock tick=288 vel=0.7 line=2
-  1.7727 inst=snare art=rim lane=snare.rim kit=rock tick=312 vel=0.7 line=3
+  1.9091 inst=crash art=hit lane=crash kit=rock tick=336 vel=0.7 line=12
+  1.9091 inst=kick art=hit lane=kick kit=rock tick=336 vel=0.7 line=2
   1.9091 inst=ride art=bell lane=ride.bell kit=rock tick=336 vel=0.7 line=4
-  2.1818 inst=kick art=hit lane=kick kit=rock tick=384 vel=0.7 line=2
+  2.3182 inst=kick art=hit lane=kick kit=rock tick=408 vel=0.7 line=2
   2.3182 inst=ride art=bell lane=ride.bell kit=rock tick=408 vel=0.7 line=4
-  2.5909 inst=kick art=hit lane=kick kit=rock tick=456 vel=0.7 line=2
+  2.4545 inst=snare art=rim lane=snare.rim kit=rock tick=432 vel=0.7 line=3
   2.7273 inst=ride art=bell lane=ride.bell kit=rock tick=480 vel=0.7 line=4
-  2.7273 inst=snare art=rim lane=snare.rim kit=rock tick=480 vel=0.7 line=3
-  3.1364 inst=kick art=hit lane=kick kit=rock tick=552 vel=0.7 line=2
+  2.8636 inst=kick art=hit lane=kick kit=rock tick=504 vel=0.7 line=2
   3.1364 inst=ride art=bell lane=ride.bell kit=rock tick=552 vel=0.7 line=4
-  3.5455 inst=kick art=hit lane=kick kit=rock tick=624 vel=0.7 line=2
+  3.2727 inst=kick art=hit lane=kick kit=rock tick=576 vel=0.7 line=2
+  3.4091 inst=snare art=rim lane=snare.rim kit=rock tick=600 vel=0.7 line=3
   3.5455 inst=ride art=bell lane=ride.bell kit=rock tick=624 vel=0.7 line=4
-  3.6818 inst=snare art=rim lane=snare.rim kit=rock tick=648 vel=0.7 line=3
+  3.8182 inst=kick art=hit lane=kick kit=rock tick=672 vel=0.7 line=2
   3.9545 inst=ride art=bell lane=ride.bell kit=rock tick=696 vel=0.7 line=4
-  4.0909 inst=kick art=hit lane=kick kit=rock tick=720 vel=0.7 line=2
+  4.2273 inst=kick art=hit lane=kick kit=rock tick=744 vel=0.7 line=2
   4.3636 inst=ride art=bell lane=ride.bell kit=rock tick=768 vel=0.7 line=4
-  4.5 inst=kick art=hit lane=kick kit=rock tick=792 vel=0.7 line=2
-  4.6364 inst=snare art=rim lane=snare.rim kit=rock tick=816 vel=0.7 line=3
+  4.3636 inst=snare art=rim lane=snare.rim kit=rock tick=768 vel=0.7 line=3
+  4.7727 inst=kick art=hit lane=kick kit=rock tick=840 vel=0.7 line=2
   4.7727 inst=ride art=bell lane=ride.bell kit=rock tick=840 vel=0.7 line=4
-  5.0455 inst=kick art=hit lane=kick kit=rock tick=888 vel=0.7 line=2
+  5.1818 inst=kick art=hit lane=kick kit=rock tick=912 vel=0.7 line=2
   5.1818 inst=ride art=bell lane=ride.bell kit=rock tick=912 vel=0.7 line=4
-  5.4545 inst=kick art=hit lane=kick kit=rock tick=960 vel=0.7 line=2
+  5.3182 inst=snare art=rim lane=snare.rim kit=rock tick=936 vel=0.7 line=3
   5.5909 inst=ride art=bell lane=ride.bell kit=rock tick=984 vel=0.7 line=4
-  5.5909 inst=snare art=rim lane=snare.rim kit=rock tick=984 vel=0.7 line=3
 notes:
-  0.2727 tick=48 ticks=96 note={"midi":38,"name":"D2","spell":{"letter":"D","alter":0}} label=D instrument=guitar.electric sound=muted voice=0 vel=0.7 line=5 secDur=0.5455
-  0.8182 tick=144 ticks=24 note={"midi":40,"name":"E2","spell":{"letter":"E","alter":0}} label=E instrument=guitar.electric sound=muted voice=0 vel=0.7 line=5 secDur=0.1364
-  0.9545 tick=168 ticks=48 note={"midi":38,"name":"D2","spell":{"letter":"D","alter":0}} label=D instrument=guitar.electric sound=muted voice=0 vel=0.7 line=5 secDur=0.2727
-  1.2273 tick=216 ticks=72 note={"midi":38,"name":"D2","spell":{"letter":"D","alter":0}} label=D instrument=guitar.electric sound=muted voice=0 vel=0.7 line=5 secDur=0.4091
-  1.6364 tick=288 ticks=96 note={"midi":38,"name":"D2","spell":{"letter":"D","alter":0}} label=D instrument=guitar.electric sound=muted voice=0 vel=0.7 repeat=true line=5 secDur=0.5455
-  2.1818 tick=384 ticks=24 note={"midi":40,"name":"E2","spell":{"letter":"E","alter":0}} label=E instrument=guitar.electric sound=muted voice=0 vel=0.7 repeat=true line=5 secDur=0.1364
-  2.3182 tick=408 ticks=48 note={"midi":38,"name":"D2","spell":{"letter":"D","alter":0}} label=D instrument=guitar.electric sound=muted voice=0 vel=0.7 repeat=true line=5 secDur=0.2727
-  2.5909 tick=456 ticks=72 note={"midi":38,"name":"D2","spell":{"letter":"D","alter":0}} label=D instrument=guitar.electric sound=muted voice=0 vel=0.7 repeat=true line=5 secDur=0.4091
-  3 tick=528 ticks=96 note={"midi":38,"name":"D2","spell":{"letter":"D","alter":0}} label=D instrument=guitar.electric sound=muted voice=0 vel=0.7 repeat=true line=5 secDur=0.5455
-  3.5455 tick=624 ticks=24 note={"midi":40,"name":"E2","spell":{"letter":"E","alter":0}} label=E instrument=guitar.electric sound=muted voice=0 vel=0.7 repeat=true line=5 secDur=0.1364
-  3.6818 tick=648 ticks=48 note={"midi":38,"name":"D2","spell":{"letter":"D","alter":0}} label=D instrument=guitar.electric sound=muted voice=0 vel=0.7 repeat=true line=5 secDur=0.2727
-  3.9545 tick=696 ticks=72 note={"midi":38,"name":"D2","spell":{"letter":"D","alter":0}} label=D instrument=guitar.electric sound=muted voice=0 vel=0.7 repeat=true line=5 secDur=0.4091
-  4.3636 tick=768 ticks=96 note={"midi":38,"name":"D2","spell":{"letter":"D","alter":0}} label=D instrument=guitar.electric sound=muted voice=0 vel=0.7 repeat=true line=5 secDur=0.5455
-  4.9091 tick=864 ticks=24 note={"midi":40,"name":"E2","spell":{"letter":"E","alter":0}} label=E instrument=guitar.electric sound=muted voice=0 vel=0.7 repeat=true line=5 secDur=0.1364
-  5.0455 tick=888 ticks=48 note={"midi":38,"name":"D2","spell":{"letter":"D","alter":0}} label=D instrument=guitar.electric sound=muted voice=0 vel=0.7 repeat=true line=5 secDur=0.2727
-  5.3182 tick=936 ticks=72 note={"midi":38,"name":"D2","spell":{"letter":"D","alter":0}} label=D instrument=guitar.electric sound=muted voice=0 vel=0.7 repeat=true line=5 secDur=0.4091
+  1.9091 tick=336 ticks=96 note={"midi":38,"name":"D2","spell":{"letter":"D","alter":0}} label=D instrument=guitar.electric sound=muted voice=0 vel=0.7 line=5 secDur=0.5455
+  2.4545 tick=432 ticks=24 note={"midi":40,"name":"E2","spell":{"letter":"E","alter":0}} label=E instrument=guitar.electric sound=muted voice=0 vel=0.7 line=5 secDur=0.1364
+  2.5909 tick=456 ticks=48 note={"midi":38,"name":"D2","spell":{"letter":"D","alter":0}} label=D instrument=guitar.electric sound=muted voice=0 vel=0.7 line=5 secDur=0.2727
+  2.8636 tick=504 ticks=72 note={"midi":38,"name":"D2","spell":{"letter":"D","alter":0}} label=D instrument=guitar.electric sound=muted voice=0 vel=0.7 line=5 secDur=0.4091
+  3.2727 tick=576 ticks=96 note={"midi":38,"name":"D2","spell":{"letter":"D","alter":0}} label=D instrument=guitar.electric sound=muted voice=0 vel=0.7 line=5 secDur=0.5455
+  3.8182 tick=672 ticks=24 note={"midi":40,"name":"E2","spell":{"letter":"E","alter":0}} label=E instrument=guitar.electric sound=muted voice=0 vel=0.7 line=5 secDur=0.1364
+  3.9545 tick=696 ticks=48 note={"midi":38,"name":"D2","spell":{"letter":"D","alter":0}} label=D instrument=guitar.electric sound=muted voice=0 vel=0.7 line=5 secDur=0.2727
+  4.2273 tick=744 ticks=72 note={"midi":38,"name":"D2","spell":{"letter":"D","alter":0}} label=D instrument=guitar.electric sound=muted voice=0 vel=0.7 line=5 secDur=0.4091
+  4.6364 tick=816 ticks=96 note={"midi":38,"name":"D2","spell":{"letter":"D","alter":0}} label=D instrument=guitar.electric sound=muted voice=0 vel=0.7 line=5 secDur=0.5455
+  5.1818 tick=912 ticks=24 note={"midi":40,"name":"E2","spell":{"letter":"E","alter":0}} label=E instrument=guitar.electric sound=muted voice=0 vel=0.7 line=5 secDur=0.1364
+  5.3182 tick=936 ticks=48 note={"midi":38,"name":"D2","spell":{"letter":"D","alter":0}} label=D instrument=guitar.electric sound=muted voice=0 vel=0.7 line=5 secDur=0.2727
+  5.5909 tick=984 ticks=72 note={"midi":38,"name":"D2","spell":{"letter":"D","alter":0}} label=D instrument=guitar.electric sound=muted voice=0 vel=0.7 line=5 secDur=0.1364
 
 ## Gavin Harrison's paradiddle challenge
 errors: none
@@ -1646,11 +1632,18 @@ errors: none
 names: none
 from above: none
 length: 5.2174 s
-block startSec=0 durSec=5.2174 bars=2 time=4 over 4 tempo=92 key=C unit=4 barTicks=384 res=1
+block startSec=0 durSec=5.2174 bars=2 time=4 over 4 tempo=92 key=C unit=4 barTicks=384 res=2
 drums:
   0 inst=hat art=hit lane=hat kit=rock tick=0 vel=0.7 line=8
   0 inst=kick art=hit lane=kick kit=rock tick=0 vel=0.7 line=9
+  0.3261 inst=hat art=hit lane=hat kit=rock tick=48 vel=0.7 line=8
+  0.6522 inst=hat art=hit lane=hat kit=rock tick=96 vel=0.7 line=8
+  0.9783 inst=hat art=hit lane=hat kit=rock tick=144 vel=0.7 line=8
+  1.3043 inst=hat art=hit lane=hat kit=rock tick=192 vel=0.7 line=8
   1.3043 inst=kick art=hit lane=kick kit=rock tick=192 vel=0.7 line=9
+  1.6304 inst=hat art=hit lane=hat kit=rock tick=240 vel=0.7 line=8
+  1.9565 inst=hat art=hit lane=hat kit=rock tick=288 vel=0.7 line=8
+  2.2826 inst=hat art=hit lane=hat kit=rock tick=336 vel=0.7 line=8
 notes:
   0 tick=0 ticks=96 note={"midi":36,"name":"C2","spell":{"letter":"C","alter":0}} label=i instrument=bass voice=0 vel=0.7 line=5 secDur=0.6522
   0.6522 tick=96 ticks=96 note={"midi":43,"name":"G2","spell":{"letter":"G","alter":0}} label=v instrument=bass voice=0 vel=0.7 line=5 secDur=0.6522

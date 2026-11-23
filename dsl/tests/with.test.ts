@@ -145,7 +145,7 @@ describe("with", () => {
         ).outputs[0],
       ),
     ).toEqual(["E", "C#m", "G", "Em"])
-    expect(clean("play (2 bars with key E { kick: x--- } kick: x)").outputs[0].durSec).toBe(4.125)
+    expect(clean("play (2 bars with key E { kick: x--- } kick: x)").outputs[0].durSec).toBe(6)
   })
 
   it("plays a pattern where it's played, so a pattern under two keys plays in each", () => {
@@ -178,9 +178,9 @@ describe("with", () => {
   })
 
   it("sets time, tempo and swing around a whole play, or on a part in order", () => {
-    expect(clean("with tempo 60 {\n  play kick: x---\n}").outputs[0].durSec).toBe(1)
+    expect(clean("with tempo 60 {\n  play kick: x---\n}").outputs[0].durSec).toBe(4)
     // or around everything a play or a pattern plays, with nothing beside it
-    expect(clean("play with tempo 60 { kick: x--- }").outputs[0].durSec).toBe(1)
+    expect(clean("play with tempo 60 { kick: x--- }").outputs[0].durSec).toBe(4)
     const tag = clean(
       "pattern tag = with time 6 over 4 {\n  piano: chords i,\n  hat: x---\n}\nplay (tag piano: chords v)",
     )
@@ -189,7 +189,7 @@ describe("with", () => {
       ["4 over 4", 1],
     ])
     const p = clean("play (\n  with tempo 60 { kick: x--- }\n  kick: x---\n)")
-    expect(p.outputs[0].durSec).toBe(1.5)
+    expect(p.outputs[0].durSec).toBe(6)
     expect(p.outputs[0].blocks.map((b) => b.tempo)).toEqual([60, 120])
     expect(
       clean("play (with time 3 over 4 { kick: x 11*- } kick: x 15*-)").outputs[0].blocks.map(

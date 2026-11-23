@@ -68,7 +68,10 @@ function inferredTypes(value: string, st: State, depth = 0): Set<string> {
     }
     const fn = intervalCall(token)
     if (fn?.call) {
-      for (const type of inferredTypes(fn.call.body, st, depth + 1)) types.add(type)
+      if (fn.call.name === "note") types.add("notes")
+      else if (fn.call.name === "chord" || fn.call.name === "modify" || fn.call.name === "voice")
+        types.add("chords")
+      else for (const type of inferredTypes(fn.call.body, st, depth + 1)) types.add(type)
     } else if (isStepRun(token) && /[x^~d]/.test(token)) types.add("steps")
     else if (!noteSteps(token) && buildChord(token, keyOf(st))) types.add("chords")
   }
@@ -92,6 +95,7 @@ export function printedItems(value: PrintedValue): PrintedItem[] {
 }
 
 function printedChordText(token: string, chord: Voiced, st: State): string {
+  chord = chord.voicing?.base ?? chord
   const key = keyOf(st)!
   let source = token
   let steps = 0
@@ -129,7 +133,7 @@ function printedChordText(token: string, chord: Voiced, st: State): string {
     )
       return text
   }
-  return token
+  return chord.label
 }
 
 // One argument of a print, evaluated. A mistake in it is about the argument as written, or
@@ -394,7 +398,11 @@ export function isBareValue(text: string, st: State, depth = 0): boolean {
     const named = st.words[token]
     if (named) return PRINTABLE.includes(named.type)
     const fn = intervalCall(token)
-    return !!fn?.call && isBareValue(fn.call.body, st, depth + 1)
+    return (
+      !!fn?.call &&
+      (["note", "chord", "modify", "voice"].includes(fn.call.name) ||
+        isBareValue(fn.call.body, st, depth + 1))
+    )
   })
 }
 
@@ -425,13 +433,13 @@ export function printedMeaning(item: PrintedItem): string {
   return base + (item.sounding ? ` → sounds ${item.sounding.join(" ")}` : "")
 }
 
-/* How a print is laid out, shared by every front end so they all show the same thing.
-   A print is one row per type: the type, then its values in order. A value that stands
-   for pitches carries them in parentheses straight after it: 1(C3), 6m(Am(A3 C4 E4)). */
+/* Shared print layout: one row per type; values separated by spaces, arguments by
+   commas. Degree → chord name → (tones), or note degree → pitch. */
 export type PrintPart = {
   kind: "note" | "chord" | "steps" | "quiet"
   text: string
-  note?: string // what goes in the parentheses
+  name?: string // resolved chord name, when distinct from the degree
+  note?: string // resolved pitch or chord tones
   title?: string
   comma?: boolean // the last value of an argument, with another argument after it
 }
@@ -450,7 +458,8 @@ function printPart(item: PrintedItem): PrintPart {
     return {
       kind: "chord",
       text: item.text,
-      note: chord === item.text ? tones : `${chord}(${tones})`,
+      ...(chord !== item.text ? { name: chord } : {}),
+      note: tones,
     }
   }
   if (!item.pitch) return { kind: "quiet", text: item.text, title: printedMeaning(item) }
@@ -481,7 +490,10 @@ export function printLayout(prints: PrintOutput[]): PrintRow[] {
 }
 
 export const printPartText = (part: PrintPart): string =>
-  part.text + (part.note ? `(${part.note})` : "") + (part.comma ? "," : "")
+  part.text +
+  (part.name ? ` → ${part.name}` : "") +
+  (part.note ? ` → ${part.kind === "chord" ? `(${part.note})` : part.note}` : "") +
+  (part.comma ? "," : "")
 
 // A row as one line of text, for clients that only show text.
 export const printRowText = (row: PrintRow): string =>

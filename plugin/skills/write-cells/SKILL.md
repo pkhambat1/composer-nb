@@ -57,21 +57,22 @@ it has not been saved to a notebook.
 ## The standard
 
 - Every cell makes musical sense on its own: one idea, with names that say what each part is.
-- No drum figure written twice. A pattern repeats its lines, so `hat: x-`, not `hat: x-x- x-x-`. The parser rejects the repeat.
+- Every played bar is complete. Finite lines are padded with silence before repetition. `hat: x-` is one hit per bar; write `hat: 8*x-` for eight eighth-note hits. Explicit repeated figures are valid.
 - Scales, lines and chord formulas by degree (`1 2 3 4 5 6 7`) and charts by numeric degree, so they play in any key. In a mode, write the plain degrees and numerals and let `set mode` make them minor, dorian, harmonicMinor, melodicMinor, wholeTone (six degrees per octave, with 7 the next tonic) and so on: no `b` or `#` for what the mode already does. Letters only where the note names are the point.
-- Notes and chords divide each bar evenly into slots: in `4 over 4`, `notes 1 2 3 4` is four quarter notes, `notes 1 5` is two half notes, and `notes 1` is a whole note. Use `|` between bars. Each note, hold or rest is one slot, regardless of its characters: `b7` is one slot. An explicit `every 1/4 beats` switches notes to fixed sixteenth steps; `every 1/2 beats` selects eighth-note steps.
 - Write accidentals with ASCII `b` and `#` (`Bb`, `F#`, `b7`), not the musical glyphs `♭` and `♯`.
 - Count bars before saving. `chords 1 4` is two slots in one bar; `chords 1|4` is two bars. A two-bar seed played, answered and returned is six bars. For piano followed by organ, sequence their parts in `play (call answer)`; entries beside each other in braces start together.
-- Brackets for order: `play (intro 4 bars verse)`.
-- Braces that are a value say their type: `pattern { ... }` repeats and `block { ... }` plays once. So `play block { ... }` plays its lines once, `play pattern { ... }` repeats them, and a bare `play { ... }` is an error.
-- Separate entries inside every brace block with `,`, on one line or many. A trailing comma before `}` is allowed; semicolons are errors. Note words use spaces: `piano: notes 1 3,`. Newlines inside braces are layout.
-- Notes use `n*word` and `n*(words)`, including named phrases and interval functions. A final `...note` holds that note, `...-` sustains the preceding note, and `..._` fills with silence. Do not use duration clauses, `rest`, or commas between note words.
-- Kit lines use step words, `n*w`, `n*(words)` and a final `...w`. `-` is the only silence: `8*- dd ...-`. Do not use kit beat lists, lengths, `rest` or commas.
-- Position a value with `lift on bar 2` or `block { ... } on bar 3 to 4`; it adds without silencing other lines. Use typed braces for an inline value.
+- Notes and chords divide each bar evenly into slots. In `4 over 4`, `1 2 3 4` is four quarter notes and `1 5` is two half notes. Holds and rests take slots too: `C2 - - _` holds for three beats, then rests. `8*C2` is eight eighth-note attacks. Use `|` between bars and `every 1/4 beats` for fixed sixteenth-note riffs. Slots use whole ticks at 96 ticks per beat, including three equal slots in 4/4. `every` selects fixed-step timing; early barlines and final short bars pad with silence.
+- Brackets for order: `play((intro 4 bars verse))`.
+- Use constructors inside expressions: `print(second(note(1)))`, `print(second(chord(1)))`, and `modify(chord(1), sus2)`. Types propagate through interval functions and named values. Instrument lines can consume typed expressions directly. Use `play({ ... })` for a block (the default), `play(block({ ... }))` for an explicit block, and `play(pattern({ ... }))` for a pattern. Blocks play once; patterns repeat padded bars. A bounded container allows a partial final repetition.
+- Separate entries inside every brace block with `,`, on one line or many. A trailing comma before `}` is allowed; semicolons are errors. Note words use spaces: `piano: notes 1 7*- 3 7*-,`. Newlines inside braces are layout.
+- Notes use `n*word` and `n*(words)`, including named phrases and interval functions. A final `...note` holds that note, `...-` sustains the preceding note. Silence at the end is automatic; `..._` is removed. Do not use duration clauses, `rest`, or commas between note words.
+- Kit lines use step words, `n*w`, `n*(words)` and a final `...w`. `-` writes internal silence: `8*- dd`. Trailing silence is automatic; `...-` is removed. Do not use kit beat lists, lengths, `rest` or commas.
+- Position a value with `lift on bar 2` or `{ ... } on bar 3 to 4`; it adds without silencing other lines. Bare braces construct a block; `pattern({ ... })` constructs a pattern.
 - `every` takes beats only (`every 1/2 beats`). Nesting the same pace is an error; an initial `every 1/4 beats` selects fixed sixteenths for notes.
 - `set` in front of every setting.
 - A long line continues on a line starting with `|`.
 - Use signed nonzero numeric degrees for notes and chords; all consecutive digits belong to the root degree, so 8 and 15 continue into higher octaves and seventh chords use 1maj7, 2m7 or 5dom7. Negative degrees count downward from the tonic: in C major -1 is B below C, -2 is A, and -7 is the lower C; wholeTone reaches its lower tonic at -6. Separate negative note words with spaces (-1--- -2---); dashes inside 1---2--- still sustain. Interval functions such as fifth(phrase) move every tone through the active scale or mode; fifth(phrase, 2) repeats the move twice. Use interval functions for relative movement; the `of` operator is not supported. Suffixes compose: 1sus2add11#5/4 uses degree 4 of the key as bass.
+- Use `voice(value, { fifth: 1, ninth: -1 })` to move individual chord tones by octaves. It replaces the old pitches, keeps the chord name and slash bass, and accepts chord literals, names and charts. Keys name chord roles rather than key degrees; the requested tones must exist. Shifts are integer literals; 1 is up and -1 is down.
 - Chord symbols and numeric degrees spelt as `reference` (topic `chords`) spells them. A name holding one chord fills a slot just like its literal; interval functions do not add bars around it. Use `|` for a bar boundary. Names holding several chords or explicit bar lines remain complete charts when joined.
 - One space after a colon, and no columns lined up with extra spaces.
 
@@ -94,8 +95,8 @@ notes roots = 1 3|5 7
   |octave(1) 6|4 2|1
 
 pattern groove = {
-  hat: x-,
-  snare: ---- x---,
+  hat: 8*x-,
+  snare: 2*(---- x---),
   kick: x--- --x- x--- ----,
 }
 
@@ -106,5 +107,7 @@ pattern walk = {
   guitar: chords 1 3|5 7|1 6|4 2|1,
 }
 
-play (2 bars groove walk)
+play((2 bars groove walk))
 ```
+
+Print output shows **degree** → chord name → (pitches), with only the evaluated leading value bold. Spaces separate values in one argument; commas separate arguments. Never show a function expression as the resolved chord.

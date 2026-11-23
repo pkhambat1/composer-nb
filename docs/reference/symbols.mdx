@@ -46,7 +46,7 @@ description: "Every keyword, name and symbol of the language, with a link to its
 
 ## Functions
 
-All are defined in [Interval functions](/functions/intervals) and share one signature.
+The interval functions below share one signature, defined in [Interval functions](/functions/intervals). [voice](/functions/voice) shifts individual chord tones by octaves; the value constructors and `modify` are listed below.
 
 | Function | Moves by |
 | --- | --- |
@@ -91,15 +91,23 @@ The same character can mean different things in different places.
 | `~` | Ghost hit. | Soft next note. |  |  |
 | `-` | Silence. | Hold; before a degree at the start of a word, a negative degree. | Hold; before a degree, a negative degree. | Subtraction or negation in a `number`. |
 | `_` |  | Rest. | Rest. |  |
-| `\\|` | Bar check. | Bar line; bar check inside `every`. | Bar line. | At the start of a line: continues the statement above. |
+| `\\|` | Complete the current bar with silence. | Bar line; complete the current bar with silence inside `every`. | Bar line. | At the start of a line: continues the statement above. |
 | `%` |  |  | Repeats the bar before. |  |
 | `*` | Repeat: `3*x-`. | Repeat: `2*(1 3)`. |  | Multiplication in a `number`. |
 | `...` | Fill. | Fill. |  |  |
 | `/` |  |  | Bass note, or part of `6/9`. | Division in a `number`. |
 | `#` `b` |  | Sharp, flat: after a letter, before a degree. | Sharp, flat; also in suffixes. |  |
 | `( )` | Repeat group. | Repeat group; call arguments. | Call arguments. | A group of parts; arithmetic grouping. |
-| `{ }` | Layers. |  |  | A body; an instrument's layers. |
-| `,` | Between layers. |  |  | Between entries, settings and arguments. |
-| `:` |  |  |  | Joins a kit piece or instrument to what it plays. |
+| `{ }` | Layers. |  |  | A body; an instrument's layers; the shift object in `voice`. |
+| `,` | Between layers. |  |  | Between entries, settings, arguments and object properties. |
+| `:` |  |  |  | Joins an instrument to what it plays, or a chord tone to its octave shift in `voice`. |
 | `=` |  |  |  | Joins a declared name to its value. |
 | `//` |  |  |  | Comment to the end of the line. |
+
+## Value constructors
+
+| Name | Meaning |
+| --- | --- |
+| `note` | [Construct notes](/language/values#constructors). |
+| `chord` | [Construct chords](/language/values#constructors). |
+| `modify` | [Apply chord modifiers](/language/values#constructors). |

@@ -19,7 +19,7 @@ interval ::= "unison" | "second" | "third" | "fourth" | "fifth" | "sixth" | "sev
 
 Returns a new value of the same type as `value`, with every pitch moved by the function's interval, `intervalMultiplier` times. A negative multiplier moves down; `0` moves nothing. Rhythm is unchanged: holds, rests, bar lines and accents stay where they were. Nothing is played, and `value` itself is not changed.
 
-Arguments are positional. All sixteen functions share this signature; they differ only in how far they move. These are the only functions in the language: functions cannot be declared, named or passed as values.
+Arguments are positional. All sixteen functions share this signature; they differ only in how far they move. Typed constructors and `modify` are described under [Constructors](/language/values#constructors); [voice](/functions/voice) moves individual chord tones by octaves. Functions cannot be declared, named or passed as values.
 
 ## Function index
 
@@ -49,7 +49,7 @@ print(third(1), fifth(1 3 5), octave(1, -1), fourth(C4 E4))
 ```
 
 ```text Output
-notes 3(E3), 5(G3) 7(B3) 9(D4), -7(C2), F4 A4
+notes 3 → E3, 5 → G3 7 → B3 9 → D4, -7 → C2, F4 A4
 ```
 
 ## How pitches move
@@ -71,12 +71,12 @@ print(chords fifth(3))
 
 ```text Output
 notes F4, Fb4
-chords 7(Bdim(B3 D4 F4))
+chords 7 → Bdim → (B3 D4 F4)
 ```
 
 ## Type of the argument
 
-Inside `notes`, a call's argument is read as notes; inside `chords`, as a chart. A name keeps its declared type. Where nothing gives the type, as in `print`, a bare argument is notes: write `print(chords fourth(1))` for the chord.
+Inside `notes`, a call's argument is read as notes; inside `chords`, as a chart. A name keeps its declared type. Where nothing gives the type, as in `print`, a bare argument is notes: write `print(fourth(chord(1)))` for the chord.
 
 ```composer-nb Example
 chords home = 1
@@ -84,8 +84,8 @@ print(fourth(1), fourth(home), chords fourth(1))
 ```
 
 ```text Output
-notes 4(F3)
-chords 4(F(F3 A3 C4)), 4(F(F3 A3 C4))
+notes 4 → F3
+chords 4 → F → (F3 A3 C4), 4 → F → (F3 A3 C4)
 ```
 
 ## Nesting
@@ -98,7 +98,7 @@ print(octave(fourth(tonic), -1))
 ```
 
 ```text Output
-chords -4(F(F2 A2 C3))
+chords -4 → F → (F2 A2 C3)
 ```
 
 In C major this is the chord on degree 4, one octave down. `fourth` is a movement, not a destination: it gives degree 4 only when it starts from degree 1.

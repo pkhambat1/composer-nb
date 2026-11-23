@@ -27,16 +27,40 @@ const doc = (
 ): Documentation => ({ signature, description, example, page })
 
 const keywords: Record<string, Documentation> = {
+  note: doc(
+    "note(value)",
+    "Constructs a note value. Interval functions preserve its type.",
+    "print(second(note(1)))",
+    "language/values#constructors",
+  ),
+  chord: doc(
+    "chord(value)",
+    "Constructs a chord value. Bare degrees use the active scale's harmony.",
+    "print(second(chord(1)))",
+    "language/values#constructors",
+  ),
+  voice: doc(
+    "voice(value: chords, shifts: { chordTone: integer, ... }) → chords",
+    "Moves selected chord tones by octaves: 1 up, -1 down. Replaces their pitches without doubling; the slash bass stays unchanged.",
+    "print(voice(2m9, { fifth: 1 }))",
+    "functions/voice",
+  ),
+  modify: doc(
+    "modify(value, modifiers)",
+    "Applies chord modifiers before surrounding interval functions are evaluated.",
+    "print(second(modify(chord(1), sus2)))",
+    "language/values#constructors",
+  ),
   play: doc(
-    "play music [for length]",
+    "play(music) [for length]",
     "Plays an instrument line, a named pattern or block, or a parenthesized sequence. Each play creates one output.",
-    "play piano: notes 1--- 3---",
+    "play({ piano: note(1--- 3---) })",
     "language/play",
   ),
   print: doc(
     "print(value, ...)",
-    "Displays the notes or chords a value means in the active key and mode, without playing audio. Bare degrees are notes; use chords to inspect harmony.",
-    "print(third(1), chords fifth(1))",
+    "Displays the notes or chords a value means in the active key and mode, without playing audio. Bare degrees are notes; use chord(...) to inspect harmony.",
+    "print(third(note(1)), fifth(chord(1)))",
     "functions/print",
   ),
   set: doc(

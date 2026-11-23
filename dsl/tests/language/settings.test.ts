@@ -79,8 +79,8 @@ describe("settings", () => {
 describe("every", () => {
   it("uses beat lengths for eighths, triplets and dotted eighths", () => {
     expect(durations("play every 1/2 beats hat: x-xx-xxx")).toEqual([2])
-    expect(durations("play every 1/3 beats hat: x-x")).toEqual([0.5])
-    expect(durations("play every 3/4 beats hat: x-")).toEqual([0.75])
+    expect(durations("play every 1/3 beats hat: x-x")).toEqual([2])
+    expect(durations("play every 3/4 beats hat: x-")).toEqual([2])
     expect(durations("play every 4 beats kick: x-")).toEqual([4])
   })
   it("scopes steps and allows a nested change back to sixteenths", () => {
@@ -92,7 +92,7 @@ describe("every", () => {
       durations(
         "pattern feet = every 3/4 beats { kick: ^-^^-^--, hat.pedal: -x--x-xx }\nplay feet",
       ),
-    ).toEqual([3])
+    ).toEqual([4])
   })
   it("rejects old units, redundant pace, and invalid lengths", () => {
     for (const source of [

@@ -68,6 +68,7 @@
         "group": "Functions",
         "pages": [
           "functions/intervals",
+          "functions/voice",
           "functions/print"
         ]
       },

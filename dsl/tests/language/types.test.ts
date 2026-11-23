@@ -13,7 +13,7 @@ describe("types", () => {
     expect(p.errors).toEqual([])
     expect(p.chords.map((e) => e.label)).toEqual(["Am", "F", "C", "G"])
     expect(p.notes.map((e) => e.label)).toEqual(["F", "G", "F", "G"])
-    expect(hits(p.outputs[0], "hat")).toHaveLength(16)
+    expect(hits(p.outputs[0], "hat")).toHaveLength(4)
   })
 
   it("are asked for when a name has none, with the line to write", () => {

@@ -224,7 +224,7 @@ export function classify({ ln, parts }: Line, err: Report, st: State): ReadLine 
   // ( ... ) or 4 bars ( ... ): what plays in order, whatever lines are in it. pattern { ... }
   // or 4 bars block { ... }: lines with their type.
   const lead = lengthPrefix(text).rest
-  if (!m && (lead.startsWith("(") || TYPED_BRACES_RE.test(lead))) {
+  if (!m && (lead.startsWith("(") || lead.startsWith("{") || TYPED_BRACES_RE.test(lead))) {
     const items = readSequence(parts, ln, err, st)
     return items && { kind: "sequence", ln, items }
   }
@@ -350,7 +350,7 @@ export function readPart(
       return null
     }
     const run = stepBlock(only, st, err, part, repeats)
-    const pattern = run == null ? null : stepPattern(part, [run], st, err)
+    const pattern = run == null ? null : stepPattern(part, [], st, err, false, null, run)
     return pattern && { ...pattern, part }
   }
   const parts = stepParts(textOf(part.value), st, err, part.ln, part, repeats)

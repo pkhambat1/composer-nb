@@ -13,6 +13,7 @@ export type DiagramChord = {
   noteNames: string[]
   bassMidi?: number
   overBass?: boolean
+  voicing?: { octaves: number[] }
   position?: Position | null
 }
 
@@ -460,7 +461,8 @@ const ChordDiagram = React.memo(function ChordDiagram({
   accent?: string
   range?: PianoRange
 }) {
-  if (instrument.split(".")[0] === "guitar") return <GuitarDiagram chord={chord} />
+  if (instrument.split(".")[0] === "guitar" && !chord.voicing)
+    return <GuitarDiagram chord={chord} />
   return <PianoDiagram chord={chord} range={range ?? pianoRange([chord])} />
 })
 export default ChordDiagram

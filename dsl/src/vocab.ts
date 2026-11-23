@@ -7,7 +7,7 @@
 // The types a name can have. Its type goes in front of it: steps pair = ^-x-
 export const TYPES = ["steps", "notes", "chords", "pattern", "block"] as const
 // Braces that are a value say their type in front of them: pattern { ... }, block { ... }
-export const TYPED_BRACES_RE = /^(pattern|block)\s*\{/
+export const TYPED_BRACES_RE = /^(pattern|block)\s*(?:\(\s*)?\{/
 export type Type = (typeof TYPES)[number]
 
 // A token that reads as a name: a lowercase letter, then letters and digits (riff, partA)
@@ -46,10 +46,30 @@ export const INTERVALS = {
   fifteenth: 15,
 } as const
 
+// Chord roles are intervals from the chord root, independent of the song's key.
+export const CHORD_TONES = {
+  root: 1,
+  second: 2,
+  third: 3,
+  fourth: 4,
+  fifth: 5,
+  sixth: 6,
+  seventh: 7,
+  ninth: 9,
+  eleventh: 11,
+  thirteenth: 13,
+} as const
+export type ChordTone = keyof typeof CHORD_TONES
+export type ToneShifts = Partial<Record<ChordTone, number>>
+
 // Words with a meaning of their own, which can't be names
 export const KEYWORDS: readonly string[] = [
   ...TYPES,
   ...Object.keys(INTERVALS),
+  "note",
+  "chord",
+  "modify",
+  "voice",
   "play",
   "print",
   "for",

@@ -63,7 +63,7 @@ describe("notes", () => {
       ["F3", 5, 2],
       ["F3", 7, 3],
     ])
-    expect(durations("play every 1/4 beats guitar: notes F---G F-F--")).toEqual([1.25])
+    expect(durations("play every 1/4 beats guitar: notes F---G F-F--")).toEqual([2])
   })
 
   it("take one step each, however many characters a note is", () => {
@@ -120,11 +120,11 @@ describe("notes", () => {
       "set time 7 over 8\npattern groove = {\n  kick: x--x---,\n  every 1/4 beats guitar.electric: notes F---G F-F--\n}\n"
     // Lines of 7 and 10 steps meet after 70: five bars of 14.
     const o = parseSource(groove + "play groove").outputs[0]
-    expect(o.durSec).toBe(8.75)
-    expect(o.notes).toHaveLength(28)
+    expect(o.durSec).toBe(1.75)
+    expect(o.notes).toHaveLength(4)
     expect(o.notes.every((e) => e.instrument === "guitar.electric")).toBe(true)
-    expect(hits(o, "kick")).toHaveLength(20)
-    expect(o.blocks.map((b) => [b.time, b.bars])).toEqual([["7 over 8", 5]])
+    expect(hits(o, "kick")).toHaveLength(2)
+    expect(o.blocks.map((b) => [b.time, b.bars])).toEqual([["7 over 8", 1]])
   })
 
   it("play once on a play's own line, like a drum's", () => {
@@ -157,7 +157,7 @@ describe("notes", () => {
       ["C3", 0, 4],
       ["E3", 4, 4],
     ])
-    expect(durations("play every 1/3 beats piano: notes C E G")).toEqual([0.5])
+    expect(durations("play every 1/3 beats piano: notes C E G")).toEqual([2])
   })
 
   it("play together from a block of lines, each ringing on its own", () => {
@@ -251,19 +251,13 @@ describe("notes", () => {
       sound("play piano: notes ^E4----------- ~D4---"),
     )
     expect(sound("play bass: notes F2 15*- | G2 15*-")).toBe(sound("play bass: notes F2 | G2"))
-    expect(firstError("play bass: notes F2 11*- | G2 15*-")).toMatch(
-      /can't be split evenly into 12/,
-    )
+    expect(sound("play bass: notes F2 11*- | G2 15*-")).toBe(sound("play bass: notes F2 | G2"))
     expect(heard("play bass: notes C2 ...G1 for 2 bars")).toEqual([
       ["C2", 0, 16],
       ["G1", 16, 16],
     ])
-    expect(firstError("play piano: notes E4--- ..._")).toMatch(
-      /Every line in this play ends in \.\.\./,
-    )
-    expect(firstError("notes tail = E4--- ..._")).toMatch(
-      /A name's notes have a length of their own/,
-    )
+    expect(firstError("play piano: notes E4--- ..._")).toMatch(/automatically fill with silence/)
+    expect(firstError("notes tail = E4--- ..._")).toMatch(/automatically fill with silence/)
     expect(firstError("play piano: notes 3 beats riff")).toMatch(/step words and \* repeats/)
   })
 
@@ -336,18 +330,14 @@ describe("notes", () => {
     expect(parseSource("play piano: notes 13---").notes.map((e) => e.note.name)).toEqual(["A4"])
   })
 
-  it("allow repeated slots, but reject a repeated figure under every", () => {
-    expect(firstError("play every 1/4 beats { piano: notes C4-C4- }")).toBe(
-      "piano: notes C4-C4- repeats C4-. Write piano: notes C4-: a pattern repeats it. Use a block to play a finite sequence once",
-    )
-    expect(
-      firstError("notes riff = C4---D4---\nplay every 1/4 beats { piano: notes riff riff }"),
-    ).toMatch(/repeats C4---D4---/)
-    expect(parseSource("play piano: notes C2-C2--___").errors).toEqual([])
-    expect(parseSource("play piano: notes C4-C4-").errors).toEqual([])
-    expect(
-      parseSource("notes riff = 2*(C4---D4---)\nplay piano: notes riff | riff").errors,
-    ).toEqual([])
+  it("allows repeated slots and repeated figures under every", () => {
+    for (const source of [
+      "play every 1/4 beats { piano: notes C4-C4- }",
+      "notes riff = C4---D4---\nplay every 1/4 beats { piano: notes riff riff }",
+      "play piano: notes C2-C2--___",
+      "notes riff = 2*(C4---D4---)\nplay piano: notes riff | riff",
+    ])
+      expect(parseSource(source).errors).toEqual([])
   })
 })
 

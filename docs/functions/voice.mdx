@@ -1,0 +1,94 @@
+---
+title: "voice"
+description: "Move individual chord tones by octaves while keeping the chord's harmony."
+---
+
+```text Syntax
+voice(value: chords, shifts: { chordTone: integer, ... }) -> chords
+```
+
+The second argument is an object mapping chord tones to octave shifts. `1` moves up one octave, `-1` moves down one octave, and `0` leaves the tone in place. Omitted tones stay where they are. An empty object is valid. A trailing comma is allowed.
+
+`voice` moves tones; it does not add, omit or double them. It returns a new chord value without changing its input. The chord name and any explicit slash bass stay unchanged. Printed pitches, playback, the grid, sheet music and MIDI use the new voicing.
+
+## Chord tones
+
+| Key | Which tone |
+| --- | --- |
+| `root` | The chord's root. |
+| `second`, `third`, `fourth`, `fifth`, `sixth`, `seventh` | That interval from the chord's root, including its alteration. For example, `fifth` selects the flat fifth in a half-diminished chord. |
+| `ninth`, `eleventh`, `thirteenth` | The corresponding compound interval. A ninth is distinct from a second, even if moved down into the same octave. |
+
+These are chord roles, not degrees of the key or positions in a list. `voice(2m9, { fifth: 1 })` moves the fifth of Dm9, A, rather than degree 5 of C major, G. Moving the root above other tones does not change which tone later operations identify as the fifth.
+
+The requested tone must exist in every chord in the input, including when its shift is `0`. Unknown or duplicate keys are errors. Shifts are integer literals from -10 to 10; every resulting pitch must remain within MIDI 0 to 127. Arithmetic expressions are not accepted as shifts.
+
+## Move one or several tones
+
+In C major, octave 3, Dm9 starts as D3–F3–A3–C4–E4. Raising its fifth gives D3–F3–C4–E4–A4. The old A3 is replaced by A4.
+
+```composer-nb Example
+chords inclinationHome = voice(2m9, { fifth: 1 })
+print(inclinationHome)
+play({ piano: inclinationHome })
+```
+
+```text Output
+chords 2m9 → Dm9 → (D3 F3 C4 E4 A4)
+```
+
+A sixth chord contains both a fifth and a sixth:
+
+```composer-nb Example
+print(voice(1M6, { fifth: 1, sixth: 1 }))
+print(voice(1maj9, { third: -1, fifth: 1 }))
+```
+
+```text Output
+chords 1M6 → CM6 → (C3 E3 G4 A4)
+chords 1maj9 → Cmaj9 → (E2 C3 B3 D4 G4)
+```
+
+## Slash chords
+
+The object selects chord tones, not the separate slash bass. In this example, G3 moves to G4 while the E2 bass stays put:
+
+```composer-nb Example
+print(voice(Cmaj9/3, { fifth: 1 }))
+```
+
+```text Output
+chords Cmaj9/E → (C3 E3 B3 D4 G4/E2)
+```
+
+## Names, charts and nested calls
+
+The first argument accepts a chord literal, a named chord or chart, a `chord(...)` constructor, or another chord-valued call. Each chord in a chart receives the same shifts; rhythm, holds, rests and bar lines are preserved. Notes and steps are not accepted.
+
+```composer-nb Example
+chords changes = 1maj9 | 4maj9
+play({ piano: voice(changes, { fifth: 1 }) })
+print(second(voice(2m9, { fifth: 1 })))
+```
+
+An outer interval function moves the chord through the scale while retaining its octave shifts. Nested `voice` calls accumulate shifts on the original chord roles: moving a fifth by `1` and then by `-1` restores it. [modify](/language/values#constructors) retains existing shifts when changing a chord's harmony; removing a shifted tone, such as replacing a shifted third with `sus2`, is an error.
+
+`voice` resolves under the key and octave where the value is used, before the playback `transpose` setting. Guitar playback honors the explicit pitches instead of substituting a default fretboard shape; its diagram uses a keyboard to show those pitches.
+
+## Errors
+
+```composer-nb Invalid
+print(voice(2m9, { sixth: 1 }))
+```
+
+```text Error
+Dm9 has no sixth to voice
+```
+
+```composer-nb Invalid
+print(voice(2m9, { fifth: 0.5 }))
+```
+
+```text Error
+Each voice shift is a chord tone and an integer number of octaves: fifth: 1
+```

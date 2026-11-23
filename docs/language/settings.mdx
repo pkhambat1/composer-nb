@@ -54,7 +54,7 @@ Changing `time` changes the length of a bar and therefore the slots of notes and
 
 ```composer-nb Example
 set time 3+2+2 over 8
-play pattern { kick: x-----x---x--- }
+play(pattern({ kick: x-----x---x--- }))
 ```
 
 ```composer-nb Invalid
@@ -125,8 +125,8 @@ with octave 2 { print(1, C, E4, chords 1) }
 ```
 
 ```text Output
-notes 1(C2), C(C2), E4
-chords 1(C(C2 E2 G2))
+notes 1 → C2, C → C2, E4
+chords 1 → C → (C2 E2 G2)
 ```
 
 ## transpose
@@ -144,8 +144,8 @@ with transpose 2 { print(1, chords C) }
 ```
 
 ```text Output
-notes 1(D3)
-chords C(D(D3 F#3 A3))
+notes 1 → D3
+chords C → D → (D3 F#3 A3)
 ```
 
 ## kit

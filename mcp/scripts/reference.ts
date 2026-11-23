@@ -34,7 +34,7 @@ export function referencePages(): Page[] {
     const meta: Record<string, string> = {}
     for (const line of (fm?.[1] || "").split("\n")) {
       const m = /^(\w+):\s*"?(.*?)"?\s*$/.exec(line)
-      if (m) meta[m[1]] = m[2]
+      if (m) meta[m[1]] = m[2].replace(/\]\(\//g, `](${SITE}/`)
     }
     const body = mdx
       .slice(fm ? fm[0].length : 0)

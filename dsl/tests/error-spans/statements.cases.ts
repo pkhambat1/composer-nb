@@ -12,7 +12,6 @@ export const CASES: Case[] = [
   { cell: "play block ⟦{ }⟧" },
   { cell: "play block ⟦{⟧ kick: x---" },
   { cell: "with key E ⟦{⟧\n  play block { piano: chords C }" },
-  { cell: "play ⟦{⟧ kick: x--- }" },
   { cell: "print ⟦{ kick: x }⟧" },
 
   // What goes at the top, and what goes inside braces
@@ -55,7 +54,7 @@ export const CASES: Case[] = [
   // A declaration missing its = whose value runs on at a bar line
   { cell: "⟦notes scale scale = 1---2---\n  |3---4---⟧" },
   // A line that starts with a block is marked over what it holds
-  { cell: "pattern groove = ⟦{\n  kick: x---,\n  every }1/4 beats piano: notes 1---⟧\n⟦}⟧" },
+  { cell: "pattern groove = {\n  kick: x---,\n  every }⟦1/4⟧ beats piano: notes 1---\n⟦}⟧" },
   { cell: "play block ⟦{ }⟧ ⟦outro⟧" },
   { cell: "play block { kick: x--- } ⟦outro⟧", above: "pattern outro = { snare: x--- }" },
   { cell: "play block {\n  kick: x---\n} ⟦outro⟧", above: "pattern outro = { snare: x--- }" },
