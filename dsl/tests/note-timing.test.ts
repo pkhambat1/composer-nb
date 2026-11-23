@@ -103,37 +103,41 @@ play block { piano: notes 2*(third(phrase) |) }`)
       [384, 384],
     ])
     expect(timing(clean("play piano: notes 1 ...- for 2 bars").notes)).toEqual([[0, 768]])
-    expect(timing(clean("play piano: notes 1 ..._ for 2 bars").notes)).toEqual([[0, 384]])
+    expect(timing(clean("play piano: notes 1 for 2 bars").notes)).toEqual([[0, 384]])
     expect(timing(clean("play piano: notes ...5 for 2 bars").notes)).toEqual([[0, 768]])
   })
 
-  it("retains fixed steps with explicit every and restores bar timing outside it", () => {
-    const p = clean(`notes riff = 1 2 3 4
-play every 1/4 beats piano: notes riff
-play piano: notes riff`)
-    expect(p.outputs.map((o) => o.durSec)).toEqual([0.5, 2])
+  it("retains fixed steps, pads bars and restores bar timing outside it", () => {
+    const p = clean(
+      "notes riff = 1 2 3 4\nplay every 1/4 beats piano: notes riff\nplay piano: notes riff",
+    )
+    expect(p.outputs.map((o) => o.durSec)).toEqual([2, 2])
     expect(timing(p.outputs[0].notes)).toEqual([
       [0, 24],
       [24, 24],
       [48, 24],
       [72, 24],
     ])
-    const triplets = clean("play every 1/3 beats piano: notes 1 2 3")
-    expect(timing(triplets.notes)).toEqual([
+    expect(timing(clean("play every 1/3 beats piano: notes 1 2 3").notes)).toEqual([
       [0, 32],
       [32, 32],
       [64, 32],
     ])
-    expect(parseCell("play every 1/4 beats piano: notes 1 2 | 3 4").errors[0].msg).toMatch(
-      /isn't at the end of a bar/,
-    )
+    expect(timing(clean("play every 1/4 beats piano: notes 1 2 | 3 4").notes)).toEqual([
+      [0, 24],
+      [24, 24],
+      [384, 24],
+      [408, 24],
+    ])
   })
 
-  it("rejects unsupported bar divisions and sequences longer than 64 bars", () => {
+  it("allows triplet divisions while retaining the clock and length limits", () => {
     for (const type of ["notes", "chords"]) {
-      const p = parseCell(`play piano: ${type} 1 2 3`)
-      expect(p.errors[0].msg).toMatch(/can't be split evenly into 3/)
-      expect(p.outputs).toEqual([])
+      const p = clean(`play piano: ${type} 1 2 3`)
+      expect(p.events.map((e) => e.ticks)).toEqual([128, 128, 128])
+      expect(parseCell(`play piano: ${type} 1 2 3 4 5`).errors[0].msg).toMatch(
+        /can't be split evenly/,
+      )
     }
     expect(parseCell("play piano: notes 65*(1 |)").errors[0].msg).toMatch(/at most 64 bars/)
   })

@@ -172,6 +172,22 @@ export function readSequence(
       i = j + 1
       return { with: settings, shown: `with ${shown.trim()}`, block: playable(block), bars, span }
     }
+    // Constructors take exactly one braced body.
+    const constructor = /^(pattern|block)\s*\(\s*$/.exec(textFrom(i))
+    const body = constructor && units[i + constructor[0].length]
+    if (constructor && body && isBraces(body)) {
+      i += constructor[0].length + 1
+      ws()
+      if (ch(i) !== ")") {
+        fail(
+          `${constructor[1]} takes one body in braces: ${constructor[1]}({ ... })`,
+          constructor[1],
+        )
+        return null
+      }
+      i++
+      return { block: playable(body, constructor[1] as Playable["type"]), bars }
+    }
     // pattern { ... }, block { ... }: braces that are a value say their type
     const word = /^(pattern|block)\s*$/.exec(textFrom(i))
     const typed = word ? units[i + word[0].length] : undefined
@@ -181,12 +197,8 @@ export function readSequence(
     }
     const block = units[i]
     if (isBraces(block)) {
-      if (!block.type) {
-        fail(message("brace.untyped"), "{")
-        return null
-      }
       i++
-      return { block: playable(block, block.type), bars }
+      return { block: playable(block, block.type ?? "block"), bars }
     }
     // piano: C4---D4---, in a group: a line of its own, which runs to the end of its line
     // or to the group's ), and plays as a block of one line

@@ -43,10 +43,8 @@ describe("patterns", () => {
       "pattern fill = { snare: x-xx }\npattern beat = 1 bars { kick: x--- }\nplay (beat fill beat)",
     )
     expect(p.errors).toEqual([])
-    expect(p.outputs[0].durSec).toBe(4.5)
-    expect(hits(p.outputs[0], "kick").map((e) => e.secStart)).toEqual([
-      0, 0.5, 1, 1.5, 2.5, 3, 3.5, 4,
-    ])
+    expect(p.outputs[0].durSec).toBe(6)
+    expect(hits(p.outputs[0], "kick").map((e) => e.secStart)).toEqual([0, 4])
     expect(p.outputs[0].blocks[0].bars).toBe(3) // the part bar still gets a row on the grid
   })
 

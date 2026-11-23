@@ -115,22 +115,24 @@ print(melody, fifth(harmony), rhythm)`)
 
   it("lays a print out as one row per type, each value followed by its pitches in parentheses", () => {
     expect(rows("print(1, 2, 3)\nprint(fifth(1 3 5 7))")).toEqual([
-      "notes 1(C3), 2(D3), 3(E3)",
-      "notes 5(G3) 7(B3) 9(D4) 11(F4)",
+      "notes 1 → C3, 2 → D3, 3 → E3",
+      "notes 5 → G3 7 → B3 9 → D4 11 → F4",
     ])
     expect(rows("print(1 3 5 8, chords 1 6m | 4 5, steps x---)")).toEqual([
-      "notes 1(C3) 3(E3) 5(G3) 8(C4)",
-      "chords 1(C(C3 E3 G3)) 6m(Am(A3 C4 E4)) 4(F(F3 A3 C4)) 5(G(G3 B3 D4))",
+      "notes 1 → C3 3 → E3 5 → G3 8 → C4",
+      "chords 1 → C → (C3 E3 G3) 6m → Am → (A3 C4 E4) 4 → F → (F3 A3 C4) 5 → G → (G3 B3 D4)",
       "steps x",
     ])
-    expect(rows("print(Cm7)")[0]).toBe("chords Cm7(C3 Eb3 G3 Bb3)")
-    expect(rows("print(fifth(2*(^1 3*- ~3 3*_)))")).toEqual(["notes ^5(G3) ~7(B3) ^5(G3) ~7(B3)"])
+    expect(rows("print(Cm7)")[0]).toBe("chords Cm7 → (C3 Eb3 G3 Bb3)")
+    expect(rows("print(fifth(2*(^1 3*- ~3 3*_)))")).toEqual([
+      "notes ^5 → G3 ~7 → B3 ^5 → G3 ~7 → B3",
+    ])
     expect(rows("set transpose 2\nprint(1, chords 1)")).toEqual([
-      "notes 1(D3)",
-      "chords 1(D(D3 F#3 A3))",
+      "notes 1 → D3",
+      "chords 1 → D → (D3 F#3 A3)",
     ])
     expect(rows("set transpose -2\nprint(Cm7, chords 1/3, chords Bb)")).toEqual([
-      "chords Cm7(A#m7(A#2 C#3 F3 G#3)), 1/3(A#/D(A#2 D3 F3/D2)), Bb(G#(G#3 C4 D#4))",
+      "chords Cm7 → A#m7 → (A#2 C#3 F3 G#3), 1/3 → A#/D → (A#2 D3 F3/D2), Bb → G# → (G#3 C4 D#4)",
     ])
     const layout = printLayout(clean("print(1)\nplay piano: notes 1---\nprint(2, steps x-)").prints)
     expect(layout.map((r) => [r.line, r.type])).toEqual([
@@ -142,56 +144,58 @@ print(melody, fifth(harmony), rhythm)`)
 
   it("prints the evaluated pitches without rests, holds, bar lines, or duration labels", () => {
     expect(rows("set key A\nset octave 2\nprint(notes 1-------5-------|)")).toEqual([
-      "notes 1(A2) 5(E3)",
+      "notes 1 → A2 5 → E3",
     ])
     expect(rows("print(notes C3---__D3|--E3_)")).toEqual(["notes C3 D3 E3"])
-    expect(rows("set transpose 2\nprint(notes 1---)")).toEqual(["notes 1(D3)"])
+    expect(rows("set transpose 2\nprint(notes 1---)")).toEqual(["notes 1 → D3"])
   })
 
   it("evaluates single-chord names and functions without chart separators", () => {
     const source = "chords tonic = 1\nchords circle = tonic fifth(tonic)|fifth(tonic, 2)\ncircle"
-    expect(rows(source)).toEqual(["chords 1(C(C3 E3 G3)) 5(G(G3 B3 D4)) 9(Dm(D4 F4 A4))"])
+    expect(rows(source)).toEqual([
+      "chords 1 → C → (C3 E3 G3) 5 → G → (G3 B3 D4) 9 → Dm → (D4 F4 A4)",
+    ])
     expect(clean(source).prints[0].text).toBe("1 5 9")
   })
 
   it("preserves chord degrees through interval functions and aliases", () => {
     expect(
       rows("chords tonic = 1\nchords dominant = fifth(tonic)\nprint(tonic, dominant)"),
-    ).toEqual(["chords 1(C(C3 E3 G3)), 5(G(G3 B3 D4))"])
+    ).toEqual(["chords 1 → C → (C3 E3 G3), 5 → G → (G3 B3 D4)"])
     expect(
       rows("print(chords fifth(3) fifth(7) fifth(fifth(1)) fifth(1, -1) octave(1, -1))"),
     ).toEqual([
-      "chords 7(Bdim(B3 D4 F4)) 11(F(F4 A4 C5)) 9(Dm(D4 F4 A4)) -4(F(F2 A2 C3)) -7(C(C2 E2 G2))",
+      "chords 7 → Bdim → (B3 D4 F4) 11 → F → (F4 A4 C5) 9 → Dm → (D4 F4 A4) -4 → F → (F2 A2 C3) -7 → C → (C2 E2 G2)",
     ])
     expect(rows("set mode wholeTone\nprint(chords octave(1))")).toEqual([
-      "chords 7(Caug(C4 E4 G#4))",
+      "chords 7 → Caug → (C4 E4 G#4)",
     ])
   })
 
   it("prints transformed qualities and bass degrees accurately, retaining absolute names", () => {
     expect(rows("print(chords fifth(3m7) fifth(1/3) fifth(C))")).toEqual([
-      "chords 7m7b5(Bm7b5(B3 D4 F4 A4)) 5/7(G/B(G3 B3 D4/B2)) G(G3 B3 D4)",
+      "chords 7m7b5 → Bm7b5 → (B3 D4 F4 A4) 5/7 → G/B → (G3 B3 D4/B2) G → (G3 B3 D4)",
     ])
     expect(rows("set key D\nset mode minor\nset transpose 2\nprint(chords fifth(1m7))")).toEqual([
-      "chords 5m7(Bm7(B3 D4 F#4 A4))",
+      "chords 5m7 → Bm7 → (B3 D4 F#4 A4)",
     ])
   })
 
   it("shows repeated attacks and repeated-bar values, but never duplicates a held value", () => {
     expect(rows("print(notes 1---1---, chords C -|%|G _)")).toEqual([
-      "notes 1(C3) 1(C3)",
-      "chords C(C3 E3 G3) C(C3 E3 G3) G(G3 B3 D4)",
+      "notes 1 → C3 1 → C3",
+      "chords C → (C3 E3 G3) C → (C3 E3 G3) G → (G3 B3 D4)",
     ])
     expect(rows("print(steps x---|^-~-)\nprint(notes -1---)")).toEqual([
       "steps x^~",
-      "notes -1(B2)",
+      "notes -1 → B2",
     ])
     expect(parseCell("print(chords %|C)").errors[0].msg).toContain("first bar")
   })
 
   it("shows an empty evaluation for silence without breaking mixed arguments", () => {
     expect(rows("print(notes ----, notes 1---, chords _ _|_, steps ----)")).toEqual([
-      "notes [], 1(C3)",
+      "notes [], 1 → C3",
       "chords []",
       "steps []",
     ])
@@ -251,20 +255,20 @@ print(melody, fifth(harmony), rhythm)`)
 
 describe("a value on a line of its own", () => {
   it("prints when it is the cell's last statement, as a notebook's last expression does", () => {
-    expect(rows("chords 1/3 C/E")).toEqual(["chords 1/3(C/E(C3 E3 G3/E2)) C/E(C3 E3 G3/E2)"])
-    expect(rows("notes fifth(1 3 5 7)")).toEqual(["notes 5(G3) 7(B3) 9(D4) 11(F4)"])
+    expect(rows("chords 1/3 C/E")).toEqual(["chords 1/3 → C/E → (C3 E3 G3/E2) C/E → (C3 E3 G3/E2)"])
+    expect(rows("notes fifth(1 3 5 7)")).toEqual(["notes 5 → G3 7 → B3 9 → D4 11 → F4"])
     expect(rows("steps 2*(x- ^-)")).toEqual(["steps x^x^"])
-    expect(rows("notes melody = 1 3\nmelody")).toEqual(["notes 1(C3) 3(E3)"])
+    expect(rows("notes melody = 1 3\nmelody")).toEqual(["notes 1 → C3 3 → E3"])
     expect(rows("chords harmony = 1 4\nfifth(harmony) // up a fifth\n")).toEqual([
-      "chords 5(G(G3 B3 D4)) 8(C(C4 E4 G4))",
+      "chords 5 → G → (G3 B3 D4) 8 → C → (C4 E4 G4)",
     ])
-    expect(rows("set key D\nnotes melody = 1 3\nnotes melody")).toEqual(["notes 1(D3) 3(F#3)"])
+    expect(rows("set key D\nnotes melody = 1 3\nnotes melody")).toEqual(["notes 1 → D3 3 → F#3"])
   })
 
   it("is evaluated and shows nothing anywhere else, and print still shows one anywhere", () => {
-    expect(rows("chords 1 4\nnotes 1 2")).toEqual(["notes 1(C3) 2(D3)"])
-    expect(rows("chords 1 4\nprint(1)\nplay piano: chords 1")).toEqual(["notes 1(C3)"])
-    expect(rows("print(1)\nchords 1")).toEqual(["notes 1(C3)", "chords 1(C(C3 E3 G3))"])
+    expect(rows("chords 1 4\nnotes 1 2")).toEqual(["notes 1 → C3 2 → D3"])
+    expect(rows("chords 1 4\nprint(1)\nplay piano: chords 1")).toEqual(["notes 1 → C3"])
+    expect(rows("print(1)\nchords 1")).toEqual(["notes 1 → C3", "chords 1 → C → (C3 E3 G3)"])
     expect(rows("with key D { chords 1, }")).toEqual([])
     const p = clean("play piano: notes 1---\nchords 1 4")
     expect(p.outputs).toHaveLength(1)

@@ -16,6 +16,7 @@ import {
 } from "../chords.ts"
 import {
   intervalCall,
+  constructedType,
   intervalSteps,
   moveInScale,
   wrapInterval,
@@ -27,13 +28,12 @@ import { misplaced } from "../check.ts"
 import { bracesIn, headOf, onlyBraces, textOf, withHead, sourceOf } from "../parts.ts"
 import { atCursor, message, reportIn, type Report } from "../diagnostics.ts"
 import { SourceText, locatedTokens, tokenSources, repeatTokens } from "../source.ts"
-import { type Line, type Piece, type State, barLineProblem } from "../state.ts"
+import type { Line, Piece, State } from "../state.ts"
 import { barSlotTicks, lcm, MAX_BARS, meterOf, sayTicks, timeLabel } from "../time.ts"
 import { INTERVALS, NAME_LIKE, TRACK_RE } from "../vocab.ts"
 import {
   CHORD_MARKS,
   chordPattern,
-  chartRepeat,
   type ChartClip,
   type ChordEvent,
   type Key,
@@ -62,6 +62,7 @@ type NoteParts = { tokens: string[]; open: boolean; fill: NoteStep | null }
 type Voice = {
   bars: Step[][]
   sources: (SourceText | undefined)[]
+  endBar?: boolean
   open?: boolean
   fill?: NoteStep | null
 }
@@ -196,9 +197,6 @@ export function noteSteps(run: string): Step[] | null {
 // Use a space before another negative note: -1--- -2---. 1---2--- keeps its rhythm.
 const negativeStart = (run: string, i: number) => i === 0 && /^-[#b]?\d/.test(run)
 
-// A note's step as it's written: ^C2, b3, octave(1)
-const writtenNote = (s: NoteStep) => (s.accent ? "^" : s.ghost ? "~" : "") + s.label
-
 // The shortest run `s` repeats, when it is nothing but that run more than once: x-x-x-x-
 // is x- four times. 0 when it isn't a repeat.
 export function period(s: string): number {
@@ -279,7 +277,7 @@ export function noteParts(
   ln: number,
   part: PitchedPart | null,
   depth = 0,
-  repeats = true,
+  _repeats = true,
 ): NoteParts | null {
   // Calls can touch a preceding sustain (1---fifth(3)---). Keep the whole word
   // under a repeat count while reading each call's parentheses as one unit.
@@ -366,6 +364,8 @@ export function noteParts(
     if (!fn) return locatedTokens([token], source && [source])
     if (fn.error) return fail(fn.error, callAt(token))
     const call = fn.call!
+    if (call.name === "chord" || call.name === "modify" || call.name === "voice")
+      return fail(`${call.name}(...) produces chords, not notes; use note(...) here`, token)
     const tail = token.slice(call.end)
     if (!/^[-_]*$/.test(tail))
       return fail(message("note.spaceAfterCall", { call: call.name }), token)
@@ -463,6 +463,8 @@ export function noteParts(
         const steps = expanded?.flatMap((t) => noteSteps(t) ?? [])
         if (!steps || steps.length !== 1) return fail(message("note.fillOne"), one)
         fill = steps[0]
+        if (fill?.cut)
+          return fail("Bars automatically fill with silence; remove the rest-to-end fill", "...")
         open = true
         ws()
         if (at < value.length) return fail(message("note.afterFill"), value.slice(at))
@@ -489,34 +491,7 @@ export function noteParts(
   const tokens = sequence(0)
   if (!tokens) return null
   if (at < value.length) return fail(message("note.repeatStray"), ")")
-  if (repeats && !open && tokens.every((t) => knownSize(t) !== null)) {
-    const expanded = tokens.flatMap((t) => st.words[t]?.tokens ?? [t])
-    const run = expanded.filter((t) => t !== "|").join(" ")
-    const period = st.noteStepTicks && !/^[-_\s]*$/.test(run) && noteRunPeriod(run)
-    // Only whole bars repeat by default: shortening a figure within a bar would
-    // stretch its notes and change the rhythm. Explicit every keeps step timing.
-    const short = st.noteStepTicks
-      ? period && spaceNotes(run.replace(/\s/g, "").slice(0, period))
-      : chartRepeat(expanded)
-    if (short) {
-      const head = part ? `${part.name}: notes ` : ""
-      return fail(message("note.repeats", { head, value, short }), value)
-    }
-  }
   return { tokens, open, fill }
-}
-
-// The shortest run of notes `run` repeats, in characters, counted at note boundaries so
-// that C2-C2- repeats C2- and C2-C2-- doesn't. 0 when it isn't a repeat.
-function noteRunPeriod(run: string): number {
-  const steps = tokenize(run).flatMap((t): Step[] => noteSteps(t) || [{ name: t, label: t }])
-  if (!steps.length) return 0
-  const written = steps.map((s) => (!s ? "-" : s.cut ? "_" : writtenNote(s)))
-  for (let p = 1; p <= written.length / 2; p++) {
-    if (written.length % p) continue
-    if (written.every((w, i) => w === written[i % p])) return written.slice(0, p).join("").length
-  }
-  return 0
 }
 
 // Why `tok` isn't notes, on `inst`'s line. `chart` is the line to write if these are chords.
@@ -582,6 +557,7 @@ function noteVoice(
   const written: (SourceText | undefined)[] = []
   const sources: (SourceText | undefined)[] = []
   let barStart = 0
+  let endBar = false
   let ok = true
   const fail = (msg: string, at: string) => {
     err(line.ln, msg, at)
@@ -600,16 +576,12 @@ function noteVoice(
     barStart = steps.length
   }
   // A mistake in a name's notes is marked on that name at its use site.
-  const barLine = (viaWord?: string) => {
+  const barLine = () => {
+    endBar = true
     finishBar()
-    const problem = ok && st.noteStepTicks && barLineProblem(steps.length, st)
-    if (!problem) return
-    fail(
-      chart ? message("note.barLineChords", { problem, part: part.name, text }) : problem,
-      viaWord ?? "|",
-    )
   }
   const add = (tok: string, viaWord?: string) => {
+    endBar = false
     const at = viaWord ?? tok
     const run = noteSteps(tok)
     const spaced = run && spacedNotes(tok)
@@ -641,7 +613,7 @@ function noteVoice(
         chart,
       })
       if (problem) fail(problem, tok)
-      else for (const t of w.tokens) t === "|" ? barLine(tok) : add(t, tok)
+      else for (const t of w.tokens) t === "|" ? barLine() : add(t, tok)
     }
   }
   err = outerReport
@@ -649,7 +621,7 @@ function noteVoice(
     fail(message("block.empty", { name: part.name }), text || part.name)
   }
   finishBar()
-  return ok ? { bars, sources, open: parts.open, fill: parts.fill } : null
+  return ok ? { bars, sources, endBar, open: parts.open, fill: parts.fill } : null
 }
 
 // A note's written pitch, shared by playback and print inspection. Transpose is
@@ -680,7 +652,7 @@ export function resolveNote(
 // then `fill`, a note held to the end or silence, and has no length of its own.
 function notePattern(
   part: PitchedPart,
-  { bars, sources, open = false, fill = null }: Voice,
+  { bars, sources, endBar = false, open = false, fill = null }: Voice,
   st: State,
   err: Report,
 ): PitchedClip | null {
@@ -701,6 +673,10 @@ function notePattern(
     for (const step of bar) {
       steps.push({ step, tick: ticks })
       ticks += slot
+    }
+    if (st.noteStepTicks && (!open || endBar || index < bars.length - 1) && ticks % barTicks) {
+      steps.push({ step: { cut: true }, tick: ticks })
+      ticks = Math.ceil(ticks / barTicks) * barTicks
     }
   }
   if (ticks > MAX_BARS * barTicks) {
@@ -790,6 +766,25 @@ function pitchedLayer(
   const here = { ...part, ln: line.ln, value: line.parts }
   const text = textOf(line.parts)
   const tokens = tokenize(text, err.source)
+  const inferred = tokens.map((t) => constructedType(t, st.words) ?? st.words[t]?.type)
+  if (
+    tokens[0] !== "notes" &&
+    tokens[0] !== "chords" &&
+    inferred.some((t) => t === "notes" || t === "chords")
+  ) {
+    const type = inferred.find((t) => t === "notes" || t === "chords")!
+    if (inferred.some((t) => t && t !== type)) {
+      err(
+        line.ln,
+        "An instrument voice contains either notes or chords; put different types in separate layers",
+        text,
+      )
+      return null
+    }
+    if (type === "chords") return chordPattern(here, tokens, st, barTicks, err)
+    const voice = noteVoice(line, part, st, err, repeats)
+    return voice && notePattern(here, voice, st, err)
+  }
   if (tokens[0] === "chords") {
     const chart = locatedTokens(tokens.slice(1), tokenSources(tokens)?.slice(1))
     if (bracesIn(line.parts).length) {

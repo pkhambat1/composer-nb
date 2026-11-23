@@ -11,42 +11,49 @@ print(value: steps | notes | chords, ...)
 | --- | --- | --- |
 | `value` | `steps`, `notes` or `chords` | One or more arguments, separated by commas. Each is a typed value, a name, an interval call, or a bare value. Must be finite. Not a pattern, block or line. |
 
-Displays each argument as written, with what it resolves to under the settings in effect. `print` produces no sound and takes no musical time. It is a statement, not a function: it returns nothing and cannot be nested. It stands at the top level of a cell or inside a top-level `with`, and nothing may follow its closing parenthesis on the line.
+Displays each evaluated argument, with what it resolves to under the settings in effect. `print` produces no sound and takes no musical time. It is a statement, not a function: it returns nothing and cannot be nested. It stands at the top level of a cell or inside a top-level `with`, and nothing may follow its closing parenthesis on the line.
 
 ## Arguments
 
 | Argument | Read as |
 | --- | --- |
 | `steps step_seq`, `notes note_seq`, `chords chart` | The type written. |
+| `note(value)`, `chord(value)` | The constructor's type. |
 | A name | Its declared type. |
 | An interval call on a name | The type of the name. |
 | A bare degree or note letter, `1`, `C`, or a call on one | `notes`. |
 | A bare value that can only be one type, `Cmaj7`, `x-x-` | That type. |
 
-Each argument has one type. The type keyword goes at the start of the argument, not inside a call.
+Each argument has one type. Constructors such as `note(1)` and `chord(1)` establish it inside a call: `print(second(note(1)))`. A sequence may also use a `notes` or `chords` prefix at the start of the argument.
 
 ## Output
 
-One row per run of arguments with the same type: the type, then each value followed by its meaning in parentheses.
+Print evaluates calls before displaying their results. One row holds consecutive arguments of the same type. Spaces separate values within an argument; commas separate arguments. Only the leading evaluated value is bold; arrows, chord names and pitches use regular weight.
 
-| Value | Shown as |
+| Value | Display |
 | --- | --- |
-| Note | The note as written, then its pitch: `1(C3)`. A note written with its octave, such as `E4`, is shown alone. |
-| Chord | The chord as written, then its tones: `C(C3 E3 G3)`. A degree also shows the chord's name: `4(F(F3 A3 C4))`. |
-| Slash chord | The bass after a slash, among the tones: `C/E(C3 E3 G3/E2)`. |
-| Steps | The hits, without silence: `x^`. |
+| Note degree | **1** → C3 |
+| Absolute pitch | **E4** |
+| Chord degree | **4** → F → (F3 A3 C4) |
+| Named chord | **C** → (C3 E3 G3) |
+| Slash chord | **C/E** → (C3 E3 G3/E2) |
+| Steps | **x^** |
 
-Within a row, a comma separates one argument from the next. Holds, rests and bar lines are not shown. A value with no hits or notes shows `[]`. Under `transpose`, the parentheses show the sounding pitches.
+Function calls and constructors never add display levels. Deeply nested calls still resolve to a degree, a chord name, and its pitches. Unusual unnamed harmonies display their evaluated tone set rather than an unevaluated function call.
+
+Holds, rests and bar lines are omitted. Empty values show `[]`. Under `transpose`, resolved names and pitches reflect the sounding result.
 
 ```composer-nb Example
-steps accents = x-^-
-print(accents, notes 1 3 5, chords 1 4 | 5dom7, chords C/E)
+print(second(note(1)), second(chord(1)))
+print(chord(1 4), chord(5))
+print(second(modify(chord(1), sus2)))
 ```
 
 ```text Output
-steps x^
-notes 1(C3) 3(E3) 5(G3)
-chords 1(C(C3 E3 G3)) 4(F(F3 A3 C4)) 5dom7(G7(G3 B3 D4 F4)), C/E(C3 E3 G3/E2)
+notes 2 → D3
+chords 2 → Dm → (D3 F3 A3)
+chords 1 → C → (C3 E3 G3) 4 → F → (F3 A3 C4), 5 → G → (G3 B3 D4)
+chords 2sus2 → Dsus2 → (D3 E3 A3)
 ```
 
 ## Last expression
@@ -55,7 +62,7 @@ chords 1(C(C3 E3 G3)) 4(F(F3 A3 C4)) 5dom7(G7(G3 B3 D4 F4)), C/E(C3 E3 G3/E2)
 value_expr ::= "steps" step_seq | "notes" note_seq | "chords" chart | name | call
 ```
 
-A value written as a statement of its own is displayed as if printed, when it is the last statement of the cell. Earlier ones are checked and not displayed, and so is one inside a `with`. A literal needs its type keyword; a name or a call on a name does not.
+A value written as a statement of its own is displayed as if printed, when it is the last statement of the cell. Earlier ones are checked and not displayed, and so is one inside a `with`. Use a constructor for a typed literal; names and calls preserve their types.
 
 ```composer-nb Example
 notes riff = 1 3 5
@@ -63,7 +70,7 @@ fifth(riff)
 ```
 
 ```text Output
-notes 5(G3) 7(B3) 9(D4)
+notes 5 → G3 7 → B3 9 → D4
 ```
 
 ## Errors

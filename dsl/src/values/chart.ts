@@ -3,6 +3,9 @@
    (Am7, C6/9/E), a scale degree (1, 5dom7), or an interval function. */
 import {
   applyTranspose,
+  shiftChordTones,
+  retainVoicing,
+  voicedChord,
   buildChord,
   chordParts,
   degreeNumber,
@@ -21,7 +24,6 @@ import {
   splitBars,
 } from "../intervals.ts"
 import { misplaced } from "../check.ts"
-import { textOf } from "../parts.ts"
 import type { Piece, State } from "../state.ts"
 import { callAt, drawsNotes, spaceNotes } from "./notes.ts"
 import { barSlotTicks, timeLabel } from "../time.ts"
@@ -100,6 +102,10 @@ export function chordSlot(
       return null
     }
     const call = fn.call!
+    if (call.name === "note") {
+      err(part.ln, "note(...) produces notes, not chords; use chord(...) here", at)
+      return null
+    }
     if (call.end !== tok.length || call.prefix) {
       err(part.ln, message("chord.callEnds"), at)
       return null
@@ -115,7 +121,39 @@ export function chordSlot(
       at === tok ? call.body : at,
     )
     if (!inner?.chord) return inner
-    const chord = moveChord(inner.chord, key, intervalSteps(call, key))
+    let chord = moveChord(inner.chord, key, intervalSteps(call, key))
+    if (call.name === "voice") {
+      const voiced = shiftChordTones(inner.chord, call.shifts!)
+      if (typeof voiced === "string") {
+        err(part.ln, voiced, at)
+        return null
+      }
+      chord = voiced
+    }
+    if (call.name === "modify") {
+      const harmony = inner.chord.voicing?.base ?? inner.chord
+      const [main, bass] = chordParts(harmony.label)
+      const rootOctave = Number(/-?\d+$/.exec(harmony.noteNames[0])![0])
+      const changed = buildChord(main + call.modifier + (bass ? `/${bass}` : ""), key, rootOctave)
+      if (!changed) {
+        err(part.ln, `Cannot apply ${call.modifier} to ${inner.chord.label}`, at)
+        return null
+      }
+      chord = {
+        ...changed,
+        ...(inner.chord.overBass
+          ? { bassMidi: inner.chord.bassMidi, bassName: inner.chord.bassName }
+          : {}),
+      }
+    }
+    if (call.name === "modify" && inner.chord.voicing) {
+      const voiced = retainVoicing(inner.chord, chord)
+      if (typeof voiced === "string") {
+        err(part.ln, voiced, at)
+        return null
+      }
+      chord = voiced
+    }
     chord.input = tok
     applyTranspose(chord, st.transpose)
     if (![chord.bassMidi, ...chord.notesMidi].every((m) => m >= 0 && m <= 127)) {
@@ -158,6 +196,9 @@ export function chordSlot(
 // Recognize the resulting harmony for its chip and guitar shape. Unusual tone
 // sets get an honest list of spelled notes instead of an incorrect chord name.
 function moveChord(chord: Chord, key: Key, steps: number): Chord {
+  if (chord.voicing)
+    return voicedChord(moveChord(chord.voicing.base, key, steps), chord.voicing.octaves)
+
   const notes = chord.notesMidi.map((m, i) => moveInScale(m, chord.noteNames[i], key, steps))
   const bass = moveInScale(chord.bassMidi, chord.bassName, key, steps)
   const root = notes[0].name.replace(/-?\d+$/, "")
@@ -167,7 +208,23 @@ function moveChord(chord: Chord, key: Key, steps: number): Chord {
       type.intervals.length === intervals.length &&
       type.intervals.every((iv, i) => iv === intervals[i]),
   )
-  const suffix = known?.name === "major" ? "" : known?.aliases[0]
+  let suffix = known?.name === "major" ? "" : known?.aliases[0]
+  // A diatonic ninth can acquire a flat ninth and/or fifth. Recognize those
+  // alterations even when Tonal has no dictionary entry for the full symbol.
+  if (suffix === undefined) {
+    const semis = notes.map((n) => n.midi - notes[0].midi)
+    for (const candidate of ["m7b9", "m7b5b9", "maj7b9", "7b9", "m9b5"]) {
+      const built = buildChord(root + candidate, key, Number(/-?\d+$/.exec(notes[0].name)![0]))
+      if (
+        built &&
+        built.notesMidi.length === semis.length &&
+        built.notesMidi.every((m, i) => m - built.notesMidi[0] === semis[i])
+      ) {
+        suffix = candidate
+        break
+      }
+    }
+  }
   const [original, originalBass] = chordParts(chord.label)
   const sameShape = intervals.every(
     (iv, i) => iv === Note.distance(chord.noteNames[0], chord.noteNames[i]),
@@ -248,7 +305,10 @@ export function expandChordTokens(
     }
     if (fn.error) return fail(fn.error, callAt(token))
     const call = fn.call!
-    if (call.end !== token.length || call.prefix) return fail(message("chord.callEnds"), token)
+    if (call.name === "note")
+      return fail("note(...) produces notes, not chords; use chord(...) here", token)
+    if (call.end !== token.length || call.prefix)
+      return fail("A chord interval call ends at its closing ): fifth(1)", token)
     const bodyFrom = token.indexOf("(") + 1
     const leading = token.slice(bodyFrom).length - token.slice(bodyFrom).trimStart().length
     const body = source?.slice(bodyFrom + leading, bodyFrom + leading + call.body.length)
@@ -282,23 +342,6 @@ export function validChordToken(token: string, st: State, err: Report, ln: numbe
   return !!chordSlot(token, { name: "piano", ln }, { ...st, transpose: 0 }, keyOf(st)!, err)
 }
 
-// A chart that is the same bars more than once, after its names and % are written out:
-// Am F|Am F is Am F twice. Returns the bars it repeats (Am F), or null. A chart repeats at
-// the bar, so C C inside one bar strikes the chord twice and is no repeat.
-export function chartRepeat(tokens: string[]): string | null {
-  const bars: string[] = []
-  for (const bar of splitBars(tokens)) {
-    if (bar.length === 1 && bar[0] === "%") bars.push(bars.at(-1) ?? "%")
-    else bars.push(bar.join(" "))
-  }
-  for (let p = 1; p <= bars.length / 2; p++) {
-    if (bars.length % p === 0 && bars.every((b, i) => b === bars[i % p])) {
-      return bars.slice(0, p).join("|")
-    }
-  }
-  return null
-}
-
 // A chords line: its chords, `tokens`, read from the line's value, when it has one
 export function chordPattern(
   part: Part & { value?: Piece[] },
@@ -318,20 +361,6 @@ export function chordPattern(
   const places: number[][] = [[]]
   expanded.forEach((t, k) => (t === "|" ? places.push([]) : places.at(-1)!.push(k)))
   let ok = true
-  const again = chartRepeat(expanded)
-  if (again) {
-    const chart = part.value ? textOf(part.value).replace(/^chords\s*/, "") : tokens.join(" ")
-    err(
-      part.ln,
-      message("chord.repeats", {
-        part: part.name,
-        chart: tokens.join(" ").replace(/ \| /g, "|"),
-        again,
-      }),
-      chart,
-    )
-    return null
-  }
   const bars: Slot[][] = []
   for (const at of places.filter((b) => b.length)) {
     const bar = at.map((k) => expanded[k])

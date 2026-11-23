@@ -9,6 +9,7 @@ import type { Span, Token, TokenKind } from "./syntax.ts"
 export class Lexer {
   readonly #src: string
   #at = 0
+  #objectDepth = 0
   #line = 1
   #col = 0
   // ( still open at each brace level, the cell's own level first
@@ -40,6 +41,14 @@ export class Lexer {
         this.#inside || this.#parens.length > 1 || !this.#breaks() ? "join" : "newline",
         1,
       )
+    if (c === "{" && (this.#objectDepth || voiceObject(this.#heads.at(-1)!))) {
+      this.#objectDepth++
+      return this.#take("text", 1)
+    }
+    if (c === "}" && this.#objectDepth) {
+      this.#objectDepth--
+      return this.#take("text", 1)
+    }
     if (c === "{") {
       this.#heads[this.#heads.length - 1] = ""
       this.#parens.push(0)
@@ -78,6 +87,7 @@ export class Lexer {
   // setting commas until its opening brace; every other brace-level comma ends an entry.
   // Keep obsolete semicolons as separators so the parser can give a migration error.
   #separator(at: number): boolean {
+    if (this.#objectDepth) return false
     if (this.#src[at] === ";") return true
     const level = this.#parens.length - 1
     if (this.#src[at] !== "," || (!this.#inside && !level) || this.#parens[level]) return false
@@ -124,4 +134,21 @@ export class Lexer {
     const span: Span = { ...start, endLine: this.#line, endCol: this.#col }
     return { kind, text, span }
   }
+}
+
+// Only the second argument of voice owns an object. Musical bodies remain blocks,
+// including bodies elsewhere in the same parenthesized play expression.
+function voiceObject(prefix: string): boolean {
+  const calls: { name: string; argument: number }[] = []
+  let braces = 0
+  for (let i = 0; i < prefix.length; i++) {
+    const c = prefix[i]
+    if (c === "{") braces++
+    else if (c === "}") braces--
+    else if (!braces && c === "(")
+      calls.push({ name: /([A-Za-z]+)\s*$/.exec(prefix.slice(0, i))?.[1] ?? "", argument: 0 })
+    else if (!braces && c === ")") calls.pop()
+    else if (!braces && c === "," && calls.length) calls.at(-1)!.argument++
+  }
+  return calls.at(-1)?.name === "voice" && calls.at(-1)?.argument === 1
 }

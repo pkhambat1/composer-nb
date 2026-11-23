@@ -47,7 +47,7 @@ print(notes 1 3 5 8 -1 -7 b3)
 ```
 
 ```text Output
-notes 1(C3) 3(E3) 5(G3) 8(C4) -1(B2) -7(C2) b3(Eb3)
+notes 1 → C3 3 → E3 5 → G3 8 → C4 -1 → B2 -7 → C2 b3 → Eb3
 ```
 
 ```composer-nb Example
@@ -55,7 +55,7 @@ with key A, mode minor { print(notes 1 3 5 8 -1 -7 #7) }
 ```
 
 ```text Output
-notes 1(A3) 3(C4) 5(E4) 8(A4) -1(G3) -7(A2) #7(G#4)
+notes 1 → A3 3 → C4 5 → E4 8 → A4 -1 → G3 -7 → A2 #7 → G#4
 ```
 
 In `notes`, a degree is one pitch. In `chords`, a degree is the triad the scale builds on that pitch: every other scale tone, three of them. A suffix replaces or alters that triad; see [Chords by degree](/pitched/chords#chords-by-degree).
@@ -65,7 +65,7 @@ print(chords 1 2 3 4 5 6 7)
 ```
 
 ```text Output
-chords 1(C(C3 E3 G3)) 2(Dm(D3 F3 A3)) 3(Em(E3 G3 B3)) 4(F(F3 A3 C4)) 5(G(G3 B3 D4)) 6(Am(A3 C4 E4)) 7(Bdim(B3 D4 F4))
+chords 1 → C → (C3 E3 G3) 2 → Dm → (D3 F3 A3) 3 → Em → (E3 G3 B3) 4 → F → (F3 A3 C4) 5 → G → (G3 B3 D4) 6 → Am → (A3 C4 E4) 7 → Bdim → (B3 D4 F4)
 ```
 
 ```composer-nb Example
@@ -73,7 +73,7 @@ with mode minor { print(chords 1 2 3 4 5 6 7) }
 ```
 
 ```text Output
-chords 1(Cm(C3 Eb3 G3)) 2(Ddim(D3 F3 Ab3)) 3(Eb(Eb3 G3 Bb3)) 4(Fm(F3 Ab3 C4)) 5(Gm(G3 Bb3 D4)) 6(Ab(Ab3 C4 Eb4)) 7(Bb(Bb3 D4 F4))
+chords 1 → Cm → (C3 Eb3 G3) 2 → Ddim → (D3 F3 Ab3) 3 → Eb → (Eb3 G3 Bb3) 4 → Fm → (F3 Ab3 C4) 5 → Gm → (G3 Bb3 D4) 6 → Ab → (Ab3 C4 Eb4) 7 → Bb → (Bb3 D4 F4)
 ```
 
 ## Spelling and key signature
@@ -93,6 +93,6 @@ with key F, mode minor { print(riff) }
 ```
 
 ```text Output
-notes 1(D3) 3(F#3) 5(A3)
-notes 1(F3) 3(Ab3) 5(C4)
+notes 1 → D3 3 → F#3 5 → A3
+notes 1 → F3 3 → Ab3 5 → C4
 ```

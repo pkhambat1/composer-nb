@@ -4,25 +4,29 @@ description: "The `play` statement: renders a part as sound."
 ---
 
 ```text Syntax
-play_stmt ::= "play" part ["for" length]
+play_stmt ::= "play" "(" part ")" ["for" length]
 ```
 
 | Operand | Type | May be |
 | --- | --- | --- |
-| `part` | `part` | A [line](/language/patterns#lines), a `pattern` or `block` name, `pattern { ... }`, `block { ... }`, a [group](/language/patterns#groups), an [every](/language/patterns#every), a [placed part](/language/patterns#on-bar), or a [with](/language/scope#with). |
+| `part` | `part` | A [line](/language/patterns#lines), a `pattern` or `block` name, `pattern({ ... })`, `block({ ... })`, bare `{ ... }`, a [group](/language/patterns#groups), an [every](/language/patterns#every), a [placed part](/language/patterns#on-bar), or a [with](/language/scope#with). |
 | `length` | `length` | `number "bars"`: greater than 0, at most 64. |
+
+The older `play part` spelling remains accepted. New examples use `play(part)`.
+
+Bare braces construct a block. Finite lines are padded with silence to complete bars. A pattern repeats those padded bars; a block plays its lines once.
 
 Evaluates `part` under the settings in effect and produces one output. `play` is a statement: it stands at the top level of a cell or inside a top-level `with`, never inside a body.
 
-`steps`, `notes` and `chords` are not parts. To hear one, give it a line: `play piano: notes riff`.
+`steps`, `notes` and `chords` are not parts. To hear one, give it a line: `play(piano: riff)`.
 
 ## What plays how often
 
 | Part after `play` | Without `for` | With `for length` |
 | --- | --- | --- |
 | Line | Once. | Once, then silence. |
-| `block { ... }` | Its lines once. | Its lines once in a block of that length. |
-| `pattern { ... }` | One cycle: until its lines realign. | Its lines repeat for that length. |
+| `block({ ... })` | Its lines once. | Its lines once in a block of that length. |
+| `pattern({ ... })` | One cycle: until its lines realign. | Its lines repeat for that length. |
 | Pattern name | Its own length. | Repeats, cut off at `length`. |
 | Block name | Its own length. | Once, then silence. |
 | Group | Its parts in order, once. | Repeats as a whole, cut off at `length`. |
@@ -33,9 +37,9 @@ Evaluates `part` under the settings in effect and produces one output. `play` is
 "for" length
 ```
 
-Without `for`, the output lasts as long as the part. With `for`, the output lasts exactly `length`: whatever is still repeating or sounding is cut off there, and time the part does not fill is silent. For `pattern { ... }` and `block { ... }` written inline, `for` is the length of that pattern or block itself.
+Without `for`, the output lasts as long as the part. With `for`, the output lasts exactly `length`: whatever is still repeating or sounding is cut off there, and time the part does not fill is silent. For `pattern({ ... })` and `block({ ... })` written inline, `for` is the length of that pattern or block itself.
 
-`for` only bounds the output. A named part keeps its own length, and everything inside it must still fit by its own rules.
+`for` only bounds the output. A named part keeps its own length, and a longer output adds silence after a block or repeats a pattern.
 
 Bars are the music's own: when the part sets its time with `with`, `for 8 bars` is eight of its bars, and parts in order in different meters count their bars one after another. A tempo of its own is only a speed, so its length counts the bars of the play it's in.
 
@@ -43,9 +47,9 @@ One output may last at most 600 seconds.
 
 ```composer-nb Example
 pattern groove = { kick: x--- --x-, hat: x- }
-play groove
-play groove for 4 bars
-play pattern { kick: x---, crash: x ...- } for 2 bars
+play(groove)
+play(groove) for 4 bars
+play(pattern({ kick: x---, crash: x })) for 2 bars
 ```
 
 ## Output

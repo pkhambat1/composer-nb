@@ -57,7 +57,7 @@ export const STEP_MESSAGES = {
 
   // A kit line's step words
   "step.needsWord": () => "A repeat needs a step word or a group: 3*x- or 2*(x- --^)",
-  "step.silence": () => "A step of silence is -. Repeat silence with 8*- or fill with ...-",
+  "step.silence": () => "A step of silence is -. Repeat internal silence with 8*-; trailing silence is automatic",
   "step.lengths": () =>
     "Kit lines use step words, not lengths: repeat with 4*x- or fill the block with ...x-",
   "step.beatList": () => "Kit lines use step words, not beat lists: draw the hits with x and -",

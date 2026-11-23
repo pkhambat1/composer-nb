@@ -24,7 +24,7 @@ An `integer` is a literal, not an expression. Positions that take an `integer` s
 
 ```composer-nb Example
 set tempo 60*2
-play piano: notes 1--- for 1/2 bars
+play(piano: notes 1---) for 1/2 bars
 ```
 
 Inside music the same characters have other meanings: `*` repeats a word, `/` adds a bass to a chord, `-` holds a note or negates a degree. A time signature is written with `over`, because `7/8` is the number 0.875.
@@ -51,10 +51,10 @@ A `length` may stand in these positions:
 | --- | --- |
 | `pattern name = length body`, `block name = length body` | The declared part lasts exactly `length`. |
 | `length "pattern" body`, `length "block" body` | The inline part lasts exactly `length`. |
-| `length name`, `length group` | The named pattern or the group repeats for `length`, which must hold a whole number of repetitions. A block name takes no length: a block plays once. |
+| `length name`, `length group` | The named pattern or the group repeats for `length`, allowing a partial final repetition. A block name takes no length: a block plays once. |
 | `play part "for" length` | The output lasts `length`; see [play duration](/language/play#duration). |
 
-`steps`, `notes` and `chords` never take a length: they last as long as what is written. To make one longer, repeat a word (`8*-`) or end the line with a fill (`...-`).
+`steps`, `notes` and `chords` never take a length: they last as long as what is written. To make one longer, repeat a word (`8*-`) or specify the containing part’s length; trailing silence is automatic.
 
 ## Limits
 

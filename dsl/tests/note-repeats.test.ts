@@ -86,38 +86,36 @@ play every 1/4 beats { block { piano: notes fifth(phrase, 2) } }`)
     ])
     expect(p.totalSec).toBe(2)
     clean("play piano: notes 2*(1 7*- 3 7*- |)")
-    expect(errors("play every 1/4 beats { block { piano: notes 2*(1 3*- |) } }")).toMatch(
-      /isn't at the end of a bar/,
-    )
+    expect(
+      clean("play every 1/4 beats { block { piano: notes 2*(1 3*- |) } }").notes.map((e) => e.tick),
+    ).toEqual([0, 384])
   })
 
-  it("allows finite repetition but asks pattern lines for their repeating figure once", () => {
+  it("allows written repetition in both blocks and patterns", () => {
     for (const value of ["1---1---", "2*1---", "2*(1---)"]) {
-      clean(`play piano: notes ${value}`)
-      clean(`play block { piano: notes ${value}, }`)
-      clean(`notes phrase = ${value}\nplay every 1/4 beats { block { piano: notes phrase } }`)
-      clean(`play pattern { piano: notes ${value}, }`)
-      expect(errors(`play every 1/4 beats { piano: notes ${value}, }`)).toMatch(
-        /pattern repeats it/,
-      )
+      for (const source of [
+        `play(piano: notes ${value})`,
+        `play(pattern({ piano: notes ${value} }))`,
+        `play every 1/4 beats { piano: notes ${value} }`,
+      ])
+        expect(clean(source).notes).toHaveLength(2)
     }
-    clean("play pattern { piano: notes 1 7*- 3 7*-, }")
   })
 
   it("fills with a new note, sustain or silence after a finite prefix", () => {
     const fill = (value: string) =>
       clean(`play every 1/4 beats { block { piano: notes ${value}, hat: 16*x, } }`).notes
     expect(fill("1 3*- ...-").map((e) => [e.tick, e.ticks])).toEqual([[0, 384]])
-    expect(fill("1 3*- ..._").map((e) => [e.tick, e.ticks])).toEqual([[0, 96]])
+    expect(fill("1 3*-").map((e) => [e.tick, e.ticks])).toEqual([[0, 96]])
     expect(fill("1 3*- ...3").map((e) => [e.note.midi, e.tick, e.ticks])).toEqual([
       [48, 0, 96],
       [52, 96, 288],
     ])
     expect(fill("...fifth(-1)")[0].note.midi).toBe(53)
     expect(errors("play piano: notes 2*(1 ..._)")).toMatch(/bounded repeat/)
-    expect(errors("play piano: notes fifth(1 ..._)")).toMatch(/outside the function/)
-    expect(errors("play piano: notes 1 ..._ 3")).toMatch(/nothing goes after/)
-    expect(errors("notes phrase = 1 ..._")).toMatch(/length of their own/)
+    expect(errors("play piano: notes fifth(1 ...3)")).toMatch(/outside the function/)
+    expect(errors("play piano: notes 1 ..._ 3")).toMatch(/automatically fill with silence/)
+    expect(errors("notes phrase = 1 ..._")).toMatch(/automatically fill with silence/)
   })
 
   it("rejects obsolete durations and comma lists with migration advice", () => {
@@ -148,7 +146,7 @@ play every 1/4 beats { block { piano: notes fifth(phrase, 2) } }`)
   })
 
   it("highlights repeats and preserves every source character", () => {
-    for (const value of ["2*(^-1--- fifth(3, -1) 3*_) ..._", "...fifth(1)", "2*fifth(C3, 2)"]) {
+    for (const value of ["2*(^-1--- fifth(3, -1) 3*_)", "...fifth(1)", "2*fifth(C3, 2)"]) {
       const source = `play block { piano: notes ${value}, } for 2 bars`
       clean(source)
       const highlighted = highlightMusic(source).flat()

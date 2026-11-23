@@ -5,10 +5,14 @@ import { message } from "./diagnostics.ts"
 import { count, meterOf, TPQ, timeLabel, type Timing } from "./time.ts"
 import type { Setting, Type } from "./vocab.ts"
 
+// Step positions in units of the active step length. Layer padding can be fractional.
+export type StepSequence = { length: number; steps: { at: number; token: string }[] }
+
 // A name of steps, notes or chords, and what it holds, as tokens
 export type Word = {
   type: Type
   tokens: string[]
+  stepSequence?: StepSequence
   line: number
   beats?: boolean // it holds beats (snare: 2 4), which may be written once in a pattern
   above?: boolean // it came from a cell above, so this cell can define it again

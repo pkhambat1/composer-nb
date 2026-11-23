@@ -11,7 +11,7 @@ attack    ::= ["^" | "~"] pitch
 pitch     ::= letter ["#" | "b"] [octave] | degree | numeral
 repeat    ::= integer "*" (note_word | name | call | "(" note_item+ ")")
 call      ::= ["^" | "~"] interval "(" note_seq ["," integer] ")"
-note_fill ::= "..." (pitch | "-" | "_")
+note_fill ::= "..." (pitch | "-")
 ```
 
 A `notes` value is a melody or bass line: one note at a time, written in bars. It names no instrument: the [instrument line](/pitched/instruments#instrument-lines) it is written on decides what plays it. Several voices at once are [layers](/pitched/instruments#layers) on that line.
@@ -20,7 +20,7 @@ A `notes` value is a melody or bass line: one note at a time, written in bars. I
 
 | Position | Signature | Notes |
 | --- | --- | --- |
-| On an instrument line | `instrument ":" "notes" note_seq` | The `notes` keyword is required, before a name as well. |
+| On an instrument line | `instrument ":" "notes" note_seq` | Use `note(value)` or a typed name directly; a whole sequence may use the `notes` prefix. |
 | In a declaration | `"notes" name "=" note_seq` | Must be finite: no `note_fill`. |
 | As a function argument | `interval "(" note_seq ")"` | Must be finite. |
 | In `print`, or as a last expression | `"notes" note_seq`, or a `notes` name | Must be finite. |
@@ -35,7 +35,7 @@ A `notes` value is a melody or bass line: one note at a time, written in bars. I
 | Interval call | `octave(riff)`, `fifth(1 3)` | The argument, moved through the scale; see [Interval functions](/functions/intervals). |
 | Repeat | `4*1`, `2*(1-3-)`, `2*riff` | The word, name, call or group, that many times in a row. |
 | Bar line | `\\|` | Separates bars. The notes, holds and rests in each bar divide it evenly. |
-| Fill | `...-`, `..._`, `...5` | Last on the line: holds, rests or sounds a note to the end of the surrounding part. |
+| Fill | `...-`, `...5` | Last on the line: holds or sounds a note to the end of the surrounding part. |
 
 Items are separated by spaces, which take no time. Two notes may not touch: `F# E`, not `F#E`. A note may be followed directly by its holds and rests, and the next note may follow those: `1---3---`.
 
@@ -56,7 +56,7 @@ print(notes C E4 F#2 Bb, notes 1 3 b3 8 -1, notes i iii v)
 ```
 
 ```text Output
-notes C(C3) E4 F#2 Bb(Bb3), 1(C3) 3(E3) b3(Eb3) 8(C4) -1(B2), 1(C3) 3(E3) 5(G3)
+notes C → C3 E4 F#2 Bb → Bb3, 1 → C3 3 → E3 b3 → Eb3 8 → C4 -1 → B2, 1 → C3 3 → E3 5 → G3
 ```
 
 ## Steps, holds and rests
@@ -64,10 +64,10 @@ notes C(C3) E4 F#2 Bb(Bb3), 1(C3) 3(E3) b3(Eb3) 8(C4) -1(B2), 1(C3) 3(E3) 5(G3)
 Each note, hold and rest occupies one slot, however many characters the note takes to write. The slots in each bar divide that bar evenly, just as they do in `chords`: in `4 over 4`, `1 2 3 4` is four quarter notes, `1 5` is two half notes, and `1` is a whole note. Without a bar line, the entire value is one bar; with bar lines, each bar divides independently.
 
 ```composer-nb Example
-play piano: notes 1 2 3 4 | 5 6 7 8 | 8 7 6 5 | 4 3 2 1
+play(piano: notes 1 2 3 4 | 5 6 7 8 | 8 7 6 5 | 4 3 2 1)
 ```
 
-As with chords, slots must land on the sixteenth-note grid. For a fixed step length, triplets or a riff shorter than a bar, use [every](/language/patterns#every): `play every 1/4 beats piano: notes 1 2 3` plays three sixteenth notes. Inside `every`, `|` checks that the fixed steps reach a bar boundary.
+As with chords, slots must occupy whole ticks at 96 ticks per beat. Three equal notes in 4/4 are valid. For a fixed step length, triplets or a riff shorter than a bar, use [every](/language/patterns#every): `play every 1/4 beats piano: notes 1 2 3` plays three sixteenth notes. Inside `every`, `|` fills the rest of the bar with silence; the final incomplete bar is padded too.
 
 | Token | Effect on its slot |
 | --- | --- |
@@ -80,7 +80,7 @@ As with chords, slots must land on the sixteenth-note grid. For a fixed step len
 A note sounds until the next note, the next `_`, or the end of the part. In a repeating pattern, a note still held at the end of the line rings into the repeat until the line's first note or rest.
 
 ```composer-nb Example
-play piano: notes C4--- E4-_- ^G4- ~G4- C5---
+play(piano: notes C4--- E4-_- ^G4- ~G4- C5---)
 ```
 
 ## Length
@@ -109,32 +109,32 @@ repeat ::= integer "*" (note_word | name | call | "(" note_item+ ")")
 
 Plays its right-hand side `integer` times in a row. A repeat copies what it is given: `8*1` is eight separate notes, `1 7*-` is one note held for eight steps, and `8*_` is eight silent steps. Parentheses in notes always need a count.
 
-A pattern may repeat attacks within a bar: `4*1` is four notes, not one long note. A sequence of whole bars written out several times in a pattern is an error, since the pattern repeats those bars automatically. Under `every`, the fixed-step repeating-figure rule applies; see [In a pattern, write the figure once](/drums/steps#in-a-pattern-write-the-figure-once).
+A pattern may repeat attacks within a bar: `4*1` is four notes, not one long note. Explicit repetition is valid in both patterns and blocks. Finite fixed-step lines are padded to complete bars before they repeat; see [Explicit repetition](/drums/steps#explicit-repetition).
 
 ```composer-nb Example
 print(notes 2*(1 3) 5 3*-)
 ```
 
 ```text Output
-notes 1(C3) 3(E3) 1(C3) 3(E3) 5(G3)
+notes 1 → C3 3 → E3 1 → C3 3 → E3 5 → G3
 ```
 
 ## Fills
 
 ```text Syntax
-note_fill ::= "..." (pitch | "-" | "_")
+note_fill ::= "..." (pitch | "-")
 ```
 
 | Fill | Effect |
 | --- | --- |
 | `...-` | The note sounding is held to the end of the surrounding part. |
-| `..._` | The note sounding stops; silence to the end. |
+
 | `...pitch` | That note starts and is held to the end. |
 
 A fill is the last item on a line and has no length of its own: another finite line, or an explicit length, must say when the part ends. It starts after the written bars (or after the fixed steps inside `every`); with no prefix it starts immediately. A value with a fill cannot be named, printed or passed to a function.
 
 ```composer-nb Example
-play piano: notes 1 3 5 - ...- for 2 bars
+play(piano: notes 1 3 5 - ...-) for 2 bars
 ```
 
 ## Interval calls
@@ -151,7 +151,7 @@ print(notes riff fifth(riff) octave(riff, -1))
 ```
 
 ```text Output
-notes 1(C3) 3(E3) 5(G3) 7(B3) -7(C2) -5(E2)
+notes 1 → C3 3 → E3 5 → G3 7 → B3 -7 → C2 -5 → E2
 ```
 
 ## Errors
@@ -169,7 +169,7 @@ play piano: notes 1 rest 3
 ```
 
 ```text Error
-A silent note step is _. Repeat silence with 8*_ or fill with ..._
+A silent note step is _. Repeat silence with 8*_; unfinished bars fill with silence
 ```
 
 ```composer-nb Invalid

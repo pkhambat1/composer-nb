@@ -19,7 +19,7 @@ A `chords` value is a chord chart: bars separated by `|`, each bar divided equal
 
 | Position | Signature | Notes |
 | --- | --- | --- |
-| On an instrument line | `instrument ":" "chords" chart` | The `chords` keyword is required, before a name as well. |
+| On an instrument line | `instrument ":" "chords" chart` | A named chord or typed call goes directly on the line. Use `chord(...)` for an inline typed value, or `chords` before a whole chart. |
 | In a declaration | `"chords" name "=" chart` |  |
 | As a function argument | `interval "(" chart ")"` |  |
 | In `print`, or as a last expression | `"chords" chart`, or a `chords` name |  |
@@ -41,25 +41,23 @@ Slots are separated by spaces. A long chart may continue on a new line that star
 
 ## Bars and slots
 
-A bar's slots share it equally, and each slot must last a whole number of sixteenth notes. A `4 over 4` bar therefore holds 1, 2, 4, 8 or 16 slots; a `3 over 4` bar 1, 2, 3, 4, 6 or 12. [every](/language/patterns#every) does not change this: chords count bars, not steps.
+A bar's slots share it equally at the engine's resolution of 96 ticks per beat. Three equal chords in 4/4 are valid: each lasts 128 ticks (1⅓ beats). Slots must contain a whole number of ticks. [every](/language/patterns#every) does not change this: chords count bars, not steps.
 
 A chart is as long as its bars. It takes no `n*` repeats and no `...` fills.
 
 - A chart cannot start with `-`: there is no chord to hold.
 - `%` stands alone in its bar and needs a bar before it.
-- In a pattern, a chart that is the same bars written out more than once is an error, with or without `%`. Write one cycle; the pattern repeats it. The same chord twice inside one bar, `C C`, is fine.
+- Repeated chords and bars are allowed, including inside patterns.
 
 ```composer-nb Example
-play piano: chords C - G _ | Am F | % | G
+play(piano: chords C - G _ | Am F | % | G)
 ```
 
-```composer-nb Invalid
-play piano: chords C D E
+```composer-nb Example
+play(piano: chords C D E)
 ```
 
-```text Error
-A 4 over 4 bar can't be split evenly into 3. Use - to hold a chord for another slot, e.g. Am - F G
-```
+The three chords divide the bar equally.
 
 ## Names in a chart
 
@@ -70,7 +68,7 @@ To make one chord a full bar under a name, keep its bar lines: `chords homeBar =
 ```composer-nb Example
 chords home = 1
 chords turn = 4 5 | 1
-play piano: chords home fifth(home) | turn
+play(piano: chords home fifth(home) | turn)
 ```
 
 ## Chord symbols
@@ -93,7 +91,7 @@ print(chords C Dm7 G7 Fmaj7 Bb/D C6/9)
 ```
 
 ```text Output
-chords C(C3 E3 G3) Dm7(D3 F3 A3 C4) G7(G3 B3 D4 F4) Fmaj7(F3 A3 C4 E4) Bb/D(Bb3 D4 F4/D2) C6/9(C3 E3 G3 A3 D4)
+chords C → (C3 E3 G3) Dm7 → (D3 F3 A3 C4) G7 → (G3 B3 D4 F4) Fmaj7 → (F3 A3 C4 E4) Bb/D → (Bb3 D4 F4/D2) C6/9 → (C3 E3 G3 A3 D4)
 ```
 
 ## Chords by degree
@@ -116,7 +114,7 @@ print(chords 1 2 5dom7 b7 1maj7 5sus4)
 ```
 
 ```text Output
-chords 1(C(C3 E3 G3)) 2(Dm(D3 F3 A3)) 5dom7(G7(G3 B3 D4 F4)) b7(Bb(Bb3 D4 F4)) 1maj7(Cmaj7(C3 E3 G3 B3)) 5sus4(Gsus4(G3 C4 D4))
+chords 1 → C → (C3 E3 G3) 2 → Dm → (D3 F3 A3) 5dom7 → G7 → (G3 B3 D4 F4) b7 → Bb → (Bb3 D4 F4) 1maj7 → Cmaj7 → (C3 E3 G3 B3) 5sus4 → Gsus4 → (G3 C4 D4)
 ```
 
 Lowercase Roman numerals `i` to `vii` are also roots, for degrees 1 to 7, with an optional `b` or `#` in front. A numeral is always lowercase: the mode decides major or minor, and a quality written after it overrides that (`iM`, `im`). Because a numeral has no digits, digits after it are its suffix: `v7` is the seventh chord the scale builds on degree 5. Use `dim`, `dim7` and `m7b5` with degrees and numerals; the glyphs `°` and `ø` are accepted only after a letter root.
@@ -145,7 +143,7 @@ print(chords Csus2add11, chords C7#5b9, chords 1sus2add11#5/4)
 ```
 
 ```text Output
-chords Csus2add11(C3 D3 G3 F4), C7#5b9(C3 E3 G#3 Bb3 Db4), 1sus2add11#5/4(Csus2add11#5/F(C3 D3 G#3 F4/F2))
+chords Csus2add11 → (C3 D3 G3 F4), C7#5b9 → (C3 E3 G#3 Bb3 Db4), 1sus2add11#5/4 → Csus2add11#5/F → (C3 D3 G#3 F4/F2)
 ```
 
 ## Slash bass
@@ -163,12 +161,12 @@ print(chords C/E, chords 1/3, chords Am/G)
 ```
 
 ```text Output
-chords C/E(C3 E3 G3/E2), 1/3(C/E(C3 E3 G3/E2)), Am/G(A3 C4 E4/G2)
+chords C/E → (C3 E3 G3/E2), 1/3 → C/E → (C3 E3 G3/E2), Am/G → (A3 C4 E4/G2)
 ```
 
 ## Voicing
 
-Chord tones are stacked upward from the root, which sits in the [octave](/language/settings#octave) in effect. Extended chords keep their upper tones up to two octaves above the root. `guitar` and `guitar.electric` play a fretboard shape for the chord when one is known, and the stacked tones otherwise.
+Chord tones are stacked upward from the root, which sits in the [octave](/language/settings#octave) in effect. Extended chords keep their upper tones up to two octaves above the root. `guitar` and `guitar.electric` normally play a fretboard shape when one is known. An explicit [voice](/functions/voice) call moves selected chord tones by octaves and is honored by every instrument, including guitars. For example, `voice(2m9, { fifth: 1 })` gives D3–F3–C4–E4–A4 in C major, octave 3.
 
 Every tone, and the bass, must be within MIDI 0 to 127.
 
@@ -186,7 +184,7 @@ print(chords home fourth(home) fifth(home) octave(home, -1))
 ```
 
 ```text Output
-chords 1(C(C3 E3 G3)) 4(F(F3 A3 C4)) 5(G(G3 B3 D4)) -7(C(C2 E2 G2))
+chords 1 → C → (C3 E3 G3) 4 → F → (F3 A3 C4) 5 → G → (G3 B3 D4) -7 → C → (C2 E2 G2)
 ```
 
 ## Errors
@@ -213,6 +211,7 @@ play piano: chords I IV
 
 ```text Error
 "I": numerals are lowercase, and the mode makes the chord major or minor: i. To say a chord outright, write its quality after it: iM, im
+"IV": numerals are lowercase, and the mode makes the chord major or minor: iv. To say a chord outright, write its quality after it: ivM, ivm
 ```
 
 ```composer-nb Invalid

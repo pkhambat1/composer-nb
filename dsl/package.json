@@ -1,6 +1,6 @@
 {
   "name": "composer-nb",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "private": true,
   "description": "The composer-nb language and engine, used by the web app and the MCP server. Not published.",
   "author": "Pezanne Khambatta",

@@ -8,7 +8,7 @@ description: "The instruments: the names that take `notes` and `chords`."
 ```text Syntax
 line    ::= instrument ":" pitched
           | instrument ":" "{" pitched ("," pitched)* [","] "}"
-pitched ::= "notes" note_seq | "chords" chart
+pitched ::= "notes" note_seq | "chords" chart | typed_value | name
 ```
 
 | Operand | Type | May be |
@@ -17,16 +17,16 @@ pitched ::= "notes" note_seq | "chords" chart
 | `note_seq` | `notes` | Note words, a `notes` name, repeats, interval calls, a fill; see [notes](/pitched/notes). |
 | `chart` | `chords` | Chord symbols and degrees in bars, a `chords` name, interval calls; see [chords](/pitched/chords). |
 
-An instrument line gives `notes` or `chords` to one instrument. `instrument` is a fixed name, not a value: it cannot be declared, assigned or passed to a function. Because an instrument takes either type, the line always says which: the keyword `notes` or `chords` follows the colon, before a literal and before a name, and a name must be of that type.
+An instrument line gives `notes` or `chords` to one instrument. `instrument` is a fixed name, not a value: it cannot be declared, assigned or passed to a function. Use a typed constructor or named value directly, such as `piano: second(chord(1))` or `bass: riff`. Whole sequences may use `notes` or `chords` after the colon.
 
 The line is a [part](/language/patterns#parts): it stands in a body or directly after `play`.
 
 ```composer-nb Example
 notes walk = 1-3-5-3-
-play pattern {
+play(pattern({
   bass: notes walk,
   piano: chords C | Am,
-}
+}))
 ```
 
 ## Instruments
@@ -55,9 +55,9 @@ The braces are everything the instrument plays: nothing else may stand on the li
 A body may hold one line for each instrument, so layers are how an instrument plays more than one thing in a body.
 
 ```composer-nb Example
-play pattern {
+play(pattern({
   piano: { chords C | F, notes 5-3-1--- },
-}
+}))
 ```
 
 ```composer-nb Invalid
@@ -80,8 +80,8 @@ These settings change what an instrument line sounds like. Each is defined in [S
 | [guitar.electric](/language/settings#guitarelectric) | The electric guitar's sound. |
 
 ```composer-nb Example
-play pattern {
+play(pattern({
   piano: chords 1 | 4,
   with octave 2 { bass: notes 1---5--- },
-}
+}))
 ```

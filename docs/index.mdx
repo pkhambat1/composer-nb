@@ -14,7 +14,7 @@ composer-nb is a typed language for writing music as text. A notebook cell holds
 | Settings | [Settings](/language/settings), [Key and mode](/pitched/key) |
 | Value types | [steps](/drums/steps), [notes](/pitched/notes), [chords](/pitched/chords), [Chord symbol catalog](/pitched/chord-symbols) |
 | Composition | [Parts and composition](/language/patterns), [play](/language/play) |
-| Functions | [Interval functions](/functions/intervals), [print](/functions/print) |
+| Functions | [Interval functions](/functions/intervals), [voice](/functions/voice), [print](/functions/print) |
 | Kit and instruments | [Drum kit](/drums/kit), [Pitched instruments](/pitched/instruments) |
 | Guides | [Using the notebook](/for-musicians), [MCP integration](/assistants) |
 
@@ -25,11 +25,11 @@ Every position in a cell has a type, and the type decides what else may be writt
 ```composer-nb Example
 set tempo 96
 steps pulse = x--x--x-
-play pattern {
+play(pattern({
   kick: pulse,
   hat: x-,
   piano: chords C G,
-}
+}))
 ```
 
 | Written | What it is | What else may stand there |
@@ -37,7 +37,7 @@ play pattern {
 | `set tempo 96` | A [set](/language/scope#set) statement. `tempo 96` is a `setting`. | Any of the nine [settings](/language/settings#settings-index). |
 | `steps pulse = x--x--x-` | A [declaration](/language/values#declarations) of a `steps` name. | A declaration of any of the five [value types](/language/values#value-types). |
 | `play` | The [play](/language/play) statement. It takes a `part`. | `print`, to display values instead. |
-| `pattern { ... }` | A [pattern](/language/patterns#pattern): a `part` whose lines repeat. | `block { ... }`, a pattern or block name, a group `( ... )`, or a single line; see [Parts](/language/patterns#parts). |
+| `pattern({ ... })` | A [pattern](/language/patterns#pattern): a `part` whose lines repeat. | `{ ... }`, a pattern or block name, a group `( ... )`, or a single line; see [Parts](/language/patterns#parts). |
 | `kick` | A `kit_piece`. | Any of the 14 [kit pieces](/drums/kit#kit-pieces). |
 | `pulse` | A `steps` value, by name. | Anything of type [steps](/drums/steps): step words, a repeat, a Euclidean rhythm, a fill, layers. |
 | `x-` | A `steps` value, written out. | The same. |

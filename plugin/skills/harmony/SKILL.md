@@ -20,6 +20,7 @@ Build the part from an idea and the language's functions. A chart typed chord by
    - **No stock loops**: not 1 5 6 4, 1 6 4 5 or 6 4 1 5, unless asked for.
    - **A bass, if any, follows the same seed**: the roots as a named line sequenced the same way, or a slash bass (`1/3`), in `with octave 2`.
      Notes divide each bar evenly: `3 6` or `4 b7` gives two half-bar notes. Use `|` between bars; explicit `every` selects fixed steps instead. Spell keys and accidentals with `b` and `#`, as in `Bb`.
+   - **Shape the voicing** with `voice(chord, { fifth: 1 })`: move the fifth up an octave while keeping the chord's harmony and slash bass. Use multiple object properties for several tones; this moves them instead of doubling them.
 4. Save it as the `write-cells` skill says. Check the reported bar count, roots, qualities and instrument order against the request, and correct that same cell if any differ. The task is not complete with an unsaved code block. `print(fifth(pair, -1))` as a cell's last line shows what a function gives before you build on it.
 5. Say what the user will hear in a line or two, in the terms of step 1.
 
@@ -39,10 +40,10 @@ chords cycle = pair|second(pair, -1)|second(pair, -2)|5dom7 -
 notes roots = 1 4
 notes line = roots|second(roots, -1)|second(roots, -2)|-4 -
 
-play block {
+play({
   with octave 4 { piano: chords cycle, },
   with octave 2 { bass: notes line, },
-}
+})
 ```
 
 The save reports Am7 Dm7, G7 Cmaj7, Fmaj7 Bm7b5, E7: seven chords from one seed, and `set key` or `set mode` moves all of them.
@@ -60,9 +61,9 @@ chords home = 1m7
 chords under = home|second(home)|third(home)|second(home, -1)
 notes pedal = 1 5
 
-play block {
+play({
   with octave 4 { piano: notes tune, },
   organ: chords under,
   with octave 2 { bass: notes pedal|second(pedal)|third(pedal)|second(pedal, -1), },
-}
+})
 ```

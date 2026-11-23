@@ -20,12 +20,12 @@ Save each cell as the `write-cells` skill says: one call writes it, checks it an
 ```composer-nb
 chords chart = 1 2|3 4|5 6|7 octave(1)
 
-with key D, mode minor { play piano: chords chart, }
-with key D, mode dorian { play piano: chords chart, }
+with key D, mode minor { play(piano: chords chart), }
+with key D, mode dorian { play(piano: chords chart), }
 ```
 
 The raised 6 makes the 4 major: G in D dorian, where natural minor has Gm. The same chart in another key, as the next cell of the notebook:
 
 ```composer-nb
-with key A, mode dorian { play piano: chords chart, }
+with key A, mode dorian { play(piano: chords chart), }
 ```

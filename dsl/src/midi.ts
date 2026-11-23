@@ -165,7 +165,13 @@ export function midiFile(outputs: Output | Output[]): Uint8Array {
       { tick: 0, order: -1, bytes: [0xc0 | ch, program] },
     ]
     for (const { e, start, end } of notes) {
-      const midis = "note" in e ? [e.note.midi] : e.chord.notesMidi || []
+      const midis =
+        "note" in e
+          ? [e.note.midi]
+          : [
+              ...(e.chord.overBass && !e.chord.fromGuitarPosition ? [e.chord.bassMidi] : []),
+              ...e.chord.notesMidi,
+            ]
       const vel = Math.max(1, Math.min(127, Math.round(("vel" in e ? e.vel : 0.7) * 127)))
       for (const m of midis) {
         out.push({ tick: start, order: 1, bytes: [0x90 | ch, m, vel] })

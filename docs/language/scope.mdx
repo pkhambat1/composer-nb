@@ -28,9 +28,9 @@ Changes one setting from this statement onward: statements above it are unaffect
 `set` is a top-level statement only. It may come between other statements, but not inside any braces.
 
 ```composer-nb Example
-play piano: notes 1---
+play(piano: notes 1---)
 set key D
-play piano: notes 1---
+play(piano: notes 1---)
 ```
 
 The first `play` sounds C3 and the second D3.
@@ -69,29 +69,29 @@ Applies its settings to everything inside its braces, then restores the environm
 ```composer-nb Example
 with key D, octave 2 {
   print(chords 4),
-  play bass: notes 1---5---,
+  play(bass: notes 1---5---),
 }
 ```
 
 ```text Output
-chords 4(G(G2 B2 D3))
+chords 4 → G → (G2 B2 D3)
 ```
 
 ```composer-nb Example
-play pattern {
+play(pattern({
   kick: x---,
   with octave 2 { bass: notes 1---5--- },
   piano: chords C G,
-}
+}))
 ```
 
 Which settings a `with_scope` may change depends on what sounds beside it. Parts that sound together share one clock, so they must share `time`, `tempo` and `swing`. To change one of those, put the `with` around the whole `play`, or on a part of a group, where parts play one after another. All other settings may differ between parts that sound together.
 
 ```composer-nb Example
-play (
+play((
   with tempo 90 { pattern { kick: x--- } }
   with tempo 140 { pattern { kick: x--- } }
-)
+))
 ```
 
 ```composer-nb Invalid
@@ -122,8 +122,8 @@ key is in this with twice. A with sets each setting once
 A name must be declared above its first use. A declaration cannot reuse a name that is visible at that point, including one from enclosing braces. Two sets of braces that do not enclose one another may each declare the same name.
 
 ```composer-nb Example
-play pattern { notes riff = 1---, piano: notes riff }
-play pattern { notes riff = 5---, piano: notes riff }
+play(pattern({ notes riff = 1---, piano: notes riff }))
+play(pattern({ notes riff = 5---, piano: notes riff }))
 ```
 
 ```composer-nb Invalid

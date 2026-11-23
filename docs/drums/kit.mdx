@@ -19,12 +19,12 @@ A kit-piece line gives a `steps` value to one piece of the kit. `kit_piece` is a
 The line is a [part](/language/patterns#parts): it stands in a body or directly after `play`.
 
 ```composer-nb Example
-play pattern {
+play(pattern({
   kick: x--- --x-,
   snare: ---- x---,
   snare.ghost: -x-- ---x,
   hat: x-,
-}
+}))
 ```
 
 ## Kit pieces

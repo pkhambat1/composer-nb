@@ -30,8 +30,8 @@ A cell that contains any error produces no output at all: nothing plays and noth
 | Token | Meaning |
 | --- | --- |
 | Newline | Ends a statement at the top level. Inside `{ }` and inside the parentheses of `print` it is layout only. Inside a [group](/language/patterns#groups) it ends an instrument line. |
-| `,` | Separates the entries of a `{ }` body, the settings of a `with`, and the arguments of a call. Required between entries even when they are on separate lines. One trailing comma before `}` is allowed. |
-| `{ }` | A body: entries that belong together. What an entry may be depends on what the braces belong to. |
+| `,` | Separates the entries of a `{ }` body, the settings of a `with`, and the arguments of a call, and the properties of a `voice` shift object. Required between entries even when they are on separate lines. One trailing comma before `}` is allowed. |
+| `{ }` | A body: entries that belong together. What an entry may be depends on what the braces belong to. In the second argument of `voice`, braces hold a chord-tone shift object. |
 | `( )` | A group of parts played in order; also arithmetic grouping, a repeat group and call arguments. |
 | `:` | Joins a kit piece or instrument to what it plays. |
 | `=` | Joins a declared name to its value. |
@@ -72,10 +72,8 @@ kick: x---
 An instrument's line goes inside braces: in a pattern, or play block { kick: x--- }
 ```
 
-```composer-nb Invalid
-play { kick: x--- }
+```composer-nb Example
+play({ kick: x--- })
 ```
 
-```text Error
-These braces need a type: play pattern { ... } repeats, play block { ... } plays once
-```
+Bare braces default to a block. Use `pattern({ ... })` for repetition.

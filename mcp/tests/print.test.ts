@@ -48,11 +48,11 @@ describe("printed music in notebook hosts", () => {
         run!.queuedRunAll()
       })
       expect(manager!.cells[0].output?.kind).toBe("printed")
-      expect(mount.querySelector(".print-row")!.textContent).toBe("notes 1(C3), 2(D3), 3(E3)")
+      expect(mount.querySelector(".print-row")!.textContent).toBe("notes 1 → C3, 2 → D3, 3 → E3")
       expect([...mount.querySelectorAll(".print-note")].map((r) => r.textContent)).toEqual([
-        "1(C3),",
-        "2(D3),",
-        "3(E3)",
+        "1 → C3,",
+        "2 → D3,",
+        "3 → E3",
       ])
       expect(mount.querySelector("audio, button, canvas, table")).toBeNull()
       expect(MusicEngine.renderToBuffer).not.toHaveBeenCalled()
@@ -72,17 +72,25 @@ describe("printed music in notebook hosts", () => {
     expect(text).toContain(
       [
         "Print (line 1):",
-        "  notes 5(G3) 7(B3) 9(D4) 11(F4)",
-        "  chords 1sus2add11#5/4(Csus2add11#5/F(C3 D3 G#3 F4/F2))",
+        "  notes 5 → G3 7 → B3 9 → D4 11 → F4",
+        "  chords 1sus2add11#5/4 → Csus2add11#5/F → (C3 D3 G#3 F4/F2)",
       ].join("\n"),
     )
     expect(text).not.toContain("To hear something, add a play")
     const html = renderToStaticMarkup(React.createElement(PrintedValues, { prints: parsed.prints }))
     const { document } = parseHTML(html)
     expect([...document.querySelectorAll(".print-row")].map((r) => r.textContent)).toEqual([
-      "notes 5(G3) 7(B3) 9(D4) 11(F4)",
-      "chords 1sus2add11#5/4(Csus2add11#5/F(C3 D3 G#3 F4/F2))",
+      "notes 5 → G3 7 → B3 9 → D4 11 → F4",
+      "chords 1sus2add11#5/4 → Csus2add11#5/F → (C3 D3 G#3 F4/F2)",
     ])
+    expect([...document.querySelectorAll("strong")].map((n) => n.textContent)).toEqual([
+      "5",
+      "7",
+      "9",
+      "11",
+      "1sus2add11#5/4",
+    ])
+    expect(document.querySelector(".print-meaning strong")).toBeNull()
     expect(html).not.toContain("Playback")
   })
 })

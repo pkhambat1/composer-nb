@@ -99,18 +99,15 @@ describe("step words and finite repeats", () => {
     ])
     const named = "steps aa = x-\nsteps bb = 2*aa\nblock cc = { kick: 2*bb }\nplay cc"
     expect(hits(named)).toEqual([0, 0.25, 0.5, 0.75])
-    expect(clean("play block { kick: 8*- x }").totalSec).toBe(1.125)
+    expect(clean("play block { kick: 8*- x }").totalSec).toBe(2)
   })
 
-  it("rejects repeated figures only where the drum line itself repeats", () => {
+  it("allows explicit repetition in blocks and patterns", () => {
     for (const value of ["x-x-", "2*x-", "2*(x-)"]) {
-      expect(errors(`play pattern { kick: ${value} }`)).toMatch(/pattern repeats it/)
-      expect(errors(`pattern pp = { kick: ${value} }`)).toMatch(/pattern repeats it/)
-      clean(`block bb = { kick: ${value} }\nplay bb`)
-      clean(`play block { kick: ${value} }`)
+      expect(hits(`play(pattern({ kick: ${value} }))`)).toEqual([0, 0.25])
+      expect(hits(`play({ kick: ${value} })`)).toEqual([0, 0.25])
     }
-    expect(hits("play block { kick: 8*x- }")).toHaveLength(8)
-    expect(errors("play pattern { kick: 8*x- }")).toMatch(/repeats x-/)
+    expect(hits("play(pattern({ kick: 8*x- }))")).toHaveLength(8)
   })
 
   it("bounds repeats and requires integer counts of at least two", () => {
@@ -126,14 +123,16 @@ describe("step words and finite repeats", () => {
 
   it("fills the containing block with a final step word", () => {
     expect(hits("play block { kick: x ...x-, snare: -------x }")).toEqual([
-      0, 0.125, 0.375, 0.625, 0.875,
+      0, 0.125, 0.375, 0.625, 0.875, 1.125, 1.375, 1.625, 1.875,
     ])
-    expect(hits("play block { kick: x- ...-, snare: -------x }")).toEqual([0])
+    expect(hits("play block { kick: x-, snare: -------x }")).toEqual([0])
     expect(hits("steps aa = x-\nplay block { kick: ...aa } for 1 bars")).toHaveLength(8)
-    clean("play block { kick: ...- } for 1 bars")
+    expect(errors("play block { kick: ...- } for 1 bars")).toMatch(
+      /automatically fill with silence/,
+    )
     expect(errors("play block { kick: ...x- -- }")).toMatch(/nothing goes after/)
     expect(errors("play block { kick: 2*(x- ...-) }")).toMatch(/bounded repeat/)
-    expect(errors("steps aa = x- ...-")).toMatch(/length of their own/)
+    expect(errors("steps aa = x- ...-")).toMatch(/automatically fill with silence/)
     expect(errors("play block { kick: ...x- }")).toMatch(/nothing says how long/)
   })
 
@@ -141,7 +140,7 @@ describe("step words and finite repeats", () => {
     expect(hits("play block { kick: 3 in 8 }")).toEqual([0, 0.375, 0.75])
     expect(hits("play block { kick: 2*(3 in 8 --) }")).toHaveLength(6)
     clean("play block { kick: 8*x- | x }")
-    expect(errors("play block { kick: 4*x- | x }")).toMatch(/isn't at the end of a bar/)
+    expect(hits("play block { kick: 4*x- | x }")).toEqual([0, 0.25, 0.5, 0.75, 2])
   })
 
   it("removes beat lists, measured kit parts, rest, and commas", () => {
@@ -156,7 +155,7 @@ describe("step words and finite repeats", () => {
     ]) {
       expect(errors(`play block { kick: ${value} }`), value).not.toBe("")
     }
-    clean("play block { piano: notes 8*_ C4 7*- ..._ } for 1 bars")
+    clean("play block { piano: notes 8*_ C4 7*- } for 1 bars")
     clean("play block { piano: chords C G }")
   })
 })
@@ -182,20 +181,18 @@ describe("pace and placement", () => {
     const inline = "play pattern { kick: x---, block { crash: x } on bar 2 } for 2 bars"
     expect(hits(named, "crash")).toEqual([2])
     expect(hits(inline, "crash")).toEqual(hits(named, "crash"))
-    expect(hits(inline)).toEqual([0, 0.5, 1, 1.5, 2, 2.5, 3, 3.5])
+    expect(hits(inline)).toEqual([0, 2])
     expect(hits("play block { crash: x } on bar 2 for 2 bars", "crash")).toEqual([2])
     expect(hits("play block { block { kick: x } on bar 2 to 3 } for 3 bars")).toEqual([2])
   })
 
   it("places patterns over a range and rejects the old prefix syntax", () => {
-    expect(hits("play block { pattern { kick: x--- } on bar 2 to 3 } for 3 bars")).toEqual([
-      2, 2.5, 3, 3.5, 4, 4.5, 5, 5.5,
-    ])
+    expect(hits("play block { pattern { kick: x--- } on bar 2 to 3 } for 3 bars")).toEqual([2, 4])
     expect(errors("play block { bar 2 { crash: x } }")).toMatch(/Placement follows its value/)
     expect(errors("play block { block { kick: x } on bar 3 to 2 }")).toMatch(/backwards/)
     expect(errors("play block { block { kick: x } on bar 0 }")).toMatch(/counted from 1/)
     expect(errors("play block { block { kick: x } on bar 2 extra }")).toMatch(/Placement ends/)
-    expect(errors("play block { { kick: x } on bar 2 }")).toMatch(/braces need a type/)
+    expect(hits("play({ { kick: x } on bar 2 })")).toEqual([2])
   })
 })
 

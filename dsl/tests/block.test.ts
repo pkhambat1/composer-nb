@@ -20,7 +20,7 @@ ${lines}
       )
       expect(parsed.errors).toEqual([])
       expect(parsed.drumEvents.filter((event) => event.lane === "kick")).toHaveLength(1)
-      expect(parsed.drumEvents.filter((event) => event.lane === "snare")).toHaveLength(8)
+      expect(parsed.drumEvents.filter((event) => event.lane === "snare")).toHaveLength(2)
     }
   })
   it("keeps a block nonrepeating inside a pattern", () => {
@@ -47,7 +47,6 @@ describe("typed braces", () => {
     return parsed
   }
   const firstError = (source: string) => parseCell(source).errors[0]?.msg
-  const UNTYPED = "These braces need a type: pattern { ... } repeats, block { ... } plays once"
   const CELL = "  snare.cross: ----x---,\n  piano: notes i---v---iii---octave(i)---"
 
   it("plays a play's own lines once", () => {
@@ -58,7 +57,7 @@ describe("typed braces", () => {
   it("repeats every line of play pattern, as a named pattern does", () => {
     const parsed = clean(`play pattern {\n${CELL}\n}`)
     const named = clean(`pattern groove = {\n${CELL}\n}\nplay groove`)
-    expect(lane(parsed, "snare.cross")).toHaveLength(2)
+    expect(lane(parsed, "snare.cross")).toHaveLength(1)
     expect(parsed.drumEvents.map((e) => e.secStart)).toEqual(
       named.drumEvents.map((e) => e.secStart),
     )
@@ -66,38 +65,37 @@ describe("typed braces", () => {
   })
   it("stops play pattern at its length, whether or not its lines fit", () => {
     const parsed = clean(`play pattern {\n${CELL}\n} for 4 bars`)
-    expect(lane(parsed, "snare.cross")).toHaveLength(8)
+    expect(lane(parsed, "snare.cross")).toHaveLength(4)
     expect(parsed.events).toHaveLength(16)
     expect(parsed.totalSec).toBe(8)
     const cut = clean("play pattern {\n  kick: x--\n} for 1 bars")
-    expect(lane(cut, "kick")).toHaveLength(6)
+    expect(lane(cut, "kick")).toHaveLength(1)
     expect(cut.totalSec).toBe(2)
     const held = clean("play pattern {\n  every 1/4 beats piano: notes C4--D4--E4--\n} for 1 bars")
-    expect(held.events.map((e) => e.secStart + (e.secDur ?? 0)).pop()).toBe(2)
+    expect(held.events.map((e) => e.secStart + (e.secDur ?? 0)).pop()).toBe(1.125)
   })
-  it("says how long a play pattern is when its lines don't meet", () => {
-    const lines = [17, 19, 23, 29].map((n, i) => {
-      return `  ${["kick", "snare", "hat", "ride"][i]}: x${"-".repeat(n - 1)}`
-    })
-    expect(firstError(`play pattern {\n${lines.join(",\n")}\n}`)).toMatch(
-      /Say how long it is: play pattern \{ \.\.\. \} for 4 bars/,
-    )
-    clean(`play pattern {\n${lines.join(",\n")}\n} for 4 bars`)
+  it("pads short lines before finding a pattern's cycle", () => {
+    const source = "play(pattern({ kick: x 16*-, snare: x 18*-, hat: x 22*-, ride: x 28*- }))"
+    const p = clean(source)
+    expect(p.totalSec).toBe(4)
+    expect(p.drumEvents).toHaveLength(4)
   })
-  it("asks for a type on the braces after play, as on any others", () => {
-    const rule =
-      "These braces need a type: play pattern { ... } repeats, play block { ... } plays once"
-    expect(firstError("play { kick: x--- }")).toBe(rule)
-    expect(firstError("play {\n  kick: x---\n} for 2 bars")).toBe(rule)
-    expect(firstError("pattern gg = { kick: x--- }\nplay { gg }")).toBe(rule)
+  it("defaults inline braces after play to blocks", () => {
+    for (const source of [
+      "play({ kick: x--- })",
+      "play({ kick: x--- }) for 2 bars",
+      "pattern gg = { kick: x--- }\nplay({ gg })",
+    ]) {
+      expect(clean(source).drumEvents).toHaveLength(1)
+    }
   })
   it("reads a length after block braces as theirs, and a name keeps its own", () => {
     const groove = "pattern gg = { kick: x--- }\n"
     const fills = clean(`${groove}play block {\n  crash: x 15*-,\n  gg\n} for 4 bars`)
-    expect(lane(fills, "kick")).toHaveLength(16)
+    expect(lane(fills, "kick")).toHaveLength(4)
     expect(lane(fills, "crash")).toHaveLength(1)
     const once = clean(`${groove}block bb = {\n  crash: x 15*-,\n  gg\n}\nplay bb for 4 bars`)
-    expect(lane(once, "kick")).toHaveLength(4)
+    expect(lane(once, "kick")).toHaveLength(1)
     expect(once.totalSec).toBe(8)
   })
   it("plays play block as it plays a named block", () => {
@@ -112,21 +110,17 @@ describe("typed braces", () => {
       "Write the length like this: play pattern { ... } for 2 bars",
     )
   })
-  it("asks for a type on braces that are a value", () => {
+  it("accepts bare block values in bodies and sequences", () => {
     for (const source of [
-      "play block {\n  { kick: x--- }\n}",
-      "play block {\n  2 bars { kick: x--- }\n}",
-      "play ({ kick: x--- } { snare: x--- })",
-      "pattern gg = {\n  { kick: x--- }\n}\nplay gg",
-      "pattern gg = ({ kick: x--- } { snare: x--- })\nplay gg",
-      "play block {\n  2 bars { kick: x--- } on bar 2\n} for 2 bars",
-    ]) {
-      expect(parseCell(source).errors.map((e) => e.msg)).toContain(UNTYPED)
-    }
+      "play({ { kick: x--- } })",
+      "play(({ kick: x--- } { snare: x--- }))",
+      "pattern gg = { { kick: x--- } }\nplay(gg)",
+    ])
+      clean(source)
   })
   it("plays a pattern on a line of its own repeating, and a block once", () => {
     const repeats = clean("play block {\n  pattern { kick: x--- }\n} for 2 bars")
-    expect(lane(repeats, "kick")).toHaveLength(8)
+    expect(lane(repeats, "kick")).toHaveLength(2)
     const once = clean("play block {\n  block { kick: x--- }\n} for 2 bars")
     expect(lane(once, "kick")).toHaveLength(1)
   })
@@ -135,20 +129,20 @@ describe("typed braces", () => {
       "pattern gg = {\n  block { crash: x--- },\n  kick: x---\n}\nplay gg for 2 bars",
     )
     expect(lane(inPattern, "crash")).toHaveLength(1)
-    expect(lane(inPattern, "kick")).toHaveLength(8)
+    expect(lane(inPattern, "kick")).toHaveLength(2)
     const inGroup = clean(
       "play block {\n  (block { crash: x--- } pattern { kick: x--- })\n} for 2 bars",
     )
     expect(lane(inGroup, "crash")).toHaveLength(1)
-    expect(lane(inGroup, "kick")).toHaveLength(4)
+    expect(lane(inGroup, "kick")).toHaveLength(1)
   })
   it("reads a length in front of typed braces as their own", () => {
     const repeats = clean("play block {\n  2 bars pattern { kick: x--- }\n}")
-    expect(lane(repeats, "kick")).toHaveLength(8)
+    expect(lane(repeats, "kick")).toHaveLength(2)
     expect(repeats.totalSec).toBe(4)
     const once = clean("play (2 bars block { crash: x 15*- } pattern { kick: x--- })")
     expect(lane(once, "crash")).toHaveLength(1)
-    expect(once.totalSec).toBe(4.5)
+    expect(once.totalSec).toBe(6)
     expect(firstError("play block {\n  pattern 2 bars { kick: x--- }\n}")).toBe(
       "A length goes in front of what it measures: 2 bars pattern { ... }",
     )
@@ -157,11 +151,11 @@ describe("typed braces", () => {
     clean("play block {\n  kick: x---,\n  pattern { crash: x 15*- } on bar 2\n} for 2 bars")
     expect(lane(clean("play every 1 beats { kick: x }"), "kick")).toHaveLength(1)
     expect(lane(clean("play block {\n  every 1 beats 2 bars { kick: x }\n}"), "kick")).toHaveLength(
-      8,
+      2,
     )
     expect(
       lane(clean("pattern ss = every 1 beats { kick: x }\nplay ss for 1 bars"), "kick"),
-    ).toHaveLength(4)
+    ).toHaveLength(1)
     expect(
       clean("play block {\n  with octave 2 { bass: notes i---v--- },\n  kick: x---\n} for 2 bars")
         .events,

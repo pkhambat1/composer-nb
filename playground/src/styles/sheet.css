@@ -277,15 +277,15 @@ button.dg-cell:focus-visible {
 }
 .print-type,
 .print-meaning {
+  font-weight: 400;
   color: color-mix(in srgb, var(--text-dim) 74%, var(--paper));
 }
-.print-note {
+.print-note,
+.print-chord {
   white-space: nowrap;
 }
 .print-value {
-  font-weight: 500;
-  /* a hair heavier than 500: the system font has no weight between 500 and 600 */
-  -webkit-text-stroke: 0.2px currentColor;
+  font-weight: 700;
   color: var(--text);
 }
 .print-steps .print-value {

@@ -21,7 +21,6 @@ import type { Braces, Piece, Section, State } from "./state.ts"
 import { evalNumber, fmt, lengthAt, lengthPrefix, MAX_BARS } from "./time.ts"
 import {
   CHORD_MARKS,
-  chartRepeat,
   dimMarkProblem,
   expandChordTokens,
   validChordToken,
@@ -41,6 +40,7 @@ import {
   EUCLID_RE,
   isStepRun,
   stepBlock,
+  stepSequence,
   stepParts,
   withoutCalls,
 } from "./values/steps.ts"
@@ -161,7 +161,12 @@ export function defineWord(
     }
     const run = stepBlock(only, state, err)
     if (run == null) return
-    new Scope(state).defineWord(name, { type, tokens: [run], line: ln })
+    new Scope(state).defineWord(name, {
+      type,
+      tokens: run.steps.map((s) => s.token),
+      stepSequence: run,
+      line: ln,
+    })
     return
   }
   if (type === "steps") {
@@ -221,11 +226,14 @@ export function defineWord(
     }
   }
   if (!tokens.length) return err(ln, message("decl.needsValue", { type, name }), "=")
-  const again = type === "chords" && chartRepeat(tokens)
-  if (again) {
-    return err(ln, message("decl.chordsRepeat", { name, again }), value)
-  }
-  new Scope(state).defineWord(name, { type, tokens, line: ln })
+  new Scope(state).defineWord(name, {
+    type,
+    tokens,
+    line: ln,
+    ...(type === "steps" && written.some((t) => state.words[t]?.stepSequence)
+      ? { stepSequence: stepSequence(written, state) }
+      : {}),
+  })
 }
 
 // name = value, with or without a type in front. null if the line isn't one.

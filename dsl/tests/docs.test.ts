@@ -5,7 +5,7 @@
    in the sidebar, every link landing on a heading that exists. */
 import site from "../../docs/docs.json" with { type: "json" }
 import { describe, it, expect } from "vitest"
-import { existsSync } from "node:fs"
+import { existsSync, readFileSync } from "node:fs"
 import { join } from "node:path"
 import { ChordType } from "tonal"
 import {
@@ -16,13 +16,15 @@ import {
   LANES,
   MODES,
   parseCell,
+  printLayout,
+  printRowText,
   PITCHED,
   SETTINGS,
   SOUNDS,
   TYPES,
 } from "../src/language.ts"
 import { buildChord } from "../src/chords.ts"
-import { DOCS, examples, pages, read } from "./docs-examples.ts"
+import { DOCS, documentedResults, examples, pages, read } from "./docs-examples.ts"
 
 describe("docs examples", () => {
   it("finds the pages", () => {
@@ -173,4 +175,24 @@ describe("docs site", () => {
       expect(broken).toEqual([])
     })
   }
+})
+
+describe("documented results", () => {
+  for (const page of pages)
+    for (const result of documentedResults(read(page)))
+      it(`${page}:${result.line} matches its ${result.kind}`, () => {
+        const parsed = parseCell(result.source)
+        const actual =
+          result.kind === "text Output"
+            ? printLayout(parsed.prints).map(printRowText).join("\n")
+            : parsed.errors.map((e) => e.msg).join("\n")
+        expect(actual).toBe(result.expected)
+      })
+
+  it("keeps the README's musical examples runnable", () => {
+    const text = readFileSync(join(DOCS, "../README.md"), "utf8")
+    const blocks = examples(text)
+    expect(blocks.length).toBeGreaterThan(0)
+    for (const block of blocks) expect(parseCell(block.source).errors, block.source).toEqual([])
+  })
 })

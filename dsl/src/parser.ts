@@ -128,7 +128,7 @@ function classify(value: Value, span: Span): Node {
   const first = value.parts[0]
   const text = first?.kind === "text" ? first.text : ""
   if (/^print(?=\s|\(|$)/.test(text)) return { kind: "print", span, value: after(value, "print") }
-  const word = /^[a-z]+(?=\s|$)/.exec(text)?.[0] as keyof typeof HEADS | undefined
+  const word = /^[a-z]+(?=\s|\(|$)/.exec(text)?.[0] as keyof typeof HEADS | undefined
   const head = word && HEADS[word]
   if (head === "set") {
     const m = /^set\s+(\S*)\s*/.exec(text)

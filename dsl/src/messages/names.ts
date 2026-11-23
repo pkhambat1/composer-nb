@@ -103,9 +103,9 @@ export const NAME_MESSAGES = {
   "decl.lengthAfterBraces": ({ name, bars }: { name: string; bars: string }) =>
     `A length goes in front of what it measures: pattern ${name} = ${bars} bars {`,
   "decl.notesNameOpen": ({ name }: { name: string }) =>
-    `A name's notes have a length of their own. ... is the rest of a block, so it goes on the instrument's line: piano: notes ${name} ..._`,
+    `A name's notes have a length of their own. ... is the rest of a block, so it goes on the instrument's line: piano: notes ${name} ...5`,
   "decl.stepsNameOpen": ({ name }: { name: string }) =>
-    `A name's steps have a length of their own. ... is the rest of a block, so it goes on the drum's line: snare: ${name} ...-`,
+    `A name's steps have a length of their own. ... is the rest of a block, so it goes on the drum's line: snare: ${name} ...x-`,
   "decl.chordsRepeat": ({ name, again }: { name: string; again: string }) =>
     `${name} repeats ${again}. Write chords ${name} = ${again}: a pattern repeats it`,
   "decl.chordsBlock": () =>

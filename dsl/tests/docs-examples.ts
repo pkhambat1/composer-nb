@@ -28,3 +28,24 @@ export function examples(text: string) {
   }
   return found
 }
+
+// Exact results shown under runnable examples: keep print output and error messages
+// in the reference checked against the engine, not just the example's validity.
+export function documentedResults(text: string) {
+  const out: { source: string; kind: string; expected: string; line: number }[] = []
+  let source: string | undefined
+  const fences = /^```(composer-nb[^\n]*|text (?:Output|Error))\n([\s\S]*?)\n```/gm
+  for (const match of text.matchAll(fences)) {
+    if (match[1].startsWith("composer-nb")) source = match[2]
+    else if (source !== undefined) {
+      out.push({
+        source,
+        kind: match[1],
+        expected: match[2],
+        line: text.slice(0, match.index).split("\n").length,
+      })
+      source = undefined
+    }
+  }
+  return out
+}

@@ -22,7 +22,8 @@ function problems(source: string) {
     const code = line.replace(/\/\/.*/, "")
     const at = `line ${i + 1}`
     const opens = (code.match(/\(/g) || []).length - (code.match(/\)/g) || []).length
-    if (opens > 0 && !/\(\s*$/.test(code)) out.push(`${at}: a ( that runs over lines ends its line`)
+    if (opens > 0 && !/[({]\s*$/.test(code))
+      out.push(`${at}: a ( that runs over lines ends its line`)
     if (/\}\s*\{\s*$/.test(code))
       out.push(`${at}: one block a line in a group that runs over lines`)
     if (/\s$/.test(line)) out.push(`${at}: a trailing space`)

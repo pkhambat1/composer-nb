@@ -33,12 +33,13 @@ describe("chord rhythm", () => {
     expect(labels("C G|%|F G")).toEqual(["C", "G", "C", "G", "F", "G"])
   })
 
-  it("rejects splits that don't land on sixteenths", () => {
-    expect(play("C F G").errors[0].msg).toMatch(/split evenly into 3/)
+  it("supports equal divisions finer than sixteenths", () => {
+    expect(play("C F G").errors).toEqual([])
+    expect(beats("C F G")).toEqual([4 / 3, 4 / 3, 4 / 3])
   })
 
-  it("points the old . hold at -", () => {
-    expect(play("C . G").errors[0].msg).toMatch(/Use - to hold a chord/)
+  it("rejects unsupported chord tokens", () => {
+    expect(play("C . G").errors[0].msg).toMatch(/isn't a chord/)
   })
 
   it("rejects a hold with nothing to hold", () => {

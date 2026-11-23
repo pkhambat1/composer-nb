@@ -8,92 +8,54 @@
   <img src="docs/images/playground.png" width="820" alt="The composer-nb playground playing a cell: guitar chords and a bass line over a drum pattern, with a waveform player, the three staves of sheet music and the chord diagrams">
 </p>
 
-## How a cell reads
+## Write and play music
 
-Every line starts by saying what it is: a setting, a name with its type, an instrument and what it plays, or `play`. Nothing makes a sound unless it's inside a `play`.
+A cell contains settings, typed declarations and statements. `play({ ... })` constructs a block by default: its lines play once, with any unfinished bar space filled by silence. Use `pattern({ ... })`, or a named pattern, to repeat completed bars.
 
-<p align="center">
-  <img src="docs/images/how-a-cell-reads.svg" width="820" alt="A cell with each kind of line labelled: a setting, a named pattern, drum lines, play, chords, and a pattern played by name">
-</p>
-
-## Patterns repeat until they line up
-
-Everything in a pattern repeats until the pattern ends. Give lines different lengths and they drift against each other, so odd meters and polyrhythms take a line each:
-
-```
-// what happens now: crash once, the groove repeating under it
-set time 7 over 8
-
-pattern groove = 3 bars {
-  kick: x--x---,
-  snare: ----x--,
-  ride.bell: x--,
-}
-
-play block {
-  crash: x 13*-,
-  groove,
-} for 6 bars
-```
-
-<p align="center">
-  <img src="docs/images/lines-line-up.svg" width="820" alt="A step grid in 7 over 8: the kick and snare repeat every 7 steps and the ride bell every 3, lining up again after 21 steps">
-</p>
-
-A block is a timeline: its lines play once, so the crash hits once while the groove repeats under it. Anything that repeats has to fit what it's in, and if it doesn't, the error says where it lines up.
-
-## Notes go on the same steps
-
-A guitar, piano or bass gets a line like a drum's, with a note where the drum has its `x`. `-` lets the note ring, `_` stops it, and a space goes between two notes that would otherwise touch (`F# E`). This riff is ten steps against the drums' seven and three, so it drifts too, and with no lengths written the pattern lasts until all four lines meet. `set octave 2` puts it on the guitar's low E string:
-
-```
-set time 7 over 8
-set octave 2
-
+```composer-nb
+set tempo 96
 pattern groove = {
-  kick: x--x---,
-  snare: ----x--,
-  ride.bell: x--,
-  guitar.electric: notes E---F# E-E--,
+  kick: 4*x---,
+  snare: 2*(4*- x 3*-),
+  hat: 8*x-,
 }
-
-play block {
-  crash: x 13*-,
-  groove,
-}
+play({ crash: x, groove }) for 4 bars
 ```
 
-Chords are written by the bar, on their instrument's line with `chords` in front: `piano: chords Am F|C G`.
+`kick: x---` is one hit followed by silence for the rest of its bar. `4*x---` writes four hits in that bar. `|` finishes the current drum bar with silence, and a final unfinished bar is padded even without `|`. A container can end partway through a repeating part.
 
-## Name the bar where something happens
+## Notes, chords and voicing
 
-A drum's line is a picture of time (`x--x---`), or the beats it hits on (`2e 4`). Either way it repeats in every bar. For something that happens in one bar only, like a lift at the end of a groove, put the bar in front of it. And instead of counting out a long run of `-`, put a length in front of `rest`:
+Notes and chords divide each written bar into equal slots. For fixed-step riffs, use `every`: this plays four sixteenth notes and pads the rest of the bar with silence.
 
+```composer-nb
+play(every 1/4 beats piano: note(1 2 3 5))
 ```
-set time 7 over 8
-set tempo 90
 
+`note(...)` and `chord(...)` supply a type inside expressions. Names and interval functions keep that type. For whole sequences, the `notes` and `chords` prefixes are also accepted.
+
+`voice` moves selected chord tones by octaves without changing the harmony. Its second argument is an object: `1` is up an octave, `-1` is down. A slash bass stays unchanged.
+
+```composer-nb
+chords inclinationHome = voice(2m9, { fifth: 1 })
+print(inclinationHome)
+play({ piano: inclinationHome })
+```
+
+In C major, octave 3, this prints **2m9** → Dm9 → (D3 F3 C4 E4 A4). Only the leading value is bold. Spaces separate values within one print argument; commas separate arguments. See [voice](https://pkhambat.mintlify.site/functions/voice) and [print](https://pkhambat.mintlify.site/functions/print).
+
+## Place an event in a later bar
+
+Write the placement after the part. A bare body is a block, so the extra crash below sounds once on bar 2.
+
+```composer-nb
 pattern groove = {
-  kick: x--x---,
-  snare: 5*- x-,
-  snare.ghost: --x----,
-  hat: ^-x-,
-  pattern {
-    snare.ghost: 8*- dd 4*-,
-    hat.open: 10*- ^ 3*-,
-    hat.pedal: 12*- x-,
-  } on bar 2,
+  kick: 4*x---,
+  hat: 8*x-,
+  { crash: x } on bar 2,
 }
-
-play block {
-  crash: x 13*-,
-  groove,
-} for 6 bars
+play(groove) for 4 bars
 ```
-
-<p align="center">
-  <img src="docs/images/one-bar-only.svg" width="820" alt="A groove whose lines repeat in both bars, with a bar 2 block that adds a ghost-note burst, an open hi-hat and a pedal close in bar 2 only">
-</p>
 
 ## From an assistant
 
@@ -117,9 +79,9 @@ integration has not yet been deployed through the published connector above.
 ## Working on it
 
 ```bash
-npm install     # installs both folders (npm workspaces)
+npm install     # installs workspace dependencies
 npm run dev     # playground at http://localhost:5173
-npm test        # language tests
+npm test        # language, notebook and MCP tests
 npm run lint
 npm run typecheck   # tsc over the library, the playground, the MCP server and the Vercel functions
 npm run build   # builds the library, the MCP server and the playground

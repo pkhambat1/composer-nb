@@ -2,7 +2,7 @@
    renderer and the tests can all share it. */
 import { Chord, Note, Interval } from "tonal"
 import type { State } from "./state.ts"
-import { MODE_TABLE, type ModeInfo } from "./vocab.ts"
+import { CHORD_TONES, MODE_TABLE, type ChordTone, type ToneShifts, type ModeInfo } from "./vocab.ts"
 
 const modeInfo = (mode: string): ModeInfo | undefined =>
   (MODE_TABLE as Record<string, ModeInfo>)[mode]
@@ -33,6 +33,7 @@ export type Voiced = {
   bassName: string
   overBass?: boolean
   fromGuitarPosition?: boolean
+  voicing?: { base: Voiced; octaves: number[] }
 }
 
 export const NOTE_TO_PC: Record<string, number> = {
@@ -239,7 +240,7 @@ function degreeToSymbol(main: string, key: Key): string | null {
   if (/^(add|[#b])/.test(rest)) return root + triad + rest
   if (rest === "M") return root
   if (rest.startsWith("M6/9")) return root + rest.slice(1)
-  if (rest.startsWith("dom7")) return root + "7" + rest.slice(4)
+  if (/^dom(?:7|9|11|13)/.test(rest)) return root + rest.slice(3)
   if (rest.startsWith("mmaj")) return root + "mMaj" + rest.slice(4)
   return root + rest
 }
@@ -405,3 +406,46 @@ export function applyTranspose(chord: Voiced, semis: number): Voiced {
 
 // The key a state is in, as the chords and the sheet read it.
 export const keyOf = (st: State) => parseKey(st.key, st.mode)
+
+// Keep harmony and tone identity separate from pitch order. Moving the root below or
+// above other tones must not rename the chord or change what a later fifth refers to.
+export function voicedChord(base: Voiced, octaves: number[]): Voiced {
+  const tones = base.notesMidi
+    .map((midi, i) => ({
+      midi: midi + 12 * octaves[i],
+      name: base.noteNames[i].replace(/-?\d+$/, (octave) => String(Number(octave) + octaves[i])),
+    }))
+    .sort((a, b) => a.midi - b.midi)
+  return {
+    ...base,
+    notesMidi: tones.map((t) => t.midi),
+    noteNames: tones.map((t) => t.name),
+    voicing: { base, octaves },
+  }
+}
+
+export function shiftChordTones(chord: Voiced, shifts: ToneShifts): Voiced | string {
+  const base = chord.voicing?.base ?? chord
+  const octaves = [...(chord.voicing?.octaves ?? base.notesMidi.map(() => 0))]
+  const degrees = base.noteNames.map((name) => Interval.num(Note.distance(base.noteNames[0], name)))
+  for (const [tone, shift] of Object.entries(shifts) as [ChordTone, number][]) {
+    const matches = degrees.flatMap((degree, i) => (degree === CHORD_TONES[tone] ? [i] : []))
+    if (!matches.length) return `${base.label} has no ${tone} to voice`
+    for (const i of matches) octaves[i] += shift
+  }
+  return voicedChord(base, octaves)
+}
+
+// Reapply existing role shifts after changing a chord's harmony (e.g. add9).
+export function retainVoicing(source: Voiced, target: Voiced): Voiced | string {
+  if (!source.voicing) return target
+  const { base, octaves } = source.voicing
+  const shifts: ToneShifts = {}
+  base.noteNames.forEach((name, i) => {
+    if (!octaves[i]) return
+    const degree = Interval.num(Note.distance(base.noteNames[0], name))
+    const tone = (Object.keys(CHORD_TONES) as ChordTone[]).find((t) => CHORD_TONES[t] === degree)
+    if (tone) shifts[tone] = octaves[i]
+  })
+  return shiftChordTones(target, shifts)
+}

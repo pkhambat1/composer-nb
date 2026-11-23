@@ -193,7 +193,7 @@ async function renderNow(parsed: Playable): Promise<Tone.ToneAudioBuffer> {
     try {
       await ChordLookup.load()
       for (const ev of chordEvents) {
-        if (!isGuitar(ev.instrument)) continue
+        if (!isGuitar(ev.instrument) || ev.chord.voicing) continue
         const pos = ChordLookup.lookupPosition(ev.chord.label)
         if (!pos?.midi?.length) continue
         const voicing = pos.midi.map((m) => m + (ev.transpose || 0))
